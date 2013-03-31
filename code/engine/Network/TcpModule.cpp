@@ -49,6 +49,112 @@ void TcpModule::sendTimesyncRequest()
 	mRoundTripTimer.start();
 }
 
+void TcpModule::read()
+{
+	
+	dbglog << "TcpModule::read (" << mPeerId << ")";
+	boost::asio::async_read
+	(
+		*socket(),
+		boost::asio::buffer(mReadHeaderBuffer),
+		boost::asio::transfer_exactly(HeaderSerializationT::size()),
+		bind(&TcpModule::readHeaderHandler, boost::shared_static_cast<TcpModule>(shared_from_this()), _1, _2)
+	);
+	dbglog << "TcpModule::~read";
+}
+
+void TcpModule::readHeaderHandler(const error_code &ec, std::size_t bytesTransferred)
+{
+	dbglog << "TcpModule::readHeaderHandler (" << bytesTransferred << ")";
+	if (!ec)
+	{
+		HeaderT header;
+		header.deserialize(mReadHeaderBuffer);
+		
+		if (header.mDataLength == 0)
+		{
+			warnlog << "readHeaderHandler: Got empty Header! Disconnecting Client.";
+
+			// Peer sends crap? Bye bye!
+			socket().reset();
+			return;
+		}
+
+		u16 headerChecksum = header.mHeaderChecksum;
+		u16 ownHeaderChecksum = calculateHeaderChecksum(header);
+
+		if (ownHeaderChecksum != headerChecksum)
+		{
+			warnlog << std::hex << std::uppercase
+			        << "readHeaderHandler: Got bad Header (Own CRC: "
+			        << ownHeaderChecksum
+			        << " Rcvd CRC: "
+			        << headerChecksum
+			        << "). Disconnecting Peer.";
+
+			// Peer sends crap? Bye bye!
+			socket().reset();
+			return;
+		}
+
+		dbglog << "PacketSize: " << header.mDataLength;
+		boost::asio::async_read
+		(
+			*socket(),
+			boost::asio::buffer(mReadBuffer),
+			boost::asio::transfer_exactly(header.mDataLength),
+			bind(&TcpModule::readDataHandler, boost::shared_static_cast<TcpModule>(shared_from_this()), _1, _2, header.mDataChecksum)
+		);
+	}
+	else if (ec.value() == boost::asio::error::connection_reset)
+	{
+		dbglog << "TcpModule: connection was closed!";
+		emit<ControlEvent>(ID::NE_DISCONNECT, mPeerId);
+	}
+	else
+	{
+		emit<ControlEvent>(ID::NE_DISCONNECT, mPeerId);
+		printErrorCode(ec, "readHeaderHandler");
+	}
+}
+
+void TcpModule::readDataHandler(const error_code &ec, std::size_t bytesTransferred, u32 packetChecksum)
+{
+	dbglog << "TcpModule::readDataHandler (" << bytesTransferred << ")";
+	if (!ec)
+	{
+		u32 ownPacketChecksum = calculateChecksum(mReadBuffer.data(), bytesTransferred);
+
+		if (ownPacketChecksum != packetChecksum)
+		{
+			warnlog << std::hex << std::uppercase
+			        << "readDataHandler: Got bad Packet (Own CRC: "
+			        << ownPacketChecksum
+			        << " Rcvd CRC: "
+			        << packetChecksum
+			        << "). Disconnecting Peer.";
+
+			// Peer sends crap? Bye bye!
+			socket().reset();
+			return;
+		}
+
+		OPacket<Tcp> oPacket(boost::asio::buffer(mReadBuffer, bytesTransferred));
+		onReceive(oPacket);
+		read();
+	}
+	else if (ec.value() == boost::asio::error::connection_reset)
+	{
+		dbglog << "TcpModule: connection was closed!";
+		emit<ControlEvent>(ID::NE_DISCONNECT, mPeerId);
+	}
+	else
+	{
+		emit<ControlEvent>(ID::NE_DISCONNECT, mPeerId);
+		printErrorCode(ec, "readDataHandler");
+	}
+}
+
 void TcpModule::onReceive(OPacket<Tcp>& oPacket)
 {
 	dbglog << "TcpModule::onReceive";
@@ -85,11 +191,11 @@ void TcpModule::onReceive(OPacket<Tcp>& oPacket)
 
 void TcpModule::queueTimeCriticalPacket(DataPayload& payload)
 {
-	dbglog << "NetworkModule::queueTimeCriticalPacket -> onSend";
+	dbglog << "TcpModule::queueTimeCriticalPacket -> onSend";
 	onSend(payload);
-	dbglog << "NetworkModule::queueTimeCriticalPacket -> Flush";
+	dbglog << "TcpModule::queueTimeCriticalPacket -> Flush";
 	flush();
-	dbglog << "NetworkModule::queueTimeCriticalPacket -> Done";
+	dbglog << "TcpModule::queueTimeCriticalPacket -> Done";
 }
 
 void TcpModule::onTimeSyncRequest()
@@ -134,7 +240,7 @@ void TcpModule::calculateServerTimestampOffset(u32 serverTimestamp, s32& offset,
 
 void TcpModule::setTimestampOffset(const s32 offset, const s32 rtt)
 {
-	dbglog << "NetworkModule:setTimestampOffset: "
+	dbglog << "TcpModule:setTimestampOffset: "
 		<< offset << "(" << offset - mTimestampOffset << ")" << ", "
 		<< rtt << "(" << rtt - mRtt.last() << ")";
 

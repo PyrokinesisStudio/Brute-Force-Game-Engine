@@ -28,8 +28,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_NETWORK_TCP_H
 
 #include <cstring>
+
 #include <boost/array.hpp>
 #include <boost/asio/buffer.hpp>
+
 #include <Network/Checksum.h>
 
 namespace BFG {

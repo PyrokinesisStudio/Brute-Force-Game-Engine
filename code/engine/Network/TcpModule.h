@@ -52,7 +52,38 @@ public:
 	//! \brief Start synchronizing the local clock with the server
 	void sendTimesyncRequest();
 
+	//! \brief Enable or disable Nagle's Algorithm
+	//! Enabling this could cause a delay in latency
+	//! \param[in] on Enable delay or not
+	void setTcpDelay(bool on)
+	{
+		boost::asio::ip::tcp::no_delay oldOption;
+		socket()->get_option(oldOption);
+		boost::asio::ip::tcp::no_delay newOption(!on);
+		socket()->set_option(newOption);
+		
+		dbglog << "Set TCP_NODELAY from " << oldOption.value()
+		       << " to " << newOption.value();
+	}
+	
 private:
+	// # Reading
+	// ##########
+	
+	//! \brief Start asynchronous reading from the connected network module
+	virtual void read();
+	
+	//! \brief Handler for the reading of the data header
+	//! \param[in] ec Error code of boost asio
+	//! \param[in] bytesTransferred size of the data received
+	void readHeaderHandler(const error_code &ec, std::size_t bytesTransferred);
+	
+	//! \brief Handler for the reading of the data
+	//! \param[in] ec Error code of boost asio
+	//! \param[in] bytesTransferred size of the data received
+	//! \param[in] pacetChecksum Checksum of the data packet
+	void readDataHandler(const error_code &ec, std::size_t bytesTransferred, u32 packetChecksum);
+	
 	//! \brief Received data from the net is packed as a corresponding event 
 	//! \param[in] data data array received from the network
 	//! \param[in] size size of the data received
@@ -91,6 +122,12 @@ private:
 	Clock::StopWatch mRoundTripTimer;
 	Rtt<s32, 10>     mRtt;
 	s32              mTimestampOffset;
+	
+	// TODO: Use CreateBuffer
+	HeaderSerializationT mReadHeaderBuffer;
+
+	// TODO: Use CreateBuffer
+	boost::array<char, PACKET_MTU> mReadBuffer;
 };
 
 } // namespace Network
