@@ -29,7 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/crc.hpp>
 #include <Base/Logger.h>
 #include <Network/Event.h>
-#include <Network/NetworkModule.h>
+#include <Network/TcpModule.h>
 
 namespace BFG {
 namespace Network{
@@ -48,7 +48,7 @@ mLocalTime(new Clock::StopWatch(Clock::milliSecond))
 	mLoop->connect(ID::NE_DISCONNECT, this, &Client::controlEventHandler);
 	mLoop->connect(ID::NE_SHUTDOWN, this, &Client::controlEventHandler);
 
-	mNetworkModule.reset(new NetworkModule(mLoop, mService, 0, mLocalTime));
+	mTcpModule.reset(new TcpModule(mLoop, mService, 0, mLocalTime));
 }
 
 Client::~Client()
@@ -73,15 +73,15 @@ void Client::stop()
 	mService.stop();
 	mThread.join();
 
-	if (mNetworkModule && mNetworkModule->socket()->is_open())
-		mNetworkModule->socket()->close();	
+	if (mTcpModule && mTcpModule->socket()->is_open())
+		mTcpModule->socket()->close();	
 
-	mNetworkModule.reset();
+	mTcpModule.reset();
 }
 
 void Client::startConnecting(const std::string& ip, const std::string& port)
 {
-	dbglog << "NetworkModule::startConnecting";
+	dbglog << "TcpModule::startConnecting";
 	boost::asio::ip::tcp::resolver::query query(ip, port);
 	mResolver->async_resolve(query, boost::bind(&Client::resolveHandler, this, _1, _2));
 }
@@ -91,7 +91,7 @@ void Client::readHandshake()
 	dbglog << "Client::readHandshake";
 	boost::asio::async_read
 	(
-		*(mNetworkModule->socket()), 
+		*(mTcpModule->socket()), 
 		boost::asio::buffer(mHandshakeBuffer),
 		boost::asio::transfer_exactly(Handshake::SerializationT::size()),
 		bind(&Client::readHandshakeHandler, this, _1, _2)
@@ -100,10 +100,10 @@ void Client::readHandshake()
 
 void Client::resolveHandler(const error_code &ec, tcp::resolver::iterator it)
 { 
-	dbglog << "NetworkModule::resolveHandler";
+	dbglog << "TcpModule::resolveHandler";
 	if (!ec) 
 	{
-		mNetworkModule->socket()->async_connect(*it, bind(&Client::connectHandler, this, _1)); 
+		mTcpModule->socket()->async_connect(*it, bind(&Client::connectHandler, this, _1)); 
 	}
 	else
 		printErrorCode(ec, "resolveHandler");
@@ -143,7 +143,7 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 				<< "). Disconnecting Peer.";
 
 			// Peer sends crap? Bye bye!
-			mNetworkModule->socket().reset();
+			mTcpModule->socket().reset();
 			return;
 		}
 		else
@@ -151,12 +151,12 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 			dbglog << "Received peer ID: " << hs.mPeerId;
 			mPeerId = hs.mPeerId;
 
-			mNetworkModule->startReading();
+			mTcpModule->startReading();
 
 			Emitter e(mLoop);
 			e.emit<ControlEvent>(ID::NE_CONNECTED, mPeerId);
 
-			mNetworkModule->sendTimesyncRequest();
+			mTcpModule->sendTimesyncRequest();
 			setTimeSyncTimer(TIME_SYNC_WAIT_TIME);
 		}
 	}
@@ -207,7 +207,7 @@ void Client::syncTimerHandler(const error_code &ec)
 {
 	if (!ec)
 	{
-		mNetworkModule->sendTimesyncRequest();
+		mTcpModule->sendTimesyncRequest();
 		setTimeSyncTimer(TIME_SYNC_WAIT_TIME);
 	}
 	else

@@ -44,7 +44,7 @@ namespace Network{
 using namespace boost::asio::ip;
 using namespace boost::system;
 
-class NetworkModule;
+class TcpModule;
 
 //! This class represents a network client. It starts the connection to a server 
 //! using a NetworkModule
@@ -101,6 +101,7 @@ private:
 	//! \param[in] ec Error code of boost::asio
 	void syncTimerHandler(const error_code &ec);
 
+	// TODO: Move to Checksum.h and remove crc include
 	//! \brief Calculates the checksum of a Handshake
 	//! \param[in] hs The Handshake to calculate the checksum for
 	//! \return Calculated checksum
@@ -126,7 +127,7 @@ private:
 
 	boost::shared_ptr<boost::asio::deadline_timer> mTimeSyncTimer;
 
-	boost::shared_ptr<NetworkModule> mNetworkModule;
+	boost::shared_ptr<TcpModule> mTcpModule;
 
 	PeerIdT mPeerId;
 

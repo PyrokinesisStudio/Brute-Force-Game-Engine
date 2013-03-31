@@ -36,11 +36,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/ClockUtils.h>
 #include <Core/Types.h>
 #include <EventSystem/Emitter.h>
+
+#include <Network/CreateBuffer.h>
 #include <Network/Defs.h>
 #include <Network/Event_fwd.h>
 #include <Network/Packet.h>
-#include <Network/Rtt.h>
-#include <Network/Tcp.h>
 
 class EventLoop;
 
@@ -52,7 +52,8 @@ using namespace boost::system;
 
 //! A NetworkModule is used to communicate over the network. The data can be send using the NE_SEND event. 
 //! Received data is send via the NE_RECEIVED event.
-class NetworkModule : public Emitter, public boost::enable_shared_from_this<NetworkModule>
+template <typename ProtocolT>
+class NetworkModule : public Emitter, public boost::enable_shared_from_this<NetworkModule<ProtocolT> >
 {
 public:
 	typedef tcp::socket SocketT;
@@ -62,22 +63,104 @@ public:
 	//! \param[in] service Asio service for the network connection
 	//! \param[in] peerId ID of the module for identification over the network
 	//! \param[in] localTime The local time of this module
-	NetworkModule(EventLoop* loop, boost::asio::io_service& service, PeerIdT peerId, boost::shared_ptr<Clock::StopWatch> localTime);
-	~NetworkModule();
+	NetworkModule(EventLoop* loop_,
+	              boost::asio::io_service& service,
+	              PeerIdT peerId,
+	              boost::shared_ptr<Clock::StopWatch> localTime) :
+	BFG::Emitter(loop_),
+	mPeerId(peerId),
+	mLocalTime(localTime),
+	mPool(PACKET_MTU*2),
+	mSendPacket(createBuffer(mPool), mHeaderFactory)
+	{
+		mSocket.reset(new SocketT(service));
+		mTimer.reset(new boost::asio::deadline_timer(service));
+	}
 
+	//! \brief Destructor
+	~NetworkModule()
+	{
+		mTimer.reset();
+
+		dbglog << "NetworkModule::~NetworkModule (" << this << ")";
+		loop()->disconnect(ID::NE_SEND, this);
+
+		mSocket.reset();
+	}
+	
 	//! \brief Returns the socket of the connection
 	//! \return tcp::socket of the connection
-	boost::shared_ptr<SocketT> socket(){return mSocket;}
+	boost::shared_ptr<SocketT> socket()
+	{
+		return mSocket;
+	}
 
 	//! \brief The connection is ready to receive data
-	void startReading();
+	void startReading()
+	{
+		dbglog << "NetworkModule::startReading";
+		setFlushTimer(FLUSH_WAIT_TIME);
 
-	//! \brief Start synchronizing the local clock with the server
-	void sendTimesyncRequest();
+		loop()->connect(ID::NE_SEND, this, &NetworkModule<ProtocolT>::dataPacketEventHandler);
+		if (mPeerId)
+			loop()->connect(ID::NE_SEND, this, &NetworkModule<ProtocolT>::dataPacketEventHandler, mPeerId);
+
+		setTcpDelay(false);
+		
+		read();
+	}
 	
-private:
-	typedef u32 TimestampT;
+protected:
+	//! \brief Sending data to the connected network module
+	//! With this method the data is queued and flushes automatically every few milliseconds 
+	//! or if the queue is full
+	//! \param[in] payload Data to send
+	void onSend(DataPayload& payload)
+	{
+		dbglog << "NetworkModule::onSend(): Current Time: " << mLocalTime->stop();
 
+		mFlushMutex.lock();
+		dbglog << "NetworkModule::onSend(): "
+		       << payload.mAppDataLen + sizeof(Segment)
+		       << " (" << sizeof(Segment) << " + " << payload.mAppDataLen << ")";
+
+		bool added = mSendPacket.add(payload);
+		mFlushMutex.unlock();
+		
+		if (!added)
+		{
+			flush();
+			onSend(payload);
+		}
+	}
+	
+	//! \brief Flushes the data queue to send its data to the connected network module
+	void flush()
+	{
+		boost::mutex::scoped_lock scopedLock(mFlushMutex);
+
+		// Nothing to write?
+		if (!mSendPacket.containsData())
+			return;
+
+		dbglog << "NetworkModule -> Flushing: " << mSendPacket.size() << " bytes";
+
+		write
+		(
+			mSendPacket.full(),
+			mSendPacket.size()
+		);
+
+		// Cleanup
+		mSendPacket.clear(createBuffer(mPool));
+	}
+	
+	// TODO: Make const
+	PeerIdT mPeerId;
+
+	boost::shared_ptr<Clock::StopWatch> mLocalTime;
+
+private:
 	//! \brief Reset the time for the next automatic flush
 	//! \param[in] waitTime_ms Time in milliseconds to the next flush
 	void setFlushTimer(const long& waitTime_ms);
@@ -114,51 +197,13 @@ private:
 	//! \param[in] ec Error code of boost::asio
 	//! \param[in] bytesTransferred size of the data written
 	void writeHandler(const error_code &ec, std::size_t bytesTransferred, boost::asio::const_buffer buffer);
-
-	//! \brief Send time criticle data to the connected network module
-	//! Use this function to send packets as fast as possible.
-	//! (e.g. for time synchronization). The payload will be sent almost
-	//! immediately together with any other packets which were yet waiting
-	//! for delivery. Therefore, delays caused by the event system or flush
-	//! wait times are avoided.
-	//! \param[in] payload Data to send
-	void queueTimeCriticalPacket(DataPayload& payload);
 	
 	//! \brief Handler for DataPacketEvents
 	//! \param[in] e The DataPacketEvent to distribute
 	void dataPacketEventHandler(DataPacketEvent* e);
 
-	//! \brief Sending data to the connected network module
-	//! With this method the data is queued and flushes automatically every few milliseconds 
-	//! or if the queue is full
-	//! \param[in] payload Data to send
-	void onSend(DataPayload& payload);
-
 	//! \brief Received data from the net is packed as a corresponding event 
-	//! \param[in] data data array received from the network
-	//! \param[in] size size of the data received
-	void onReceive(OPacket<Tcp>& oPacket);
-
-	//! \brief Flushes the data queue to send its data to the connected network module
-	void flush();
-
-	//! \brief Handles a request for time synchronization and sends the local timestamp back
-	void onTimeSyncRequest();
-
-	//! \brief Handles a response for time synchronization
-	//! \param[in] serverTimestamp Timestamp of the server
-	void onTimeSyncResponse(TimestampT serverTimestamp);
-	
-	//! \brief Sets the offset between the local time and server time
-	//! \param[in] offset The time offset between client and server
-	//! \param[in] rtt Round-Trip-Time of the data packet
-	void setTimestampOffset(const s32 offset, const s32 rtt);
-	
-	//! \brief Calculates the offset between server and client time
-	//! \param[in] serverTimestamp Timestamp of the server
-	//! \param[out] offset Calculated offset
-	//! \param[out] rtt Calculated round trip time
-	void calculateServerTimestampOffset(u32 serverTimestamp, s32& offset, s32& rtt);
+	virtual void onReceive(OPacket<ProtocolT>& oPacket) = 0;
 	
 	//! \brief Logs an error_code
 	//! \param[in] ec Error code to log
@@ -167,28 +212,26 @@ private:
 
 	boost::pool<> mPool;
 
-	Tcp::HeaderFactoryT mHeaderFactory;
-	IPacket<Tcp> mSendPacket;
+	typename ProtocolT::HeaderFactoryT mHeaderFactory;
+	IPacket<ProtocolT> mSendPacket;
 
 	boost::array<char, PACKET_MTU> mWriteBuffer;
 	boost::array<char, PACKET_MTU> mReadBuffer;
 
-	NetworkEventHeader::SerializationT mWriteHeaderBuffer;
-	NetworkEventHeader::SerializationT mReadHeaderBuffer;
+	typedef typename ProtocolT::HeaderT HeaderT;
+	typedef typename HeaderT::SerializationT HeaderSerializationT;
+	
+	HeaderSerializationT mWriteHeaderBuffer;
+	HeaderSerializationT mReadHeaderBuffer;
 
 	boost::shared_ptr<SocketT>                     mSocket;
 	boost::shared_ptr<boost::asio::deadline_timer> mTimer;
 	boost::mutex                                   mFlushMutex;
-
-	s32 mTimestampOffset;
-	Rtt<s32, 10> mRtt;
-	Clock::StopWatch mRoundTripTimer;
-
-	PeerIdT mPeerId;
-	boost::shared_ptr<Clock::StopWatch> mLocalTime;
 };
 
 } // namespace Network
 } // namespace BFG
+
+#include <Network/NetworkModule.cpp>
 
 #endif

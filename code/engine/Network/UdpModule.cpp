@@ -95,8 +95,6 @@ void UdpModule::readHandler(const boost::system::error_code& ec, std::size_t byt
 	p.add(segment, data);
 	
 	write(p.full(), p.size());
-	
-	OPacket<Udp> p2(boost::asio::buffer(p.full(), p.size()));
 }
 
 void UdpModule::write(boost::asio::const_buffer buf, std::size_t bytesTransferred)

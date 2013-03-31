@@ -47,7 +47,7 @@ namespace Network{
 using namespace boost::asio::ip;
 using namespace boost::system;
 
-class NetworkModule;
+class TcpModule;
 class UdpModule;
 
 //! This class represents a network server. It starts accepting connections from clients 
@@ -60,7 +60,7 @@ public:
 	Server(EventLoop* loop);
 	~Server();
 private:
-	typedef std::map<PeerIdT, boost::shared_ptr<NetworkModule> > ModulesMap;
+	typedef std::map<PeerIdT, boost::shared_ptr<TcpModule> > ModulesMap;
 
 	//! \brief Stops all communication to and from all clients
 	void stop();
@@ -113,9 +113,9 @@ private:
 
 	Handshake::SerializationT mHandshakeBuffer;
 
-	ModulesMap mNetworkModules;
+	ModulesMap mTcpModules;
 	
-	boost::shared_ptr<UdpModule> mUdp;
+	boost::shared_ptr<UdpModule> mUdpModule;
 };
 
 } // namespace Network
