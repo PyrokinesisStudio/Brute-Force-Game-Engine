@@ -36,26 +36,36 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 const BFG::GameHandle serverApplicationHandle = 123;
 const BFG::GameHandle clientApplicationHandle = 456;
 
-const std::string testMsg = "Test1234";
-const EventIdT testAppId = 10000;
+const EventIdT testAppIdTcp = 10000;
+const EventIdT testAppIdUdp = 10001;
+
+const std::string testMsg = "Test 1234";
 CharArray512T testData = stringToArray<512>(testMsg);
 
 // Make sure events are arriving
 bool serverGotConnected = false;
 bool serverGotDisconnected = false;
 bool serverGotReceived = false;
+bool serverGotTcpData = false;
+bool serverGotUdpData = false;
 bool clientGotConnected = false;
 bool clientGotDisconnected = false;
 bool clientGotReceived = false;
+bool clientGotTcpData = false;
+bool clientGotUdpData = false;
 
 void resetEventStatus()
 {
 	serverGotConnected = false;
 	serverGotDisconnected = false;
 	serverGotReceived = false;
+	serverGotTcpData = false;
+	serverGotUdpData = false;
 	clientGotConnected = false;
 	clientGotDisconnected = false;
 	clientGotReceived = false;
+	clientGotTcpData = false;
+	clientGotUdpData = false;
 }
 
 struct Server : BFG::Emitter
@@ -101,10 +111,18 @@ struct Server : BFG::Emitter
 		const BFG::Network::DataPayload& payload = e->getData();
 
 		EventIdT appId = payload.mAppEventId;
+
+		BOOST_REQUIRE (appId == testAppIdTcp || appId == testAppIdUdp);
+
+		if (appId == testAppIdTcp)
+			serverGotTcpData = true;
+
+		if (appId == testAppIdUdp)
+			serverGotUdpData = true;
+
 		BFG::GameHandle destinationHandle = payload.mAppDestination;
 		BFG::GameHandle senderHandle = payload.mAppSender;
 		
-		BOOST_REQUIRE_EQUAL (appId, testAppId);
 		BOOST_REQUIRE_EQUAL (destinationHandle, serverApplicationHandle);
 		BOOST_REQUIRE_EQUAL (senderHandle, clientApplicationHandle);
 		
@@ -158,11 +176,19 @@ struct Client : BFG::Emitter
 		
 		const BFG::Network::DataPayload& payload = e->getData();
 
-		EventIdT appId = payload.mAppEventId;		
+		EventIdT appId = payload.mAppEventId;
+
+		BOOST_REQUIRE (appId == testAppIdTcp || appId == testAppIdUdp);
+		
+		if (appId == testAppIdTcp)
+			serverGotTcpData = true;
+
+		if (appId == testAppIdUdp)
+			serverGotUdpData = true;
+		
 		BFG::GameHandle destinationHandle = payload.mAppDestination;
 		BFG::GameHandle senderHandle = payload.mAppSender;
 		
-		BOOST_REQUIRE_EQUAL (appId, testAppId);
 		BOOST_REQUIRE_EQUAL (destinationHandle, clientApplicationHandle);
 		BOOST_REQUIRE_EQUAL (senderHandle, serverApplicationHandle);
 		
@@ -278,13 +304,19 @@ BOOST_AUTO_TEST_CASE (ClientToServerDataCheck)
 	BOOST_TEST_MESSAGE( "ClientToServerDataCheck is starting" );
 	resetEventStatus();
 
-	BFG::Network::DataPayload payload(testAppId, serverApplicationHandle, clientApplicationHandle, testMsg.length(), testData);
-	clientEmitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload);
+	BFG::Network::DataPayload payloadTcp(testAppIdTcp, serverApplicationHandle, clientApplicationHandle, testMsg.length(), testData);
+	BFG::Network::DataPayload payloadUdp(testAppIdUdp, serverApplicationHandle, clientApplicationHandle, testMsg.length(), testData);
+	clientEmitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payloadTcp);
+	clientEmitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payloadUdp);
 	
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
 	BOOST_REQUIRE(serverGotReceived);
+	BOOST_REQUIRE(serverGotTcpData);
+	BOOST_REQUIRE(serverGotUdpData);
 	BOOST_REQUIRE(!clientGotReceived);
+	BOOST_REQUIRE(!clientGotTcpData);
+	BOOST_REQUIRE(!clientGotUdpData);
 
 	BOOST_TEST_MESSAGE( "ClientToServerDataCheck has ended" );
 }
@@ -296,9 +328,11 @@ BOOST_AUTO_TEST_CASE (ClientToServerDestinationNotNullCheck)
 	
 	BFG::GameHandle bogusDestination = 123456789;
 
-	BFG::Network::DataPayload payload(testAppId, serverApplicationHandle, clientApplicationHandle, testMsg.length(), testData);
-	clientEmitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload, bogusDestination);
-	
+	BFG::Network::DataPayload payloadTcp(testAppIdTcp, serverApplicationHandle, clientApplicationHandle, testMsg.length(), testData);
+	BFG::Network::DataPayload payloadUdp(testAppIdUdp, serverApplicationHandle, clientApplicationHandle, testMsg.length(), testData);
+	clientEmitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payloadTcp, bogusDestination);
+	clientEmitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payloadUdp, bogusDestination);
+
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
 	// DestinationId for NE_SEND on client side must always be 0.
@@ -318,13 +352,19 @@ BOOST_AUTO_TEST_CASE (ServerToClientDataCheck)
 	BOOST_TEST_MESSAGE( "ServerToClientDataCheck is starting" );
 	resetEventStatus();
 
-	BFG::Network::DataPayload payload(testAppId, clientApplicationHandle, serverApplicationHandle, testMsg.length(), testData);
-	serverEmitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload);
+	BFG::Network::DataPayload payloadTcp(testAppIdTcp, clientApplicationHandle, serverApplicationHandle, testMsg.length(), testData);
+	BFG::Network::DataPayload payloadUdp(testAppIdUdp, clientApplicationHandle, serverApplicationHandle, testMsg.length(), testData);
+	serverEmitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payloadTcp);
+	serverEmitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payloadUdp);
 	
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
 	BOOST_REQUIRE(!serverGotReceived);
+	BOOST_REQUIRE(!serverGotTcpData);
+	BOOST_REQUIRE(!serverGotUdpData);
 	BOOST_REQUIRE(clientGotReceived);
+	BOOST_REQUIRE(clientGotTcpData);
+	BOOST_REQUIRE(clientGotUdpData);
 	
 	BOOST_TEST_MESSAGE( "ServerToClientDataCheck has ended" );
 }

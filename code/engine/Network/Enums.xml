@@ -11,6 +11,7 @@
 
             <!-- Network Events -->
             <value>NE_SEND</value>
+            <value>NE_SEND_UDP</value>
             <value>NE_RECEIVED</value>
             <value>NE_CONNECTED</value>
             <value>NE_DISCONNECTED</value>
