@@ -90,29 +90,30 @@ struct Server : BFG::Emitter
 	void netConnectHandler(BFG::Network::ControlEvent* e)
 	{
 		serverGotConnected = true;
-		BOOST_REQUIRE_EQUAL(e->getId(), BFG::ID::NE_CONNECTED);
-		BOOST_REQUIRE_NE(boost::get<BFG::Network::PeerIdT>(e->getData()), 0);
+		BOOST_CHECK_EQUAL(e->id(), BFG::ID::NE_CONNECTED);
+		BOOST_CHECK_NE(boost::get<BFG::Network::PeerIdT>(e->getData()), 0);
 	}
 	
 	void netDisconnectHandler(BFG::Network::ControlEvent* e)
 	{
 		serverGotDisconnected = true;
-		BOOST_REQUIRE_EQUAL(e->getId(), BFG::ID::NE_DISCONNECTED);
-		BOOST_REQUIRE_NE(boost::get<BFG::Network::PeerIdT>(e->getData()), 0);
+		BOOST_CHECK_EQUAL(e->id(), BFG::ID::NE_DISCONNECTED);
+		BOOST_CHECK_NE(boost::get<BFG::Network::PeerIdT>(e->getData()), 0);
 	}
 
 	void netPacketHandler(BFG::Network::DataPacketEvent* e)
 	{
 		serverGotReceived = true;
-		BOOST_REQUIRE_EQUAL(e->getId(), BFG::ID::NE_RECEIVED);
-		BOOST_REQUIRE_EQUAL(e->destination(), serverApplicationHandle);
-		BOOST_REQUIRE_NE(e->sender(), 0);
+		BOOST_CHECK_EQUAL(e->id(), BFG::ID::NE_RECEIVED);
+		BOOST_CHECK_EQUAL(e->destination(), serverApplicationHandle);
+		BOOST_CHECK_NE(e->sender(), 0);
 		
 		const BFG::Network::DataPayload& payload = e->getData();
 
 		EventIdT appId = payload.mAppEventId;
 
-		BOOST_REQUIRE (appId == testAppIdTcp || appId == testAppIdUdp);
+		dbglog << "TestServer::netPacketHandler got appId: " << appId;
+		BOOST_CHECK (appId == testAppIdTcp || appId == testAppIdUdp);
 
 		if (appId == testAppIdTcp)
 			serverGotTcpData = true;
@@ -123,14 +124,14 @@ struct Server : BFG::Emitter
 		BFG::GameHandle destinationHandle = payload.mAppDestination;
 		BFG::GameHandle senderHandle = payload.mAppSender;
 		
-		BOOST_REQUIRE_EQUAL (destinationHandle, serverApplicationHandle);
-		BOOST_REQUIRE_EQUAL (senderHandle, clientApplicationHandle);
+		BOOST_CHECK_EQUAL (destinationHandle, serverApplicationHandle);
+		BOOST_CHECK_EQUAL (senderHandle, clientApplicationHandle);
 		
 		BFG::u16 packetSize = payload.mAppDataLen;
 		CharArray512T data = payload.mAppData;
 		
-		BOOST_REQUIRE_EQUAL (packetSize, testMsg.size());
-		BOOST_REQUIRE_EQUAL_COLLECTIONS (data.begin(), data.begin()+packetSize, testData.begin(), testData.begin() + testMsg.size());
+		BOOST_CHECK_EQUAL (packetSize, testMsg.size());
+		BOOST_CHECK_EQUAL_COLLECTIONS (data.begin(), data.begin()+packetSize, testData.begin(), testData.begin() + testMsg.size());
 	}
 };
 
@@ -156,47 +157,48 @@ struct Client : BFG::Emitter
 	void netConnectHandler(BFG::Network::ControlEvent* e)
 	{
 		clientGotConnected = true;
-		BOOST_REQUIRE_EQUAL(e->getId(), BFG::ID::NE_CONNECTED);
-		BOOST_REQUIRE_NE(boost::get<BFG::Network::PeerIdT>(e->getData()), 0);
+		BOOST_CHECK_EQUAL(e->id(), BFG::ID::NE_CONNECTED);
+		BOOST_CHECK_NE(boost::get<BFG::Network::PeerIdT>(e->getData()), 0);
 	}
 
 	void netDisconnectHandler(BFG::Network::ControlEvent* e)
 	{
 		clientGotDisconnected = true;
-		BOOST_REQUIRE_EQUAL(e->getId(), BFG::ID::NE_DISCONNECTED);
-		BOOST_REQUIRE_EQUAL(boost::get<BFG::Network::PeerIdT>(e->getData()), 0);
+		BOOST_CHECK_EQUAL(e->id(), BFG::ID::NE_DISCONNECTED);
+		BOOST_CHECK_EQUAL(boost::get<BFG::Network::PeerIdT>(e->getData()), 0);
 	}
 
 	void netPacketHandler(BFG::Network::DataPacketEvent* e)
 	{
 		clientGotReceived = true;
-		BOOST_REQUIRE_EQUAL(e->getId(), BFG::ID::NE_RECEIVED);
-		BOOST_REQUIRE_EQUAL(e->destination(), clientApplicationHandle);
-		BOOST_REQUIRE_EQUAL(e->sender(), 0);
+		BOOST_CHECK_EQUAL(e->id(), BFG::ID::NE_RECEIVED);
+		BOOST_CHECK_EQUAL(e->destination(), clientApplicationHandle);
+		BOOST_CHECK_EQUAL(e->sender(), 0);
 		
 		const BFG::Network::DataPayload& payload = e->getData();
 
 		EventIdT appId = payload.mAppEventId;
 
-		BOOST_REQUIRE (appId == testAppIdTcp || appId == testAppIdUdp);
+		dbglog << "TestClient::netPacketHandler got appId: " << appId;
+		BOOST_CHECK (appId == testAppIdTcp || appId == testAppIdUdp);
 		
 		if (appId == testAppIdTcp)
-			serverGotTcpData = true;
+			clientGotTcpData = true;
 
 		if (appId == testAppIdUdp)
-			serverGotUdpData = true;
+			clientGotUdpData = true;
 		
 		BFG::GameHandle destinationHandle = payload.mAppDestination;
 		BFG::GameHandle senderHandle = payload.mAppSender;
 		
-		BOOST_REQUIRE_EQUAL (destinationHandle, clientApplicationHandle);
-		BOOST_REQUIRE_EQUAL (senderHandle, serverApplicationHandle);
+		BOOST_CHECK_EQUAL (destinationHandle, clientApplicationHandle);
+		BOOST_CHECK_EQUAL (senderHandle, serverApplicationHandle);
 		
 		BFG::u16 packetSize = payload.mAppDataLen;
 		CharArray512T data = payload.mAppData;
 		
-		BOOST_REQUIRE_EQUAL (packetSize, testMsg.size());
-		BOOST_REQUIRE_EQUAL_COLLECTIONS (data.begin(), data.begin()+packetSize, testData.begin(), testData.begin() + testMsg.size());
+		BOOST_CHECK_EQUAL (packetSize, testMsg.size());
+		BOOST_CHECK_EQUAL_COLLECTIONS (data.begin(), data.begin()+packetSize, testData.begin(), testData.begin() + testMsg.size());
 	}
 };
 
@@ -293,8 +295,8 @@ BOOST_AUTO_TEST_CASE (ConnectionTest)
 	
 	boost::this_thread::sleep(boost::posix_time::seconds(1));
 
-	BOOST_REQUIRE(serverGotConnected);
-	BOOST_REQUIRE(clientGotConnected);
+	BOOST_CHECK(serverGotConnected);
+	BOOST_CHECK(clientGotConnected);
 	
 	BOOST_TEST_MESSAGE( "ConnectionTest has ended" );
 }
@@ -311,12 +313,12 @@ BOOST_AUTO_TEST_CASE (ClientToServerDataCheck)
 	
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
-	BOOST_REQUIRE(serverGotReceived);
-	BOOST_REQUIRE(serverGotTcpData);
-	BOOST_REQUIRE(serverGotUdpData);
-	BOOST_REQUIRE(!clientGotReceived);
-	BOOST_REQUIRE(!clientGotTcpData);
-	BOOST_REQUIRE(!clientGotUdpData);
+	BOOST_CHECK(serverGotReceived);
+	BOOST_CHECK(serverGotTcpData);
+	BOOST_CHECK(serverGotUdpData);
+	BOOST_CHECK(!clientGotReceived);
+	BOOST_CHECK(!clientGotTcpData);
+	BOOST_CHECK(!clientGotUdpData);
 
 	BOOST_TEST_MESSAGE( "ClientToServerDataCheck has ended" );
 }
@@ -337,12 +339,12 @@ BOOST_AUTO_TEST_CASE (ClientToServerDestinationNotNullCheck)
 
 	// DestinationId for NE_SEND on client side must always be 0.
 	// Nobody should receive anything when an id is passed.
-	BOOST_REQUIRE(!serverGotConnected);
-	BOOST_REQUIRE(!serverGotDisconnected);
-	BOOST_REQUIRE(!serverGotReceived);
-	BOOST_REQUIRE(!clientGotConnected);
-	BOOST_REQUIRE(!clientGotDisconnected);
-	BOOST_REQUIRE(!clientGotReceived);
+	BOOST_CHECK(!serverGotConnected);
+	BOOST_CHECK(!serverGotDisconnected);
+	BOOST_CHECK(!serverGotReceived);
+	BOOST_CHECK(!clientGotConnected);
+	BOOST_CHECK(!clientGotDisconnected);
+	BOOST_CHECK(!clientGotReceived);
 
 	BOOST_TEST_MESSAGE( "ClientToServerDestinationNotNullCheck has ended" );
 }
@@ -359,12 +361,12 @@ BOOST_AUTO_TEST_CASE (ServerToClientDataCheck)
 	
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
-	BOOST_REQUIRE(!serverGotReceived);
-	BOOST_REQUIRE(!serverGotTcpData);
-	BOOST_REQUIRE(!serverGotUdpData);
-	BOOST_REQUIRE(clientGotReceived);
-	BOOST_REQUIRE(clientGotTcpData);
-	BOOST_REQUIRE(clientGotUdpData);
+	BOOST_CHECK(!serverGotReceived);
+	BOOST_CHECK(!serverGotTcpData);
+	BOOST_CHECK(!serverGotUdpData);
+	BOOST_CHECK(clientGotReceived);
+	BOOST_CHECK(clientGotTcpData);
+	BOOST_CHECK(clientGotUdpData);
 	
 	BOOST_TEST_MESSAGE( "ServerToClientDataCheck has ended" );
 }
@@ -377,8 +379,8 @@ BOOST_AUTO_TEST_CASE (ClientDisconnect)
 
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
-	BOOST_REQUIRE(serverGotDisconnected);
-	BOOST_REQUIRE(clientGotDisconnected);
+	BOOST_CHECK(serverGotDisconnected);
+	BOOST_CHECK(clientGotDisconnected);
 	
 	BOOST_TEST_MESSAGE( "ClientDisconnect has ended" );
 }
@@ -392,12 +394,12 @@ BOOST_AUTO_TEST_CASE (ServerShutdown)
 	boost::this_thread::sleep(boost::posix_time::seconds(1));
 	
 	// Should not receive any events since DISCONNECT was sent previously
-	BOOST_REQUIRE(!serverGotConnected);
-	BOOST_REQUIRE(!serverGotDisconnected);
-	BOOST_REQUIRE(!serverGotReceived);
-	BOOST_REQUIRE(!clientGotConnected);
-	BOOST_REQUIRE(!clientGotDisconnected);
-	BOOST_REQUIRE(!clientGotReceived);
+	BOOST_CHECK(!serverGotConnected);
+	BOOST_CHECK(!serverGotDisconnected);
+	BOOST_CHECK(!serverGotReceived);
+	BOOST_CHECK(!clientGotConnected);
+	BOOST_CHECK(!clientGotDisconnected);
+	BOOST_CHECK(!clientGotReceived);
 
 	BOOST_TEST_MESSAGE( "ServerShutdown has ended" );
 }
