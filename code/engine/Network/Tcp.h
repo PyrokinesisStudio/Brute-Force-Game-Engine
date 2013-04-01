@@ -31,8 +31,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/array.hpp>
 #include <boost/asio/buffer.hpp>
+#include <boost/asio/ip/tcp.hpp>
 
 #include <Network/Checksum.h>
+#include <Network/Enums.hh>
 
 namespace BFG {
 namespace Network {
@@ -75,10 +77,16 @@ class TcpHeaderFactory;
 
 struct Tcp
 {
-	static const std::size_t MAX_PACKET_SIZE_BYTES = 2000;
+	static const std::size_t       MAX_PACKET_SIZE_BYTES = 2000;
+	static const ID::NetworkAction EVENT_ID_FOR_SENDING  = ID::NE_SEND;
+
+	//! Max size a packet can expand to before it will be flushed (Q3: rate)
+	static const u32 MAX_BYTE_RATE = 100000;
 
 	typedef NetworkEventHeader HeaderT;
 	typedef TcpHeaderFactory HeaderFactoryT;
+	
+	typedef boost::asio::ip::tcp::socket SocketT;
 
 	static std::size_t headerSize()
 	{

@@ -30,6 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/Logger.h>
 #include <Network/Event.h>
 #include <Network/TcpModule.h>
+#include <Network/UdpModule.h>
 
 namespace BFG {
 namespace Network{
@@ -38,6 +39,7 @@ Client::Client(EventLoop* loop) :
 mLoop(loop),
 mLocalTime(new Clock::StopWatch(Clock::milliSecond))
 {
+	dbglog << "Client::Client()";
 	mLocalTime->start();
 
 	mResolver.reset(new tcp::resolver(mService));
@@ -53,12 +55,12 @@ mLocalTime(new Clock::StopWatch(Clock::milliSecond))
 
 Client::~Client()
 {
-	dbglog << "Client::~Client";
+	dbglog << "Client::~Client()";
 	stop();
+
 	mLoop->disconnect(ID::NE_CONNECT, this);
 	mLoop->disconnect(ID::NE_DISCONNECT, this);
 	mLoop->disconnect(ID::NE_SHUTDOWN, this);
-
 	mLoop->disconnect(ID::NE_RECEIVED, this);
 
 	if (mResolver)
@@ -70,13 +72,12 @@ Client::~Client()
 void Client::stop()
 {
 	dbglog << "Client::stop";
+	
+	mUdpModule.reset();
+	mTcpModule.reset();
+	
 	mService.stop();
 	mThread.join();
-
-	if (mTcpModule && mTcpModule->socket()->is_open())
-		mTcpModule->socket()->close();	
-
-	mTcpModule.reset();
 }
 
 void Client::startConnecting(const std::string& ip, const std::string& port)
@@ -91,7 +92,7 @@ void Client::readHandshake()
 	dbglog << "Client::readHandshake";
 	boost::asio::async_read
 	(
-		*(mTcpModule->socket()), 
+		mTcpModule->socket(),
 		boost::asio::buffer(mHandshakeBuffer),
 		boost::asio::transfer_exactly(Handshake::SerializationT::size()),
 		bind(&Client::readHandshakeHandler, this, _1, _2)
@@ -101,9 +102,9 @@ void Client::readHandshake()
 void Client::resolveHandler(const error_code &ec, tcp::resolver::iterator it)
 { 
 	dbglog << "TcpModule::resolveHandler";
-	if (!ec) 
+	if (!ec)
 	{
-		mTcpModule->socket()->async_connect(*it, bind(&Client::connectHandler, this, _1)); 
+		mTcpModule->socket().async_connect(*it, bind(&Client::connectHandler, this, _1));
 	}
 	else
 		printErrorCode(ec, "resolveHandler");
@@ -120,6 +121,13 @@ void Client::connectHandler(const error_code &ec)
 	{
 		printErrorCode(ec, "connectHandler");
 	}
+}
+
+//! \brief Helper function for UDP endpoint identification on client-side.
+//! \return Always 0
+static PeerIdT peerIdZero(const UdpModule::EndpointT&)
+{
+	return 0;
 }
 
 void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
@@ -143,7 +151,8 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 				<< "). Disconnecting Peer.";
 
 			// Peer sends crap? Bye bye!
-			mTcpModule->socket().reset();
+			// TODO: Notify Application
+			mTcpModule->socket().close();
 			return;
 		}
 		else
@@ -152,6 +161,14 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 			mPeerId = hs.mPeerId;
 
 			mTcpModule->startReading();
+
+			boost::asio::ip::tcp::endpoint tcpServerEp = mTcpModule->socket().remote_endpoint();
+			boost::asio::ip::udp::endpoint udpServerEp(tcpServerEp.address(), tcpServerEp.port());
+			boost::asio::ip::udp::endpoint udpLocalEp(udp::endpoint(udp::v4(), RANDOM_PORT));
+			mUdpModule.reset(new UdpModule(mLoop, mService, mLocalTime, udpLocalEp, udpServerEp, peerIdZero));
+
+			mUdpModule->useServerEndpointAsRemoteEndpoint();
+			mUdpModule->startReading();
 
 			Emitter e(mLoop);
 			e.emit<ControlEvent>(ID::NE_CONNECTED, mPeerId);

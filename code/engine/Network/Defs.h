@@ -48,7 +48,6 @@ namespace Network{
 typedef GameHandle PeerIdT;
 typedef u32        TimestampT;
 
-const u32 PACKET_MTU(2000); // max size a packet can expand to before it will be flushed (Q3: rate)
 const u32 FLUSH_WAIT_TIME(20); // ms before automatic flush (Q3: 1000/cl_update_rate), "natural flush time" depends on bandwidth
 const u32 TIME_SYNC_WAIT_TIME(10000); // ms between time synchronization
 const u32 RANDOM_PORT(0); // passed to Boost.Asio as port number in order to open a random port

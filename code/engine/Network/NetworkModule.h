@@ -50,14 +50,13 @@ namespace Network {
 using namespace boost::asio::ip;
 using namespace boost::system;
 
-//! A NetworkModule is used to communicate over the network. The data can be send using the NE_SEND event. 
+//! A NetworkModule is used to communicate over the network.
+//! The data can be send using one of the SEND events.
 //! Received data is send via the NE_RECEIVED event.
 template <typename ProtocolT>
 class NetworkModule : public Emitter, public boost::enable_shared_from_this<NetworkModule<ProtocolT> >
 {
 public:
-	typedef tcp::socket SocketT;
-	
 	//! \brief Constructor
 	//! \param[in] loop Eventloop the NetworkModule is connected to 
 	//! \param[in] service Asio service for the network connection
@@ -70,10 +69,9 @@ public:
 	BFG::Emitter(loop_),
 	mPeerId(peerId),
 	mLocalTime(localTime),
-	mPool(PACKET_MTU*2),
+	mPool(ProtocolT::MAX_BYTE_RATE),
 	mSendPacket(createBuffer(mPool), mHeaderFactory)
 	{
-		mSocket.reset(new SocketT(service));
 		mFlushTimer.reset(new boost::asio::deadline_timer(service));
 	}
 
@@ -83,27 +81,20 @@ public:
 		mFlushTimer.reset();
 
 		dbglog << "NetworkModule::~NetworkModule (" << this << ")";
-		loop()->disconnect(ID::NE_SEND, this);
-
-		mSocket.reset();
+		loop()->disconnect(ProtocolT::EVENT_ID_FOR_SENDING, this);
 	}
 	
-	//! \brief Returns the socket of the connection
-	//! \return tcp::socket of the connection
-	boost::shared_ptr<SocketT> socket()
-	{
-		return mSocket;
-	}
-
 	//! \brief The connection is ready to receive data
 	void startReading()
 	{
 		dbglog << "NetworkModule::startReading";
 		setFlushTimer(FLUSH_WAIT_TIME);
 
-		loop()->connect(ID::NE_SEND, this, &NetworkModule<ProtocolT>::dataPacketEventHandler);
+		// TODO: Document why both connects are necessary
+		loop()->connect(ProtocolT::EVENT_ID_FOR_SENDING, this, &NetworkModule<ProtocolT>::dataPacketEventHandler);
+
 		if (mPeerId)
-			loop()->connect(ID::NE_SEND, this, &NetworkModule<ProtocolT>::dataPacketEventHandler, mPeerId);
+			loop()->connect(ProtocolT::EVENT_ID_FOR_SENDING, this, &NetworkModule<ProtocolT>::dataPacketEventHandler, mPeerId);
 
 		// TODO: Call from Client or Server
 //		setTcpDelay(false);
@@ -155,6 +146,21 @@ protected:
 		// Cleanup
 		mSendPacket.clear(createBuffer(mPool));
 	}
+	
+	//! \brief Handler for the writing of data
+	//! \param[in] ec Error code of boost::asio
+	//! \param[in] bytesTransferred size of the data written
+	void writeHandler(const error_code &ec,
+	                  std::size_t bytesTransferred,
+	                  boost::asio::const_buffer buffer)
+	{
+		dbglog << "NetworkModule::writeHandler: " << bytesTransferred << " Bytes written";
+		if (ec)
+		{
+			printErrorCode(ec, "writeHandler");
+		}
+		mPool.free(const_cast<char*>(boost::asio::buffer_cast<const char*>(buffer)));
+	} 
 
 	//! \brief Logs an error_code
 	//! \param[in] ec Error code to log
@@ -167,7 +173,6 @@ protected:
 	typedef typename ProtocolT::HeaderT HeaderT;
 	typedef typename HeaderT::SerializationT HeaderSerializationT;
 	
-	// TODO: Make const
 	const PeerIdT mPeerId;
 
 	boost::shared_ptr<Clock::StopWatch> mLocalTime;
@@ -184,21 +189,6 @@ private:
 		mFlushTimer->async_wait(boost::bind(&NetworkModule<ProtocolT>::flushTimerHandler, this->shared_from_this(), _1));
 	}
 
-	//! \brief Perform an asynchronous write of data to the connected network module
-	//! \param[in] packet data to write over the net
-	//! \param[in] size Size of the data set
-	void write(boost::asio::const_buffer packet, std::size_t size)
-	{
-		dbglog << "NetworkModule::write: " << size << " Bytes";
-
-		boost::asio::async_write
-		(
-			*mSocket,
-			boost::asio::buffer(packet, size),
-			boost::bind(&NetworkModule<ProtocolT>::writeHandler, this->shared_from_this(), _1, _2, packet)
-		);
-	}
-	
 	//! \brief Handler for the flush timer
 	//! \param[in] ec Error code of boost asio
 	void flushTimerHandler(const error_code &ec)
@@ -218,29 +208,13 @@ private:
 		}
 	}
 
-
-	//! \brief Handler for the writing of data
-	//! \param[in] ec Error code of boost::asio
-	//! \param[in] bytesTransferred size of the data written
-	void writeHandler(const error_code &ec,
-	                  std::size_t bytesTransferred,
-	                  boost::asio::const_buffer buffer)
-	{
-		dbglog << "NetworkModule::writeHandler: " << bytesTransferred << " Bytes written";
-		if (ec)
-		{
-			printErrorCode(ec, "writeHandler");
-		}
-		mPool.free(const_cast<char*>(boost::asio::buffer_cast<const char*>(buffer)));
-	} 
-
 	//! \brief Handler for DataPacketEvents
 	//! \param[in] e The DataPacketEvent to distribute
 	void dataPacketEventHandler(DataPacketEvent* e)
 	{
 		switch(e->id())
 		{
-		case ID::NE_SEND:
+		case ProtocolT::EVENT_ID_FOR_SENDING:
 			onSend(e->getData());
 			break;
 		default:
@@ -253,15 +227,20 @@ private:
 	//! \brief Start asynchronous reading from the connected network module
 	virtual void read() = 0;
 	
+	//! \brief Perform an asynchronous write of data to the connected network module
+	//! \param[in] packet data to write over the net
+	//! \param[in] size Size of the data set
+	virtual void write(boost::asio::const_buffer packet, std::size_t size) = 0;
+	
 	//! \brief Received data from the net is packed as a corresponding event 
-	virtual void onReceive(OPacket<ProtocolT>& oPacket) = 0;
+	virtual void onReceive(OPacket<ProtocolT>& oPacket, PeerIdT peerId) = 0;
 
 	boost::pool<> mPool;
 
 	typename ProtocolT::HeaderFactoryT mHeaderFactory;
+	
 	IPacket<ProtocolT> mSendPacket;
 
-	boost::shared_ptr<SocketT>                     mSocket;
 	boost::shared_ptr<boost::asio::deadline_timer> mFlushTimer;
 	boost::mutex                                   mFlushMutex;
 };

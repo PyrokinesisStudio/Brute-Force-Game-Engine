@@ -25,8 +25,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <Network/UdpModule.h>
-#include <boost/asio.hpp>
+
+#include <boost/asio/buffer.hpp>
+
 #include <Base/Logger.h>
+#include <Core/Utils.h>
+
 #include <Network/CreateBuffer.h>
 #include <Network/Defs.h>
 #include <Network/Packet.h>
@@ -36,97 +40,137 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Network {
 
-using namespace boost::asio;
-using namespace boost::asio::ip;
+using namespace boost;
 
-UdpModule::UdpModule(EventLoop* loop, io_service& service, u16 port) :
-Emitter(loop),
-mSocket(service, udp::endpoint(udp::v4(), port)),
-mPool(UDP_PAYLOAD_SIZE)
+UdpModule::UdpModule(EventLoop* loop_,
+                     asio::io_service& service,
+                     shared_ptr<Clock::StopWatch> localTime,
+                     const asio::ip::udp::endpoint& localEndpoint,
+                     const asio::ip::udp::endpoint& serverEndpoint,
+                     EndpointIdentificatorT endpointIdentificator) :
+NetworkModule<Udp>(loop_, service, generateNetworkHandle(), localTime),
+mSocket(service, localEndpoint),
+mServerEndpoint(serverEndpoint),
+mEndpointIdentificator(endpointIdentificator),
+mLastRemoteSequenceNumber(0)
 {
-	read();
-	errlog << "UDP";
+	dbglog << "Starting UdpModule(" << this << ")" << " with:";
+	dbglog << "\tLocal Endpoint: " << localEndpoint;
+	dbglog << "\tServer Endpoint: " << serverEndpoint;
+	
+	if (localEndpoint == serverEndpoint)
+		dbglog << "\tThis is a Server UdpModule";
+	else
+		dbglog << "\tThis is a Client UdpModule";
 }
 
 UdpModule::~UdpModule()
 {
-	errlog << "~UDP";
+	dbglog << "~UdpModule(" << this << ")";
+	mSocket.close();
+}
+
+void UdpModule::useServerEndpointAsRemoteEndpoint()
+{
+	mRemoteEndpoint = mServerEndpoint;
 }
 
 void UdpModule::read()
 {
-	errlog << "UDP: read() from: " << mRemoteEndpoint;
-	char* buf = static_cast<char*>(mPool.malloc());
-	
-	mSocket.async_receive_from
+	dbglog << "UDP: read()";
+	socket().async_receive_from
 	(
-		buffer(buf, UDP_PAYLOAD_SIZE),
+		boost::asio::buffer(mReadBuffer),
 		mRemoteEndpoint,
-		boost::bind(
+		bind
+		(
 			&UdpModule::readHandler,
 			this,
 			_1,
-			_2,
-			buf
+			_2
 		)
 	);
+	dbglog << "UDP: ~read()";
 }
 
-void UdpModule::readHandler(const boost::system::error_code& ec, std::size_t bytesTransferred, char* buffer)
+void UdpModule::readHandler(const system::error_code& ec, std::size_t bytesTransferred)
 {
-	errlog << "UDP: readHandler() ec: " << ec;
-	errlog << "UDP: readHandler() got " << bytesTransferred << " bytes: " << std::string(buffer, bytesTransferred);
-	mPool.free(buffer);
-
-	// TEST PACKET
-	char* sendBuffer = static_cast<char*>(mPool.malloc());
-	Udp::HeaderFactoryT uhf;
-	IPacket<Udp> p(createBuffer(mPool), uhf);
+	dbglog << "UdpModule::readHandler() ec: " << ec;
+	dbglog << "UdpModule::readHandler() got " << bytesTransferred << " bytes: " << std::string(mReadBuffer.data(), bytesTransferred);
 	
-	// TEST DATA
-	const char* data = "Hallo?";
-	Segment segment;
-	segment.appEventId = 12224;
-	segment.destinationId = 1234567L;
-	segment.senderId = 7654321L;
-	segment.dataSize = strlen(data);
+	Udp::HeaderT header;
+	Udp::HeaderT::SerializationT headerBuffer;
+	std::copy(mReadBuffer.begin(), mReadBuffer.begin() + Udp::headerSize(), headerBuffer.data());
 
-	// onSend()
-	p.add(segment, data);
+	header.deserialize(headerBuffer);
 	
-	write(p.full(), p.size());
+	dbglog << "\tSequence Number: " << header.mSequenceNumber;
+	if (header.mSequenceNumber > mLastRemoteSequenceNumber)
+	{
+		mLastRemoteSequenceNumber = header.mSequenceNumber;
+		
+		// TODO: Use timestamp
+		dbglog << "\tTimestamp: " << header.mTimestamp;
+
+		// TODO: Results from this query can be cached and speeded up
+		PeerIdT sender = mEndpointIdentificator(mRemoteEndpoint);
+		dbglog << "\tSender " << mRemoteEndpoint << " was identified as " << sender;
+		
+		asio::const_buffer dataBuffer = asio::buffer(mReadBuffer, bytesTransferred) + Udp::headerSize();
+		OPacket<Udp> oPacket(dataBuffer);
+		onReceive(oPacket, sender);
+	}
+	else
+	{
+		warnlog << "Discarding old or duplicated UDP packet #" << header.mSequenceNumber;
+	}
+	
+	read();
 }
 
-void UdpModule::write(boost::asio::const_buffer buf, std::size_t bytesTransferred)
+void UdpModule::onReceive(OPacket<Udp>& oPacket, PeerIdT peerId)
 {
-	errlog << "UDP: read()";
-//	char* buf = static_cast<char*>(mPool.malloc());
+	dbglog << "UdpModule::onReceive";
+
+	// TODO: Implement these
+	s32 mTimestampOffset = 0;
+	Rtt<s32, 10> mRtt;
 	
-	size_t SIZE = bytesTransferred;
-	errlog << "write() SIZE: " << SIZE;
-//	memset(buf, 0, UDP_PAYLOAD_SIZE);
-//	strncpy(buf, "Hallo!", SIZE);
+	PayloadFactory payloadFactory(mTimestampOffset, mLocalTime, mRtt);
 	
-	mSocket.async_send_to
+	while (oPacket.hasNextPayload())
+	{
+		DataPayload payload = oPacket.nextPayload(payloadFactory);
+		
+		try
+		{
+			dbglog << "UdpModule::onReceive: Emitting NE_RECEIVED to: " << payload.mAppDestination << " from: " << peerId;
+			emit<DataPacketEvent>(ID::NE_RECEIVED, payload, payload.mAppDestination, peerId);
+		}
+		catch (std::exception& ex)
+		{
+			warnlog << ex.what();
+		}
+	}
+}
+
+void UdpModule::write(asio::const_buffer packet, std::size_t size)
+{
+	dbglog << "UdpModule::write() bytes: " << size;
+
+	socket().async_send_to
 	(
-		buffer(buf, SIZE),
+		asio::buffer(packet),
 		mRemoteEndpoint,
-		boost::bind(
+		bind
+		(
 			&UdpModule::writeHandler,
 			this,
 			_1,
 			_2,
-			buf
+			packet
 		)
 	);
-}
-
-void UdpModule::writeHandler(const boost::system::error_code &ec, std::size_t bytesTransferred, boost::asio::const_buffer buffer)
-{
-	errlog << "UDP: writeHandler() ec: " << ec;
-	errlog << "UDP: writeHandler() sent " << bytesTransferred;
-	mPool.free(const_cast<char*>(boost::asio::buffer_cast<const char*>(buffer)));
-	read();
 }
 
 } // namespace Network

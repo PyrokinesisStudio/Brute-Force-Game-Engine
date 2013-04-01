@@ -59,6 +59,7 @@ public:
 	//! \param[in] loop EventLoop of the EventSystem
 	Server(EventLoop* loop);
 	~Server();
+
 private:
 	typedef std::map<PeerIdT, boost::shared_ptr<TcpModule> > ModulesMap;
 
@@ -99,6 +100,8 @@ private:
 	//! \param[in] ec Error code to log
 	//! \param[in] method Name of the method that received the error
 	void printErrorCode(const error_code &ec, const std::string& method);
+	
+	PeerIdT identifyUdpEndpoint(const boost::asio::ip::udp::endpoint&) const;
 	
 	EventLoop* mLoop;
 

@@ -26,6 +26,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Network/Server.h>
 
+#include <boost/foreach.hpp>
+
 #include <Core/Utils.h>
 
 #include <Network/Event.h>
@@ -42,6 +44,7 @@ Server::Server(EventLoop* loop) :
 mLoop(loop),
 mLocalTime(new Clock::StopWatch(Clock::milliSecond))
 {
+	dbglog << "Server::Server()";
 
 	mLocalTime->start();
 
@@ -52,7 +55,7 @@ mLocalTime(new Clock::StopWatch(Clock::milliSecond))
 
 Server::~Server()
 {
-	dbglog << "Server::~Server";
+	dbglog << "Server::~Server()";
 	stop();
 	mLoop->disconnect(ID::NE_LISTEN, this);
 	mLoop->disconnect(ID::NE_DISCONNECT, this);
@@ -65,16 +68,9 @@ void Server::stop()
 {
 	dbglog << "Server::stop";
 
-	if (!mTcpModules.empty())
-	{
-		for(ModulesMap::iterator it = mTcpModules.begin(); it != mTcpModules.end(); ++it)
-		{
-			if (it->second && it->second->socket()->is_open())
-				it->second->socket()->close();
-		}
-
-		mTcpModules.clear();
-	}
+	mTcpModules.clear();
+	mUdpModule.reset();
+	
 	mService.stop();
 	mThread.join();
 }
@@ -88,7 +84,7 @@ void Server::startAccepting()
 	mTcpModules.insert(std::make_pair(peerId, netModule));
 
 	dbglog << "Created Networkmodule(" << netModule << ")";
-	mAcceptor->async_accept(*netModule->socket(), bind(&Server::acceptHandler, this, _1, peerId));
+	mAcceptor->async_accept(netModule->socket(), bind(&Server::acceptHandler, this, _1, peerId));
 }
 
 void Server::sendHandshake(PeerIdT peerId)
@@ -102,7 +98,7 @@ void Server::sendHandshake(PeerIdT peerId)
 	
 	boost::asio::async_write
 	(
-		*(mTcpModules[peerId]->socket()),
+		mTcpModules[peerId]->socket(),
 		boost::asio::buffer(mHandshakeBuffer.data(), Handshake::SerializationT::size()),
 		boost::bind(&Server::writeHandshakeHandler, this, _1, _2, peerId)
 	);
@@ -111,9 +107,9 @@ void Server::sendHandshake(PeerIdT peerId)
 void Server::acceptHandler(const boost::system::error_code &ec, PeerIdT peerId)
 { 
 	dbglog << "Client connected: "
-	       << mTcpModules[peerId]->socket()->remote_endpoint().address()
+	       << mTcpModules[peerId]->socket().remote_endpoint().address()
 	       << ":" 
-	       << mTcpModules[peerId]->socket()->remote_endpoint().port();
+	       << mTcpModules[peerId]->socket().remote_endpoint().port();
 	if (!ec) 
 	{ 
 		sendHandshake(peerId);
@@ -136,7 +132,7 @@ void Server::writeHandshakeHandler(const error_code &ec, std::size_t bytesTransf
 
 void Server::controlEventHandler(ControlEvent* e)
 {
-	switch(e->getId())
+	switch(e->id())
 	{
 	case ID::NE_LISTEN:
 		onListen(boost::get<u16>(e->getData()));
@@ -149,7 +145,7 @@ void Server::controlEventHandler(ControlEvent* e)
 		break;
 	default:
 		warnlog << "Server: Can't handle event with ID: "
-		        << e->getId();
+		        << e->id();
 		break;
 	}
 }
@@ -158,17 +154,26 @@ void Server::onListen(const u16 port)
 {
 	if (!mAcceptor)
 	{
-		mAcceptor.reset(new tcp::acceptor(mService, tcp::endpoint(tcp::v4(), port)));
-		dbglog << "Server started to listen to port " << port;
+		dbglog << "Server starting to listen on port " << port;
+
+		// TCP
+		boost::asio::ip::tcp::endpoint tcpServerEp = tcp::endpoint(tcp::v4(), port);
+		mAcceptor.reset(new tcp::acceptor(mService, tcpServerEp));
 		startAccepting();
-		mThread = boost::thread(boost::bind(&boost::asio::io_service::run, &mService));
 		
 		// UDP
-		mUdpModule.reset(new UdpModule(mLoop, mService, port));
+		boost::asio::ip::udp::endpoint udpServerEp(tcpServerEp.address(), tcpServerEp.port());
+		boost::asio::ip::udp::endpoint udpLocalEp = udpServerEp;
+		UdpModule::EndpointIdentificatorT identificator = boost::bind(&Server::identifyUdpEndpoint, this, _1);
+		mUdpModule.reset(new UdpModule(mLoop, mService, mLocalTime, udpLocalEp, udpServerEp, identificator));
+		mUdpModule->startReading();
+
+		// Asio Loop
+		mThread = boost::thread(boost::bind(&boost::asio::io_service::run, &mService));
 	}
 	else
 	{
-		warnlog << "Server is allready listening!";
+		warnlog << "Server is already listening!";
 	}
 }
 
@@ -189,7 +194,17 @@ void Server::printErrorCode(const error_code &ec, const std::string& method)
 	warnlog << "[" << method << "] Error Code: " << ec.value() << ", message: " << ec.message();
 }
 
-
+PeerIdT Server::identifyUdpEndpoint(const boost::asio::ip::udp::endpoint& remoteEndpoint) const
+{
+	const boost::asio::ip::address address = remoteEndpoint.address();
+	BOOST_FOREACH(ModulesMap::value_type pair, mTcpModules)
+	{
+		if (pair.second->socket().remote_endpoint().address() == address)
+			return pair.first;
+	}
+	// TODO: What to do with unknown peer ids?
+	return 0xCDCDCDCD;
+}
 
 } // namespace Network
 } // namespace BFG

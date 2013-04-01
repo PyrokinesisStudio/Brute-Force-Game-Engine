@@ -27,6 +27,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_NETWORK_UDP_H
 #define BFG_NETWORK_UDP_H
 
+#include <boost/asio/ip/udp.hpp>
+
+#include <Network/Enums.hh>
 #include <Network/UnreliableHeader.h>
 
 namespace BFG {
@@ -37,24 +40,41 @@ class UdpHeaderFactory
 	typedef UnreliableHeader HeaderT;
 
 public:
+	UdpHeaderFactory() :
+	mSequenceNumber(0)
+	{}
+	
 	//! Creates an UnreliableHeader in a provided buffer.
 	//! \param[in] buffer The buffer to write the header data in
-	static UnreliableHeader create(boost::asio::const_buffer, std::size_t)
+	UnreliableHeader create(boost::asio::const_buffer, std::size_t) const
 	{
+		++mSequenceNumber;
+		
 		// Make header
 		UnreliableHeader header;
-		header.mSequenceNumber = 5;
-		header.mTimestamp = 0.9f;
+		header.mSequenceNumber = mSequenceNumber;
+		
+		// TODO: Create Timestamp
+		header.mTimestamp = 0.0f;
 		return header;
 	}
+	
+private:
+	mutable BFG::u32 mSequenceNumber;
 };
 
 struct Udp
 {
 	static const std::size_t MAX_PACKET_SIZE_BYTES = 1400;
+	static const ID::NetworkAction EVENT_ID_FOR_SENDING = ID::NE_SEND_UDP;
 
+	//! Max size a packet can expand to before it will be flushed (Q3: rate)
+	static const u32 MAX_BYTE_RATE = 100000;
+	
 	typedef UnreliableHeader HeaderT;
 	typedef UdpHeaderFactory HeaderFactoryT;
+	
+	typedef boost::asio::ip::udp::socket SocketT;
 	
 	static std::size_t headerSize()
 	{

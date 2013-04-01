@@ -35,11 +35,17 @@ TcpModule::TcpModule(EventLoop* loop_,
                      boost::shared_ptr<Clock::StopWatch> localTime) :
 NetworkModule<Tcp>(loop_, service, peerId, localTime),
 mRoundTripTimer(Clock::milliSecond),
-mTimestampOffset(0)
-{}
+mTimestampOffset(0),
+mSocket(service)
+{
+	dbglog << "Creating TcpModule(" << this << ")";
+}
 
 TcpModule::~TcpModule()
-{}
+{
+	dbglog << "Destroying TcpModule(" << this << ")";
+	mSocket.close();
+}
 
 void TcpModule::sendTimesyncRequest()
 {
@@ -51,11 +57,10 @@ void TcpModule::sendTimesyncRequest()
 
 void TcpModule::read()
 {
-	
 	dbglog << "TcpModule::read (" << mPeerId << ")";
 	boost::asio::async_read
 	(
-		*socket(),
+		socket(),
 		boost::asio::buffer(mReadHeaderBuffer),
 		boost::asio::transfer_exactly(HeaderSerializationT::size()),
 		bind(&TcpModule::readHeaderHandler, boost::shared_static_cast<TcpModule>(shared_from_this()), _1, _2)
@@ -76,7 +81,7 @@ void TcpModule::readHeaderHandler(const error_code &ec, std::size_t bytesTransfe
 			warnlog << "readHeaderHandler: Got empty Header! Disconnecting Client.";
 
 			// Peer sends crap? Bye bye!
-			socket().reset();
+			socket().close();
 			return;
 		}
 
@@ -93,14 +98,14 @@ void TcpModule::readHeaderHandler(const error_code &ec, std::size_t bytesTransfe
 			        << "). Disconnecting Peer.";
 
 			// Peer sends crap? Bye bye!
-			socket().reset();
+			socket().close();
 			return;
 		}
 
 		dbglog << "PacketSize: " << header.mDataLength;
 		boost::asio::async_read
 		(
-			*socket(),
+			socket(),
 			boost::asio::buffer(mReadBuffer),
 			boost::asio::transfer_exactly(header.mDataLength),
 			bind(&TcpModule::readDataHandler, boost::shared_static_cast<TcpModule>(shared_from_this()), _1, _2, header.mDataChecksum)
@@ -135,12 +140,12 @@ void TcpModule::readDataHandler(const error_code &ec, std::size_t bytesTransferr
 			        << "). Disconnecting Peer.";
 
 			// Peer sends crap? Bye bye!
-			socket().reset();
+			socket().close();
 			return;
 		}
 
 		OPacket<Tcp> oPacket(boost::asio::buffer(mReadBuffer, bytesTransferred));
-		onReceive(oPacket);
+		onReceive(oPacket, mPeerId);
 		read();
 	}
 	else if (ec.value() == boost::asio::error::connection_reset)
@@ -155,7 +160,7 @@ void TcpModule::readDataHandler(const error_code &ec, std::size_t bytesTransferr
 	}
 }
 
-void TcpModule::onReceive(OPacket<Tcp>& oPacket)
+void TcpModule::onReceive(OPacket<Tcp>& oPacket, PeerIdT peerId)
 {
 	dbglog << "TcpModule::onReceive";
 
@@ -179,14 +184,26 @@ void TcpModule::onReceive(OPacket<Tcp>& oPacket)
 		
 		try 
 		{
-			dbglog << "TcpModule::onReceive: Emitting NE_RECEIVED to: " << payload.mAppDestination << " from: " << mPeerId;
-			emit<DataPacketEvent>(ID::NE_RECEIVED, payload, payload.mAppDestination, mPeerId);
+			dbglog << "TcpModule::onReceive: Emitting NE_RECEIVED to: " << payload.mAppDestination << " from: " << peerId;
+			emit<DataPacketEvent>(ID::NE_RECEIVED, payload, payload.mAppDestination, peerId);
 		}
 		catch (std::exception& ex)
 		{
 			warnlog << ex.what();
 		}
 	}
+}
+
+void TcpModule::write(boost::asio::const_buffer packet, std::size_t size)
+{
+	dbglog << "TcpModule::write: " << size << " Bytes";
+
+	boost::asio::async_write
+	(
+		socket(),
+		boost::asio::buffer(packet, size),
+		boost::bind(&TcpModule::writeHandler, boost::shared_static_cast<TcpModule>(shared_from_this()), _1, _2, packet)
+	);
 }
 
 void TcpModule::queueTimeCriticalPacket(DataPayload& payload)

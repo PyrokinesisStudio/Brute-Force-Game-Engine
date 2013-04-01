@@ -27,34 +27,64 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_NETWORKMODULE_H
 #define BFG_NETWORKMODULE_H
 
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/udp.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/pool/pool.hpp>
+#include <boost/function.hpp>
+#include <boost/pool/poolfwd.hpp>
 
-#include <Core/Types.h>
-#include <EventSystem/Emitter.h>
-#include <Network/Event_fwd.h>
+#include <Network/NetworkModule.h>
+#include <Network/Udp.h>
 
 namespace BFG {
 namespace Network {
 
-class UdpModule : public Emitter, public boost::enable_shared_from_this<UdpModule>
+class UdpModule : public NetworkModule<Udp>
 {
 public:
-	UdpModule(EventLoop* loop, boost::asio::io_service& service, u16 port);
-	~UdpModule();
+	typedef boost::asio::ip::udp::endpoint EndpointT;
+	typedef boost::function<PeerIdT(const EndpointT&)> EndpointIdentificatorT;
+	
+	UdpModule(EventLoop* loop_,
+                  boost::asio::io_service& service,
+                  boost::shared_ptr<Clock::StopWatch> localTime,
+                  const EndpointT& localEndpoint,
+                  const EndpointT& serverEndpoint,
+	          EndpointIdentificatorT endpointIdentificator);
+	
+	virtual ~UdpModule();
+	
+	//! \brief Returns the socket of the connection
+	//! \return socket of the connection
+	Udp::SocketT& socket()
+	{
+		return mSocket;
+	}
+
+	void useServerEndpointAsRemoteEndpoint();
 	
 private:
-	void read();
-	void readHandler(const boost::system::error_code &ec, std::size_t bytesTransferred, char* buffer);
+	virtual void read();
+
+	void readHandler(const boost::system::error_code &ec, std::size_t bytesTransferred);
 	
-	void write(boost::asio::const_buffer buffer, std::size_t bytesTransferred);
-	void writeHandler(const boost::system::error_code& ec, std::size_t bytesTransferred, boost::asio::const_buffer buffer);
+	//! \brief Received data from the net is packed as a corresponding event 
+	//! \param[in] data data array received from the network
+	//! \param[in] size size of the data received
+	void onReceive(OPacket<Udp>& oPacket, PeerIdT peerId);
 	
-	boost::asio::ip::udp::socket mSocket;
+	//! \brief Perform an asynchronous write of data to the connected network module
+	//! \param[in] packet data to write over the net
+	//! \param[in] size Size of the data set
+	virtual void write(boost::asio::const_buffer packet, std::size_t size);
+	
+	// TODO: Use CreateBuffer
+	boost::array<char, Udp::MAX_BYTE_RATE> mReadBuffer;
+	
+	Udp::SocketT mSocket;
+	
+	const boost::asio::ip::udp::endpoint mServerEndpoint;
 	boost::asio::ip::udp::endpoint mRemoteEndpoint;
-	boost::pool<> mPool;
+
+	EndpointIdentificatorT mEndpointIdentificator;
+	BFG::u32 mLastRemoteSequenceNumber;
 };
 
 } // namespace Network

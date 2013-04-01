@@ -45,6 +45,7 @@ using namespace boost::asio::ip;
 using namespace boost::system;
 
 class TcpModule;
+class UdpModule;
 
 //! This class represents a network client. It starts the connection to a server 
 //! using a NetworkModule
@@ -128,9 +129,9 @@ private:
 	boost::shared_ptr<boost::asio::deadline_timer> mTimeSyncTimer;
 
 	boost::shared_ptr<TcpModule> mTcpModule;
+	boost::shared_ptr<UdpModule> mUdpModule;
 
 	PeerIdT mPeerId;
-
 };
 
 } // namespace Network

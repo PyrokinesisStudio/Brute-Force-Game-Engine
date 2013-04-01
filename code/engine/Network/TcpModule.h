@@ -58,12 +58,19 @@ public:
 	void setTcpDelay(bool on)
 	{
 		boost::asio::ip::tcp::no_delay oldOption;
-		socket()->get_option(oldOption);
+		socket().get_option(oldOption);
 		boost::asio::ip::tcp::no_delay newOption(!on);
-		socket()->set_option(newOption);
+		socket().set_option(newOption);
 		
 		dbglog << "Set TCP_NODELAY from " << oldOption.value()
 		       << " to " << newOption.value();
+	}
+	
+	//! \brief Returns the socket of the connection
+	//! \return socket of the connection
+	Tcp::SocketT& socket()
+	{
+		return mSocket;
 	}
 	
 private:
@@ -87,8 +94,16 @@ private:
 	//! \brief Received data from the net is packed as a corresponding event 
 	//! \param[in] data data array received from the network
 	//! \param[in] size size of the data received
-	void onReceive(OPacket<Tcp>& oPacket);
+	void onReceive(OPacket<Tcp>& oPacket, PeerIdT peerId);
 
+	// # Writing
+	// ##########
+	
+	//! \brief Perform an asynchronous write of data to the connected network module
+	//! \param[in] packet data to write over the net
+	//! \param[in] size Size of the data set
+	virtual void write(boost::asio::const_buffer packet, std::size_t size);
+	
 	//! \brief Send time criticle data to the connected network module
 	//! Use this function to send packets as fast as possible.
 	//! (e.g. for time synchronization). The payload will be sent almost
@@ -127,7 +142,9 @@ private:
 	HeaderSerializationT mReadHeaderBuffer;
 
 	// TODO: Use CreateBuffer
-	boost::array<char, PACKET_MTU> mReadBuffer;
+	boost::array<char, Tcp::MAX_BYTE_RATE> mReadBuffer;
+	
+	Tcp::SocketT mSocket;
 };
 
 } // namespace Network
