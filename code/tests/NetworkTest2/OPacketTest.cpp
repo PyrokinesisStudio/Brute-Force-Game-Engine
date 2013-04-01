@@ -42,6 +42,45 @@ const std::size_t BIG_BUFFER_SIZE = 8192;
 typedef boost::mpl::list<Tcp, Udp> AllProtocolsT;
 typedef array<BFG::u8, BIG_BUFFER_SIZE> BigBufferT;
 
+BOOST_AUTO_TEST_CASE_TEMPLATE (TestOPacketIncomingBufferSize, ProtocolT, AllProtocolsT)
+{
+	// OPacket works with a buffer which is exactly as long as the length of
+	// the size received data. That is, if we received 423 bytes of data,
+	// the buffer should be of the same size.
+	
+	array<BFG::u8, ProtocolT::MAX_PACKET_SIZE_BYTES + 100>
+		bufferExcedingMaximumPacketSize;
+
+	// A size of an incoming buffer (like 100.000 bytes) which exceeds the
+	// maximum protocol packet size (like 1.400 bytes) thus is an indicator
+	// for a programming error. Also, invalid packet sizes must be handled
+	// before OPacket begins its work. OPacket is be able to detected such
+	// an error.
+	BOOST_CHECK_THROW
+	(
+		OPacket<ProtocolT>(asio::buffer(bufferExcedingMaximumPacketSize)),
+		std::length_error
+	);
+	
+	// Other (allowed) cases:
+	
+	array<BFG::u8, ProtocolT::MAX_PACKET_SIZE_BYTES>
+		bufferWithMaximumPacketSize;
+	array<BFG::u8, ProtocolT::MAX_PACKET_SIZE_BYTES - 10>
+		bufferSmallerThanMaximumPacketSize;
+	
+	BOOST_CHECK_NO_THROW
+	(
+		OPacket<ProtocolT>(asio::buffer(bufferWithMaximumPacketSize))
+	);
+	BOOST_CHECK_NO_THROW
+	(
+		OPacket<ProtocolT>(asio::buffer(bufferSmallerThanMaximumPacketSize))
+	);
+
+	
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE (TestIPacketOPacket, ProtocolT, AllProtocolsT)
 {
 	// First create some test data

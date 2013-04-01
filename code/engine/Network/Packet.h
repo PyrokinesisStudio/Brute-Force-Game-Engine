@@ -169,7 +169,9 @@ public:
 	OPacket(boost::asio::const_buffer buffer) :
 	mBuffer(buffer),
 	mOffset(0)
-	{}
+	{
+		throwIfBufferTooBig();
+	}
 	
 	bool hasNextPayload() const
 	{
@@ -208,6 +210,20 @@ public:
 	}
 	
 private:
+	void throwIfBufferTooBig() const
+	{
+		if (boost::asio::buffer_size(mBuffer) > ProtocolT::MAX_PACKET_SIZE_BYTES)
+		{
+			std::stringstream ss;
+			ss << "Network::IPacket: Buffer size ("
+			   << boost::asio::buffer_size(mBuffer)
+			   << " bytes) too big to be a real packet (which should be "
+			   << ProtocolT::MAX_PACKET_SIZE_BYTES
+			   << " bytes at maximum).";
+			throw std::length_error(ss.str());
+		}
+	}
+	
 	boost::asio::const_buffer mBuffer;
 	
 	std::size_t mOffset;
