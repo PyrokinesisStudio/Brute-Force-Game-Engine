@@ -39,7 +39,7 @@ struct Segment
 	GameHandle destinationId;
 	GameHandle senderId;
 	u32 appEventId;
-	u32 dataSize;
+	u16 dataSize;
 };
 
 } // namespace Network
