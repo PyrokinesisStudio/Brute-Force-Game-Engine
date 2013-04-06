@@ -40,28 +40,28 @@ namespace Network{
 using namespace boost::asio::ip;
 using namespace boost::system;
 
-Server::Server(EventLoop* loop) :
-mLoop(loop),
+Server::Server(EventLoop* loop_) :
+Emitter(loop_),
 mLocalTime(new Clock::StopWatch(Clock::milliSecond))
 {
 	dbglog << "Server::Server()";
 
 	mLocalTime->start();
 
-	mLoop->connect(ID::NE_LISTEN, this, &Server::controlEventHandler);
-	mLoop->connect(ID::NE_DISCONNECT, this, &Server::controlEventHandler);
-	mLoop->connect(ID::NE_SHUTDOWN, this, &Server::controlEventHandler);
+	loop()->connect(ID::NE_LISTEN, this, &Server::controlEventHandler);
+	loop()->connect(ID::NE_DISCONNECT, this, &Server::controlEventHandler);
+	loop()->connect(ID::NE_SHUTDOWN, this, &Server::controlEventHandler);
 }
 
 Server::~Server()
 {
 	dbglog << "Server::~Server()";
 	stop();
-	mLoop->disconnect(ID::NE_LISTEN, this);
-	mLoop->disconnect(ID::NE_DISCONNECT, this);
-	mLoop->disconnect(ID::NE_SHUTDOWN, this);
+	loop()->disconnect(ID::NE_LISTEN, this);
+	loop()->disconnect(ID::NE_DISCONNECT, this);
+	loop()->disconnect(ID::NE_SHUTDOWN, this);
 
-	mLoop->disconnect(ID::NE_RECEIVED, this);
+	loop()->disconnect(ID::NE_RECEIVED, this);
 }
 
 void Server::stop()
@@ -80,7 +80,7 @@ void Server::startAccepting()
 	dbglog << "Server::startAccepting";
 	
 	PeerIdT peerId = generateNetworkHandle();
-	boost::shared_ptr<TcpModule> netModule(new TcpModule(mLoop, mService, peerId, mLocalTime));
+	boost::shared_ptr<TcpModule> netModule(new TcpModule(loop(), mService, peerId, mLocalTime));
 	mTcpModules.insert(std::make_pair(peerId, netModule));
 
 	dbglog << "Created Networkmodule(" << netModule << ")";
@@ -126,8 +126,7 @@ void Server::writeHandshakeHandler(const error_code &ec, std::size_t bytesTransf
 	dbglog << "Server: peer ID was sent";
 	mTcpModules[peerId]->startReading();
 
-	Emitter e(mLoop);
-	e.emit<ControlEvent>(ID::NE_CONNECTED, peerId);
+	emit<ControlEvent>(ID::NE_CONNECTED, peerId);
 }
 
 void Server::controlEventHandler(ControlEvent* e)
@@ -165,7 +164,7 @@ void Server::onListen(const u16 port)
 		boost::asio::ip::udp::endpoint udpServerEp(tcpServerEp.address(), tcpServerEp.port());
 		boost::asio::ip::udp::endpoint udpLocalEp = udpServerEp;
 		UdpModule::EndpointIdentificatorT identificator = boost::bind(&Server::identifyUdpEndpoint, this, _1);
-		mUdpModule.reset(new UdpModule(mLoop, mService, mLocalTime, udpLocalEp, udpServerEp, identificator));
+		mUdpModule.reset(new UdpModule(loop(), mService, mLocalTime, udpLocalEp, udpServerEp, identificator));
 		mUdpModule->startReading();
 
 		// Asio Loop
@@ -184,8 +183,7 @@ void Server::onDisconnect(const PeerIdT& peerId)
 	{
 		mTcpModules[peerId].reset();
 		mTcpModules.erase(it);
-		Emitter e(mLoop);
-		e.emit<ControlEvent>(ID::NE_DISCONNECTED, peerId);
+		emit<ControlEvent>(ID::NE_DISCONNECTED, peerId);
 	}
 }
 

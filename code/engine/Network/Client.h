@@ -32,6 +32,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Base/EntryPoint.h>
 #include <Core/ClockUtils.h>
+#include <EventSystem/Emitter.h>
 #include <Network/Defs.h>
 #include <Network/Event_fwd.h>
 #include <Network/Handshake.h>
@@ -39,7 +40,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 class EventLoop;
 
 namespace BFG {
-namespace Network{
+namespace Network {
 
 using namespace boost::asio::ip;
 using namespace boost::system;
@@ -49,7 +50,7 @@ class UdpModule;
 
 //! This class represents a network client. It starts the connection to a server 
 //! using a NetworkModule
-class NETWORK_API Client
+class NETWORK_API Client : Emitter
 {
 public:
 	//! \brief Constructor
@@ -112,8 +113,6 @@ private:
 	//! \param[in] ec Error code to log
 	//! \param[in] method Name of the method that received the error
 	void printErrorCode(const error_code &ec, const std::string& method);
-
-	EventLoop* mLoop;
 
 	boost::asio::io_service mService;
 	boost::shared_ptr<tcp::resolver> mResolver;

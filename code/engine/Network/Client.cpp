@@ -35,8 +35,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Network{
 
-Client::Client(EventLoop* loop) :
-mLoop(loop),
+Client::Client(EventLoop* loop_) :
+Emitter(loop_),
 mLocalTime(new Clock::StopWatch(Clock::milliSecond))
 {
 	dbglog << "Client::Client()";
@@ -46,11 +46,11 @@ mLocalTime(new Clock::StopWatch(Clock::milliSecond))
 	
 	mTimeSyncTimer.reset(new boost::asio::deadline_timer(mService));
 
-	mLoop->connect(ID::NE_CONNECT, this, &Client::controlEventHandler);
-	mLoop->connect(ID::NE_DISCONNECT, this, &Client::controlEventHandler);
-	mLoop->connect(ID::NE_SHUTDOWN, this, &Client::controlEventHandler);
+	loop()->connect(ID::NE_CONNECT, this, &Client::controlEventHandler);
+	loop()->connect(ID::NE_DISCONNECT, this, &Client::controlEventHandler);
+	loop()->connect(ID::NE_SHUTDOWN, this, &Client::controlEventHandler);
 
-	mTcpModule.reset(new TcpModule(mLoop, mService, 0, mLocalTime));
+	mTcpModule.reset(new TcpModule(loop(), mService, 0, mLocalTime));
 }
 
 Client::~Client()
@@ -58,10 +58,10 @@ Client::~Client()
 	dbglog << "Client::~Client()";
 	stop();
 
-	mLoop->disconnect(ID::NE_CONNECT, this);
-	mLoop->disconnect(ID::NE_DISCONNECT, this);
-	mLoop->disconnect(ID::NE_SHUTDOWN, this);
-	mLoop->disconnect(ID::NE_RECEIVED, this);
+	loop()->disconnect(ID::NE_CONNECT, this);
+	loop()->disconnect(ID::NE_DISCONNECT, this);
+	loop()->disconnect(ID::NE_SHUTDOWN, this);
+	loop()->disconnect(ID::NE_RECEIVED, this);
 
 	if (mResolver)
 		mResolver->cancel();
@@ -165,13 +165,12 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 			boost::asio::ip::tcp::endpoint tcpServerEp = mTcpModule->socket().remote_endpoint();
 			boost::asio::ip::udp::endpoint udpServerEp(tcpServerEp.address(), tcpServerEp.port());
 			boost::asio::ip::udp::endpoint udpLocalEp(udp::endpoint(udp::v4(), RANDOM_PORT));
-			mUdpModule.reset(new UdpModule(mLoop, mService, mLocalTime, udpLocalEp, udpServerEp, peerIdZero));
+			mUdpModule.reset(new UdpModule(loop(), mService, mLocalTime, udpLocalEp, udpServerEp, peerIdZero));
 
 			mUdpModule->useServerEndpointAsRemoteEndpoint();
 			mUdpModule->startReading();
 
-			Emitter e(mLoop);
-			e.emit<ControlEvent>(ID::NE_CONNECTED, mPeerId);
+			emit<ControlEvent>(ID::NE_CONNECTED, mPeerId);
 
 			mTcpModule->sendTimesyncRequest();
 			setTimeSyncTimer(TIME_SYNC_WAIT_TIME);
@@ -207,8 +206,7 @@ void Client::onConnect(const EndpointT& endpoint)
 void Client::onDisconnect(const PeerIdT& peerId)
 {
 	stop();
-	Emitter e(mLoop);
-	e.emit<ControlEvent>(ID::NE_DISCONNECTED, peerId);
+	emit<ControlEvent>(ID::NE_DISCONNECTED, peerId);
 }
 
 void Client::setTimeSyncTimer(const long& waitTime_ms)

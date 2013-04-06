@@ -35,6 +35,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/CharArray.h>
 #include <Core/ClockUtils.h>
 #include <Core/Types.h>
+#include <EventSystem/Emitter.h>
 #include <Network/Defs.h>
 #include <Network/Event_fwd.h>
 #include <Network/Handshake.h>
@@ -52,7 +53,7 @@ class UdpModule;
 
 //! This class represents a network server. It starts accepting connections from clients 
 //! using several NetworkModules
-class NETWORK_API Server
+class NETWORK_API Server : Emitter
 {
 public:
 	//! \brief Constructor
@@ -103,8 +104,6 @@ private:
 	
 	PeerIdT identifyUdpEndpoint(const boost::asio::ip::udp::endpoint&) const;
 	
-	EventLoop* mLoop;
-
 	boost::asio::io_service mService;
 	boost::shared_ptr<tcp::acceptor> mAcceptor;
 	boost::thread mThread;
