@@ -83,13 +83,16 @@ private:
 	//! \brief Handler for the reading of the data header
 	//! \param[in] ec Error code of boost asio
 	//! \param[in] bytesTransferred size of the data received
-	void readHeaderHandler(const error_code &ec, std::size_t bytesTransferred);
+	void readHeaderHandler(const boost::system::error_code &ec,
+	                       std::size_t bytesTransferred);
 	
 	//! \brief Handler for the reading of the data
 	//! \param[in] ec Error code of boost asio
 	//! \param[in] bytesTransferred size of the data received
 	//! \param[in] pacetChecksum Checksum of the data packet
-	void readDataHandler(const error_code &ec, std::size_t bytesTransferred, u32 packetChecksum);
+	void readDataHandler(const boost::system::error_code &ec,
+	                     std::size_t bytesTransferred,
+	                     u32 packetChecksum);
 	
 	//! \brief Received data from the net is packed as a corresponding event 
 	//! \param[in] data data array received from the network

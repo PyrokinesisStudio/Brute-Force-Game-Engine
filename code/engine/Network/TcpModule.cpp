@@ -26,13 +26,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Network/TcpModule.h>
 
+using namespace boost;
+
 namespace BFG {
 namespace Network { 
 
 TcpModule::TcpModule(EventLoop* loop_,
-                     boost::asio::io_service& service,
+                     asio::io_service& service,
                      PeerIdT peerId,
-                     boost::shared_ptr<Clock::StopWatch> localTime) :
+                     shared_ptr<Clock::StopWatch> localTime) :
 NetworkModule<Tcp>(loop_, service, peerId, localTime),
 mRoundTripTimer(Clock::milliSecond),
 mTimestampOffset(0),
@@ -58,17 +60,17 @@ void TcpModule::sendTimesyncRequest()
 void TcpModule::read()
 {
 	dbglog << "TcpModule::read (" << mPeerId << ")";
-	boost::asio::async_read
+	asio::async_read
 	(
 		socket(),
-		boost::asio::buffer(mReadHeaderBuffer),
-		boost::asio::transfer_exactly(HeaderSerializationT::size()),
-		bind(&TcpModule::readHeaderHandler, boost::shared_static_cast<TcpModule>(shared_from_this()), _1, _2)
+		asio::buffer(mReadHeaderBuffer),
+		asio::transfer_exactly(HeaderSerializationT::size()),
+		bind(&TcpModule::readHeaderHandler, shared_static_cast<TcpModule>(shared_from_this()), _1, _2)
 	);
 	dbglog << "TcpModule::~read";
 }
 
-void TcpModule::readHeaderHandler(const error_code &ec, std::size_t bytesTransferred)
+void TcpModule::readHeaderHandler(const system::error_code &ec, std::size_t bytesTransferred)
 {
 	dbglog << "TcpModule::readHeaderHandler (" << bytesTransferred << ")";
 	if (!ec)
@@ -103,15 +105,15 @@ void TcpModule::readHeaderHandler(const error_code &ec, std::size_t bytesTransfe
 		}
 
 		dbglog << "PacketSize: " << header.mDataLength;
-		boost::asio::async_read
+		asio::async_read
 		(
 			socket(),
-			boost::asio::buffer(mReadBuffer),
-			boost::asio::transfer_exactly(header.mDataLength),
-			bind(&TcpModule::readDataHandler, boost::shared_static_cast<TcpModule>(shared_from_this()), _1, _2, header.mDataChecksum)
+			asio::buffer(mReadBuffer),
+			asio::transfer_exactly(header.mDataLength),
+			bind(&TcpModule::readDataHandler, shared_static_cast<TcpModule>(shared_from_this()), _1, _2, header.mDataChecksum)
 		);
 	}
-	else if (ec.value() == boost::asio::error::connection_reset)
+	else if (ec.value() == asio::error::connection_reset)
 	{
 		dbglog << "TcpModule: connection was closed!";
 		emit<ControlEvent>(ID::NE_DISCONNECT, mPeerId);
@@ -123,7 +125,7 @@ void TcpModule::readHeaderHandler(const error_code &ec, std::size_t bytesTransfe
 	}
 }
 
-void TcpModule::readDataHandler(const error_code &ec, std::size_t bytesTransferred, u32 packetChecksum)
+void TcpModule::readDataHandler(const system::error_code &ec, std::size_t bytesTransferred, u32 packetChecksum)
 {
 	dbglog << "TcpModule::readDataHandler (" << bytesTransferred << ")";
 	if (!ec)
@@ -144,11 +146,11 @@ void TcpModule::readDataHandler(const error_code &ec, std::size_t bytesTransferr
 			return;
 		}
 
-		OPacket<Tcp> oPacket(boost::asio::buffer(mReadBuffer, bytesTransferred));
+		OPacket<Tcp> oPacket(asio::buffer(mReadBuffer, bytesTransferred));
 		onReceive(oPacket, mPeerId);
 		read();
 	}
-	else if (ec.value() == boost::asio::error::connection_reset)
+	else if (ec.value() == asio::error::connection_reset)
 	{
 		dbglog << "TcpModule: connection was closed!";
 		emit<ControlEvent>(ID::NE_DISCONNECT, mPeerId);
@@ -194,15 +196,21 @@ void TcpModule::onReceive(OPacket<Tcp>& oPacket, PeerIdT peerId)
 	}
 }
 
-void TcpModule::write(boost::asio::const_buffer packet, std::size_t size)
+void TcpModule::write(asio::const_buffer packet, std::size_t size)
 {
 	dbglog << "TcpModule::write: " << size << " Bytes";
 
-	boost::asio::async_write
+	asio::async_write
 	(
 		socket(),
-		boost::asio::buffer(packet, size),
-		boost::bind(&TcpModule::writeHandler, boost::shared_static_cast<TcpModule>(shared_from_this()), _1, _2, packet)
+		asio::buffer(packet, size),
+		bind
+		(
+			&TcpModule::writeHandler,
+			shared_static_cast<TcpModule>(shared_from_this()),
+			_1, _2,
+			packet
+		)
 	);
 }
 

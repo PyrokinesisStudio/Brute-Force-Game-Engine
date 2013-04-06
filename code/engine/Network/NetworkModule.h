@@ -47,9 +47,6 @@ class EventLoop;
 namespace BFG {
 namespace Network {
 
-using namespace boost::asio::ip;
-using namespace boost::system;
-
 //! A NetworkModule is used to communicate over the network.
 //! The data can be send using one of the SEND events.
 //! Received data is send via the NE_RECEIVED event.
@@ -150,7 +147,7 @@ protected:
 	//! \brief Handler for the writing of data
 	//! \param[in] ec Error code of boost::asio
 	//! \param[in] bytesTransferred size of the data written
-	void writeHandler(const error_code &ec,
+	void writeHandler(const boost::system::error_code &ec,
 	                  std::size_t bytesTransferred,
 	                  boost::asio::const_buffer buffer)
 	{
@@ -165,7 +162,7 @@ protected:
 	//! \brief Logs an error_code
 	//! \param[in] ec Error code to log
 	//! \param[in] method Name of the method that received the error
-	void printErrorCode(const error_code &ec, const std::string& method)
+	void printErrorCode(const boost::system::error_code &ec, const std::string& method)
 	{
 		warnlog << "This (" << this << ") " << "[" << method << "] Error Code: " << ec.value() << ", message: " << ec.message();
 	}
@@ -191,7 +188,7 @@ private:
 
 	//! \brief Handler for the flush timer
 	//! \param[in] ec Error code of boost asio
-	void flushTimerHandler(const error_code &ec)
+	void flushTimerHandler(const boost::system::error_code &ec)
 	{
 		if (!ec)
 		{
