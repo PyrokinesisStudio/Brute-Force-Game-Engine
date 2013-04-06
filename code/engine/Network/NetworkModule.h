@@ -27,7 +27,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef __BFG_NETWORKMODULE_H__
 #define __BFG_NETWORKMODULE_H__
 
-#include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
