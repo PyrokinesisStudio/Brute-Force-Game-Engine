@@ -58,7 +58,7 @@ struct EventStatus
 	bool gotUdpData;
 };
 
-template <typename ApplicationT, BFG::u8 ModeT>
+template <typename ApplicationT, BFG::u8 mode, BFG::GameHandle appHandle>
 struct NetworkContext
 {
 	boost::shared_ptr<EventLoop> loop;
@@ -67,12 +67,12 @@ struct NetworkContext
 	boost::shared_ptr<BFG::Emitter> emitter;
 	EventStatus status;
 	
-	NetworkContext(const char*const Threadname)
+	NetworkContext(const char*const Threadname, const std::string& testMsg)
 	{
 		loop.reset(new EventLoop(false, new EventSystem::BoostThread<>(Threadname), new EventSystem::NoCommunication()));
-		ep.reset(BFG::Network::Interface::getEntryPoint(ModeT));
+		ep.reset(BFG::Network::Interface::getEntryPoint(mode));
 		loop->addEntryPoint(ep.get());
-		application.reset(new ApplicationT(loop.get(), status));
+		application.reset(new ApplicationT(loop.get(), status, appHandle, testMsg));
 		loop->run();
 		emitter.reset(new BFG::Emitter(loop.get()));
 	}

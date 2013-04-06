@@ -31,24 +31,31 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include "Requisites.h"
 
 const BFG::GameHandle serverAppHandle = 123;
-const BFG::GameHandle clientAppHandle = 456;
+const BFG::GameHandle client_1_AppHandle = 456;
+const BFG::GameHandle client_2_AppHandle = 789;
 
 const EventIdT testAppIdTcp = 10000;
 const EventIdT testAppIdUdp = 10001;
 
-const std::string testMsg = "Test 1234";
-const CharArray512T testData = stringToArray<512>(testMsg);
+const std::string testMsg1 = "Test 1234";
+const CharArray512T testData1 = stringToArray<512>(testMsg1);
+
+const std::string testMsg2 = "Test €#!§$%*'\"`^";
+const CharArray512T testData2 = stringToArray<512>(testMsg2);
+
 
 struct Server : BFG::Emitter
 {
-	Server(EventLoop* loop, EventStatus& status) :
+	Server(EventLoop* loop, EventStatus& status, BFG::GameHandle appHandle, const std::string& testMsg) :
 	BFG::Emitter(loop),
-	mStatus(status)
+	mStatus(status),
+	mAppHandle(appHandle),
+	mTestMsg(testMsg)
 	{
 		BOOST_TEST_MESSAGE( "Server Constructor" );
 		loop->connect(BFG::ID::NE_CONNECTED, this, &Server::netConnectHandler);
 		loop->connect(BFG::ID::NE_DISCONNECTED, this, &Server::netDisconnectHandler);
-		loop->connect(BFG::ID::NE_RECEIVED, this, &Server::netPacketHandler, serverAppHandle);
+		loop->connect(BFG::ID::NE_RECEIVED, this, &Server::netPacketHandler, mAppHandle);
 	}
 	
 	~Server()
@@ -96,32 +103,36 @@ struct Server : BFG::Emitter
 		BFG::GameHandle destinationHandle = payload.mAppDestination;
 		BFG::GameHandle senderHandle = payload.mAppSender;
 		
-		BOOST_CHECK_EQUAL (destinationHandle, serverAppHandle);
-		BOOST_CHECK_EQUAL (senderHandle, clientAppHandle);
+		BOOST_CHECK_EQUAL (destinationHandle, mAppHandle);
+		BOOST_CHECK_EQUAL (senderHandle, client_1_AppHandle);
 		
 		BFG::u16 packetSize = payload.mAppDataLen;
 		CharArray512T data = payload.mAppData;
 		
-		BOOST_CHECK_EQUAL (packetSize, testMsg.size());
-		BOOST_CHECK_EQUAL_COLLECTIONS (data.begin(), data.begin()+packetSize, testData.begin(), testData.begin() + testMsg.size());
+		BOOST_CHECK_EQUAL (packetSize, mTestMsg.size());
+		BOOST_CHECK_EQUAL_COLLECTIONS (data.begin(), data.begin()+packetSize, mTestMsg.begin(), mTestMsg.end());
 	}
 	
 	EventStatus& mStatus;
+	const BFG::GameHandle mAppHandle;
+	const std::string& mTestMsg;
 };
 
 struct Client : BFG::Emitter
 {
-	Client(EventLoop* loop, EventStatus& status) :
+	Client(EventLoop* loop, EventStatus& status, BFG::GameHandle appHandle, const std::string& testMsg) :
 	Emitter(loop),
-	mStatus(status)
+	mStatus(status),
+	mAppHandle(appHandle),
+	mTestMsg(testMsg)
 	{
-		BOOST_TEST_MESSAGE( "Client Constructor" );
+		BOOST_TEST_MESSAGE( "Client Constructor " );
 		loop->connect(BFG::ID::NE_CONNECTED, this, &Client::netConnectHandler);
 		loop->connect(BFG::ID::NE_DISCONNECTED, this, &Client::netDisconnectHandler);
-		loop->connect(BFG::ID::NE_RECEIVED, this, &Client::netPacketHandler, clientAppHandle);
+		loop->connect(BFG::ID::NE_RECEIVED, this, &Client::netPacketHandler, mAppHandle);
 	}
 	
-	~Client()
+	virtual ~Client()
 	{
 		BOOST_TEST_MESSAGE( "Client Destructor" );
 		loop()->disconnect(BFG::ID::NE_CONNECTED, this);
@@ -147,7 +158,7 @@ struct Client : BFG::Emitter
 	{
 		mStatus.gotReceived = true;
 		BOOST_CHECK_EQUAL(e->id(), BFG::ID::NE_RECEIVED);
-		BOOST_CHECK_EQUAL(e->destination(), clientAppHandle);
+		BOOST_CHECK_EQUAL(e->destination(), mAppHandle);
 		BOOST_CHECK_EQUAL(e->sender(), 0);
 		
 		const BFG::Network::DataPayload& payload = e->getData();
@@ -166,30 +177,34 @@ struct Client : BFG::Emitter
 		BFG::GameHandle destinationHandle = payload.mAppDestination;
 		BFG::GameHandle senderHandle = payload.mAppSender;
 		
-		BOOST_CHECK_EQUAL (destinationHandle, clientAppHandle);
+		BOOST_CHECK_EQUAL (destinationHandle, mAppHandle);
 		BOOST_CHECK_EQUAL (senderHandle, serverAppHandle);
 		
 		BFG::u16 packetSize = payload.mAppDataLen;
 		CharArray512T data = payload.mAppData;
 		
-		BOOST_CHECK_EQUAL (packetSize, testMsg.size());
-		BOOST_CHECK_EQUAL_COLLECTIONS (data.begin(), data.begin()+packetSize, testData.begin(), testData.begin() + testMsg.size());
+		BOOST_CHECK_EQUAL (packetSize, mTestMsg.size());
+		BOOST_CHECK_EQUAL_COLLECTIONS (data.begin(), data.begin()+packetSize, mTestMsg.begin(), mTestMsg.end());
 	}
 	
 	EventStatus& mStatus;
+	const BFG::GameHandle mAppHandle;
+	const std::string& mTestMsg;
 };
 
-
-typedef NetworkContext<Server, BFG_SERVER> ServerContext;
-typedef NetworkContext<Client, BFG_CLIENT> ClientContext;
+typedef NetworkContext<Server, BFG_SERVER, serverAppHandle> ServerContext;
+typedef NetworkContext<Client, BFG_CLIENT, client_1_AppHandle> Client1Context;
+typedef NetworkContext<Client, BFG_CLIENT, client_2_AppHandle> Client2Context;
 
 boost::scoped_ptr<ServerContext> server;
-boost::scoped_ptr<ClientContext> client;
+boost::scoped_ptr<Client1Context> client1;
+boost::scoped_ptr<Client2Context> client2;
 
 void resetEventStatus()
 {
 	server->status.reset();
-	client->status.reset();
+	client1->status.reset();
+	client2->status.reset();
 }
 
 struct EventSystemSetup
@@ -202,15 +217,17 @@ struct EventSystemSetup
 // 		BFG::Base::Logger::Init(BFG::Base::Logger::SL_DEBUG, "Test.log");
 		BFG::Base::Logger::Init(BFG::Base::Logger::SL_INFORMATION, "Test.log");
 
-		server.reset(new ServerContext("Server Loop"));
-		client.reset(new ClientContext("Client Loop"));
+		server.reset(new ServerContext("Server Loop", testMsg1));
+		client1.reset(new Client1Context("Client Loop", testMsg1));
+		client2.reset(new Client2Context("Client2 Loop", testMsg2));
 	}
 
 	~EventSystemSetup()
 	{
-		client.reset();
-		server.reset();
 		BOOST_TEST_MESSAGE( "EventSystemSetup Destructor" );
+		client2.reset();
+		client1.reset();
+		server.reset();
 		boost::unit_test::unit_test_log.set_stream(std::cout);
 	}
 
@@ -246,7 +263,13 @@ BOOST_AUTO_TEST_CASE (ConnectionTest)
 	
 	server->emitter->emit<BFG::Network::ControlEvent>(BFG::ID::NE_LISTEN, static_cast<BFG::u16>(port));
 
-	client->emitter->emit<BFG::Network::ControlEvent>
+	client1->emitter->emit<BFG::Network::ControlEvent>
+	(
+		BFG::ID::NE_CONNECT,
+		boost::make_tuple(stringToArray<128>("127.0.0.1"), stringToArray<128>(portString))
+	);
+	
+	client2->emitter->emit<BFG::Network::ControlEvent>
 	(
 		BFG::ID::NE_CONNECT,
 		boost::make_tuple(stringToArray<128>("127.0.0.1"), stringToArray<128>(portString))
@@ -255,7 +278,8 @@ BOOST_AUTO_TEST_CASE (ConnectionTest)
 	boost::this_thread::sleep(boost::posix_time::seconds(1));
 
 	BOOST_CHECK(server->status.gotConnected);
-	BOOST_CHECK(client->status.gotConnected);
+	BOOST_CHECK(client1->status.gotConnected);
+	BOOST_CHECK(client2->status.gotConnected);
 	
 	BOOST_TEST_MESSAGE( "ConnectionTest has ended" );
 }
@@ -265,19 +289,22 @@ BOOST_AUTO_TEST_CASE (ClientToServerDataCheck)
 	BOOST_TEST_MESSAGE( "ClientToServerDataCheck is starting" );
 	resetEventStatus();
 
-	BFG::Network::DataPayload payloadTcp(testAppIdTcp, serverAppHandle, clientAppHandle, testMsg.length(), testData);
-	BFG::Network::DataPayload payloadUdp(testAppIdUdp, serverAppHandle, clientAppHandle, testMsg.length(), testData);
-	client->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payloadTcp);
-	client->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payloadUdp);
+	BFG::Network::DataPayload payloadTcp(testAppIdTcp, serverAppHandle, client_1_AppHandle, testMsg1.length(), testData1);
+	BFG::Network::DataPayload payloadUdp(testAppIdUdp, serverAppHandle, client_1_AppHandle, testMsg1.length(), testData1);
+	client1->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payloadTcp);
+	client1->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payloadUdp);
 	
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
 	BOOST_CHECK(server->status.gotReceived);
 	BOOST_CHECK(server->status.gotTcpData);
 	BOOST_CHECK(server->status.gotUdpData);
-	BOOST_CHECK(!client->status.gotReceived);
-	BOOST_CHECK(!client->status.gotTcpData);
-	BOOST_CHECK(!client->status.gotUdpData);
+	BOOST_CHECK(!client1->status.gotReceived);
+	BOOST_CHECK(!client1->status.gotTcpData);
+	BOOST_CHECK(!client1->status.gotUdpData);
+	BOOST_CHECK(!client2->status.gotReceived);
+	BOOST_CHECK(!client2->status.gotTcpData);
+	BOOST_CHECK(!client2->status.gotUdpData);
 
 	BOOST_TEST_MESSAGE( "ClientToServerDataCheck has ended" );
 }
@@ -289,10 +316,10 @@ BOOST_AUTO_TEST_CASE (ClientToServerDestinationNotNullCheck)
 	
 	BFG::GameHandle bogusDestination = 123456789;
 
-	BFG::Network::DataPayload payloadTcp(testAppIdTcp, serverAppHandle, clientAppHandle, testMsg.length(), testData);
-	BFG::Network::DataPayload payloadUdp(testAppIdUdp, serverAppHandle, clientAppHandle, testMsg.length(), testData);
-	client->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payloadTcp, bogusDestination);
-	client->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payloadUdp, bogusDestination);
+	BFG::Network::DataPayload payloadTcp(testAppIdTcp, serverAppHandle, client_1_AppHandle, testMsg1.length(), testData1);
+	BFG::Network::DataPayload payloadUdp(testAppIdUdp, serverAppHandle, client_1_AppHandle, testMsg1.length(), testData1);
+	client1->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payloadTcp, bogusDestination);
+	client1->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payloadUdp, bogusDestination);
 
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
@@ -301,45 +328,80 @@ BOOST_AUTO_TEST_CASE (ClientToServerDestinationNotNullCheck)
 	BOOST_CHECK(!server->status.gotConnected);
 	BOOST_CHECK(!server->status.gotDisconnected);
 	BOOST_CHECK(!server->status.gotReceived);
-	BOOST_CHECK(!client->status.gotConnected);
-	BOOST_CHECK(!client->status.gotDisconnected);
-	BOOST_CHECK(!client->status.gotReceived);
+	BOOST_CHECK(!client1->status.gotConnected);
+	BOOST_CHECK(!client1->status.gotDisconnected);
+	BOOST_CHECK(!client1->status.gotReceived);
+	BOOST_CHECK(!client2->status.gotReceived);
+	BOOST_CHECK(!client2->status.gotTcpData);
+	BOOST_CHECK(!client2->status.gotUdpData);
 
 	BOOST_TEST_MESSAGE( "ClientToServerDestinationNotNullCheck has ended" );
 }
 
-BOOST_AUTO_TEST_CASE (ServerToClientDataCheck)
+BOOST_AUTO_TEST_CASE (ServerToClient1DataCheck)
 {
-	BOOST_TEST_MESSAGE( "ServerToClientDataCheck is starting" );
+	BOOST_TEST_MESSAGE( "ServerToClient1DataCheck is starting" );
 	resetEventStatus();
 
-	BFG::Network::DataPayload payloadTcp(testAppIdTcp, clientAppHandle, serverAppHandle, testMsg.length(), testData);
-	BFG::Network::DataPayload payloadUdp(testAppIdUdp, clientAppHandle, serverAppHandle, testMsg.length(), testData);
-	server->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payloadTcp);
-	server->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payloadUdp);
+	// Send to Client1
+	BFG::Network::DataPayload payload1Tcp(testAppIdTcp, client_1_AppHandle, serverAppHandle, testMsg1.length(), testData1);
+	BFG::Network::DataPayload payload1Udp(testAppIdUdp, client_1_AppHandle, serverAppHandle, testMsg1.length(), testData1);
+
+	server->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload1Tcp);
+	server->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payload1Udp);
+
+	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+
+	BOOST_CHECK(!server->status.gotReceived);
+	BOOST_CHECK(!server->status.gotTcpData);
+	BOOST_CHECK(!server->status.gotUdpData);
+	BOOST_CHECK(client1->status.gotReceived);
+	BOOST_CHECK(client1->status.gotTcpData);
+	BOOST_CHECK(client1->status.gotUdpData);
+	BOOST_CHECK(!client2->status.gotReceived);
+	BOOST_CHECK(!client2->status.gotTcpData);
+	BOOST_CHECK(!client2->status.gotUdpData);
+	
+	BOOST_TEST_MESSAGE( "ServerToClient1DataCheck has ended" );
+}
+
+BOOST_AUTO_TEST_CASE (ServerToClient2DataCheck)
+{
+	BOOST_TEST_MESSAGE( "ServerToClient1DataCheck is starting" );
+	resetEventStatus();
+
+	// Send to Client2
+	BFG::Network::DataPayload payload2Tcp(testAppIdTcp, client_2_AppHandle, serverAppHandle, testMsg2.length(), testData2);
+	BFG::Network::DataPayload payload2Udp(testAppIdUdp, client_2_AppHandle, serverAppHandle, testMsg2.length(), testData2);
+
+	server->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload2Tcp);
+	server->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payload2Udp);
 	
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
 	BOOST_CHECK(!server->status.gotReceived);
 	BOOST_CHECK(!server->status.gotTcpData);
 	BOOST_CHECK(!server->status.gotUdpData);
-	BOOST_CHECK(client->status.gotReceived);
-	BOOST_CHECK(client->status.gotTcpData);
-	BOOST_CHECK(client->status.gotUdpData);
+	BOOST_CHECK(!client1->status.gotReceived);
+	BOOST_CHECK(!client1->status.gotTcpData);
+	BOOST_CHECK(!client1->status.gotUdpData);
+	BOOST_CHECK(client2->status.gotReceived);
+	BOOST_CHECK(client2->status.gotTcpData);
+	BOOST_CHECK(client2->status.gotUdpData);
 	
-	BOOST_TEST_MESSAGE( "ServerToClientDataCheck has ended" );
+	BOOST_TEST_MESSAGE( "ServerToClient1DataCheck has ended" );
 }
 
 BOOST_AUTO_TEST_CASE (ClientDisconnect)
 {
 	BOOST_TEST_MESSAGE( "ClientDisconnect is starting" );
 	resetEventStatus();
-	client->emitter->emit<BFG::Network::ControlEvent>(BFG::ID::NE_DISCONNECT, static_cast<BFG::u16>(0));
+	client1->emitter->emit<BFG::Network::ControlEvent>(BFG::ID::NE_DISCONNECT, static_cast<BFG::u16>(0));
 
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
 	BOOST_CHECK(server->status.gotDisconnected);
-	BOOST_CHECK(client->status.gotDisconnected);
+	BOOST_CHECK(client1->status.gotDisconnected);
 	
 	BOOST_TEST_MESSAGE( "ClientDisconnect has ended" );
 }
@@ -356,9 +418,9 @@ BOOST_AUTO_TEST_CASE (ServerShutdown)
 	BOOST_CHECK(!server->status.gotConnected);
 	BOOST_CHECK(!server->status.gotDisconnected);
 	BOOST_CHECK(!server->status.gotReceived);
-	BOOST_CHECK(!client->status.gotConnected);
-	BOOST_CHECK(!client->status.gotDisconnected);
-	BOOST_CHECK(!client->status.gotReceived);
+	BOOST_CHECK(!client1->status.gotConnected);
+	BOOST_CHECK(!client1->status.gotDisconnected);
+	BOOST_CHECK(!client1->status.gotReceived);
 
 	BOOST_TEST_MESSAGE( "ServerShutdown has ended" );
 }
