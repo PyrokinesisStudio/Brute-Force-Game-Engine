@@ -33,6 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/Location.h>
 #include <Core/Types.h>
+#include <Core/Math.h>
 
 #include <Model/Data/Connection.h>
 
@@ -79,12 +80,28 @@ struct ObjectParameter
 		try
 		{
 			mLocation.position = loadVector3(tree->child("Position"));
-			mLocation.orientation = loadQuaternion(tree->child("Orientation"));
 			parseConnection(tree->child("Connection")->elementData(), mConnection);
 		}
 		catch (std::exception& e)
 		{
 			throw std::logic_error(e.what()+std::string(" At ObjectParameter::load(...)"));
+		}
+
+		try
+		{
+			mLocation.orientation = loadQuaternion(tree->child("Orientation"));
+		}
+		catch (std::exception& e1)
+		{
+			try
+			{
+				v3 ori = loadVector3(tree->child("Orientation"));
+				mLocation.orientation = eulerToQuaternion(ori);
+			}
+			catch (std::exception& e2)
+			{
+				throw std::logic_error(e2.what()+std::string(" At ObjectParameter::load(...). Catched before: ")+e1.what());
+			}
 		}
 	}
 };
