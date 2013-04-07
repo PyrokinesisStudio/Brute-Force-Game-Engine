@@ -439,7 +439,7 @@ void Networked::sendPosition() const
 		ca512
 	);
 
-	emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload);
+	emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payload);
 }
 
 void Networked::sendOrientation() const
@@ -458,7 +458,7 @@ void Networked::sendOrientation() const
 		ca512
 	);
 
-	emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload);
+	emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payload);
 }
 
 void Networked::sendVelocity(const v3& newVelocity) const
@@ -477,7 +477,7 @@ void Networked::sendVelocity(const v3& newVelocity) const
 		ca512
 	);
 
-	emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload);
+	emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payload);
 }
 
 void Networked::sendRotationVelocity(const v3& newRotationVelocity) const
@@ -496,7 +496,7 @@ void Networked::sendRotationVelocity(const v3& newRotationVelocity) const
 		ca512
 	);
 
-	emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload);
+	emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payload);
 }
 
 } // namespace BFG
