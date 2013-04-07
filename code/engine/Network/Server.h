@@ -49,7 +49,8 @@ using namespace boost::asio::ip;
 using namespace boost::system;
 
 class TcpModule;
-class UdpModule;
+class UdpReadModule;
+class UdpWriteModule;
 
 //! This class represents a network server. It starts accepting connections from clients 
 //! using several NetworkModules
@@ -62,8 +63,10 @@ public:
 	~Server();
 
 private:
-	typedef std::map<PeerIdT, boost::shared_ptr<TcpModule> > ModulesMap;
-
+	typedef std::map<PeerIdT, boost::shared_ptr<TcpModule> > TcpModulesMap;
+	typedef std::map<PeerIdT, boost::shared_ptr<UdpWriteModule> > UdpWriteModulesMap;
+	typedef std::map<boost::asio::ip::udp::endpoint, PeerIdT> UdpEndpointMap;
+	
 	//! \brief Stops all communication to and from all clients
 	void stop();
 
@@ -97,12 +100,7 @@ private:
 	//! \param[in] peerId ID of the NetworkModule to stop communicating
 	void onDisconnect(const PeerIdT& peerId);
 	
-	//! \brief Logs an error_code
-	//! \param[in] ec Error code to log
-	//! \param[in] method Name of the method that received the error
-	void printErrorCode(const error_code &ec, const std::string& method);
-	
-	PeerIdT identifyUdpEndpoint(const boost::asio::ip::udp::endpoint&) const;
+	PeerIdT identifyUdpEndpoint(const boost::shared_ptr<boost::asio::ip::udp::endpoint>);
 	
 	boost::asio::io_service mService;
 	boost::shared_ptr<tcp::acceptor> mAcceptor;
@@ -115,9 +113,11 @@ private:
 
 	Handshake::SerializationT mHandshakeBuffer;
 
-	ModulesMap mTcpModules;
+	TcpModulesMap mTcpModules;
+	UdpWriteModulesMap mUdpWriteModules;
+	boost::shared_ptr<UdpReadModule> mUdpReadModule;
 	
-	boost::shared_ptr<UdpModule> mUdpModule;
+	UdpEndpointMap mUdpEndpoints;
 };
 
 } // namespace Network

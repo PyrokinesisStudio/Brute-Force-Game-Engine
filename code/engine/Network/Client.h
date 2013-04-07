@@ -42,11 +42,12 @@ class EventLoop;
 namespace BFG {
 namespace Network {
 
+class TcpModule;
+class UdpReadModule;
+class UdpWriteModule;
+
 using namespace boost::asio::ip;
 using namespace boost::system;
-
-class TcpModule;
-class UdpModule;
 
 //! This class represents a network client. It starts the connection to a server 
 //! using a NetworkModule
@@ -109,11 +110,6 @@ private:
 	//! \return Calculated checksum
 	u16 calculateHandshakeChecksum(const Handshake& hs);
 
-	//! \brief Logs an error_code
-	//! \param[in] ec Error code to log
-	//! \param[in] method Name of the method that received the error
-	void printErrorCode(const error_code &ec, const std::string& method);
-
 	boost::asio::io_service mService;
 	boost::shared_ptr<tcp::resolver> mResolver;
 	boost::thread mThread;
@@ -128,7 +124,9 @@ private:
 	boost::shared_ptr<boost::asio::deadline_timer> mTimeSyncTimer;
 
 	boost::shared_ptr<TcpModule> mTcpModule;
-	boost::shared_ptr<UdpModule> mUdpModule;
+
+	boost::shared_ptr<UdpReadModule> mUdpReadModule;
+	boost::shared_ptr<UdpWriteModule> mUdpWriteModule;
 
 	PeerIdT mPeerId;
 };

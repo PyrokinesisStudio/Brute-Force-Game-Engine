@@ -21,6 +21,7 @@
             <value>NE_SHUTDOWN</value>
             <value>NE_TIMESYNC_REQUEST</value>
             <value>NE_TIMESYNC_RESPONSE</value>
+            <value>NE_PING_UDP</value>
         </enum>
 
     </namespace>

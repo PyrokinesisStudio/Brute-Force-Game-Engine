@@ -73,7 +73,8 @@ struct Udp
 	
 	typedef UnreliableHeader HeaderT;
 	typedef UdpHeaderFactory HeaderFactoryT;
-	
+
+	typedef boost::asio::ip::udp::endpoint EndpointT;
 	typedef boost::asio::ip::udp::socket SocketT;
 	
 	static std::size_t headerSize()

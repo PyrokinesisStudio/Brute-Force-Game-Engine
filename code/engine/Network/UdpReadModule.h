@@ -24,67 +24,66 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_NETWORKMODULE_H
-#define BFG_NETWORKMODULE_H
+#ifndef BFG_NETWORK_UDPREADMODULE_H
+#define BFG_NETWORK_UDPREADMODULE_H
 
 #include <boost/function.hpp>
-#include <boost/pool/poolfwd.hpp>
 
 #include <Network/NetworkModule.h>
 #include <Network/Udp.h>
 
 namespace BFG {
-namespace Network {
+namespace Network { 
 
-class UdpModule : public NetworkModule<Udp>
+class UdpReadModule : public NetworkModule<Udp>
 {
 public:
-	typedef boost::asio::ip::udp::endpoint EndpointT;
-	typedef boost::function<PeerIdT(const EndpointT&)> EndpointIdentificatorT;
+	typedef boost::function<PeerIdT(const boost::shared_ptr<Udp::EndpointT>)> EndpointIdentificatorT;
 	
-	UdpModule(EventLoop* loop_,
-                  boost::asio::io_service& service,
-                  boost::shared_ptr<Clock::StopWatch> localTime,
-                  const EndpointT& localEndpoint,
-                  const EndpointT& serverEndpoint,
-	          EndpointIdentificatorT endpointIdentificator);
+	UdpReadModule(EventLoop* loop_,
+	              boost::asio::io_service& service,
+	              boost::shared_ptr<Clock::StopWatch> localTime,
+	              boost::shared_ptr<Udp::SocketT> socket,
+	              EndpointIdentificatorT endpointIdentificator);
 	
-	virtual ~UdpModule();
-	
+	virtual ~UdpReadModule();
+
 	//! \brief Returns the socket of the connection
 	//! \return socket of the connection
-	Udp::SocketT& socket()
+	boost::shared_ptr<Udp::SocketT> socket()
 	{
 		return mSocket;
 	}
-
-	void useServerEndpointAsRemoteEndpoint();
+	
+	virtual void startReading()
+	{
+		NetworkModule<Udp>::startReading();
+	}
 	
 private:
+	virtual void write(boost::asio::const_buffer, std::size_t)
+	{
+		assert(! "Useless call to UdpReadModule::write()");
+	}
+	
 	virtual void read();
 
-	void readHandler(const boost::system::error_code &ec, std::size_t bytesTransferred);
+	void readHandler(const boost::system::error_code &ec, std::size_t bytesTransferred, boost::shared_ptr<Udp::EndpointT> remoteEndpoint);
 	
 	//! \brief Received data from the net is packed as a corresponding event 
 	//! \param[in] data data array received from the network
 	//! \param[in] size size of the data received
-	void onReceive(OPacket<Udp>& oPacket, PeerIdT peerId);
+	virtual void onReceive(OPacket<Udp>& oPacket, PeerIdT peerId);
 	
-	//! \brief Perform an asynchronous write of data to the connected network module
-	//! \param[in] packet data to write over the net
-	//! \param[in] size Size of the data set
-	virtual void write(boost::asio::const_buffer packet, std::size_t size);
-	
+	boost::shared_ptr<Udp::SocketT> mSocket;
+
 	// TODO: Use CreateBuffer
 	boost::array<char, Udp::MAX_BYTE_RATE> mReadBuffer;
 	
-	Udp::SocketT mSocket;
-	
-	const boost::asio::ip::udp::endpoint mServerEndpoint;
-	boost::asio::ip::udp::endpoint mRemoteEndpoint;
-
 	EndpointIdentificatorT mEndpointIdentificator;
-	BFG::u32 mLastRemoteSequenceNumber;
+	
+	// TODO: Do this in own class
+	std::map<PeerIdT, BFG::u32> mLastSequenceNumbers;
 };
 
 } // namespace Network

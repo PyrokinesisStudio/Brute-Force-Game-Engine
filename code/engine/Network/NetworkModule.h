@@ -40,6 +40,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Network/Defs.h>
 #include <Network/Event_fwd.h>
 #include <Network/Packet.h>
+#include <Network/PrintErrorCode.h>
 
 class EventLoop;
 
@@ -68,22 +69,28 @@ public:
 	mPool(ProtocolT::MAX_BYTE_RATE),
 	mSendPacket(createBuffer(mPool), mHeaderFactory)
 	{
+		dbglog << "Creating NetworkModule";
 		mFlushTimer.reset(new boost::asio::deadline_timer(service));
 	}
-
+	
 	//! \brief Destructor
 	~NetworkModule()
 	{
+		dbglog << "Destroying NetworkModule";
 		mFlushTimer.reset();
-
-		dbglog << "NetworkModule::~NetworkModule (" << this << ")";
 		loop()->disconnect(ProtocolT::EVENT_ID_FOR_SENDING, this);
 	}
-	
+
+protected:
 	//! \brief The connection is ready to receive data
-	void startReading()
+	virtual void startReading()
 	{
-		dbglog << "NetworkModule::startReading";
+		dbglog << "UdpReadModule::startReading";
+		read();
+	}
+	
+	virtual void startSending()
+	{
 		setFlushTimer(FLUSH_WAIT_TIME);
 
 		// TODO: Document why both connects are necessary
@@ -91,14 +98,8 @@ public:
 
 		if (mPeerId)
 			loop()->connect(ProtocolT::EVENT_ID_FOR_SENDING, this, &NetworkModule<ProtocolT>::dataPacketEventHandler, mPeerId);
-
-		// TODO: Call from Client or Server
-//		setTcpDelay(false);
-		
-		read();
 	}
 	
-protected:
 	//! \brief Sending data to the connected network module
 	//! With this method the data is queued and flushes automatically every few milliseconds 
 	//! or if the queue is full
@@ -150,20 +151,14 @@ protected:
 	                  std::size_t bytesTransferred,
 	                  boost::asio::const_buffer buffer)
 	{
-		dbglog << "NetworkModule::writeHandler: " << bytesTransferred << " Bytes written";
 		if (ec)
 		{
-			printErrorCode(ec, "writeHandler");
+			printErrorCode(ec, "NetworkModule::writeHandler", mPeerId);
+			return;
 		}
+		
+		dbglog << "NetworkModule::writeHandler #" << mPeerId << " " << bytesTransferred << " Bytes written";
 		mPool.free(const_cast<char*>(boost::asio::buffer_cast<const char*>(buffer)));
-	} 
-
-	//! \brief Logs an error_code
-	//! \param[in] ec Error code to log
-	//! \param[in] method Name of the method that received the error
-	void printErrorCode(const boost::system::error_code &ec, const std::string& method)
-	{
-		warnlog << "This (" << this << ") " << "[" << method << "] Error Code: " << ec.value() << ", message: " << ec.message();
 	}
 
 	typedef typename ProtocolT::HeaderT HeaderT;
@@ -182,7 +177,7 @@ private:
 			return;
 
 		mFlushTimer->expires_from_now(boost::posix_time::milliseconds(waitTime_ms));
-		mFlushTimer->async_wait(boost::bind(&NetworkModule<ProtocolT>::flushTimerHandler, this->shared_from_this(), _1));
+		mFlushTimer->async_wait(boost::bind(&NetworkModule<ProtocolT>::flushTimerHandler, this, _1));
 	}
 
 	//! \brief Handler for the flush timer
@@ -200,7 +195,7 @@ private:
 		}
 		else
 		{
-			printErrorCode(ec, "flushTimerHandler");
+			printErrorCode(ec, "NetworkModule::flushTimerHandler", mPeerId);
 		}
 	}
 

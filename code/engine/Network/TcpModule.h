@@ -66,6 +66,17 @@ public:
 		       << " to " << newOption.value();
 	}
 	
+	virtual void startReading()
+	{
+		setTcpDelay(false);
+		NetworkModule<Tcp>::startReading();
+	}
+
+	virtual void startSending()
+	{
+		NetworkModule<Tcp>::startSending();
+	}
+		
 	//! \brief Returns the socket of the connection
 	//! \return socket of the connection
 	Tcp::SocketT& socket()
