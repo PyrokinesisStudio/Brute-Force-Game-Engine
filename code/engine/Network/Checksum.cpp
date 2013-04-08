@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,46 +24,38 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_NETWORKDEFS_H
-#define BFG_NETWORKDEFS_H
+#include <Network/Checksum.h>
 
-#include <Core/Types.h>
-
-#define BFG_SERVER 0
-#define BFG_CLIENT 1
-
-#ifdef _WIN32
-	#ifndef NETWORK_EXPORTS
-		#define NETWORK_API __declspec(dllimport)
-	#else
-		#define NETWORK_API __declspec(dllexport)
-	#endif //NETWORK_EXPORTS
-#else // UNIX
-    #define NETWORK_API
-#endif// UNIX
+#include <boost/crc.hpp>
+#include <Network/Handshake.h>
+#include <Network/Tcp.h>
 
 namespace BFG {
-namespace Network{
+namespace Network { 
 
-typedef GameHandle PeerIdT;
-typedef u32        TimestampT;
+u32 calculateChecksum(const char* data, std::size_t length)
+{
+	boost::crc_32_type result;
+	result.process_bytes(data, length);
+	return result.checksum();
+}
 
-//! ms before automatic flush (Q3: 1000/cl_update_rate), "natural flush time" depends on bandwidth
-const u32 FLUSH_WAIT_TIME(20);
+u16 calculateHeaderChecksum(const NetworkEventHeader& neh)
+{
+       boost::crc_16_type result;
+       result.process_bytes(&(neh.mDataLength), sizeof(neh.mDataLength));
+       result.process_bytes(&(neh.mTimestamp), sizeof(neh.mTimestamp));
+       result.process_bytes(&(neh.mDataChecksum), sizeof(neh.mDataChecksum));
+       return result.checksum();
+}
 
-//! ms between time synchronization
-const u32 TIME_SYNC_WAIT_TIME(10000);
+u16 calculateHandshakeChecksum(const Handshake& hs)
+{
+	boost::crc_16_type result;
+	result.process_bytes(&(hs.mPeerId), sizeof(PeerIdT));
+	return result.checksum();
+}
 
-//! passed to Boost.Asio as port number in order to open a random port
-const u32 RANDOM_PORT(0);
+} // namespace Network
+} // namespace BFG
 
-//! maximum size for UDP datagrams
-const u16 UDP_PAYLOAD_SIZE(1400);
-
-//! A client doesn't need to differentiate between multiple peers.
-const PeerIdT UNIQUE_PEER(0);
-
-}// namespace BFG
-}// namespace Network
-
-#endif

@@ -40,8 +40,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <EventSystem/Core/EventLoop.h>
 #include <EventSystem/Emitter.h>
 #include <EventSystem/Event_fwd.h>
-#include <Network/Enums.hh>
-#include <Network/Event.h>
+#include <Network/Network.h>
 #include <View/ControllerMyGuiAdapter.h>
 #include <View/Event_fwd.h>
 #include <View/HudElement.h>

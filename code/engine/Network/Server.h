@@ -35,8 +35,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/CharArray.h>
 #include <Core/ClockUtils.h>
 #include <Core/Types.h>
+#include <EventSystem/Emitter.h>
 #include <Network/Defs.h>
 #include <Network/Event_fwd.h>
+#include <Network/Handshake.h>
 
 class EventLoop;
 
@@ -46,20 +48,25 @@ namespace Network{
 using namespace boost::asio::ip;
 using namespace boost::system;
 
-class NetworkModule;
+class TcpModule;
+class UdpReadModule;
+class UdpWriteModule;
 
 //! This class represents a network server. It starts accepting connections from clients 
 //! using several NetworkModules
-class NETWORK_API Server
+class NETWORK_API Server : Emitter
 {
 public:
 	//! \brief Constructor
 	//! \param[in] loop EventLoop of the EventSystem
 	Server(EventLoop* loop);
 	~Server();
-private:
-	typedef std::map<PeerIdT, boost::shared_ptr<NetworkModule> > ModulesMap;
 
+private:
+	typedef std::map<PeerIdT, boost::shared_ptr<TcpModule> > TcpModulesMap;
+	typedef std::map<PeerIdT, boost::shared_ptr<UdpWriteModule> > UdpWriteModulesMap;
+	typedef std::map<boost::asio::ip::udp::endpoint, PeerIdT> UdpEndpointMap;
+	
 	//! \brief Stops all communication to and from all clients
 	void stop();
 
@@ -93,18 +100,8 @@ private:
 	//! \param[in] peerId ID of the NetworkModule to stop communicating
 	void onDisconnect(const PeerIdT& peerId);
 	
-	//! \brief Calculates the checksum of a Handshake
-	//! \param[in] hs The Handshake to calculate the checksum for
-	//! \return Calculated checksum
-	u16 calculateHandshakeChecksum(const Handshake& hs);
-
-	//! \brief Logs an error_code
-	//! \param[in] ec Error code to log
-	//! \param[in] method Name of the method that received the error
-	void printErrorCode(const error_code &ec, const std::string& method);
+	PeerIdT identifyUdpEndpoint(const boost::shared_ptr<boost::asio::ip::udp::endpoint>);
 	
-	EventLoop* mLoop;
-
 	boost::asio::io_service mService;
 	boost::shared_ptr<tcp::acceptor> mAcceptor;
 	boost::thread mThread;
@@ -116,7 +113,11 @@ private:
 
 	Handshake::SerializationT mHandshakeBuffer;
 
-	ModulesMap mNetworkModules;
+	TcpModulesMap mTcpModules;
+	UdpWriteModulesMap mUdpWriteModules;
+	boost::shared_ptr<UdpReadModule> mUdpReadModule;
+	
+	UdpEndpointMap mUdpEndpoints;
 };
 
 } // namespace Network

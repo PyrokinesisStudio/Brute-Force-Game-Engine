@@ -33,13 +33,13 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Types.h>
 #include <Core/Utils.h>
 #include <EventSystem/Core/EventLoop.h>
-#include <Network/Interface.h>
 
 #include <Core/CharArray.h>
 #include <Core/v3.h>
 #include <EventSystem/Emitter.h>
 #include <EventSystem/Event_fwd.h>
-#include <Network/Event.h>
+#include <Network/Network.h>
+
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 

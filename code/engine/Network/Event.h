@@ -33,51 +33,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Network {
 
-struct DataPayload
-{
-	DataPayload() :
-	mAppEventId(0),
-	mAppDestination(0),
-	mAppSender(0),
-	mAppDataLen(0),
-	mTimestamp(0),
-	mAge(0)
-	{}
-	
-	DataPayload(u32 appEventId, GameHandle appDestination,
-	            GameHandle appSender, size_t appDataLen,
-	            CharArray512T appData, u32 timestamp = 0, u16 age = 0) :
-	mAppEventId(appEventId),
-	mAppDestination(appDestination),
-	mAppSender(appSender),
-	mAppDataLen(appDataLen),
-	mAppData(appData),
-	mTimestamp(timestamp),
-	mAge(age)
-	{}
-	     
-	//! Id of the actual event on application-level
-	u32 mAppEventId;
-
-	//! GameHandle of the actual receiver on application-level
-	GameHandle mAppDestination;
-
-	//! GameHandle of the actual sender on application-level
-	GameHandle mAppSender;
-	
-	//! Actual length (not capacity) of the to be send/received data.
-	size_t mAppDataLen;
-	
-	//! Actual data to be transmitted on application-level (serialized)
-	CharArray512T mAppData;
-
-	//! Timestamp is only used by NE_RECEIVED and represents the current server time
-	u32 mTimestamp;
-	
-	//! How old the data actually is
-	u16 mAge;
-};
-
 } // namespace Network
 } // namespace BFG
 

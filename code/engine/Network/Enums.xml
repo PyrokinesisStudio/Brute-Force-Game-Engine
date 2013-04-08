@@ -11,6 +11,7 @@
 
             <!-- Network Events -->
             <value>NE_SEND</value>
+            <value>NE_SEND_UDP</value>
             <value>NE_RECEIVED</value>
             <value>NE_CONNECTED</value>
             <value>NE_DISCONNECTED</value>
@@ -20,6 +21,7 @@
             <value>NE_SHUTDOWN</value>
             <value>NE_TIMESYNC_REQUEST</value>
             <value>NE_TIMESYNC_RESPONSE</value>
+            <value>NE_PING_UDP</value>
         </enum>
 
     </namespace>

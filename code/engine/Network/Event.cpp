@@ -25,6 +25,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <sstream>
+#include <Network/DataPayload.h>
 #include <Network/Defs.h>
 #include <Network/Event.h>
 

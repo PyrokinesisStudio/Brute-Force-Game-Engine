@@ -50,10 +50,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Controller/EventDumper.h>
 #include <Controller/OISUtils.h>
 
-#include <View/WindowAttributes.h>
+#include <Network/Network.h>
 
-#include <Network/Interface.h>
-#include <Network/Event.h>
+#include <View/WindowAttributes.h>
 
 #ifdef _WIN32
 	#include "InputWindowWin32.h"

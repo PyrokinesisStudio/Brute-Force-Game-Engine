@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,46 +24,35 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_NETWORKDEFS_H
-#define BFG_NETWORKDEFS_H
+#ifndef BFG_NETWORK_CHECKSUM_H
+#define BFG_NETWORK_CHECKSUM_H
 
+#include <Network/Defs.h>
 #include <Core/Types.h>
 
-#define BFG_SERVER 0
-#define BFG_CLIENT 1
-
-#ifdef _WIN32
-	#ifndef NETWORK_EXPORTS
-		#define NETWORK_API __declspec(dllimport)
-	#else
-		#define NETWORK_API __declspec(dllexport)
-	#endif //NETWORK_EXPORTS
-#else // UNIX
-    #define NETWORK_API
-#endif// UNIX
-
 namespace BFG {
-namespace Network{
+namespace Network {
 
-typedef GameHandle PeerIdT;
-typedef u32        TimestampT;
+struct Handshake;
+struct NetworkEventHeader;
 
-//! ms before automatic flush (Q3: 1000/cl_update_rate), "natural flush time" depends on bandwidth
-const u32 FLUSH_WAIT_TIME(20);
+//! \brief Calculates the checksum of a data packet
+//! \param[in] data The data part of the packet to calculate the checksum for
+//! \param[in] length The length of the data part in bytes
+//! \return Calculated checksum
+NETWORK_API u32 calculateChecksum(const char* data, std::size_t length);
 
-//! ms between time synchronization
-const u32 TIME_SYNC_WAIT_TIME(10000);
+//! \brief Calculates the checksum of a NetworkEventHeader
+//! \param[in] neh The NetworkEventHeader to calculate the checksum for
+//! \return Calculated checksum
+NETWORK_API u16 calculateHeaderChecksum(const NetworkEventHeader& neh);
 
-//! passed to Boost.Asio as port number in order to open a random port
-const u32 RANDOM_PORT(0);
+//! \brief Calculates the checksum of a Handshake
+//! \param[in] hs The Handshake to calculate the checksum for
+//! \return Calculated checksum
+NETWORK_API u16 calculateHandshakeChecksum(const Handshake& hs);
 
-//! maximum size for UDP datagrams
-const u16 UDP_PAYLOAD_SIZE(1400);
-
-//! A client doesn't need to differentiate between multiple peers.
-const PeerIdT UNIQUE_PEER(0);
-
-}// namespace BFG
-}// namespace Network
+} // namespace Network
+} // namespace BFG
 
 #endif

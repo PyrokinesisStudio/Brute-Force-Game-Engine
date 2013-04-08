@@ -48,8 +48,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #ifdef BFG_USE_NETWORK
-	#include <Network/Interface.h>
-	#include <Network/Event.h>
+	#include <Network/Network.h>
 #endif
 
 #ifdef BFG_USE_PHYSICS

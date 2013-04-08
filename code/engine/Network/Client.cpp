@@ -26,39 +26,45 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Network/Client.h>
 
+#include <boost/crc.hpp>
 #include <Base/Logger.h>
 #include <Network/Event.h>
-#include <Network/NetworkModule.h>
+#include <Network/PrintErrorCode.h>
+#include <Network/TcpModule.h>
+#include <Network/UdpReadModule.h>
+#include <Network/UdpWriteModule.h>
 
 namespace BFG {
 namespace Network{
 
-Client::Client(EventLoop* loop) :
-mLoop(loop),
+Client::Client(EventLoop* loop_) :
+Emitter(loop_),
 mLocalTime(new Clock::StopWatch(Clock::milliSecond))
 {
+	dbglog << "Client::Client()";
 	mLocalTime->start();
 
 	mResolver.reset(new tcp::resolver(mService));
 	
 	mTimeSyncTimer.reset(new boost::asio::deadline_timer(mService));
 
-	mLoop->connect(ID::NE_CONNECT, this, &Client::controlEventHandler);
-	mLoop->connect(ID::NE_DISCONNECT, this, &Client::controlEventHandler);
-	mLoop->connect(ID::NE_SHUTDOWN, this, &Client::controlEventHandler);
+	loop()->connect(ID::NE_CONNECT, this, &Client::controlEventHandler);
+	loop()->connect(ID::NE_DISCONNECT, this, &Client::controlEventHandler);
+	loop()->connect(ID::NE_SHUTDOWN, this, &Client::controlEventHandler);
 
-	mNetworkModule.reset(new NetworkModule(mLoop, mService, 0, mLocalTime));
+	dbglog << "Client: Creating TcpModule";
+	mTcpModule.reset(new TcpModule(loop(), mService, UNIQUE_PEER, mLocalTime));
 }
 
 Client::~Client()
 {
-	dbglog << "Client::~Client";
+	dbglog << "Client::~Client()";
 	stop();
-	mLoop->disconnect(ID::NE_CONNECT, this);
-	mLoop->disconnect(ID::NE_DISCONNECT, this);
-	mLoop->disconnect(ID::NE_SHUTDOWN, this);
 
-	mLoop->disconnect(ID::NE_RECEIVED, this);
+	loop()->disconnect(ID::NE_CONNECT, this);
+	loop()->disconnect(ID::NE_DISCONNECT, this);
+	loop()->disconnect(ID::NE_SHUTDOWN, this);
+	loop()->disconnect(ID::NE_RECEIVED, this);
 
 	if (mResolver)
 		mResolver->cancel();
@@ -69,18 +75,24 @@ Client::~Client()
 void Client::stop()
 {
 	dbglog << "Client::stop";
+	
+	mUdpReadModule.reset();
+	mUdpWriteModule.reset();
+	
+	if (mTcpModule)
+	{
+		mTcpModule->socket().shutdown(boost::asio::socket_base::shutdown_both);
+		mTcpModule->socket().close();
+		mTcpModule.reset();
+	}
+	
 	mService.stop();
 	mThread.join();
-
-	if (mNetworkModule && mNetworkModule->socket()->is_open())
-		mNetworkModule->socket()->close();	
-
-	mNetworkModule.reset();
 }
 
 void Client::startConnecting(const std::string& ip, const std::string& port)
 {
-	dbglog << "NetworkModule::startConnecting";
+	dbglog << "Client::startConnecting";
 	boost::asio::ip::tcp::resolver::query query(ip, port);
 	mResolver->async_resolve(query, boost::bind(&Client::resolveHandler, this, _1, _2));
 }
@@ -90,7 +102,7 @@ void Client::readHandshake()
 	dbglog << "Client::readHandshake";
 	boost::asio::async_read
 	(
-		*(mNetworkModule->socket()), 
+		mTcpModule->socket(),
 		boost::asio::buffer(mHandshakeBuffer),
 		boost::asio::transfer_exactly(Handshake::SerializationT::size()),
 		bind(&Client::readHandshakeHandler, this, _1, _2)
@@ -99,13 +111,13 @@ void Client::readHandshake()
 
 void Client::resolveHandler(const error_code &ec, tcp::resolver::iterator it)
 { 
-	dbglog << "NetworkModule::resolveHandler";
-	if (!ec) 
+	dbglog << "TcpModule::resolveHandler";
+	if (!ec)
 	{
-		mNetworkModule->socket()->async_connect(*it, bind(&Client::connectHandler, this, _1)); 
+		mTcpModule->socket().async_connect(*it, bind(&Client::connectHandler, this, _1));
 	}
 	else
-		printErrorCode(ec, "resolveHandler");
+		printErrorCode(ec, "resolveHandler", UNIQUE_PEER);
 }
 
 void Client::connectHandler(const error_code &ec)
@@ -117,8 +129,15 @@ void Client::connectHandler(const error_code &ec)
 	}
 	else
 	{
-		printErrorCode(ec, "connectHandler");
+		printErrorCode(ec, "connectHandler", UNIQUE_PEER);
 	}
+}
+
+//! \brief Helper function for UDP endpoint identification on client-side.
+//! \return Always UNIQUE_PEER
+static PeerIdT uniquePeer(const boost::shared_ptr<Udp::EndpointT>&)
+{
+	return UNIQUE_PEER;
 }
 
 void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
@@ -135,27 +154,55 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 		if (ownHsChecksum != hsChecksum)
 		{
 			warnlog << std::hex << std::uppercase 
-				<< "readHandshakeHandler: Got bad PeerId (Own CRC: "
+				<< "Client: readHandshakeHandler: Got bad PeerId (Own CRC: "
 				<< ownHsChecksum
 				<< " Rcvd CRC: "
 				<< hsChecksum
 				<< "). Disconnecting Peer.";
 
 			// Peer sends crap? Bye bye!
-			mNetworkModule->socket().reset();
+			// TODO: Notify Application
+			mTcpModule->socket().close();
 			return;
 		}
 		else
 		{
-			dbglog << "Received peer ID: " << hs.mPeerId;
+			dbglog << "Client: Received peer ID: " << hs.mPeerId;
 			mPeerId = hs.mPeerId;
 
-			mNetworkModule->startReading();
+			mTcpModule->startReading();
+			mTcpModule->startSending();
 
-			Emitter e(mLoop);
-			e.emit<ControlEvent>(ID::NE_CONNECTED, mPeerId);
+			boost::asio::ip::tcp::endpoint tcpServerEp = mTcpModule->socket().remote_endpoint();
+			boost::shared_ptr<boost::asio::ip::udp::endpoint> udpServerEp(new boost::asio::ip::udp::endpoint(tcpServerEp.address(), tcpServerEp.port()));
+			boost::asio::ip::udp::endpoint udpLocalEp(udp::endpoint(udp::v4(), RANDOM_PORT));
+			boost::shared_ptr<Udp::SocketT> socket(new Udp::SocketT(mService, udpLocalEp));
+			
+			dbglog << "Client: Creating UdpReadModule";
+			mUdpReadModule.reset(new UdpReadModule(
+				loop(),
+				mService,
+				mLocalTime,
+				socket,
+				uniquePeer
+			));
+			mUdpReadModule->startReading();
 
-			mNetworkModule->sendTimesyncRequest();
+			dbglog << "Client: Creating UdpWriteModule";
+			mUdpWriteModule.reset(new UdpWriteModule(
+				loop(),
+				mService,
+				UNIQUE_PEER,
+				mLocalTime,
+				socket,
+				udpServerEp
+			));
+			mUdpWriteModule->startSending();
+			mUdpWriteModule->pingRemote();
+			
+			emit<ControlEvent>(ID::NE_CONNECTED, mPeerId);
+
+			mTcpModule->sendTimesyncRequest();
 			setTimeSyncTimer(TIME_SYNC_WAIT_TIME);
 		}
 	}
@@ -163,18 +210,18 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 
 void Client::controlEventHandler(ControlEvent* e)
 {
-	switch(e->getId())
+	switch(e->id())
 	{
 	case ID::NE_CONNECT:
 		onConnect(boost::get<EndpointT>(e->getData()));
 		break;
 	case ID::NE_DISCONNECT:
 	case ID::NE_SHUTDOWN:
-		onDisconnect(0);
+		onDisconnect(UNIQUE_PEER);
 		break;
 	default:
 		warnlog << "Client: Can't handle event with ID: "
-			<< e->getId();
+			<< e->id();
 		break;
 	}
 
@@ -189,8 +236,7 @@ void Client::onConnect(const EndpointT& endpoint)
 void Client::onDisconnect(const PeerIdT& peerId)
 {
 	stop();
-	Emitter e(mLoop);
-	e.emit<ControlEvent>(ID::NE_DISCONNECTED, peerId);
+	emit<ControlEvent>(ID::NE_DISCONNECTED, peerId);
 }
 
 void Client::setTimeSyncTimer(const long& waitTime_ms)
@@ -204,15 +250,14 @@ void Client::setTimeSyncTimer(const long& waitTime_ms)
 
 void Client::syncTimerHandler(const error_code &ec)
 {
-	if (!ec)
+	if (ec)
 	{
-		mNetworkModule->sendTimesyncRequest();
-		setTimeSyncTimer(TIME_SYNC_WAIT_TIME);
+		printErrorCode(ec, "Client::syncTimerHandler", UNIQUE_PEER);
+		return;
 	}
-	else
-	{
-		printErrorCode(ec, "timerHandler");
-	}
+
+	mTcpModule->sendTimesyncRequest();
+	setTimeSyncTimer(TIME_SYNC_WAIT_TIME);
 }
 
 u16 Client::calculateHandshakeChecksum(const Handshake& hs)
@@ -220,11 +265,6 @@ u16 Client::calculateHandshakeChecksum(const Handshake& hs)
 	boost::crc_16_type result;
 	result.process_bytes(&(hs.mPeerId), sizeof(PeerIdT));
 	return result.checksum();
-}
-
-void Client::printErrorCode(const error_code &ec, const std::string& method)
-{
-	warnlog << "[" << method << "] Error Code: " << ec.value() << ", message: " << ec.message();
 }
 
 } // namespace Network

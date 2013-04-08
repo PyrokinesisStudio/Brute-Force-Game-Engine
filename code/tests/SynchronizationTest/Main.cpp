@@ -55,8 +55,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Property/Plugin.h>
 #include <Model/Property/SpacePlugin.h>
 #include <Model/State.h>
-#include <Network/Event.h>
-#include <Network/Interface.h>
+#include <Network/Network.h>
 #include <Physics/Event_fwd.h>
 #include <Physics/Interface.h>
 #include <View/ControllerMyGuiAdapter.h>

@@ -29,7 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/ClockUtils.h>
 #include <Model/Property/Concept.h>
-#include <Network/Event_fwd.h>
+#include <Network/Network_fwd.h>
 #include <Physics/Event_fwd.h>
 
 namespace BFG

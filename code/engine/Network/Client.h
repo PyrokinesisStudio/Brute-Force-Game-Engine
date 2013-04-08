@@ -32,22 +32,26 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Base/EntryPoint.h>
 #include <Core/ClockUtils.h>
+#include <EventSystem/Emitter.h>
 #include <Network/Defs.h>
 #include <Network/Event_fwd.h>
+#include <Network/Handshake.h>
 
 class EventLoop;
 
 namespace BFG {
-namespace Network{
+namespace Network {
+
+class TcpModule;
+class UdpReadModule;
+class UdpWriteModule;
 
 using namespace boost::asio::ip;
 using namespace boost::system;
 
-class NetworkModule;
-
 //! This class represents a network client. It starts the connection to a server 
 //! using a NetworkModule
-class NETWORK_API Client
+class NETWORK_API Client : Emitter
 {
 public:
 	//! \brief Constructor
@@ -100,17 +104,11 @@ private:
 	//! \param[in] ec Error code of boost::asio
 	void syncTimerHandler(const error_code &ec);
 
+	// TODO: Move to Checksum.h and remove crc include
 	//! \brief Calculates the checksum of a Handshake
 	//! \param[in] hs The Handshake to calculate the checksum for
 	//! \return Calculated checksum
 	u16 calculateHandshakeChecksum(const Handshake& hs);
-
-	//! \brief Logs an error_code
-	//! \param[in] ec Error code to log
-	//! \param[in] method Name of the method that received the error
-	void printErrorCode(const error_code &ec, const std::string& method);
-
-	EventLoop* mLoop;
 
 	boost::asio::io_service mService;
 	boost::shared_ptr<tcp::resolver> mResolver;
@@ -125,10 +123,12 @@ private:
 
 	boost::shared_ptr<boost::asio::deadline_timer> mTimeSyncTimer;
 
-	boost::shared_ptr<NetworkModule> mNetworkModule;
+	boost::shared_ptr<TcpModule> mTcpModule;
+
+	boost::shared_ptr<UdpReadModule> mUdpReadModule;
+	boost::shared_ptr<UdpWriteModule> mUdpWriteModule;
 
 	PeerIdT mPeerId;
-
 };
 
 } // namespace Network
