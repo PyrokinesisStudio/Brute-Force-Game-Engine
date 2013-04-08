@@ -33,11 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace BFG {
 
-class BFG_CORE_API XmlFileHandleFactory
-{
-public:
-	static XmlFileHandleT createWithPugiXml(const std::string& path, bool createFile = false);
-};
+XmlFileHandleT BFG_CORE_API createXmlFileHandle(const std::string& path, bool createFile = false);
 
 } // namespace BFG
 

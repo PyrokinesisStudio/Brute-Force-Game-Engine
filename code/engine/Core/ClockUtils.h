@@ -32,6 +32,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/date_time/posix_time/ptime.hpp>
 
 #include <Core/Defs.h>
+#include <Core/Types.h>
 
 namespace BFG {
 namespace Clock {
@@ -52,14 +53,14 @@ class BFG_CORE_API Base
 public:
 	virtual ~Base() {}
 
-	//! \return The current time
-	bpt::ptime now();
+	//! \return The current time.
+	bpt::ptime now() const;
 	
-	//! \brief Calculates a duration from a given time to now
-	bpt::time_duration tillNow(bpt::ptime from);
+	//! \brief Calculates a duration from a given time to now.
+	bpt::time_duration tillNow(bpt::ptime from) const;
 	
 	//! \return A duration in a given resolution (s, ms, mics)
-	long total(bpt::time_duration, Resolution resolution);
+	s32 total(bpt::time_duration, Resolution resolution) const;
 };
 
 //! This class works like a stop watch, with one exception: stop() could be
@@ -78,10 +79,10 @@ public:
 
 	//! Returns the measured value in defined resolution.
 	//! You can call stop() many times but not before calling start initial!
-	long stop();
+	s32 stop() const;
 
-	//! Returns the measured time and restarts the clock
-	long restart();
+	//! Returns the measured time and restarts the clock.
+	s32 restart();
 	
 	//! Call this at the end of your clock operations to avoid wrong results
 	//! by calling stop before start.
@@ -101,20 +102,20 @@ class BFG_CORE_API SleepFrequently
 {
 public:
 	SleepFrequently(Resolution resolution,
-	                long frequency);
+	                s32 frequency);
 
 	//! Measures the time between two ticks and sleeps the threat for the time
 	//! that is left. It slows down the speed of a thread to a defined frequency.
-	long measure();
+	s32 measure();
 	void reset();
 
 private:
 
 	//! Sleep this thread for a given duration in defined resolution.
-	void  sleep(long duration);
+	void  sleep(s32 duration) const;
 
-	long  mFrequency;
-	long  mTickCount;
+	s32  mFrequency;
+	s32  mTickCount;
 
 	Resolution mResolution;
 

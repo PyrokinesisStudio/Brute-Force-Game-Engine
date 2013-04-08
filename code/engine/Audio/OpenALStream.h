@@ -29,7 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Audio/Defines.h>
 
-#ifdef ENABLE_OPENAL
+#ifdef BFG_USE_OPENAL
 
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
@@ -75,5 +75,5 @@ private:
 } // namespace Audio
 } // namespace BFG
 
-#endif // ENABLE_OPENAL
+#endif // BFG_USE_OPENAL
 #endif

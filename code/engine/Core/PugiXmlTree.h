@@ -24,8 +24,13 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
+
 #ifndef BFG_PUGI_XML_TREE__
 #define BFG_PUGI_XML_TREE__
+
+#include <Core/Defs.h>
+
+#ifdef BFG_USE_PUGIXML
 
 #include <Core/XmlTree.h>
 #include <pugixml.hpp>
@@ -69,4 +74,5 @@ private:
 
 } // namespace BFG
 
+#endif
 #endif

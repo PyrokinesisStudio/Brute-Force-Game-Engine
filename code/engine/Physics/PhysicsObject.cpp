@@ -303,19 +303,21 @@ void PhysicsObject::sendDeltas() const
 	}
 
 	// Velocity
-	const VelocityComposite velocity = boost::make_tuple(getVelocity(), v3::ZERO);
-	if (!nearEnough(velocity.get<0>(), mDeltaStorage.get<2>(), epsilon))
+	const VelocityComposite velocity = boost::make_tuple(getVelocity(), getVelocityRelative());
+	if (!nearEnough(velocity.get<0>(), mDeltaStorage.get<2>(), epsilon) || !nearEnough(velocity.get<1>(), mDeltaStorage.get<3>(), epsilon))
 	{
 		emit<Physics::Event>(ID::PE_VELOCITY, velocity, mRootModule);
 		mDeltaStorage.get<2>() = velocity.get<0>();
+		mDeltaStorage.get<3>() = velocity.get<1>();
 	}
 
 	// RotationVelocity
-	const VelocityComposite rotVelocity = boost::make_tuple(getRotationVelocity(), v3::ZERO);
-	if (!nearEnough(rotVelocity.get<0>(), mDeltaStorage.get<4>(), epsilon))
+	const VelocityComposite rotVelocity = boost::make_tuple(getRotationVelocity(), getRotationVelocityRelative());
+	if (!nearEnough(rotVelocity.get<0>(), mDeltaStorage.get<4>(), epsilon) || !nearEnough(rotVelocity.get<1>(), mDeltaStorage.get<5>(), epsilon))
 	{
 		emit<Physics::Event>(ID::PE_ROTATION_VELOCITY, rotVelocity, mRootModule);
 		mDeltaStorage.get<4>() = rotVelocity.get<0>();
+		mDeltaStorage.get<5>() = rotVelocity.get<1>();
 	}
 
 	// TODO: Other values.

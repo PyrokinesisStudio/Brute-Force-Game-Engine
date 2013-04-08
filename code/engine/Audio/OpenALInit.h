@@ -29,7 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Audio/Init.h>
 
-#ifdef ENABLE_OPENAL
+#ifdef BFG_USE_OPENAL
 
 #include <boost/shared_ptr.hpp>
 
@@ -62,5 +62,5 @@ boost::shared_ptr<Init> createInit() { return boost::shared_ptr<Init>(new OpenAL
 } // namespace Audio
 } // namespace BFG
 
-#endif // ENABLE_OPENAL
+#endif // BFG_USE_OPENAL
 #endif

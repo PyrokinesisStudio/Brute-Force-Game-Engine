@@ -29,7 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 // Define the used audio 3rd party lib here.
 // This activates the concrete classes and methods.
-#define ENABLE_OPENAL // Enables concrete classes and methods for OpenAL.
+#define BFG_USE_OPENAL // Enables concrete classes and methods for OpenAL.
 
 #ifdef _WIN32
 	#ifndef AUDIO_EXPORTS

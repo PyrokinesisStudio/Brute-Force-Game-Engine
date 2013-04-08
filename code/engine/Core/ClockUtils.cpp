@@ -37,26 +37,26 @@ mRunning(false)
 {
 }
 
-ptime Base::now()
+ptime Base::now() const
 {
 	return microsec_clock::local_time();
 }
 
-time_duration Base::tillNow(ptime from)
+time_duration Base::tillNow(ptime from) const
 {
 	return time_period(from, now()).length();
 }
 
-long Base::total(time_duration duration, Resolution resolution)
+s32 Base::total(time_duration duration, Resolution resolution) const
 {
 	switch (resolution)
 	{
 		case microSecond:
-			return static_cast<long>(duration.total_microseconds());
+			return static_cast<s32>(duration.total_microseconds());
 		case milliSecond:
-			return static_cast<long>(duration.total_milliseconds());
+			return static_cast<s32>(duration.total_milliseconds());
 		case second:
-			return static_cast<long>(duration.total_seconds());
+			return static_cast<s32>(duration.total_seconds());
 		default:
 			throw std::logic_error
 				("Clock::Base::Total: Unknown time resolution used");
@@ -69,7 +69,7 @@ void StopWatch::start()
 	mRunning = true;
 }
 
-long StopWatch::stop()
+s32 StopWatch::stop() const
 {
 	if (!mRunning)
 		throw std::logic_error("Don't call stop before start has been called!");
@@ -77,15 +77,15 @@ long StopWatch::stop()
 	return total(tillNow(mStartTime), mResolution);
 }
 
-long StopWatch::restart()
+s32 StopWatch::restart()
 {
-	long timeSinceStart = stop();
+	s32 timeSinceStart = stop();
 	start();
 	return timeSinceStart;
 }
 
 SleepFrequently::SleepFrequently(Resolution resolution,
-                                 long frequency) :
+                                 s32 frequency) :
 mFrequency(frequency),
 mResolution(resolution),
 mOverall(resolution),
@@ -102,27 +102,26 @@ void SleepFrequently::reset()
 	mOneCycle.start();
 }
 
-long SleepFrequently::measure()
+s32 SleepFrequently::measure()
 {
 	++mTickCount;
 
-	long totalTimePassed = mOverall.stop();
-	long timeOffset = (mFrequency * mTickCount) - totalTimePassed;
+	s32 totalTimePassed = mOverall.stop();
+	s32 timeOffset = (mFrequency * mTickCount) - totalTimePassed;
 
 	if (timeOffset > mFrequency)
 	{
 		sleep(timeOffset);
 	}
 
-	long diffTimePassed = mOneCycle.stop();
+	s32 diffTimePassed = mOneCycle.stop();
 	mOneCycle.start();
 
 	return diffTimePassed;
 }
 
-void SleepFrequently::sleep(long offset)
+void SleepFrequently::sleep(s32 offset) const
 {
-	//std::cout << "sleep:" << offset << "\n";
 	switch (mResolution)
 	{
 		case microSecond:

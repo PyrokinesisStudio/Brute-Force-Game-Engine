@@ -9,7 +9,24 @@ MACRO(SETUP_BUNDLE_PATHS _BUNDLE_PATH)
 	# Boost #
 	# ----- #
 
-	SET(BOOST_ROOT "${_BUNDLE_PATH}/boost_1_47_0")
+	# CMake <=> Bjam Mapping for Visual Studio versions
+	IF(${MSVC_VERSION} EQUAL "1500")
+		SET(BJAM_MS_INTERFIX "vc90")
+		SET(BOOST_MINOR_VERSION_NR "47")
+	ELSEIF(${MSVC_VERSION} EQUAL "1600")
+		SET(BJAM_MS_INTERFIX "vc100")
+		SET(BOOST_MINOR_VERSION_NR "47")
+	ELSEIF(${MSVC_VERSION} EQUAL "1700")
+		SET(BJAM_MS_INTERFIX "vc110")
+		SET(BOOST_MINOR_VERSION_NR "49")
+	ELSE()
+		SET(BJAM_MS_INTERFIX "" STRING)
+			LOG_WARNING("Unknown Microsoft compiler detected, so you'll have"
+						" to set the correct interfix (e.g. \"vc110\") manually.")
+	ENDIF(${MSVC_VERSION} EQUAL "1500")
+	
+	
+	SET(BOOST_ROOT "${_BUNDLE_PATH}/boost_1_${BOOST_MINOR_VERSION_NR}_0")
 	SET(Boost_USE_MULTITHREADED TRUE)
 	SET(Boost_USE_STATIC_LIBS   FALSE)
 
@@ -20,36 +37,23 @@ MACRO(SETUP_BUNDLE_PATHS _BUNDLE_PATH)
 	SET(BoostLog_INCLUDE_DIR "${_BUNDLE_PATH}/boost-log")
 	SET(BoostLog_LIBRARY_DIR "${_BUNDLE_PATH}/boost-log/lib")
 
-	# CMake <=> Bjam Mapping for Visual Studio versions
-	IF    (${MSVC_VERSION} EQUAL "1500")
-		SET(BJAM_MS_INTERFIX "vc90")
-	ELSEIF(${MSVC_VERSION} EQUAL "1600")
-		SET(BJAM_MS_INTERFIX "vc100")
-	ELSE  (${MSVC_VERSION} EQUAL "1500")
-		SET(BJAM_MS_INTERFIX "" STRING)
-		LOG_WARNING(
-			"Unknown Microsoft compiler detected, so you'll have"
-			" to set the correct interfix (e.g. \"vs110\") manually."
-		)
-	ENDIF(${MSVC_VERSION} EQUAL "1500")
-
 	IF(CMAKE_CONFIGURATION_TYPES)
 		SET(BoostLog_LIBRARIES
-			debug ${BoostLog_LIBRARY_DIR}/boost_log_setup-${BJAM_MS_INTERFIX}-mt-gd-1_47.lib
-			debug ${BoostLog_LIBRARY_DIR}/boost_log-${BJAM_MS_INTERFIX}-mt-gd-1_47.lib
-			optimized ${BoostLog_LIBRARY_DIR}/boost_log_setup-${BJAM_MS_INTERFIX}-mt-1_47.lib
-			optimized ${BoostLog_LIBRARY_DIR}/boost_log-${BJAM_MS_INTERFIX}-mt-1_47.lib
+			debug ${BoostLog_LIBRARY_DIR}/boost_log_setup-${BJAM_MS_INTERFIX}-mt-gd-1_${BOOST_MINOR_VERSION_NR}.lib
+			debug ${BoostLog_LIBRARY_DIR}/boost_log-${BJAM_MS_INTERFIX}-mt-gd-1_${BOOST_MINOR_VERSION_NR}.lib
+			optimized ${BoostLog_LIBRARY_DIR}/boost_log_setup-${BJAM_MS_INTERFIX}-mt-1_${BOOST_MINOR_VERSION_NR}.lib
+			optimized ${BoostLog_LIBRARY_DIR}/boost_log-${BJAM_MS_INTERFIX}-mt-1_${BOOST_MINOR_VERSION_NR}.lib
 		)
 	ELSE()
 		IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 			SET(BoostLog_LIBRARIES
-				${BoostLog_LIBRARY_DIR}/boost_log_setup-${BJAM_MS_INTERFIX}-mt-gd-1_47.lib
-				${BoostLog_LIBRARY_DIR}/boost_log-${BJAM_MS_INTERFIX}-mt-gd-1_47.lib
+				${BoostLog_LIBRARY_DIR}/boost_log_setup-${BJAM_MS_INTERFIX}-mt-gd-1_${BOOST_MINOR_VERSION_NR}.lib
+				${BoostLog_LIBRARY_DIR}/boost_log-${BJAM_MS_INTERFIX}-mt-gd-1_${BOOST_MINOR_VERSION_NR}.lib
 			)
 		ELSE() # Release!
 			SET(BoostLog_LIBRARIES
-				${BoostLog_LIBRARY_DIR}/boost_log_setup-${BJAM_MS_INTERFIX}-mt-1_47.lib
-				${BoostLog_LIBRARY_DIR}/boost_log-${BJAM_MS_INTERFIX}-mt-1_47.lib
+				${BoostLog_LIBRARY_DIR}/boost_log_setup-${BJAM_MS_INTERFIX}-mt-1_${BOOST_MINOR_VERSION_NR}.lib
+				${BoostLog_LIBRARY_DIR}/boost_log-${BJAM_MS_INTERFIX}-mt-1_${BOOST_MINOR_VERSION_NR}.lib
 			)
 		ENDIF()
 	ENDIF()

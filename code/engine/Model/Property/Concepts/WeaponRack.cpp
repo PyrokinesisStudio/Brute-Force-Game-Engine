@@ -109,11 +109,11 @@ void WeaponRack::fireRocket()
 	v3 startVelocity;
 	calculateVelocity(startImpulse, startVelocity, true);
 
-	static size_t count = 0;
-	++count;
+	static size_t Rocketcount = 0;
+	++Rocketcount;
 	
 	std::stringstream ss;
-	ss << "Rocket " << count;
+	ss << "Rocket " << Rocketcount;
 
 	ObjectParameter op;
 	op.mHandle = generateHandle();
@@ -139,7 +139,20 @@ void WeaponRack::fireLaser()
 	v3 startVelocity;
 	calculateVelocity(startImpulse, startVelocity, false);
 
-	warnlog << "STUB: WeaponRack::fireLaser()";
+	static size_t LaserCount = 0;
+	++LaserCount;
+	
+	std::stringstream ss;
+	ss << "Laser " << LaserCount;
+
+	ObjectParameter op;
+	op.mHandle = generateHandle();
+	op.mName = ss.str();
+	op.mType = "Laser";
+	op.mLocation = spawnLocation;
+	op.mLinearVelocity = startVelocity;
+	
+	emit<SectorEvent>(ID::S_CREATE_GO, op);
 }
 
 void WeaponRack::updateGuiAmmo() const

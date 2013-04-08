@@ -24,8 +24,11 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Base/Logger.h>
 #include <Core/PugiXmlFileHandle.h>
+
+#ifdef BFG_USE_PUGIXML
+
+#include <Base/Logger.h>
 #include <Core/PugiXmlTree.h>
 
 namespace BFG {
@@ -90,3 +93,5 @@ void PugiXmlFileHandle::save(const std::string& path)
 }
 
 } // namespace BFG
+
+#endif

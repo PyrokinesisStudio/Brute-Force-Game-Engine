@@ -26,7 +26,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Audio/OpenALListener.h>
 
-#ifdef ENABLE_OPENAL
+#ifdef BFG_USE_OPENAL
 
 #include <Audio/Main.h>
 #include <Audio/Enums.hh>

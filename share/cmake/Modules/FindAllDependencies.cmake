@@ -6,7 +6,14 @@ MACRO(FIND_ALL_DEPENDENCIES)
 	# Boost #
 	# ----- #
 
-	FIND_PACKAGE(Boost 1.47 REQUIRED date_time filesystem program_options regex serialization system thread unit_test_framework)
+#	set(Boost_DEBUG ON)
+
+	# Default value for systems that do not use DependencyBundle.cmake
+	IF("${BOOST_MINOR_VERSION_NR}" STREQUAL "")
+		SET(BOOST_MINOR_VERSION_NR "49")
+	ENDIF()
+
+	FIND_PACKAGE(Boost 1.${BOOST_MINOR_VERSION_NR} REQUIRED date_time filesystem program_options regex serialization system thread unit_test_framework)
 
 	IF(Boost_FOUND)
 		LOG("Found boost ${Boost_VERSION} in ${Boost_LIBRARY_DIRS} and ${Boost_INCLUDE_DIR}")

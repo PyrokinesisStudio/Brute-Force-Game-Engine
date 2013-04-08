@@ -563,7 +563,7 @@ void AdapterControl::onLoadOk(MyGUI::Widget*)
 {
 	std::string filename(mDialog.getFileName());
 
-	XmlFileHandleT fileHandle = XmlFileHandleFactory::createWithPugiXml(filename);
+	XmlFileHandleT fileHandle = createXmlFileHandle(filename);
 	XmlTreeT configs;
 	configs = fileHandle->root()->child("AdapterConfigs");
 
@@ -601,7 +601,7 @@ void AdapterControl::fillGroupBox()
 
 void AdapterControl::onSaveOk(MyGUI::Widget*)
 {
-	XmlFileHandleT fileHandle = XmlFileHandleFactory::createWithPugiXml(mDialog.getFileName(), true);
+	XmlFileHandleT fileHandle = createXmlFileHandle(mDialog.getFileName(), true);
 
 	XmlTreeT configs;
 	configs = fileHandle->root()->addElement("AdapterConfigs");
@@ -633,7 +633,7 @@ void AdapterControl::onSaveOk(MyGUI::Widget*)
 
 void AdapterControl::onAppendOk(MyGUI::Widget*)
 {
-	XmlFileHandleT fileHandle = XmlFileHandleFactory::createWithPugiXml(mDialog.getFileName());
+	XmlFileHandleT fileHandle = createXmlFileHandle(mDialog.getFileName());
 
 	XmlTreeT configs;
 	configs = fileHandle->root()->child("AdapterConfigs");

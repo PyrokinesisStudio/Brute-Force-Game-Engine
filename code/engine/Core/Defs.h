@@ -27,6 +27,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_CORE_MAIN__
 #define BFG_CORE_MAIN__
 
+//! At the moment there is only one 3rd party lib provided. If anybody intend to use another, this switch must be moved to cmake.
+#define BFG_USE_PUGIXML
+
+
 #ifdef _WIN32
 	#ifndef CORE_EXPORTS
 		#define BFG_CORE_API __declspec(dllimport)

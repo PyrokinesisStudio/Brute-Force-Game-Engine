@@ -26,7 +26,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Audio/OpenALInit.h>
 
-#ifdef ENABLE_OPENAL
+#ifdef BFG_USE_OPENAL
 
 #include <Base/Logger.h>
 #include <Audio/HelperFunctions.h>

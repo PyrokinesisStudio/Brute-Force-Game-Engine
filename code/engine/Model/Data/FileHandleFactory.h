@@ -54,7 +54,7 @@ FileHandleFactory(const std::vector<std::string>& files)
 	
 	for (;it != files.end(); ++it)
 	{
-		fileHandle = XmlFileHandleFactory::createWithPugiXml(*it);
+		fileHandle = createXmlFileHandle(*it);
 		mFileHandlerList.push_back(FileHandlerT_ptr(new FileHandlerT(fileHandle)));
 	}
 }

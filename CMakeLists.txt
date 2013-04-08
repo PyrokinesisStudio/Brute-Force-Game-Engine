@@ -48,8 +48,8 @@ ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK )                 # Use Boost as shared lib
 # -----------------------#
 
 IF(WIN32)
-	# For Visual Studio 2008 or 2010
-	IF(${MSVC_VERSION} EQUAL "1500" OR ${MSVC_VERSION} EQUAL "1600")
+	# For Visual Studio 2008 or 2010 or 2012
+	IF(${MSVC_VERSION} EQUAL "1500" OR ${MSVC_VERSION} EQUAL "1600" OR ${MSVC_VERSION} EQUAL "1700")
 		ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)                 # Target: WinXP
 		ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)             # Disable std::copy warnings
 		ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)             # Disable sprintf warnings

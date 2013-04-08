@@ -27,6 +27,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_PUGI_XML_FILE_HANDLE__
 #define BFG_PUGI_XML_FILE_HANDLE__
 
+#include <Core/Defs.h>
+
+#ifdef BFG_USE_PUGIXML
+
 #include <boost/shared_ptr.hpp>
 #include <pugixml.hpp>
 #include <Core/XmlFileHandle.h>
@@ -48,4 +52,5 @@ private:
 
 } // namespace BFG
 
+#endif
 #endif

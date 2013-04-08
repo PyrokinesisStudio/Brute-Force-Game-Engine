@@ -236,7 +236,7 @@ namespace Tool
 		onClearClicked(NULL);
 
 		std::string filename(mDialog.getFileName());
-		BFG::XmlFileHandleT fileHandle = BFG::XmlFileHandleFactory::createWithPugiXml(filename);
+		BFG::XmlFileHandleT fileHandle = BFG::createXmlFileHandle(filename);
 
 		BFG::XmlTreeT configs = fileHandle->root()->child("ObjectConfigs");
 
@@ -304,7 +304,7 @@ namespace Tool
 
 	void ModuleControl::onSaveOk(MyGUI::Widget*)
 	{
-		XmlFileHandleT fileHandle = XmlFileHandleFactory::createWithPugiXml(mDialog.getFileName(), true);
+		XmlFileHandleT fileHandle = createXmlFileHandle(mDialog.getFileName(), true);
 
 		XmlTreeT configs;
 		configs = fileHandle->root()->addElement("ObjectConfigs");

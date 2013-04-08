@@ -29,7 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Audio/AudioObject.h>
 
-#ifdef ENABLE_OPENAL
+#ifdef BFG_USE_OPENAL
 
 #include <al.h>
 
@@ -71,5 +71,5 @@ boost::shared_ptr<AudioObject> createAudioObject(std::string audioName,
 } // namespace Audio
 } // namespace BFG
 
-#endif // ENABLE_OPENAL
+#endif // BFG_USE_OPENAL
 #endif

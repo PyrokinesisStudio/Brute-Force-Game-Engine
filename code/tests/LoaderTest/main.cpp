@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE (loadFile)
 	BOOST_REQUIRE_NO_THROW (xml_test_file_path = path.Expand("LoaderTest.xml"));
 
 	XmlFileHandleT fileHandle;
-	BOOST_REQUIRE_NO_THROW(fileHandle = XmlFileHandleFactory::createWithPugiXml(xml_test_file_path));
+	BOOST_REQUIRE_NO_THROW(fileHandle = createXmlFileHandle(xml_test_file_path));
 	BOOST_REQUIRE (fileHandle.get());
 
 	BOOST_REQUIRE (fileHandle->root().get());
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE (EditAndSaveFile)
 	std::string xml_test_file_path = "";
 	xml_test_file_path = path.Expand("LoaderTest.xml");
 
-	XmlFileHandleT fileHandle = XmlFileHandleFactory::createWithPugiXml(xml_test_file_path);
+	XmlFileHandleT fileHandle = createXmlFileHandle(xml_test_file_path);
 
 	XmlTreeT root;
 	root = fileHandle->root()->child("Root");
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE (SaveVector)
 	std::string xml_test_file_path = "";
 	xml_test_file_path = path.Expand("LoaderTest.xml");
 
-	XmlFileHandleT fileHandle = XmlFileHandleFactory::createWithPugiXml(xml_test_file_path);
+	XmlFileHandleT fileHandle = createXmlFileHandle(xml_test_file_path);
 
 	XmlTreeT root;
 	root = fileHandle->root()->child("Root");
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE (SaveVector)
 	BOOST_REQUIRE_NO_THROW(saveVector3(vec, vectorElement));
 	BOOST_REQUIRE_NO_THROW(fileHandle->save());
 
-	fileHandle = XmlFileHandleFactory::createWithPugiXml(xml_test_file_path);
+	fileHandle = createXmlFileHandle(xml_test_file_path);
 	root = fileHandle->root()->child("Root");
 	elements = root->childList("Element");
 
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE (elementList)
 	std::string xml_test_file_path = "";
 	xml_test_file_path = path.Expand("LoaderTest.xml");
 
-	XmlFileHandleT fileHandle = XmlFileHandleFactory::createWithPugiXml(xml_test_file_path);
+	XmlFileHandleT fileHandle = createXmlFileHandle(xml_test_file_path);
 
 	XmlTreeT searchHandle;
 	BOOST_REQUIRE_NO_THROW(searchHandle = fileHandle->root()->child("Root"));
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE (attribute)
 	std::string xml_test_file_path = "";
 	xml_test_file_path = path.Expand("LoaderTest.xml");
 
-	XmlFileHandleT fileHandle = XmlFileHandleFactory::createWithPugiXml(xml_test_file_path);
+	XmlFileHandleT fileHandle = createXmlFileHandle(xml_test_file_path);
 
 	XmlTreeT searchHandle;
 	searchHandle = fileHandle->root()->child("Root");
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE (defaultAdapter)
 	std::string xml_test_file_path = "";
 	xml_test_file_path = path.Get(ID::P_SCRIPTS_LEVELS)+"/default/Adapter.xml";
 
-	XmlFileHandleT fileHandle = XmlFileHandleFactory::createWithPugiXml(xml_test_file_path);
+	XmlFileHandleT fileHandle = createXmlFileHandle(xml_test_file_path);
 	BOOST_REQUIRE_NO_THROW
 	(
 		AdapterXml factory = AdapterXml(fileHandle);
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE (defaultValuesTest)
 	std::string xml_test_file_path = "";
 	xml_test_file_path = path.Get(ID::P_SCRIPTS_LEVELS)+"/default/Value.xml";
 
-	XmlFileHandleT fileHandle = XmlFileHandleFactory::createWithPugiXml(xml_test_file_path);
+	XmlFileHandleT fileHandle = createXmlFileHandle(xml_test_file_path);
 	BOOST_REQUIRE_NO_THROW
 	(
 		ValueXml factory = ValueXml(fileHandle);
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE (defaultConceptsTest)
 	std::string xml_test_file_path = "";
 	xml_test_file_path = path.Get(ID::P_SCRIPTS_LEVELS)+"/default/Concept.xml";
 
-	XmlFileHandleT fileHandle = XmlFileHandleFactory::createWithPugiXml(xml_test_file_path);
+	XmlFileHandleT fileHandle = createXmlFileHandle(xml_test_file_path);
 	BOOST_REQUIRE_NO_THROW
 	(
 		ConceptXml factory = ConceptXml(fileHandle);

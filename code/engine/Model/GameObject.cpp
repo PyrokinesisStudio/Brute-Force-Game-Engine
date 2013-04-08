@@ -526,7 +526,7 @@ void GameObject::vectorToModuleFromRoot(VD module, v3& vecResult, qv4& oriResult
 	while (current != Root)
 	{
 		graph_traits<GameObject::ModuleTreeT>::in_edge_iterator iei, iei_end;
-		tie(iei, iei_end) = in_edges(current, mModules);
+		tuples::tie(iei, iei_end) = in_edges(current, mModules);
 
 		assert(iei != iei_end && "GameObject::vectorToModuleFromRoot: "
 			"Got a vertex which has no in-edges but is not root either!");
