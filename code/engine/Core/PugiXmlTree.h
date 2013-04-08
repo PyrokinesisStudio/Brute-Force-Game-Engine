@@ -28,7 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_PUGI_XML_TREE__
 #define BFG_PUGI_XML_TREE__
 
-#include <Core\Defs.h>
+#include <Core/Defs.h>
 
 #ifdef BFG_USE_PUGIXML
 
