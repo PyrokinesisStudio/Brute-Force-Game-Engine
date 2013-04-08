@@ -68,23 +68,16 @@ PugiXmlFileHandle::PugiXmlFileHandle(const std::string& path, bool createFile): 
 	dbglog << "Parsed: " << path << ".";
 }
 
-
 void PugiXmlFileHandle::save(const std::string& path)
 {
-	std::string errorInformationPath = "";
+	std::string errorInformationPath(path);
+
+	if (errorInformationPath.empty())
+		errorInformationPath = mPath;
 
 	try
 	{
-		if (path == "")
-		{
-			errorInformationPath = mPath;
-			dbglog << mDocument.save_file(mPath.c_str());
-		}
-		else
-		{
-			errorInformationPath = path;
-			dbglog << mDocument.save_file(path.c_str());
-		}
+		dbglog << mDocument.save_file(errorInformationPath.c_str());
 	}
 	catch (std::exception& e)
 	{
