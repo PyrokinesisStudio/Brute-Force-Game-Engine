@@ -99,6 +99,7 @@ struct Server : Emitter
 
 		}
 		default:
+		{
 			warnlog << "Server::netControlHandler: Got unhandled event: " << e->id();
 			break;
 		}

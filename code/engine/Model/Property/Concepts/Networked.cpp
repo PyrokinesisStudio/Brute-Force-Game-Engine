@@ -170,6 +170,7 @@ void Networked::onNetworkEvent(Network::DataPacketEvent* e)
 			break;
 		}
 		default:
+		{
 			warnlog << "Networked::onNetworkEvent: Got unhandled event: " << e->id();
 		}
 
