@@ -121,9 +121,18 @@ private:
 		return ProtocolT::headerSize();
 	}
 	
+	boost::asio::const_buffer dataPart() const
+	{
+		return boost::asio::buffer
+		(
+			mBuffer + ProtocolT::headerSize(),
+			mOffset - ProtocolT::headerSize()
+		);
+	}
+	
 	void makeHeader()
 	{
-		HeaderT header = mHeaderFactory.create(mBuffer, mOffset);
+		HeaderT header = mHeaderFactory.createFrom(dataPart());
 		
 		// Integrate header into packet
 		typename HeaderT::SerializationT output;

@@ -136,7 +136,6 @@ void TcpModule::readDataHandler(const system::error_code &ec, std::size_t bytesT
 	}
 	
 	u32 ownPacketChecksum = calculateChecksum(mReadBuffer.data(), bytesTransferred);
-
 	if (ownPacketChecksum != packetChecksum)
 	{
 		warnlog << std::hex << std::uppercase

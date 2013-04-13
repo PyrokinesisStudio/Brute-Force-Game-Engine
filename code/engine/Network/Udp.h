@@ -46,7 +46,7 @@ public:
 	
 	//! Creates an UnreliableHeader in a provided buffer.
 	//! \param[in] buffer The buffer to write the header data in
-	UnreliableHeader create(boost::asio::const_buffer, std::size_t) const
+	UnreliableHeader createFrom(boost::asio::const_buffer) const
 	{
 		++mSequenceNumber;
 		

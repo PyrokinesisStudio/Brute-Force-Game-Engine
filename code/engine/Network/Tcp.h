@@ -99,17 +99,17 @@ class TcpHeaderFactory
 public:
 	typedef NetworkEventHeader HeaderT;
 	
-	//! Creates a NetworkEventHeader in a provided buffer. The
+	//! Creates a NetworkEventHeader from a provided buffer. The
 	//! to-transmitted data must've already been written into the buffer.
-	//! \param[in] buffer The buffer to write the header data in
-	//! \param[in] length The length of the content within the buffer
-	static NetworkEventHeader create(boost::asio::const_buffer buffer, std::size_t length)
+	//! \param[in] buffer The buffer used to generate the header. No extra
+	//!                   bytes allowed. Its size must fit exactly the data
+	//!                   part of the packet.
+	static NetworkEventHeader createFrom(boost::asio::const_buffer data)
 	{
 		using namespace boost::asio;
 
 		// Checksum of data
-		const_buffer data = buffer + Tcp::headerSize();
-		std::size_t dataLength = length - Tcp::headerSize();
+		BFG::u16 dataLength = boost::asio::buffer_size(data);
 		u32 dataChecksum = calculateChecksum(buffer_cast<const char*>(data), dataLength);
 
 		// Construct header (without header checksum)
