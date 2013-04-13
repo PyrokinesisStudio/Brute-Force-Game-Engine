@@ -84,13 +84,15 @@ std::ostream& operator<< (std::ostream& strm, const SeverityLevel& svl)
 
 void Init(SeverityLevel Min_Log_Level, const std::string& Filename)
 {
+#ifndef NDEBUG
 	static bool already_initialized = false;
 	
 	assert("It seems that you called Base::Logger::Init() twice."
 	       " This is not recommended." && ! already_initialized);
 
 	already_initialized = true;
-
+#endif
+	
 	setupCore(Min_Log_Level);
 	setupFileSink(Filename);
 	setupCoutSink();

@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE (TestIPacketOPacket, ProtocolT, AllProtocolsT)
 	boost::shared_ptr<StopWatch> fakeLocaltime(new StopWatch(milliSecond));
 	fakeLocaltime->start();
 	Rtt<BFG::s32, 10> fakeRtt;
-	PayloadFactory pf(2222, fakeLocaltime, fakeRtt);
+	PayloadFactory pf(fakeTimestampOffset, fakeLocaltime, fakeRtt);
 
 	// Try to get it
 	DataPayload dp1 = oPacket.nextPayload(pf);

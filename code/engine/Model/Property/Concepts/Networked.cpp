@@ -169,7 +169,9 @@ void Networked::onNetworkEvent(Network::DataPacketEvent* e)
 			emit<Physics::Event>(ID::PE_UPDATE_ROTATION_VELOCITY, v, ownerHandle());
 			break;
 		}
-
+		default:
+			warnlog << "Networked::onNetworkEvent: Got unhandled event: " << e->id();
+		}
 
 		}
 	}

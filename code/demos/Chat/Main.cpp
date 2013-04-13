@@ -98,6 +98,10 @@ struct Server : Emitter
 				peers.erase(it);
 
 		}
+		default:
+			warnlog << "Server::netControlHandler: Got unhandled event: " << e->id();
+			break;
+		}
 		} // switch
 	}
 	
@@ -211,6 +215,8 @@ struct Client : Emitter
 			dbglog << "Connection to Server was lost.";
 			break;
 		}
+		default:
+			warnlog << "Client::netControlHandler: Got unhandled event: " << e->id();
 		}
 	}
 
