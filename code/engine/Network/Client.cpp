@@ -143,69 +143,71 @@ static PeerIdT uniquePeer(const boost::shared_ptr<Udp::EndpointT>&)
 void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 {
 	dbglog << "Client::readHandshakeHandler (" << bytesTransferred << ")";
-	if (!ec) 
+
+	if (ec)
 	{
-		Handshake hs;
-		hs.deserialize(mHandshakeBuffer);
-		
-		u16 hsChecksum = hs.mChecksum;
-		u16 ownHsChecksum = calculateHandshakeChecksum(hs);
-		
-		if (ownHsChecksum != hsChecksum)
-		{
-			warnlog << std::hex << std::uppercase 
-				<< "Client: readHandshakeHandler: Got bad PeerId (Own CRC: "
-				<< ownHsChecksum
-				<< " Rcvd CRC: "
-				<< hsChecksum
-				<< "). Disconnecting Peer.";
-
-			// Peer sends crap? Bye bye!
-			// TODO: Notify Application
-			mTcpModule->socket().close();
-			return;
-		}
-		else
-		{
-			dbglog << "Client: Received peer ID: " << hs.mPeerId;
-			mPeerId = hs.mPeerId;
-
-			mTcpModule->startReading();
-			mTcpModule->startSending();
-
-			boost::asio::ip::tcp::endpoint tcpServerEp = mTcpModule->socket().remote_endpoint();
-			boost::shared_ptr<boost::asio::ip::udp::endpoint> udpServerEp(new boost::asio::ip::udp::endpoint(tcpServerEp.address(), tcpServerEp.port()));
-			boost::asio::ip::udp::endpoint udpLocalEp(udp::endpoint(udp::v4(), RANDOM_PORT));
-			boost::shared_ptr<Udp::SocketT> socket(new Udp::SocketT(mService, udpLocalEp));
-			
-			dbglog << "Client: Creating UdpReadModule";
-			mUdpReadModule.reset(new UdpReadModule(
-				loop(),
-				mService,
-				mLocalTime,
-				socket,
-				uniquePeer
-			));
-			mUdpReadModule->startReading();
-
-			dbglog << "Client: Creating UdpWriteModule";
-			mUdpWriteModule.reset(new UdpWriteModule(
-				loop(),
-				mService,
-				UNIQUE_PEER,
-				mLocalTime,
-				socket,
-				udpServerEp
-			));
-			mUdpWriteModule->startSending();
-			mUdpWriteModule->pingRemote();
-			
-			emit<ControlEvent>(ID::NE_CONNECTED, mPeerId);
-
-			mTcpModule->sendTimesyncRequest();
-			setTimeSyncTimer(TIME_SYNC_WAIT_TIME);
-		}
+		printErrorCode(ec, "Client::syncTimerHandler", UNIQUE_PEER);
+		return;
 	}
+
+	Handshake hs;
+	hs.deserialize(mHandshakeBuffer);
+	
+	u16 hsChecksum = hs.mChecksum;
+	u16 ownHsChecksum = calculateHandshakeChecksum(hs);
+	
+	if (ownHsChecksum != hsChecksum)
+	{
+		warnlog << std::hex << std::uppercase 
+			<< "Client: readHandshakeHandler: Got bad PeerId (Own CRC: "
+			<< ownHsChecksum
+			<< " Rcvd CRC: "
+			<< hsChecksum
+			<< "). Disconnecting Peer.";
+
+		// Peer sends crap? Bye bye!
+		// TODO: Notify Application
+		mTcpModule->socket().close();
+		return;
+	}
+
+	dbglog << "Client: Received peer ID: " << hs.mPeerId;
+	mPeerId = hs.mPeerId;
+
+	mTcpModule->startReading();
+	mTcpModule->startSending();
+
+	boost::asio::ip::tcp::endpoint tcpServerEp = mTcpModule->socket().remote_endpoint();
+	boost::shared_ptr<boost::asio::ip::udp::endpoint> udpServerEp(new boost::asio::ip::udp::endpoint(tcpServerEp.address(), tcpServerEp.port()));
+	boost::asio::ip::udp::endpoint udpLocalEp(udp::endpoint(udp::v4(), RANDOM_PORT));
+	boost::shared_ptr<Udp::SocketT> socket(new Udp::SocketT(mService, udpLocalEp));
+	
+	dbglog << "Client: Creating UdpReadModule";
+	mUdpReadModule.reset(new UdpReadModule(
+		loop(),
+		mService,
+		mLocalTime,
+		socket,
+		uniquePeer
+	));
+	mUdpReadModule->startReading();
+
+	dbglog << "Client: Creating UdpWriteModule";
+	mUdpWriteModule.reset(new UdpWriteModule(
+		loop(),
+		mService,
+		UNIQUE_PEER,
+		mLocalTime,
+		socket,
+		udpServerEp
+	));
+	mUdpWriteModule->startSending();
+	mUdpWriteModule->pingRemote();
+	
+	emit<ControlEvent>(ID::NE_CONNECTED, mPeerId);
+
+	mTcpModule->sendTimesyncRequest();
+	setTimeSyncTimer(TIME_SYNC_WAIT_TIME);
 }
 
 void Client::controlEventHandler(ControlEvent* e)
