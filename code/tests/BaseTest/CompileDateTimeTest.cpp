@@ -1,7 +1,9 @@
+#define BOOST_TEST_MODULE BaseTest
+#include <boost/test/unit_test.hpp>
+
 #include <Base/CompileDateTime.h>
 
-#define BOOST_TEST_MODULE CompileDateTimeTest
-#include <boost/test/unit_test.hpp>
+BOOST_AUTO_TEST_SUITE(CompileDateTimeTestSuite)
 
 BOOST_AUTO_TEST_CASE (testOutput)
 {
@@ -32,3 +34,5 @@ BOOST_AUTO_TEST_CASE (testContent)
 
 	BOOST_REQUIRE (sizeOk && yearOk);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
