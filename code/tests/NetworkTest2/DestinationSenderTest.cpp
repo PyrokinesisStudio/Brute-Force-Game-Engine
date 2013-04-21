@@ -30,6 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <Base/TestAppDeco.h>
 #include "Requisites.h"
+#include <ControllerTest/InputWindowX11.h>
 
 const BFG::GameHandle serverAppHandle = 123;
 const BFG::GameHandle client_1_AppHandle = 456;
@@ -268,15 +269,15 @@ BOOST_AUTO_TEST_CASE (ConnectionTest)
 	
 	server->emitter->emit<BFG::Network::ControlEvent>(BFG::ID::NE_LISTEN, static_cast<BFG::u16>(port));
 
-	boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-
 	client1->emitter->emit<BFG::Network::ControlEvent>
 	(
 		BFG::ID::NE_CONNECT,
 		boost::make_tuple(stringToArray<128>("127.0.0.1"), stringToArray<128>(portString))
 	);
 
-	boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+	EventStatus c1;
+	c1.gotConnected = true;
+	periodicWaitForEqual(c1, client1->status, boost::posix_time::milliseconds(5000));
 
 	client2->emitter->emit<BFG::Network::ControlEvent>
 	(
@@ -284,11 +285,13 @@ BOOST_AUTO_TEST_CASE (ConnectionTest)
 		boost::make_tuple(stringToArray<128>("127.0.0.1"), stringToArray<128>(portString))
 	);
 	
-	boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+	EventStatus c2;
+	c2.gotConnected = true;
+	periodicWaitForEqual(c2, client2->status, boost::posix_time::milliseconds(5000));
 
-	BOOST_CHECK(server->status.gotConnected);
 	BOOST_CHECK(client1->status.gotConnected);
 	BOOST_CHECK(client2->status.gotConnected);
+	BOOST_CHECK(server->status.gotConnected);
 	
 	BOOST_TEST_MESSAGE("ConnectionTest done.");
 }
@@ -303,8 +306,12 @@ BOOST_AUTO_TEST_CASE (ClientToServerDataCheck)
 	client1->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payloadTcp);
 	client1->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payloadUdp);
 	
-	boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-
+	EventStatus s;
+	s.gotReceived = true;
+	s.gotTcpData  = true;
+	s.gotUdpData  = true;
+	periodicWaitForEqual(s, server->status, boost::posix_time::milliseconds(5000));
+	
 	BOOST_CHECK(server->status.gotReceived);
 	BOOST_CHECK(server->status.gotTcpData);
 	BOOST_CHECK(server->status.gotUdpData);
@@ -330,7 +337,7 @@ BOOST_AUTO_TEST_CASE (ClientToServerDestinationNotNullCheck)
 	client1->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payloadTcp, bogusDestination);
 	client1->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payloadUdp, bogusDestination);
 
-	boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
 	// DestinationId for NE_SEND on client side must always be 0.
 	// Nobody should receive anything when an id is passed.
@@ -359,8 +366,12 @@ BOOST_AUTO_TEST_CASE (ServerToClient1DataCheck)
 	server->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload1Tcp);
 	server->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payload1Udp);
 
-	boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-
+	EventStatus c1;
+	c1.gotReceived = true;
+	c1.gotTcpData  = true;
+	c1.gotUdpData  = true;
+	periodicWaitForEqual(c1, client1->status, boost::posix_time::milliseconds(5000));
+	
 	BOOST_CHECK(!server->status.gotReceived);
 	BOOST_CHECK(!server->status.gotTcpData);
 	BOOST_CHECK(!server->status.gotUdpData);
@@ -385,9 +396,13 @@ BOOST_AUTO_TEST_CASE (ServerToClient2DataCheck)
 
 	server->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload2Tcp);
 	server->emitter->emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND_UDP, payload2Udp);
-	
-	boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 
+	EventStatus c2;
+	c2.gotReceived = true;
+	c2.gotTcpData  = true;
+	c2.gotUdpData  = true;
+	periodicWaitForEqual(c2, client2->status, boost::posix_time::milliseconds(5000));
+	
 	BOOST_CHECK(!server->status.gotReceived);
 	BOOST_CHECK(!server->status.gotTcpData);
 	BOOST_CHECK(!server->status.gotUdpData);
@@ -409,8 +424,16 @@ BOOST_AUTO_TEST_CASE (Client1Disconnect)
 
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
-	BOOST_CHECK(server->status.gotDisconnected);
+	EventStatus c1;
+	c1.gotDisconnected = true;
+	periodicWaitForEqual(c1, client1->status, boost::posix_time::milliseconds(5000));
+	
+	EventStatus s;
+	s.gotDisconnected = true;
+	periodicWaitForEqual(s, server->status, boost::posix_time::milliseconds(5000));
+	
 	BOOST_CHECK(client1->status.gotDisconnected);
+	BOOST_CHECK(server->status.gotDisconnected);
 	BOOST_CHECK(!client2->status.gotDisconnected);
 	
 	BOOST_TEST_MESSAGE("Client1Disconnect done");

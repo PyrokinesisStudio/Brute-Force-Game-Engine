@@ -51,12 +51,40 @@ struct EventStatus
 		gotUdpData = false;
 	}
 	
+	bool operator == (const EventStatus& rhs) const
+	{
+		return
+			gotConnected == rhs.gotConnected &&
+			gotDisconnected == rhs.gotDisconnected &&
+			gotReceived == rhs.gotReceived &&
+			gotTcpData == rhs.gotTcpData &&
+			gotUdpData == rhs.gotUdpData;
+	}
+	
+	bool operator != (const EventStatus& rhs) const
+	{
+		return !this->operator == (rhs);
+	}
+	
 	bool gotConnected;
 	bool gotDisconnected;
 	bool gotReceived;
 	bool gotTcpData;
 	bool gotUdpData;
 };
+
+template <typename T>
+void periodicWaitForEqual(const T& lhs, const T& rhs, boost::posix_time::time_duration wait)
+{
+	using namespace boost;
+	posix_time::time_duration slept;
+	const posix_time::time_duration interval(posix_time::milliseconds(100));
+	while (lhs != rhs && slept < wait)
+	{
+		this_thread::sleep(interval);
+		slept += interval;
+	}
+}
 
 template <typename ApplicationT, BFG::u8 mode, BFG::GameHandle appHandle>
 struct NetworkContext
