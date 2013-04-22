@@ -8,7 +8,7 @@ PACKAGE=package
 PREFIX=$PACKAGE/usr
 CPUS=`grep -c processor /proc/cpuinfo`
 JOBS=`echo print $CPUS + 1 | perl`
-VERSION="0.5.0"
+VERSION="0.6.0"
 DEBIAN_ARCH="`dpkg --print-architecture`"
 
 # Relative to the temporary build directory
