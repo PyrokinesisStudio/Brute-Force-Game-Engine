@@ -33,10 +33,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Network/Defs.h>
 
-#ifdef _WIN32
-#define NOMINMAX // This fixes a name collision between WINAPI and OGRE.
-#endif
-
 namespace BFG {
 namespace Network {
 
