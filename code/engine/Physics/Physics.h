@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,33 +24,10 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Physics/Interface.h>
+#ifndef BFG_PHYSICS_PHYSICS_H
+#define BFG_PHYSICS_PHYSICS_H
 
-#include <Physics/PhysicsManager.h>
+#include <Physics/Event.h>
+#include <Physics/Main.h>
 
-class EventLoop;
-
-namespace BFG {
-namespace Physics {
-
-Base::IEntryPoint* Interface::getEntryPoint()
-{
-	return new Base::CClassEntryPoint<Interface>
-	(
-		new Interface,
-		&Interface::start
-	);
-}
-
-void* Interface::start(void* ptr)
-{
-	assert(ptr && "Physics::Interface: EventLoop pointer invalid!");
-
-	EventLoop* loop = reinterpret_cast<EventLoop*> (ptr);
-
-	mPhysicsManager.reset(new PhysicsManager(loop));
-	return 0;
-}
-
-} // namespace Physics
-} // namespace BFG
+#endif

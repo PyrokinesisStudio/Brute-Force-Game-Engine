@@ -163,8 +163,10 @@ BFG::Base::MainContainerT engineInit(const Configuration& cfg)
 		loop.addEntryPoint(ControllerInterface::getEntryPoint(cfg.controllerFrequency));
 #endif
 
+		
 #ifdef BFG_USE_PHYSICS
-		loop.addEntryPoint(BFG::Physics::Interface::getEntryPoint());
+		BFG::Base::MainContainerT::value_type physicsMain(new BFG::Physics::Main(&loop));
+		mains.push_back(physicsMain);
 #endif
 
 #ifdef BFG_USE_VIEW

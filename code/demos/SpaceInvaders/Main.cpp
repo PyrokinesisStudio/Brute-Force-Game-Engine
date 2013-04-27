@@ -38,8 +38,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Audio/Interface.h>
 
-#include <Physics/Event.h>
-#include <Physics/Interface.h>
+#include <Physics/Physics.h>
 
 #include <Model/Interface.h>
 
@@ -122,10 +121,12 @@ int main( int argc, const char* argv[] ) try
 	//       pointer, but it doesn't yet. So here comes the workaround:
 	boost::scoped_ptr<Base::IEntryPoint> epView(View::Interface::getEntryPoint(caption));
 
+	BFG::Physics::Main physicsMain;
+	
 	iLoop.addEntryPoint(epView.get());
 	iLoop.addEntryPoint(ModelInterface::getEntryPoint());
 	iLoop.addEntryPoint(ControllerInterface::getEntryPoint(controllerFrequency));
-	iLoop.addEntryPoint(Physics::Interface::getEntryPoint());
+	iLoop.addEntryPoint(physicsMain.entryPoint());
 	iLoop.addEntryPoint(Audio::AudioInterface::getEntryPoint());
 	iLoop.addEntryPoint(new Base::CEntryPoint(createStates));
 

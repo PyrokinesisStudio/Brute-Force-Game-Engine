@@ -56,8 +56,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Property/SpacePlugin.h>
 #include <Model/State.h>
 #include <Network/Network.h>
-#include <Physics/Event_fwd.h>
-#include <Physics/Interface.h>
+#include <Physics/Physics_fwd.h>
 #include <View/ControllerMyGuiAdapter.h>
 #include <View/Event.h>
 #include <View/Interface.h>
@@ -664,9 +663,11 @@ int main( int argc, const char* argv[] ) try
 		}
 
 		BFG::Network::Main networkMain(&loop1, BFG_SERVER);
+		BFG::Physics::Main physicsMain;
+
 		loop1.addEntryPoint(networkMain.entryPoint());
 		loop1.addEntryPoint(BFG::ModelInterface::getEntryPoint());
-		loop1.addEntryPoint(BFG::Physics::Interface::getEntryPoint());
+		loop1.addEntryPoint(physicsMain.entryPoint());
 		loop1.addEntryPoint(new BFG::Base::CEntryPoint(&createServerState));
 		loop1.run();
 
@@ -690,9 +691,11 @@ int main( int argc, const char* argv[] ) try
 		size_t controllerFrequency = 1000;
 
 		BFG::Network::Main networkMain(&loop1, BFG_CLIENT);
+		BFG::Physics::Main physicsMain;
+
 		loop1.addEntryPoint(networkMain.entryPoint());
 		loop1.addEntryPoint(BFG::ModelInterface::getEntryPoint());
-		loop1.addEntryPoint(BFG::Physics::Interface::getEntryPoint());
+		loop1.addEntryPoint(physicsMain.entryPoint());
 		loop1.addEntryPoint(BFG::View::Interface::getEntryPoint("SynchronizationTest"));
 		loop1.addEntryPoint(BFG::ControllerInterface::getEntryPoint(controllerFrequency));
 		loop1.addEntryPoint(new BFG::Base::CEntryPoint(&createClientStates));

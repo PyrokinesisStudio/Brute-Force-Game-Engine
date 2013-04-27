@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,34 +24,26 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SI_CANNON_H
-#define SI_CANNON_H
+#ifndef BFG_PHYSICS_MAIN_H
+#define BFG_PHYSICS_MAIN_H
 
-#include <Core/Types.h>
+#include <boost/shared_ptr.hpp>
+#include <Base/LibraryMainBase.h>
+#include <Physics/Defs.h>
 
-#include <EventSystem/Event.h>
+namespace BFG {
+namespace Physics { 
 
-#include <Model/GameObject.h>
-#include <Model/Property/Concept.h>
+class PhysicsManager;
 
-using namespace BFG;
-
-class Cannon : public Property::Concept
+class PHYSICS_API Main : public Base::LibraryMainBase
 {
-public:
-	Cannon(GameObject& Owner, BFG::PluginId pid);
-
-	void internalOnEvent(EventIdT action,
-	                     Property::Value payload,
-	                     GameHandle module,
-	                     GameHandle sender);
-
-	void fireRocket(bool autoRocket);
+	void* main(void*);
 	
-	s32 mAutoRocketAmmo;
-
-private:
-	std::string mLaserSound;
+	boost::shared_ptr<PhysicsManager> mPhysicsManager;
 };
+
+} // namespace Physics
+} // namespace BFG
 
 #endif

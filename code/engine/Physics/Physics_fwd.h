@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,34 +24,10 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_PHYSICS_INTERFACE_H
-#define BFG_PHYSICS_INTERFACE_H
+#ifndef BFG_PHYSICS_PHYSICS_FWD_H
+#define BFG_PHYSICS_PHYSICS_FWD_H
 
-#include <boost/shared_ptr.hpp>
-#include <Base/EntryPoint.h>
-#include <Physics/Defs.h>
-
-namespace BFG {
-namespace Physics {
-
-class PhysicsManager;
-
-class PHYSICS_API Interface
-{
-public:
-	friend class Base::CClassEntryPoint<Interface>;
-
-	// This is your hooking place
-	static Base::IEntryPoint* getEntryPoint();
-
-private:
-	void* start(void* ptr);
-	
-	boost::shared_ptr<PhysicsManager> mPhysicsManager;
-};
-
-} // namespace Physics
-} // namespace BFG
+#include <Physics/Event_fwd.h>
+#include <Physics/Main.h>
 
 #endif
-
