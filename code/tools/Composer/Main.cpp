@@ -32,9 +32,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreSceneNode.h>
 #include <OgreEntity.h>
 
-#include <Controller/Action.h>
-#include <Controller/ControllerEvents.h>
-#include <Controller/Interface.h>
+#include <Controller/Controller.h>
 #include <Core/ClockUtils.h>
 #include <Core/Path.h>
 #include <Core/ShowException.h>
@@ -390,9 +388,10 @@ int main( int argc, const char* argv[] ) try
 	const std::string caption = "Composer: He composes everything!";
 
 	boost::scoped_ptr<Base::IEntryPoint> epView(View::Interface::getEntryPoint(caption));
+	BFG::Controller_::Main controllerMain(controllerFrequency);
 
 	loop.addEntryPoint(epView.get());
-	loop.addEntryPoint(ControllerInterface::getEntryPoint(controllerFrequency));
+	loop.addEntryPoint(controllerMain.entryPoint());
 	loop.addEntryPoint(new Base::CEntryPoint(SingleThreadEntryPoint));
 
 	loop.run();

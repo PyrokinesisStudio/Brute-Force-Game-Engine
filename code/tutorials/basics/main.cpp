@@ -37,9 +37,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 // BFG libraries
 #include <Base/EntryPoint.h>
 #include <Base/Logger.h>
-#include <Controller/Action.h>
-#include <Controller/ControllerEvents.h>
-#include <Controller/Interface.h>
+#include <Controller/Controller.h>
 #include <Core/Path.h>
 #include <Core/ShowException.h>
 #include <Core/Utils.h>
@@ -207,12 +205,12 @@ int main( int argc, const char* argv[] ) try
 	// Setting up callbacks for module initialization
 	// This is still very inconsistent but a proof for flexibility ;)
 	boost::scoped_ptr<BFG::Base::IEntryPoint> epView(BFG::View::Interface::getEntryPoint(caption));
-	boost::scoped_ptr<BFG::Base::IEntryPoint> epController(BFG::ControllerInterface::getEntryPoint(controllerFrequency));
 	boost::scoped_ptr<BFG::Base::IEntryPoint> epGame(new BFG::Base::CEntryPoint(&createStates));
+	BFG::Controller_::Main controllerMain(controllerFrequency);
 
 	// The order is important.
 	loop.addEntryPoint(epView.get());
-	loop.addEntryPoint(epController.get());
+	loop.addEntryPoint(controllerMain.entryPoint());
 	loop.addEntryPoint(epGame.get());
 
 	// Now the following line will call all entry points and run the

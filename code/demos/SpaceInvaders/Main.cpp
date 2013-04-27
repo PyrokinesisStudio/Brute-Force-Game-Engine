@@ -32,9 +32,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Path.h>
 #include <Core/ShowException.h>
 
-#include <Controller/Action.h>
-#include <Controller/StateInsertion.h>
-#include <Controller/Interface.h>
+#include <Controller/Controller.h>
 
 #include <Audio/Interface.h>
 
@@ -122,10 +120,11 @@ int main( int argc, const char* argv[] ) try
 	boost::scoped_ptr<Base::IEntryPoint> epView(View::Interface::getEntryPoint(caption));
 
 	BFG::Physics::Main physicsMain;
+	BFG::Controller_::Main controllerMain(controllerFrequency);
 	
 	iLoop.addEntryPoint(epView.get());
 	iLoop.addEntryPoint(ModelInterface::getEntryPoint());
-	iLoop.addEntryPoint(ControllerInterface::getEntryPoint(controllerFrequency));
+	iLoop.addEntryPoint(controllerMain.entryPoint());
 	iLoop.addEntryPoint(physicsMain.entryPoint());
 	iLoop.addEntryPoint(Audio::AudioInterface::getEntryPoint());
 	iLoop.addEntryPoint(new Base::CEntryPoint(createStates));

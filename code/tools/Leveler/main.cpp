@@ -34,9 +34,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreSceneNode.h>
 #include <OgreEntity.h>
 
-#include <Controller/Action.h>
-#include <Controller/ControllerEvents.h>
-#include <Controller/Interface.h>
+#include <Controller/Controller.h>
 #include <Core/ClockUtils.h>
 #include <Core/Path.h>
 #include <Core/ShowException.h>
@@ -305,9 +303,10 @@ int main( int argc, const char* argv[] ) try
 	const std::string caption = "Leveler: He levels everything!";
 
 	boost::scoped_ptr<Base::IEntryPoint> epView(View::Interface::getEntryPoint(caption));
+	BFG::Controller_::Main controllerMain(controllerFrequency);
 
 	iLoop.addEntryPoint(epView.get());
-	iLoop.addEntryPoint(ControllerInterface::getEntryPoint(controllerFrequency));
+	iLoop.addEntryPoint(controllerMain.entryPoint());
 	iLoop.addEntryPoint(new Base::CEntryPoint(SingleThreadEntryPoint));
 
 	iLoop.run();

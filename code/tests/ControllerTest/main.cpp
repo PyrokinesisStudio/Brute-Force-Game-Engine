@@ -43,9 +43,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <EventSystem/Emitter.h>
 #include <EventSystem/EventFactory.h>
 
-#include <Controller/Action.h>
+#include <Controller/ControllerImpl.h>
 #include <Controller/Controller.h>
-#include <Controller/ControllerEvents.h>
 #include <Controller/Enums.hh>
 #include <Controller/EventDumper.h>
 #include <Controller/OISUtils.h>

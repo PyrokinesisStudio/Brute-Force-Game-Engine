@@ -24,37 +24,28 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Controller/Interface.h>
+#include <Controller/Main.h>
 
-#include <Controller/Controller.h>
+#include <Controller/ControllerImpl.h>
 #include <Controller/OISUtils.h>
 
+class EventLoop;
+
 namespace BFG {
+namespace Controller_ {
 
-Base::IEntryPoint* ControllerInterface::getEntryPoint(size_t frequency)
-{
-	return new Base::CClassEntryPoint<ControllerInterface>
-	(
-		new ControllerInterface(frequency),
-		&ControllerInterface::start
-	);
-}
-
-ControllerInterface::ControllerInterface(size_t frequency) :
+Main::Main(size_t frequency) :
 mFrequency(frequency)
 {}
 
-void* ControllerInterface::start(void* ptr)
+void* Main::main(void* p)
 {
-	assert(ptr && "ControllerInterface: EventLoop pointer invalid!");
+	EventLoop* loop = static_cast<EventLoop*>(p);
 
-	EventLoop* iLoop = static_cast<EventLoop*>(ptr);
-
-	mController.reset(new Controller(iLoop));
-
+	mController.reset(new Controller(loop));
 	mController->init(mFrequency);
 	return 0;
 }
 
-
+} // namespace Controller_
 } // namespace BFG

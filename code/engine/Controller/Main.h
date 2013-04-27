@@ -24,38 +24,33 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_CONTROLLER_INTERFACE_H
-#define BFG_CONTROLLER_INTERFACE_H
+#ifndef BFG_CONTROLLER_MAIN_H
+#define BFG_CONTROLLER_MAIN_H
 
-#include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <Controller/Defs.h>
-#include <Base/EntryPoint.h>
+#include <Base/LibraryMainBase.h>
 
 namespace BFG {
-
 namespace Controller_ {
-	class Controller;
-}
 
-class CONTROLLER_API ControllerInterface
+class Controller;
+
+class CONTROLLER_API Main : public Base::LibraryMainBase
 {
 public:
-	// This is your hooking place
-	static Base::IEntryPoint* getEntryPoint(size_t frequency);
-
-	ControllerInterface(size_t frequency);
-
-	friend class Base::CClassEntryPoint<ControllerInterface>;
+	Main(size_t frequency);
 
 private:
-	void* start(void* ptr);
+	void* main(void*);
 	
-	boost::scoped_ptr<Controller_::Controller> mController;
+	boost::shared_ptr<Controller_::Controller> mController;
 	
 	size_t mFrequency;
 };
 
+} // namespace Controller_
 } // namespace BFG
 
 #endif

@@ -45,7 +45,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #ifdef BFG_USE_CONTROLLER
-	#include <Controller/Interface.h>
+	#include <Controller/Controller.h>
 #endif
 
 #ifdef BFG_USE_NETWORK
@@ -53,7 +53,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #ifdef BFG_USE_PHYSICS
-	#include <Physics/Interface.h>
+	#include <Physics/Physics.h>
 #endif
 
 #ifdef BFG_USE_VIEW
@@ -160,7 +160,8 @@ BFG::Base::MainContainerT engineInit(const Configuration& cfg)
 #endif
 
 #ifdef BFG_USE_CONTROLLER
-		loop.addEntryPoint(ControllerInterface::getEntryPoint(cfg.controllerFrequency));
+		BFG::Base::MainContainerT::value_type controllerMain(new BFG::Controller_::Main(cfg.controllerFrequency));
+		mains.push_back(controllerMain);
 #endif
 
 		

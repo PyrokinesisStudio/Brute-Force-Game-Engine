@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,79 +24,12 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _CONTROLLER_H_
-#define _CONTROLLER_H_
-
-#include <boost/shared_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
-
-#include <Core/Types.h>
+#ifndef BFG_CONTROLLER_CONTROLLER.H_H
+#define BFG_CONTROLLER_CONTROLLER.H_H
 
 #include <Controller/Action.h>
-#include <Controller/ControllerEvents_fwd.h>
-
-class LoopEvent;
-class EventLoop; // Confused?
-
-namespace BFG {
-
-namespace Clock {
-	class SleepFrequently;
-}
-
-namespace Controller_ {
-
-class State;
-
-class CONTROLLER_API Controller
-{
-public:
-	Controller(EventLoop* loop);
-	~Controller();
-
-	void init(int maxFrameratePerSec);
-
-	void nextTick();
-
-	void resetInternalClock();
-
-	void loopHandler(LoopEvent*);
-
-	void controlHandler(ControlEvent* iLE);
-
-private:
-	void capture();
-	
-	void sendFeedback(long microseconds_passed);
-
-	void insertState(StateInsertion& si);
-	void removeState(GameHandle state);
-
-	void activateState(GameHandle state);
-	void deactivateState(GameHandle state);
-
-	void addAction(const ActionDefinition&);
-
-	typedef std::map
-	<
-		GameHandle,
-		boost::shared_ptr<Controller_::State>
-	> StateContainerT;
-
-	boost::shared_ptr<State>                  mActiveState;
-
-	StateContainerT                           mStates;
-	ActionMapT                                mActions;
-
-	boost::scoped_ptr<Clock::SleepFrequently> mClock;
-
-	EventLoop*                                mEventLoop;
-};
-
-} // namespace Controller_
-} // namespace BFG
-
-// For typing convenience
-using BFG::Controller_::Controller;
+#include <Controller/ControllerEvents.h>
+#include <Controller/Main.h>
+#include <Controller/StateInsertion.h>
 
 #endif

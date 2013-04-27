@@ -40,9 +40,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/EntryPoint.h>
 #include <Base/Logger.h>
 #include <Base/Pause.h>
-#include <Controller/Action.h>
-#include <Controller/ControllerEvents.h>
-#include <Controller/Interface.h>
+#include <Controller/Controller.h>
 #include <Core/Path.h>
 #include <Core/ShowException.h>
 #include <Core/Utils.h>
@@ -692,12 +690,13 @@ int main( int argc, const char* argv[] ) try
 
 		BFG::Network::Main networkMain(&loop1, BFG_CLIENT);
 		BFG::Physics::Main physicsMain;
+		BFG::Controller_::Main controllerMain(controllerFrequency);
 
 		loop1.addEntryPoint(networkMain.entryPoint());
 		loop1.addEntryPoint(BFG::ModelInterface::getEntryPoint());
 		loop1.addEntryPoint(physicsMain.entryPoint());
 		loop1.addEntryPoint(BFG::View::Interface::getEntryPoint("SynchronizationTest"));
-		loop1.addEntryPoint(BFG::ControllerInterface::getEntryPoint(controllerFrequency));
+		loop1.addEntryPoint(controllerMain.entryPoint());
 		loop1.addEntryPoint(new BFG::Base::CEntryPoint(&createClientStates));
 		loop1.run();
 
