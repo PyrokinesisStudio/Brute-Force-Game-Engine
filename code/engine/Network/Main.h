@@ -33,9 +33,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #pragma warning (disable:4251)
 #endif
 
-
-#include <EventSystem/Core/EventLoop.h>
+#include <Base/LibraryMainBase.h>
 #include <Network/Defs.h>
+
+class EventLoop;
 
 namespace BFG {
 namespace Network {
@@ -43,13 +44,17 @@ namespace Network {
 class Server;
 class Client;
 
-class NETWORK_API Main
+class NETWORK_API Main : public Base::LibraryMainBase
 {
 public:
 	Main(EventLoop* loop, u8 mode);
 	~Main();
 
 private:
+	void* main(void*);
+	
+	BFG::u8 mMode;
+	
 	boost::scoped_ptr<Server> mServer;
 	boost::scoped_ptr<Client> mClient;
 };

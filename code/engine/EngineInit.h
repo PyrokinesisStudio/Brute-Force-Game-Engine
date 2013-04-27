@@ -32,6 +32,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/function.hpp>
 
+#include <Base/LibraryMainBase.h>
 #include <Base/Logger.h>
 #include <Base/Pause.h>
 #include <Core/Path.h>
@@ -105,7 +106,7 @@ struct Configuration
 };
 
 //! Initializes the BFG-Engine.
-void engineInit(const Configuration& cfg)
+BFG::Base::MainContainerT engineInit(const Configuration& cfg)
 {
 #ifdef BFG_USE_NETWORK
 	// Parse port
@@ -128,7 +129,7 @@ void engineInit(const Configuration& cfg)
 
 	// Initialize logger
 	Path p;
-	Base::Logger::Init(cfg.logLevel, p.Get(ID::P_LOGS) + "/" + logName);
+	BFG::Base::Logger::Init(cfg.logLevel, p.Get(ID::P_LOGS) + "/" + logName);
 	
 	EventLoop loop
 	(
@@ -140,8 +141,12 @@ void engineInit(const Configuration& cfg)
 	if (!cfg.port.empty())
 		dbglog << "Starting as " + strNetworkMode;
 
+	
+	BFG::Base::MainContainerT mains;
+	
 #ifdef BFG_USE_NETWORK
-	loop.addEntryPoint(Network::Interface::getEntryPoint(intNetworkMode));
+	BFG::Base::MainContainerT::value_type networkMain(new BFG::Network::Main(&loop, intNetworkMode));
+	mains.push_back(networkMain);
 #else
 	assert(cfg.port.empty() && "You forgot to define BFG_USE_NETWORK!");
 #endif
@@ -166,6 +171,10 @@ void engineInit(const Configuration& cfg)
 		loop.addEntryPoint(View::Interface::getEntryPoint(cfg.appName));
 #endif
 	}
+
+	BFG::Base::MainContainerT::iterator it = mains.begin();
+	for (; it != mains.end(); ++it)
+		loop.addEntryPoint((*it)->entryPoint());
 	
 	loop.run();
 	Emitter e(&loop);

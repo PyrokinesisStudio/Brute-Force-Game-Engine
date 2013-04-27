@@ -27,6 +27,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_BASE_LIBRARYMAINBASE_H
 #define BFG_BASE_LIBRARYMAINBASE_H
 
+#include <vector>
+#include <boost/shared_ptr.hpp>
 #include <Base/EntryPoint.h>
 
 namespace BFG {
@@ -50,6 +52,8 @@ struct LibraryMainBase
 		);
 	}
 };
+
+typedef std::vector<boost::shared_ptr<BFG::Base::LibraryMainBase> > MainContainerT;
 
 } // namespace Base
 } // namespace BFG

@@ -597,7 +597,8 @@ int main( int argc, const char* argv[] ) try
 			return 0;
 		}
 
-		loop1.addEntryPoint(BFG::Network::Interface::getEntryPoint(BFG_SERVER));
+		BFG::Network::Main networkMain(&loop1, BFG_SERVER);
+		loop1.addEntryPoint(networkMain.entryPoint());
 		loop1.addEntryPoint(BFG::ModelInterface::getEntryPoint());
 		loop1.addEntryPoint(BFG::Physics::Interface::getEntryPoint());
 		loop1.addEntryPoint(new BFG::Base::CEntryPoint(&createServerState));
@@ -622,7 +623,8 @@ int main( int argc, const char* argv[] ) try
 
 		size_t controllerFrequency = 50;
 
-		loop1.addEntryPoint(BFG::Network::Interface::getEntryPoint(BFG_CLIENT));
+		BFG::Network::Main networkMain(&loop1, BFG_CLIENT);
+		loop1.addEntryPoint(networkMain.entryPoint());
 		loop1.addEntryPoint(BFG::ModelInterface::getEntryPoint());
 		loop1.addEntryPoint(BFG::Physics::Interface::getEntryPoint());
 		loop1.addEntryPoint(BFG::View::Interface::getEntryPoint("Pong"));

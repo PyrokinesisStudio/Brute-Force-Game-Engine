@@ -538,6 +538,8 @@ void startSingleThreaded()
 	Base::CEntryPoint ep2(EventLoopEntryPoint);
 
 	EventLoop testLoop(false);
+	
+	boost::scoped_ptr<BFG::Network::Main> networkMain;
 
 	if (g_Config.NetworkTest)
 	{
@@ -545,14 +547,15 @@ void startSingleThreaded()
 
 		if (g_Config.IsServer)
 		{
-			testLoop.addEntryPoint(BFG::Network::Interface::getEntryPoint(BFG_SERVER));
+			networkMain.reset(new BFG::Network::Main(&testLoop, BFG_SERVER));
 		}
 		else
 		{
-			testLoop.addEntryPoint(BFG::Network::Interface::getEntryPoint(BFG_CLIENT));
+			networkMain.reset(new BFG::Network::Main(&testLoop, BFG_CLIENT));
 		}
 	}
 	
+	testLoop.addEntryPoint(networkMain->entryPoint());
 	testLoop.addEntryPoint(&ep1);
 	testLoop.addEntryPoint(&ep2);
 
@@ -567,6 +570,8 @@ void startMultiThreaded()
 		new EventSystem::BoostThread<>("Test Function"),
 		new EventSystem::InterThreadCommunication()
 	);
+	
+	boost::scoped_ptr<BFG::Network::Main> networkMain;
 
 	if (g_Config.NetworkTest)
 	{
@@ -574,14 +579,15 @@ void startMultiThreaded()
 
 		if (g_Config.IsServer)
 		{
-			testLoop.addEntryPoint(BFG::Network::Interface::getEntryPoint(BFG_SERVER));
+			networkMain.reset(new BFG::Network::Main(&testLoop, BFG_SERVER));
 		}
 		else
 		{
-			testLoop.addEntryPoint(BFG::Network::Interface::getEntryPoint(BFG_CLIENT));
+			networkMain.reset(new BFG::Network::Main(&testLoop, BFG_CLIENT));
 		}
 	}
 	
+	testLoop.addEntryPoint(networkMain->entryPoint());
 	testLoop.addEntryPoint(new Base::CEntryPoint(EventLoopEntryPoint));
 	testLoop.run();
 

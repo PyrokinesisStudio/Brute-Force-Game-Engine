@@ -38,17 +38,29 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #endif //_WIN32
 
 #include <Base/Logger.h>
+#include <EventSystem/Core/EventLoop.h>
 #include <Network/Client.h>
 #include <Network/Server.h>
 
 namespace BFG {
 namespace Network {
 
-Main::Main(EventLoop* loop, u8 mode)
+Main::Main(EventLoop* loop, u8 mode) :
+mMode(mode)
 {
 	assert(loop && "Main: EventLoop is invalid");
+}
 
-	switch(mode)
+Main::~Main()
+{
+	dbglog << "Network::Main::~Main()";
+}
+
+void* Main::main(void* p)
+{
+	EventLoop* loop = static_cast<EventLoop*>(p);
+	
+	switch(mMode)
 	{
 	case BFG_SERVER:
 		{
@@ -66,11 +78,8 @@ Main::Main(EventLoop* loop, u8 mode)
 		throw std::runtime_error("Network mode not recognized");
 		break;
 	}
-}
-
-Main::~Main()
-{
-	dbglog << "Network::Main::~Main()";
+	
+	return 0;
 }
 
 #ifdef _WIN32

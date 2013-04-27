@@ -288,7 +288,7 @@ int main(int argc, const char* argv[]) try
 		return 0;
 	}
 	
-	BFG::engineInit(cfg);
+	BFG::Base::MainContainerT mains = BFG::engineInit(cfg);
 
 	// Give EventSystem some time to stop all loops
 	boost::this_thread::sleep(boost::posix_time::milliseconds(500));

@@ -30,6 +30,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Network/DataPayload.h>
 #include <Network/Enums.hh>
 #include <Network/Event.h>
-#include <Network/Interface.h>
+#include <Network/Main.h>
 
 #endif

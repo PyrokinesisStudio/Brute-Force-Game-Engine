@@ -140,7 +140,8 @@ int main( int argc, const char* argv[] ) try
 
 		dbglog << "Starting as Server";
 
-		loop1.addEntryPoint(Network::Interface::getEntryPoint(BFG_SERVER));
+		BFG::Network::Main networkMain(&loop1, BFG_SERVER);
+		loop1.addEntryPoint(networkMain.entryPoint());
 		loop1.run();
 
 		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
@@ -163,7 +164,8 @@ int main( int argc, const char* argv[] ) try
 
 		dbglog << "Starting as Client";
 
-		loop1.addEntryPoint(Network::Interface::getEntryPoint(BFG_CLIENT));
+		BFG::Network::Main networkMain(&loop1, BFG_CLIENT);
+		loop1.addEntryPoint(networkMain.entryPoint());
 		loop1.run();
 
 		boost::this_thread::sleep(boost::posix_time::milliseconds(500));

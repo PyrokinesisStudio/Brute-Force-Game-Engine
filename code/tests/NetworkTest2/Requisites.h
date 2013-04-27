@@ -91,15 +91,15 @@ struct NetworkContext
 {
 	boost::shared_ptr<EventLoop> loop;
 	boost::scoped_ptr<ApplicationT> application;
-	boost::scoped_ptr<BFG::Base::IEntryPoint> ep;
+	boost::scoped_ptr<BFG::Network::Main> mNetworkMain;
 	boost::shared_ptr<BFG::Emitter> emitter;
 	EventStatus status;
 	
 	NetworkContext(const char*const Threadname, const std::string& testMsg)
 	{
 		loop.reset(new EventLoop(false, new EventSystem::BoostThread<>(Threadname), new EventSystem::NoCommunication()));
-		ep.reset(BFG::Network::Interface::getEntryPoint(mode));
-		loop->addEntryPoint(ep.get());
+		mNetworkMain.reset(new BFG::Network::Main(loop.get(), mode));
+		loop->addEntryPoint(mNetworkMain->entryPoint());
 		application.reset(new ApplicationT(loop.get(), status, appHandle, testMsg));
 		loop->run();
 		emitter.reset(new BFG::Emitter(loop.get()));
@@ -111,7 +111,7 @@ struct NetworkContext
 		loop->setExitFlag();
 		boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 		emitter.reset();
-		ep.reset();
+		mNetworkMain.reset();
 		loop.reset();
 	}
 };
