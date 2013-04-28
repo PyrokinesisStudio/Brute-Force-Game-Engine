@@ -24,8 +24,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <boost/archive/text_oarchive.hpp>
-
 #include <Base/Cpp.h>
 #include <Base/Logger.h>
 #include <Base/NameCurrentThread.h>

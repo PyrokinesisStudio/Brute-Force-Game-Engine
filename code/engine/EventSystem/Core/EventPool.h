@@ -35,9 +35,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>
 #include <stdexcept>
 
-#include <boost/serialization/split_member.hpp>
-#include <boost/serialization/binary_object.hpp>
-
 #include <EventSystem/Core/EventDefs.h>
 
 
@@ -234,51 +231,6 @@ public:
 		}
 		return wRet;
 	}
-
-	template<class Archive>
-	void save(Archive & ar, const unsigned int version) const
-	{
-		// save the current byte count stored in this pool
-		size_t memorySize = ((size_t) mCurrentStoragePositionPtr) - ((size_t) mStoragePtr);
-		ar & memorySize;
-
-		// save the bytes stored in this pool
-		ar << boost::serialization::make_binary_object(mStoragePtr, memorySize);
-
-		// save internal counter of events
-		ar & mEventStorageCount;
-		
-		// save memory usage of this pool
-		for (size_t i = 0; i < mEventStorageCount; ++i)
-		{
-			size_t listEntry = mStorageList[i];
-			ar & listEntry;
-		}
-	}
-
-	template<class Archive>
-	void load(Archive & ar, const unsigned int version)
-	{
-		// restore the current byte count to be stored in this pool
-		size_t memorySize;
-		ar & memorySize;
-		mCurrentStoragePositionPtr = (InternalPointerType)( memorySize + ((size_t)mStoragePtr) );
-
-		// restore the bytes to be stored in this pool
-		ar >> boost::serialization::make_binary_object(mStoragePtr, memorySize);
-
-		// restore the internal counter of events to be stored in this pool
-		ar & mEventStorageCount;
-
-		// restore internal pointers to events
-		for (size_t i = 0; i < mEventStorageCount; ++i)
-		{
-			size_t storage;
-			ar & storage;
-			mStorageList[i] = storage;
-		}
-	}
-	BOOST_SERIALIZATION_SPLIT_MEMBER()
 
 	friend std::ostream& operator << (std::ostream& os, MyType& es)
 	{
