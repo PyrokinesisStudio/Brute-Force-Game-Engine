@@ -37,21 +37,21 @@ namespace Audio {
 
 OpenALListener::OpenALListener()
 {
-	AudioMain::eventLoop()->connect(ID::AE_MASTER_GAIN, this, &OpenALListener::eventHandler);
-	AudioMain::eventLoop()->connect(ID::AE_POSITION_PLAYER, this, &OpenALListener::eventHandler);
-	AudioMain::eventLoop()->connect(ID::AE_ORIENTATION_PLAYER, this, &OpenALListener::eventHandler);
-	AudioMain::eventLoop()->connect(ID::AE_VELOCITY_PLAYER, this, &OpenALListener::eventHandler);
+	Main::eventLoop()->connect(ID::AE_MASTER_GAIN, this, &OpenALListener::eventHandler);
+	Main::eventLoop()->connect(ID::AE_POSITION_PLAYER, this, &OpenALListener::eventHandler);
+	Main::eventLoop()->connect(ID::AE_ORIENTATION_PLAYER, this, &OpenALListener::eventHandler);
+	Main::eventLoop()->connect(ID::AE_VELOCITY_PLAYER, this, &OpenALListener::eventHandler);
 }
 
 OpenALListener::~OpenALListener()
 {
-	AudioMain::eventLoop()->disconnect(ID::AE_MASTER_GAIN, this);
-	AudioMain::eventLoop()->disconnect(ID::AE_POSITION_PLAYER, this);
-	AudioMain::eventLoop()->disconnect(ID::AE_ORIENTATION_PLAYER, this);
-	AudioMain::eventLoop()->disconnect(ID::AE_VELOCITY_PLAYER, this);
+	Main::eventLoop()->disconnect(ID::AE_MASTER_GAIN, this);
+	Main::eventLoop()->disconnect(ID::AE_POSITION_PLAYER, this);
+	Main::eventLoop()->disconnect(ID::AE_ORIENTATION_PLAYER, this);
+	Main::eventLoop()->disconnect(ID::AE_VELOCITY_PLAYER, this);
 
-	AudioMain::eventLoop()->setExitFlag(true);
-	AudioMain::eventLoop()->doLoop();
+	Main::eventLoop()->setExitFlag(true);
+	Main::eventLoop()->doLoop();
 }
 
 void OpenALListener::eventHandler(AudioEvent* AE)	

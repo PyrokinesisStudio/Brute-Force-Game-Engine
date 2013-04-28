@@ -48,10 +48,6 @@ void musicAndSoundTest()
 {
     using namespace BFG;
 
-    dbglog << "Get EventLoop";
-    Audio::AudioInterface::getEntryPoint();
-    EventLoop* myEventLoop = Audio::AudioMain::eventLoop();
-
     std::vector<std::string> fileNameList = musicFileNames();
     dbglog << "CreatePlaylist";
     Audio::Playlist playlist(fileNameList, true);

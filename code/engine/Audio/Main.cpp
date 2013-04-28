@@ -32,28 +32,25 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Audio {
 
-EventLoop* AudioMain::mLoop = NULL;
+EventLoop* Main::mLoop = NULL;
 
-AudioMain::AudioMain(EventLoop* loop)
+EventLoop* Main::eventLoop()
 {
-	assert(loop && "AudioMain: EventLoop is invalid");
+	return Main::mLoop;
+}
 
-	if (mLoop)
-		throw std::logic_error("AudioMain gets initialized twice!");
+void* Main::main(void* p)
+{
+	EventLoop* loop = static_cast<EventLoop*>(p);
 	
-	AudioMain::mLoop = loop;
+	assert(loop && "Audio::Main: EventLoop is invalid");
+
+	if (Main::mLoop)
+		throw std::logic_error("Audio::Main gets initialized twice!");
+
+	Main::mLoop = loop;
 	mInit = createInit();
 	mListener = createListener();
-}
-
-AudioMain::~AudioMain()
-{
-	AudioMain::mLoop = NULL;
-}
-
-EventLoop* AudioMain::eventLoop()
-{
-	return AudioMain::mLoop;
 }
 
 } // namespace Audio

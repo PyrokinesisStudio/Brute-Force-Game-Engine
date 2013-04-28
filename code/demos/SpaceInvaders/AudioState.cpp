@@ -41,12 +41,12 @@ AudioState::AudioState()
 
 	mPlaylist.reset(new Audio::Playlist(program, true));
 
-	Audio::AudioMain::eventLoop()->connect(ID::AE_SOUND_EMITTER_PROCESS_SOUND,
-	                                       this,
-	                                       &AudioState::audioStateEventHandler);
-	Audio::AudioMain::eventLoop()->connect(ID::AE_SOUND_EFFECT,
-	                                       this,
-	                                       &AudioState::audioStateEventHandler);
+	Audio::Main::eventLoop()->connect(ID::AE_SOUND_EMITTER_PROCESS_SOUND,
+	                                  this,
+	                                  &AudioState::audioStateEventHandler);
+	Audio::Main::eventLoop()->connect(ID::AE_SOUND_EFFECT,
+	                                  this,
+	                                  &AudioState::audioStateEventHandler);
 
 	mSoundEffectMap[stringToArray<128>("Explosion_big")] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.wav";
 	mSoundEffectMap[stringToArray<128>("Explosion_small")] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.wav";
@@ -55,8 +55,8 @@ AudioState::AudioState()
 
 AudioState::~AudioState()
 {
-	Audio::AudioMain::eventLoop()->disconnect(ID::AE_SOUND_EMITTER_PROCESS_SOUND, this);
-	Audio::AudioMain::eventLoop()->disconnect(ID::AE_SOUND_EFFECT, this);
+	Audio::Main::eventLoop()->disconnect(ID::AE_SOUND_EMITTER_PROCESS_SOUND, this);
+	Audio::Main::eventLoop()->disconnect(ID::AE_SOUND_EFFECT, this);
 }
 
 void AudioState::audioStateEventHandler(Audio::AudioEvent* AE)

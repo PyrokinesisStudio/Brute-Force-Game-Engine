@@ -46,10 +46,6 @@ void soundEmitterTest()
 {
 	using namespace BFG;
 
-	dbglog << "Get EventLoop";
-	Audio::AudioInterface::getEntryPoint();
-	EventLoop* myEventLoop = Audio::AudioMain::eventLoop();
-	
     Path path;
 
     std::string laserSound =  path.Get(ID::P_SOUND_EFFECTS)+"Laser_003.wav";

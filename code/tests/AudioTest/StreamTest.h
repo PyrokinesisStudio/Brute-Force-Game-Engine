@@ -57,7 +57,6 @@ void streamTest()
 	using namespace BFG;
 
 	dbglog << "Get EventLoop";
-	Audio::AudioInterface::getEntryPoint();
 
 	std::vector<std::string> fileNameList = soundFileNames();
 

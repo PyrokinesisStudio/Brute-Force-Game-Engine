@@ -28,6 +28,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_AUDIOMAIN_H
 #define BFG_AUDIOMAIN_H
 
+#include <Base/LibraryMainBase.h>
+
 #include <Audio/Defines.h>
 #include <Audio/Init.h>
 #include <Audio/Listener.h>
@@ -38,15 +40,14 @@ namespace BFG {
 namespace Audio {
 
 //! This is the ancor of the module.
-class BFG_AUDIO_API AudioMain
+class BFG_AUDIO_API Main : public Base::LibraryMainBase
 {
 public:
-	AudioMain(EventLoop* loop);
-	~AudioMain();
-	
 	static EventLoop* eventLoop();
 	
 private:
+	void* main(void*);
+	
 	static EventLoop* mLoop;
 	boost::shared_ptr<Init> mInit;
 	boost::shared_ptr<Listener> mListener;

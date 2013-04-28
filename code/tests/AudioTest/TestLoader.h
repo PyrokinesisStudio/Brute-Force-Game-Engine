@@ -27,8 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef AUDIO_TEST_LOADER_H_
 #define AUDIO_TEST_LOADER_H_
 
-#include <Audio/Main.h>
-#include <Audio/Interface.h>
+#include <Audio/Audio.h>
 #include <tests/AudioTest/functions.h>
 
 namespace BFG
@@ -44,8 +43,6 @@ public:
 	AudioTestLoader()
 	{
 		mEventLoop = new EventLoop(true);
-
-		mEntryPoint = Audio::AudioInterface::getEntryPoint();
 		startEventLoop();
 	}
 
@@ -55,7 +52,6 @@ public:
 		boost::this_thread::sleep(boost::posix_time::seconds(1));
 
 		delete mEventLoop;
-		delete mEntryPoint;
 		mEventLoop = NULL;
 	}
 
@@ -77,7 +73,7 @@ private:
 	{
 		using namespace BFG;
 
-		mEventLoop->addEntryPoint(mEntryPoint);
+		mEventLoop->addEntryPoint(mAudioMain.entryPoint());
 		mEventLoop->addEntryPoint(new Base::CEntryPoint(EventLoopEntryPoint));
 		mEventLoop->registerLoopEventListener(this, &AudioTestLoader::loopEventHandler);
 
@@ -90,7 +86,7 @@ private:
 	}
 
 	static pFunc mTestFunction;
-	Base::IEntryPoint* mEntryPoint;
+	Audio::Main mAudioMain;
 	EventLoop* mEventLoop;
 };
 
