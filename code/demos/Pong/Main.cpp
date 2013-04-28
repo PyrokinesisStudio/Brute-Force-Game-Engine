@@ -618,11 +618,14 @@ int main( int argc, const char* argv[] ) try
 		BFG::Network::Main networkMain(&loop1, BFG_CLIENT);
 		BFG::Physics::Main physicsMain;
 		BFG::Controller_::Main controllerMain(controllerFrequency);
+		BFG::View::Main viewMain("Pong");
+
 		loop1.addEntryPoint(networkMain.entryPoint());
 		loop1.addEntryPoint(physicsMain.entryPoint());
-		loop1.addEntryPoint(BFG::View::Interface::getEntryPoint("Pong"));
+		loop1.addEntryPoint(viewMain.entryPoint());
 		loop1.addEntryPoint(controllerMain.entryPoint());
 		loop1.addEntryPoint(new BFG::Base::CEntryPoint(&createClientStates));
+		
 		loop1.run();
 
 		BFG::Network::EndpointT payload = make_tuple(stringToArray<128>(ip), stringToArray<128>(port));

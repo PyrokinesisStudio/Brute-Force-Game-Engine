@@ -54,11 +54,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/State.h>
 #include <Network/Network.h>
 #include <Physics/Physics_fwd.h>
-#include <View/ControllerMyGuiAdapter.h>
-#include <View/Event.h>
-#include <View/Interface.h>
-#include <View/State.h>
-#include <View/WindowAttributes.h>
+#include <View/View.h>
 
 using namespace boost::units;
 
@@ -689,10 +685,11 @@ int main( int argc, const char* argv[] ) try
 		BFG::Network::Main networkMain(&loop1, BFG_CLIENT);
 		BFG::Physics::Main physicsMain;
 		BFG::Controller_::Main controllerMain(controllerFrequency);
+		BFG::View::Main viewMain("SynchronizationTest");
 
 		loop1.addEntryPoint(networkMain.entryPoint());
 		loop1.addEntryPoint(physicsMain.entryPoint());
-		loop1.addEntryPoint(BFG::View::Interface::getEntryPoint("SynchronizationTest"));
+		loop1.addEntryPoint(viewMain.entryPoint());
 		loop1.addEntryPoint(controllerMain.entryPoint());
 		loop1.addEntryPoint(new BFG::Base::CEntryPoint(&createClientStates));
 		loop1.run();

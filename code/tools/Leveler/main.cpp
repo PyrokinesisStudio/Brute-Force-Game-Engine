@@ -41,13 +41,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Types.h>
 #include <Core/Utils.h>
 #include <EventSystem/Emitter.h>
-#include <View/CameraCreation.h>
-#include <View/ControllerMyGuiAdapter.h>
-#include <View/Event.h>
-#include <View/Interface.h>
-#include <View/RenderObject.h>
-#include <View/State.h>
-#include <View/WindowAttributes.h>
+#include <View/View.h>
 
 #include <Actions.h>
 #include <BaseFeature.h>
@@ -302,10 +296,10 @@ int main( int argc, const char* argv[] ) try
 
 	const std::string caption = "Leveler: He levels everything!";
 
-	boost::scoped_ptr<Base::IEntryPoint> epView(View::Interface::getEntryPoint(caption));
 	BFG::Controller_::Main controllerMain(controllerFrequency);
+	BFG::View::Main viewMain(caption);
 
-	iLoop.addEntryPoint(epView.get());
+	iLoop.addEntryPoint(viewMain.entryPoint());
 	iLoop.addEntryPoint(controllerMain.entryPoint());
 	iLoop.addEntryPoint(new Base::CEntryPoint(SingleThreadEntryPoint));
 

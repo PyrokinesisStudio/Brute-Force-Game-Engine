@@ -37,6 +37,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Math.h>
 #include <Core/Utils.h> // stringify()
 
+#include <EventSystem/Core/EventLoop.h>
+
 #include <View/Convert.h>
 #include <View/Defs.h>
 #include <View/Event.h>

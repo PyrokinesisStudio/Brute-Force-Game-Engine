@@ -40,13 +40,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Utils.h>
 #include <EventSystem/Emitter.h>
 #include <Model/State.h>
-#include <View/CameraCreation.h>
-#include <View/ControllerMyGuiAdapter.h>
-#include <View/Event.h>
-#include <View/Interface.h>
-#include <View/RenderObject.h>
-#include <View/State.h>
-#include <View/WindowAttributes.h>
+#include <View/View.h>
 
 #include <Actions.h>
 #include <BaseFeature.h>
@@ -387,10 +381,10 @@ int main( int argc, const char* argv[] ) try
 
 	const std::string caption = "Composer: He composes everything!";
 
-	boost::scoped_ptr<Base::IEntryPoint> epView(View::Interface::getEntryPoint(caption));
+	BFG::View::Main viewMain(caption);
 	BFG::Controller_::Main controllerMain(controllerFrequency);
 
-	loop.addEntryPoint(epView.get());
+	loop.addEntryPoint(viewMain.entryPoint());
 	loop.addEntryPoint(controllerMain.entryPoint());
 	loop.addEntryPoint(new Base::CEntryPoint(SingleThreadEntryPoint));
 

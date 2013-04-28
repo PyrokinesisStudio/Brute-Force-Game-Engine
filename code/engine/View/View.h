@@ -29,7 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <View/ControllerMyGuiAdapter.h>
 #include <View/Event.h>
-#include <View/Interface.h>
+#include <View/Main.h>
 #include <View/State.h>
 #include <View/WindowAttributes.h>
 

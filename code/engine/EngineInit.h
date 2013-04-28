@@ -57,7 +57,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #ifdef BFG_USE_VIEW
-	#include <View/Interface.h>
+	#include <View/View.h>
 #endif
 
 namespace BFG {
@@ -156,7 +156,8 @@ BFG::Base::MainContainerT engineInit(const Configuration& cfg)
 #endif
 	{
 #ifdef BFG_USE_AUDIO
-		loop.addEntryPoint(BFG::Audio::AudioInterface::getEntryPoint());
+		BFG::Base::MainContainerT::value_type audioMain(new BFG::Audio::Main);
+		mains.push_back(audioMain);
 #endif
 
 #ifdef BFG_USE_CONTROLLER
@@ -171,7 +172,8 @@ BFG::Base::MainContainerT engineInit(const Configuration& cfg)
 #endif
 
 #ifdef BFG_USE_VIEW
-		loop.addEntryPoint(View::Interface::getEntryPoint(cfg.appName));
+		BFG::Base::MainContainerT::value_type viewMain(new BFG::View::Main(cfg.appName));
+		mains.push_back(viewMain);
 #endif
 	}
 

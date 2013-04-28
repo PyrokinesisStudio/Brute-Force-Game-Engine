@@ -103,18 +103,14 @@ int main( int argc, const char* argv[] ) try
 	EventLoop iLoop(true);
 
 	size_t controllerFrequency = 1000;
-
 	const std::string caption = "Engine Test 02: Space Invaders";
-
-	// Hack: Actually, EventLoop should take ownership over an entry point
-	//       pointer, but it doesn't yet. So here comes the workaround:
-	boost::scoped_ptr<Base::IEntryPoint> epView(View::Interface::getEntryPoint(caption));
 
 	BFG::Audio::Main audioMain;
 	BFG::Controller_::Main controllerMain(controllerFrequency);
 	BFG::Physics::Main physicsMain;
+	BFG::View::Main viewMain(caption);
 	
-	iLoop.addEntryPoint(epView.get());
+	iLoop.addEntryPoint(viewMain.entryPoint());
 	iLoop.addEntryPoint(controllerMain.entryPoint());
 	iLoop.addEntryPoint(physicsMain.entryPoint());
 	iLoop.addEntryPoint(audioMain.entryPoint());

@@ -42,11 +42,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/ShowException.h>
 #include <Core/Utils.h>
 #include <Model/State.h>
-#include <View/ControllerMyGuiAdapter.h>
-#include <View/Event.h>
-#include <View/Interface.h>
-#include <View/State.h>
-#include <View/WindowAttributes.h>
+#include <View/View.h>
 
 // We use Boost.Units for typesafe calculations - which are
 // essentially compile time checks for formulas.
@@ -203,13 +199,12 @@ int main( int argc, const char* argv[] ) try
 	size_t controllerFrequency = 1000;
 	
 	// Setting up callbacks for module initialization
-	// This is still very inconsistent but a proof for flexibility ;)
-	boost::scoped_ptr<BFG::Base::IEntryPoint> epView(BFG::View::Interface::getEntryPoint(caption));
 	boost::scoped_ptr<BFG::Base::IEntryPoint> epGame(new BFG::Base::CEntryPoint(&createStates));
 	BFG::Controller_::Main controllerMain(controllerFrequency);
+	BFG::View::Main viewMain(caption);
 
 	// The order is important.
-	loop.addEntryPoint(epView.get());
+	loop.addEntryPoint(viewMain.entryPoint());
 	loop.addEntryPoint(controllerMain.entryPoint());
 	loop.addEntryPoint(epGame.get());
 

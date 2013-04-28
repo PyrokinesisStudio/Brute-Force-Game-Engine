@@ -552,9 +552,10 @@ void startSingleThreaded()
 		{
 			networkMain.reset(new BFG::Network::Main(&testLoop, BFG_CLIENT));
 		}
+		
+		testLoop.addEntryPoint(networkMain->entryPoint());
 	}
 	
-	testLoop.addEntryPoint(networkMain->entryPoint());
 	testLoop.addEntryPoint(&ep1);
 	testLoop.addEntryPoint(&ep2);
 
