@@ -24,8 +24,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_CONTROLLER_CONTROLLER.H_H
-#define BFG_CONTROLLER_CONTROLLER.H_H
+#ifndef BFG_CONTROLLER_CONTROLLER_H
+#define BFG_CONTROLLER_CONTROLLER_H
 
 #include <Controller/Action.h>
 #include <Controller/ControllerEvents.h>

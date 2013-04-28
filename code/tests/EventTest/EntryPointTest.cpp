@@ -70,6 +70,7 @@ struct Main : BFG::Base::LibraryMainBase
 	{
 		EntryPointCalled = true;
 		mCode.reset(new Code(mParam));
+		return 0;
 	}
 
 private:

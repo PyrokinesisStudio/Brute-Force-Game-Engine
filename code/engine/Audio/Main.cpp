@@ -51,6 +51,8 @@ void* Main::main(void* p)
 	Main::mLoop = loop;
 	mInit = createInit();
 	mListener = createListener();
+
+	return 0;
 }
 
 } // namespace Audio
