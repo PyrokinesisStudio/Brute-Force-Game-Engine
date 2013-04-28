@@ -56,11 +56,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/State.h>
 #include <Network/Network.h>
 #include <Physics/Physics_fwd.h>
-#include <View/ControllerMyGuiAdapter.h>
-#include <View/Event.h>
-#include <View/Interface.h>
-#include <View/State.h>
-#include <View/WindowAttributes.h>
+#include <View/View.h>
 
 #include <Pong/PongDefinitions.h>
 #include <Pong/PropertyPlugin.h>

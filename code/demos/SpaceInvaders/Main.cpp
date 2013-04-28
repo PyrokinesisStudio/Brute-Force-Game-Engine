@@ -32,16 +32,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Path.h>
 #include <Core/ShowException.h>
 
-#include <Controller/Controller.h>
-
 #include <Audio/Audio.h>
+#include <Controller/Controller.h>
 #include <Physics/Physics.h>
-
-#include <View/Event.h>
-#include <View/Interface.h>
-#include <View/Main.h>
-#include <View/State.h>
-#include <View/WindowAttributes.h>
+#include <View/View.h>
 
 #include "MainState.h"
 #include "AudioState.h"

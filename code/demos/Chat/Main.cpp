@@ -41,11 +41,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <EventSystem/Emitter.h>
 #include <EventSystem/Event_fwd.h>
 #include <Network/Network.h>
-#include <View/ControllerMyGuiAdapter.h>
-#include <View/Event_fwd.h>
 #include <View/HudElement.h>
-#include <View/State.h>
-#include <View/WindowAttributes.h>
+#include <View/View.h>
 
 #define BFG_USE_CONTROLLER
 #define BFG_USE_NETWORK
