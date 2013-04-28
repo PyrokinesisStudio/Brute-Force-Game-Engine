@@ -50,7 +50,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/GameObject.h>
 #include <Model/Data/GameObjectFactory.h>
 #include <Model/Sector.h>
-#include <Model/Interface.h>
 #include <Model/Property/Concept.h>
 #include <Model/Property/Plugin.h>
 #include <Model/Property/SpacePlugin.h>
@@ -597,7 +596,6 @@ int main( int argc, const char* argv[] ) try
 		BFG::Network::Main networkMain(&loop1, BFG_SERVER);
 		BFG::Physics::Main physicsMain;
 		loop1.addEntryPoint(networkMain.entryPoint());
-		loop1.addEntryPoint(BFG::ModelInterface::getEntryPoint());
 		loop1.addEntryPoint(physicsMain.entryPoint());
 		loop1.addEntryPoint(new BFG::Base::CEntryPoint(&createServerState));
 		loop1.run();
@@ -625,7 +623,6 @@ int main( int argc, const char* argv[] ) try
 		BFG::Physics::Main physicsMain;
 		BFG::Controller_::Main controllerMain(controllerFrequency);
 		loop1.addEntryPoint(networkMain.entryPoint());
-		loop1.addEntryPoint(BFG::ModelInterface::getEntryPoint());
 		loop1.addEntryPoint(physicsMain.entryPoint());
 		loop1.addEntryPoint(BFG::View::Interface::getEntryPoint("Pong"));
 		loop1.addEntryPoint(controllerMain.entryPoint());

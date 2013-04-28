@@ -37,8 +37,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Audio/Audio.h>
 #include <Physics/Physics.h>
 
-#include <Model/Interface.h>
-
 #include <View/Event.h>
 #include <View/Interface.h>
 #include <View/Main.h>
@@ -123,7 +121,6 @@ int main( int argc, const char* argv[] ) try
 	BFG::Physics::Main physicsMain;
 	
 	iLoop.addEntryPoint(epView.get());
-	iLoop.addEntryPoint(ModelInterface::getEntryPoint());
 	iLoop.addEntryPoint(controllerMain.entryPoint());
 	iLoop.addEntryPoint(physicsMain.entryPoint());
 	iLoop.addEntryPoint(audioMain.entryPoint());
