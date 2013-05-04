@@ -34,6 +34,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <EventSystem/Core/EventDefs.h>
 #include <EventSystem/Core/EventInterface.h>
 #include <EventSystem/Core/EventPool.h>
+#include <EventSystem/Core/ExceptionPolicy.h>
 #include <EventSystem/Core/IEventLoop.h>
 #include <EventSystem/Core/ThreadingPolicy.h>
 
@@ -66,12 +67,12 @@ class EventLoop : public EventProcessor,
                   public BFG::Base::CEntryPointHandler<EventLoop>
 {
 public:
-
 	EventLoop
-	(	
-		bool notifyLoopEventListener, 
+	(
+		bool notifyLoopEventListener,
 		EventSystem::ThreadingPolicy* tp = new EventSystem::NoThread<>(),
-		EventSystem::CommunicationPolicy* cp = new EventSystem::NoCommunication()
+		EventSystem::CommunicationPolicy* cp = new EventSystem::NoCommunication(),
+		EventSystem::ExceptionPolicy* ep = new EventSystem::ShowException()
 	);
 
 	virtual ~EventLoop();
@@ -138,6 +139,7 @@ private:
 
 	EventSystem::ThreadingPolicy* mThreadingPolicy;
 	EventSystem::CommunicationPolicy* mCommunicationPolicy;
+	EventSystem::ExceptionPolicy* mExceptionPolicy;
 
 	EventFunctorTable<EventLoop,LoopEvent> mLoopEventReceivers;
 

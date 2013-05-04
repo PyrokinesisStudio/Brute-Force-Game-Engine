@@ -35,7 +35,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <EventSystem/Core/EventDefs.h>
 #include <EventSystem/Core/EventPool.h>
 #include <EventSystem/Core/EventFunctorTable.h>
-
+#include <EventSystem/Core/ExceptionPolicy.h>
 
 #if !defined(NDEBUG)
 //#define BOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING
@@ -107,7 +107,7 @@ private:
 class EventProcessor : public IEventProcessor
 {
 public:
-	EventProcessor();
+	EventProcessor(EventSystem::ExceptionPolicy* ep);
 	virtual ~EventProcessor();
 
 	virtual void processEvent(BaseEvent* event);
@@ -138,6 +138,7 @@ public:
 
 private:
 	MultiIndexEventMapType mEventMap;
+	EventSystem::ExceptionPolicy* mExceptionPolicy;
 
 protected:
 	template<class EventListener, class EventType>

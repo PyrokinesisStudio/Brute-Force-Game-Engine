@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2012 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,39 +24,34 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef TEST_EVENT_COUNTER_H
-#define TEST_EVENT_COUNTER_H
+#ifndef BFG_EVENTSYSTEM_CORE_EXCEPTIONPOLICY_H
+#define BFG_EVENTSYSTEM_CORE_EXCEPTIONPOLICY_H
 
-#include <EventSystem/Event_fwd.h>
+#include <Base/ShowException.h>
 
-typedef BFG::Event<EventIdT, int, int, int> TestEvent;
-const EventIdT TEST_EVENT_ID = 123;
-const float TEST_EVENT_PAYLOAD = 1;
+namespace EventSystem { 
 
-//! Test class which counts received events.
-template<typename EventT>
-class EventCounter
+class ExceptionPolicy
 {
 public:
-	EventCounter() :
-	mReceivedEvents(0)
-	{}
-	
-	size_t receivedEvents() const
-	{
-		return mReceivedEvents;
-	}
-	
-	virtual void eventHandler(EventT*)
-	{
-		++mReceivedEvents;
-	}
-	
-private:
-	size_t mReceivedEvents;
+	virtual void onStdException(const std::exception& ex) = 0;
+	virtual void onUnknownException() = 0;
 };
 
-typedef EventCounter<TestEvent> TestEventCounter;
-typedef EventCounter<LoopEvent> LoopEventCounter;
+class ShowException : public ExceptionPolicy
+{
+public:
+	virtual void onStdException(const std::exception& ex)
+	{
+		BFG::showException(ex.what());
+	}
+
+	virtual void onUnknownException()
+	{
+		BFG::showException("Unknown non-standard exception");
+	}
+};
+
+} // namespace EventSystem
 
 #endif

@@ -29,11 +29,14 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 EventLoop::EventLoop(bool notifyLoopEventListener,
                      EventSystem::ThreadingPolicy* tp,
-                     EventSystem::CommunicationPolicy* cp) :
+                     EventSystem::CommunicationPolicy* cp,
+                     EventSystem::ExceptionPolicy* ep) :
+EventProcessor(ep),
 mFrontPool(new BaseEventPool()),
 mBackPool(new BaseEventPool()),
 mThreadingPolicy(tp),
 mCommunicationPolicy(cp),
+mExceptionPolicy(ep),
 mShouldExit(false),
 mMultiLoop(notifyLoopEventListener)
 {}
@@ -54,20 +57,31 @@ void EventLoop::stop()
 
 void EventLoop::entry()
 {
-	mCommunicationPolicy->init();
-	if ( !hasEntryPoints() )
+	try
 	{
-		throw std::logic_error("EventLoop: This loop has no EntryPoints!");
+		mCommunicationPolicy->init();
+		if ( !hasEntryPoints() )
+		{
+			throw std::logic_error("EventLoop: This loop has no EntryPoints!");
+		}
+
+		// Run synchronously
+		callEntryPoints(this);
+		
+		while(!mShouldExit)
+			doLoop();
+
+	//	mCommunicationPolicy->deinit();
+		mThreadingPolicy->stop();
 	}
-
-	// Run synchronously
-	callEntryPoints(this);
-	
-	while(!mShouldExit)
-		doLoop();
-
-//	mCommunicationPolicy->deinit();
-	mThreadingPolicy->stop();
+	catch (const std::exception& ex)
+	{
+		mExceptionPolicy->onStdException(ex);
+	}
+	catch (...)
+	{
+		mExceptionPolicy->onUnknownException();
+	}
 }
 
 long EventLoop::doLoop()

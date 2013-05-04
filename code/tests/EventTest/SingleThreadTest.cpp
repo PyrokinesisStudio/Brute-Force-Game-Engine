@@ -33,7 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BOOST_TEST_MODULE EventTest
 #include <boost/test/unit_test.hpp>
 
-size_t gEntryPointCalled = 0;
+static size_t gEntryPointCalled = 0;
 
 static void resetGlobals()
 {

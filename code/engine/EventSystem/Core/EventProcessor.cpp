@@ -26,7 +26,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <EventSystem/Core/EventInterface.h>
 
-EventProcessor::EventProcessor()
+EventProcessor::EventProcessor(EventSystem::ExceptionPolicy* ep) :
+mExceptionPolicy(ep)
 {
 }
 
@@ -78,7 +79,19 @@ long EventProcessor::processEventCount(BaseEvent* event)
 	if (it != mEventMap.end())
 	{
 		IEventTable* wTable = it->mTable;
-		numEvents = wTable->call(event);
+		
+		try
+		{
+			numEvents = wTable->call(event);
+		}
+		catch (const std::exception& ex)
+		{
+			mExceptionPolicy->onStdException(ex);
+		}
+		catch (...)
+		{
+			mExceptionPolicy->onUnknownException();
+		}
 	}
 #ifdef DEBUG_EVENT_ACCEPTANCE
 	else
