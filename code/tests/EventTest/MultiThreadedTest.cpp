@@ -62,17 +62,17 @@ BOOST_AUTO_TEST_CASE (TestTwoLoopsWithoutCommunication)
 	BFG::Emitter e1(&loop1);
 	BFG::Emitter e2(&loop2);
 	
-	TestEventCounter ter;
+	TestEventCounter tec;
 
 	e1.emit<TestEvent>(TEST_EVENT_ID, TEST_EVENT_PAYLOAD);
 
-	loop2.connect(TEST_EVENT_ID, &ter, &TestEventCounter::eventHandler);
+	loop2.connect(TEST_EVENT_ID, &tec, &TestEventCounter::eventHandler);
 	
 	loop1.doLoop();
 	loop2.doLoop();
 
 	// Expect no received events since we arent't using "Interthread Communication"
-	BOOST_REQUIRE_EQUAL(ter.receivedEvents(), 0);
+	BOOST_REQUIRE_EQUAL(tec.receivedEvents(), 0);
 }
 
 BOOST_AUTO_TEST_CASE (TestTwoLoopsWithOneWayCommunication)
@@ -83,18 +83,18 @@ BOOST_AUTO_TEST_CASE (TestTwoLoopsWithOneWayCommunication)
 	BFG::Emitter e1(&loop1);
 	BFG::Emitter e2(&loop2);
 	
-	TestEventCounter ter;
+	TestEventCounter tec;
 
 	e1.emit<TestEvent>(TEST_EVENT_ID, TEST_EVENT_PAYLOAD);
 
-	loop2.connect(TEST_EVENT_ID, &ter, &TestEventCounter::eventHandler);
+	loop2.connect(TEST_EVENT_ID, &tec, &TestEventCounter::eventHandler);
 	
 	loop1.doLoop();
 	loop2.doLoop();
 
 	// Expect no received events since loop2 has no communication and does
 	// not poll if other pools are available.
-	BOOST_REQUIRE_EQUAL(ter.receivedEvents(), 0);
+	BOOST_REQUIRE_EQUAL(tec.receivedEvents(), 0);
 }
 
 #ifndef SKIP_BROKEN_TESTS
@@ -106,11 +106,11 @@ BOOST_AUTO_TEST_CASE (TestTwoLoopsWithCommunication)
 	BFG::Emitter e1(&loop1);
 	BFG::Emitter e2(&loop2);
 	
-	TestEventCounter ter;
+	TestEventCounter tec;
 
 	// Sending 1000 events with Loop1 to an event handler of Loop2.
 	
-	loop2.connect(TEST_EVENT_ID, &ter, &TestEventCounter::eventHandler);
+	loop2.connect(TEST_EVENT_ID, &tec, &TestEventCounter::eventHandler);
 
 	loop1.run();
 	loop2.run();
@@ -141,10 +141,10 @@ BOOST_AUTO_TEST_CASE (TestTwoLoopsWithCommunication)
 	std::cout << "Sleep (1)" << std::endl;
 	boost::this_thread::sleep(boost::posix_time::seconds(1));
 	
-	std::cout << "Received Events: " << ter.receivedEvents() << std::endl;
+	std::cout << "Received Events: " << tec.receivedEvents() << std::endl;
 	
 	// Expect EXPECTED_NUMBER_OF_EVENTS received events. Both loops should communicate.
-	BOOST_CHECK_EQUAL(ter.receivedEvents(), EXPECTED_NUMBER_OF_EVENTS);
+	BOOST_CHECK_EQUAL(tec.receivedEvents(), EXPECTED_NUMBER_OF_EVENTS);
 }
 #endif
 
@@ -155,11 +155,11 @@ BOOST_AUTO_TEST_CASE (TestCreatePoolElementException)
 	
 	BFG::Emitter e1(&loop1);
 	
-	TestEventCounter ter;
+	TestEventCounter tec;
 
 	// Provoking "unable to create pool element"
 	
-	loop1.connect(TEST_EVENT_ID, &ter, &TestEventCounter::eventHandler);
+	loop1.connect(TEST_EVENT_ID, &tec, &TestEventCounter::eventHandler);
 	loop1.run();
 
 	std::cout << "Sleep (100ms)" << std::endl;
@@ -190,10 +190,10 @@ BOOST_AUTO_TEST_CASE (TestCreatePoolElementException)
 	std::cout << "Sleep (1)" << std::endl;
 	boost::this_thread::sleep(boost::posix_time::seconds(1));
 	
-	std::cout << "Received Events: " << ter.receivedEvents() << std::endl;
+	std::cout << "Received Events: " << tec.receivedEvents() << std::endl;
 	
 	// Expect EXPECTED_NUMBER_OF_EVENTS received events without error.
-	BOOST_CHECK_EQUAL(ter.receivedEvents(), EXPECTED_NUMBER_OF_EVENTS);
+	BOOST_CHECK_EQUAL(tec.receivedEvents(), EXPECTED_NUMBER_OF_EVENTS);
 }
 #endif
 

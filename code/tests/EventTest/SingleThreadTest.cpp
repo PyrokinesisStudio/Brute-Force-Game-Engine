@@ -58,21 +58,21 @@ BOOST_AUTO_TEST_CASE (TestLoopWithOneEvent)
 	
 	EventLoop loop(false);
 	BFG::Emitter e(&loop);
-	TestEventCounter ter;
+	TestEventCounter tec;
 	
-	loop.connect(TEST_EVENT_ID, &ter, &TestEventCounter::eventHandler);
+	loop.connect(TEST_EVENT_ID, &tec, &TestEventCounter::eventHandler);
 
-	// Shouldn't get delivered
+	// Shouldn't get delivered yet
 	e.emit<TestEvent>(TEST_EVENT_ID, TEST_EVENT_PAYLOAD);
-	BOOST_REQUIRE_EQUAL(ter.receivedEvents(), 0);
+	BOOST_REQUIRE_EQUAL(tec.receivedEvents(), 0);
 
 	// Should get delivered
 	loop.doLoop();
-	BOOST_REQUIRE_EQUAL(ter.receivedEvents(), 1);
+	BOOST_REQUIRE_EQUAL(tec.receivedEvents(), 1);
 
 	// Make sure it doesn't get delivered again
 	loop.doLoop();
-	BOOST_REQUIRE_EQUAL(ter.receivedEvents(), 1);
+	BOOST_REQUIRE_EQUAL(tec.receivedEvents(), 1);
 }
 
 BOOST_AUTO_TEST_CASE (TestLoopWithOneEventAndDestinationAndSender)
@@ -85,24 +85,24 @@ BOOST_AUTO_TEST_CASE (TestLoopWithOneEventAndDestinationAndSender)
 
 	EventLoop loop(false);
 	BFG::Emitter e(&loop);
-	TestEventCounter ter;
+	TestEventCounter tec;
 
-	loop.connect(TEST_EVENT_ID, &ter, &TestEventCounter::eventHandler, DESTINATION);
+	loop.connect(TEST_EVENT_ID, &tec, &TestEventCounter::eventHandler, DESTINATION);
 
 	// Should not arrive since the DESTINATION is different
 	e.emit<TestEvent>(TEST_EVENT_ID, TEST_EVENT_PAYLOAD, OTHER_DESTINATION, SENDER);
 	loop.doLoop();
-	BOOST_REQUIRE_EQUAL(ter.receivedEvents(), 0);
+	BOOST_REQUIRE_EQUAL(tec.receivedEvents(), 0);
 
 	// Should arrive since the DESTINATION is equal
 	e.emit<TestEvent>(TEST_EVENT_ID, TEST_EVENT_PAYLOAD, DESTINATION, SENDER);
 	loop.doLoop();
-	BOOST_REQUIRE_EQUAL(ter.receivedEvents(), 1);
+	BOOST_REQUIRE_EQUAL(tec.receivedEvents(), 1);
 
 	// Should not arrive since it has no DESTINATION (which means: to all)
 	e.emit<TestEvent>(TEST_EVENT_ID, TEST_EVENT_PAYLOAD);
 	loop.doLoop();
-	BOOST_REQUIRE_EQUAL(ter.receivedEvents(), 1);
+	BOOST_REQUIRE_EQUAL(tec.receivedEvents(), 1);
 }
 
 BOOST_AUTO_TEST_CASE (TestEntryPoint)

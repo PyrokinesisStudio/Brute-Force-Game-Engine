@@ -85,7 +85,7 @@ struct Configuration
 {
 	Configuration(const std::string& appName) :
 	appName(appName),
-	logLevel(BFG::Base::Logger::SL_WARNING),
+	logLevel(Base::Logger::SL_WARNING),
 	controllerFrequency(1000),
 	handler(&detail::idle)
 	{
@@ -98,7 +98,7 @@ struct Configuration
 	const std::string appName;
 
 	// Optional Parameters
-	BFG::Base::Logger::SeverityLevel logLevel;
+	Base::Logger::SeverityLevel logLevel;
 	std::size_t controllerFrequency;
 	std::string logName;
 	std::string ip;
@@ -111,13 +111,13 @@ MainContainerT engineInit(const Configuration& cfg)
 {
 #ifdef BFG_USE_NETWORK
 	// Parse port
-	BFG::u16 intPort = 0;
+	u16 intPort = 0;
 	if (!detail::from_string(intPort, cfg.port, std::dec))
 		throw std::runtime_error("Port not a number: " + cfg.port);
 
 	// Determine if server or client
 	bool isServer = cfg.ip.empty();
-	BFG::u8     intNetworkMode = (isServer?BFG_SERVER:BFG_CLIENT);
+	u8     intNetworkMode = (isServer?BFG_SERVER:BFG_CLIENT);
 	std::string strNetworkMode = (isServer?"Server":"Client");
 #else
 	std::string strNetworkMode; // For logName suffix
@@ -130,7 +130,7 @@ MainContainerT engineInit(const Configuration& cfg)
 
 	// Initialize logger
 	Path p;
-	BFG::Base::Logger::Init(cfg.logLevel, p.Get(ID::P_LOGS) + "/" + logName);
+	Base::Logger::Init(cfg.logLevel, p.Get(ID::P_LOGS) + "/" + logName);
 	
 	EventLoop loop
 	(
