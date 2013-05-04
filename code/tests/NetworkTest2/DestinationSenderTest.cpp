@@ -269,6 +269,10 @@ BOOST_AUTO_TEST_CASE (ConnectionTest)
 	
 	server->emitter->emit<BFG::Network::ControlEvent>(BFG::ID::NE_LISTEN, static_cast<BFG::u16>(port));
 
+	EventStatus s;
+	s.gotConnected = true;
+	periodicWaitForEqual(s, server->status, boost::posix_time::milliseconds(5000));
+
 	client1->emitter->emit<BFG::Network::ControlEvent>
 	(
 		BFG::ID::NE_CONNECT,

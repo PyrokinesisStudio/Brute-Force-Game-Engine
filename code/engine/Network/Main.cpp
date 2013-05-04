@@ -24,13 +24,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef _MSC_VER
-  // Many many warnings coming from Ogre...
-  #pragma warning (push)
-  #pragma warning (once: 4251)
-  #pragma warning (once: 4244)
-#endif
-
 #include <Network/Main.h>
 
 #ifdef _WIN32

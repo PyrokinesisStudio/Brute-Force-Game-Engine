@@ -88,16 +88,6 @@ public:
 
 	operator const DataType&() const {return mData;}
 
-	friend std::ostream& operator << (std::ostream& os, TBaseEvent& ev)
-	{
-#ifdef EVENTSYSTEM_NETWORK_TEST
-		os << "TBaseEvent(" << ev.mId << ", " << ev.mReceiver << ")" 
-			<< "Data (" << ev.mData 
-			<< ")" << std::endl;
-#endif
-		return os;
-	}
-
 	virtual unsigned int getSize(void) const
 	{
 		return sizeof(TBaseEvent<DataType, Header>);
