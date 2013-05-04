@@ -39,20 +39,15 @@ EventLoop* Main::eventLoop()
 	return Main::mLoop;
 }
 
-void* Main::main(void* p)
+void Main::main(EventLoop* loop)
 {
-	EventLoop* loop = static_cast<EventLoop*>(p);
-	
-	assert(loop && "Audio::Main: EventLoop is invalid");
-
 	if (Main::mLoop)
 		throw std::logic_error("Audio::Main gets initialized twice!");
 
 	Main::mLoop = loop;
+	
 	mInit = createInit();
 	mListener = createListener();
-
-	return 0;
 }
 
 } // namespace Audio

@@ -31,14 +31,16 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/LibraryMainBase.h>
 #include <Physics/Defs.h>
 
+class EventLoop;
+
 namespace BFG {
 namespace Physics { 
 
 class PhysicsManager;
 
-class PHYSICS_API Main : public Base::LibraryMainBase
+class PHYSICS_API Main : public Base::LibraryMainBase<EventLoop>
 {
-	void* main(void*);
+	void main(EventLoop*);
 	
 	boost::shared_ptr<PhysicsManager> mPhysicsManager;
 };

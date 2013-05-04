@@ -43,15 +43,11 @@ EventLoop* Main::eventLoop()
 	return Main::mLoop;
 }
 
-void* Main::main(void* p)
+void Main::main(EventLoop* loop)
 {
 	if (mLoop)
 		throw std::logic_error("Main gets initialized twice!");
 	
-	EventLoop* loop = static_cast<EventLoop*>(p);
-	
-	assert(loop && "Main: EventLoop is invalid");
-
 	Main::mLoop = loop;
 	
 	mMain.reset(new OgreInit(loop, mWindowTitle));

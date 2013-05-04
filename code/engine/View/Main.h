@@ -37,7 +37,7 @@ namespace View {
 
 class OgreInit;
 
-class VIEW_API Main : public Base::LibraryMainBase
+class VIEW_API Main : public Base::LibraryMainBase<EventLoop>
 {
 public:
 	Main(const std::string& windowTitle);
@@ -46,7 +46,7 @@ public:
 	static EventLoop* eventLoop();
 
 private:
-	void* main(void*);
+	void main(EventLoop*);
 	
 	static EventLoop* mLoop;
 	boost::shared_ptr<OgreInit> mMain;

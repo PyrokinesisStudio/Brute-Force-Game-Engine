@@ -38,13 +38,10 @@ Main::Main(size_t frequency) :
 mFrequency(frequency)
 {}
 
-void* Main::main(void* p)
+void Main::main(EventLoop* loop)
 {
-	EventLoop* loop = static_cast<EventLoop*>(p);
-
 	mController.reset(new Controller(loop));
 	mController->init(mFrequency);
-	return 0;
 }
 
 } // namespace Controller_

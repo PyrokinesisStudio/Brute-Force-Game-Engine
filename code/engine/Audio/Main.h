@@ -40,13 +40,13 @@ namespace BFG {
 namespace Audio {
 
 //! This is the ancor of the module.
-class BFG_AUDIO_API Main : public Base::LibraryMainBase
+class BFG_AUDIO_API Main : public Base::LibraryMainBase<EventLoop>
 {
 public:
 	static EventLoop* eventLoop();
 	
 private:
-	void* main(void*);
+	void main(EventLoop*);
 	
 	static EventLoop* mLoop;
 	boost::shared_ptr<Init> mInit;

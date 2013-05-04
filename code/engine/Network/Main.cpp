@@ -56,10 +56,8 @@ Main::~Main()
 	dbglog << "Network::Main::~Main()";
 }
 
-void* Main::main(void* p)
+void Main::main(EventLoop* loop)
 {
-	EventLoop* loop = static_cast<EventLoop*>(p);
-	
 	switch(mMode)
 	{
 	case BFG_SERVER:
@@ -78,8 +76,6 @@ void* Main::main(void* p)
 		throw std::runtime_error("Network mode not recognized");
 		break;
 	}
-	
-	return 0;
 }
 
 #ifdef _WIN32

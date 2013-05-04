@@ -32,18 +32,20 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Controller/Defs.h>
 #include <Base/LibraryMainBase.h>
 
+class EventLoop;
+
 namespace BFG {
 namespace Controller_ {
 
 class Controller;
 
-class CONTROLLER_API Main : public Base::LibraryMainBase
+class CONTROLLER_API Main : public Base::LibraryMainBase<EventLoop>
 {
 public:
 	Main(size_t frequency);
 
 private:
-	void* main(void*);
+	void main(EventLoop*);
 	
 	boost::shared_ptr<Controller_::Controller> mController;
 	

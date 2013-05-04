@@ -32,11 +32,9 @@ class EventLoop;
 namespace BFG {
 namespace Physics { 
 
-void* Main::main(void* p)
+void Main::main(EventLoop* loop)
 {
-	EventLoop* loop = static_cast<EventLoop*>(p);
 	mPhysicsManager.reset(new PhysicsManager(loop));
-	return 0;
 }
 
 } // namespace Physics

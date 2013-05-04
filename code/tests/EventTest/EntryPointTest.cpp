@@ -55,7 +55,7 @@ struct Code
 	}
 };
 
-struct Main : BFG::Base::LibraryMainBase
+struct Main : BFG::Base::LibraryMainBase<EventLoop>
 {
 	Main(int param) :
 	mParam(param)
@@ -66,11 +66,10 @@ struct Main : BFG::Base::LibraryMainBase
 		MainDestroyed = true;
 	}
 
-	void* main(void*)
+	virtual void main(EventLoop*)
 	{
 		EntryPointCalled = true;
 		mCode.reset(new Code(mParam));
-		return 0;
 	}
 
 private:

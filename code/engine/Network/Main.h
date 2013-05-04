@@ -44,14 +44,14 @@ namespace Network {
 class Server;
 class Client;
 
-class NETWORK_API Main : public Base::LibraryMainBase
+class NETWORK_API Main : public Base::LibraryMainBase<EventLoop>
 {
 public:
 	Main(EventLoop* loop, u8 mode);
 	~Main();
 
 private:
-	void* main(void*);
+	void main(EventLoop*);
 	
 	BFG::u8 mMode;
 	
