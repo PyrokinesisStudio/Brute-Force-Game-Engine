@@ -26,7 +26,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include <Base/Logger.h>
-#include <Core/ShowException.h>
+#include <Base/ShowException.h>
 
 #include <tests/AudioTest/TestLoader.h>
 #include <tests/AudioTest/CpuBurnTest.h>

@@ -30,7 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/Utils.h>
 #include <Core/Path.h>
-#include <Core/ShowException.h>
+#include <Base/ShowException.h>
 
 #include <Audio/Audio.h>
 #include <Controller/Controller.h>

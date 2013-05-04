@@ -24,11 +24,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Core/ShowException.h>
-
-#ifndef errlog
-  #include <iostream>
-#endif
+#include <Base/Logger.h>
+#include <Base/ShowException.h>
 
 #ifdef _WIN32
   #define WIN32_LEAN_AND_MEAN
@@ -41,11 +38,7 @@ void showException(const char* info_text)
 {
 	const char info_head[] = "An exception has occurred";
 
-#ifdef errlog
 	errlog << info_head << ": " << info_text;
-#else
-	std::cerr << info_head << ": " << info_text << std::endl;
-#endif
 
 #ifdef _WIN32
 	MessageBox(NULL, info_text, info_head,

@@ -44,7 +44,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Controller/Controller.h>
 #include <Core/Math.h>
 #include <Core/Path.h>
-#include <Core/ShowException.h>
+#include <Base/ShowException.h>
 #include <Core/Utils.h>
 #include <Model/Environment.h>
 #include <Model/GameObject.h>

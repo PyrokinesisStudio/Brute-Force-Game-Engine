@@ -29,7 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/Pause.h>
 #include <Base/ResolveDns.h>
 #include <Core/Path.h>
-#include <Core/ShowException.h>
+#include <Base/ShowException.h>
 #include <Core/Types.h>
 #include <Core/Utils.h>
 #include <EventSystem/Core/EventLoop.h>

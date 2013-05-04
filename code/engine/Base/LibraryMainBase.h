@@ -30,6 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <boost/shared_ptr.hpp>
 #include <Base/EntryPoint.h>
+#include <Base/ShowException.h>
 
 namespace BFG {
 namespace Base {
