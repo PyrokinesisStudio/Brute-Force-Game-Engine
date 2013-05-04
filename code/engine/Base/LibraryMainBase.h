@@ -54,7 +54,6 @@ struct LibraryMainBase
 	}
 };
 
-typedef std::vector<boost::shared_ptr<BFG::Base::LibraryMainBase> > MainContainerT;
 
 } // namespace Base
 } // namespace BFG

@@ -63,6 +63,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 
 typedef boost::function<void(EventLoop&)> InitHandlerT;
+typedef std::vector<boost::shared_ptr<Base::LibraryMainBase<EventLoop> > > MainContainerT;
 
 namespace detail {
 	
@@ -106,7 +107,7 @@ struct Configuration
 };
 
 //! Initializes the BFG-Engine.
-BFG::Base::MainContainerT engineInit(const Configuration& cfg)
+MainContainerT engineInit(const Configuration& cfg)
 {
 #ifdef BFG_USE_NETWORK
 	// Parse port
@@ -142,10 +143,10 @@ BFG::Base::MainContainerT engineInit(const Configuration& cfg)
 		dbglog << "Starting as " + strNetworkMode;
 
 	
-	BFG::Base::MainContainerT mains;
+	MainContainerT mains;
 	
 #ifdef BFG_USE_NETWORK
-	BFG::Base::MainContainerT::value_type networkMain(new BFG::Network::Main(&loop, intNetworkMode));
+	MainContainerT::value_type networkMain(new Network::Main(&loop, intNetworkMode));
 	mains.push_back(networkMain);
 #else
 	assert(cfg.port.empty() && "You forgot to define BFG_USE_NETWORK!");
@@ -156,28 +157,28 @@ BFG::Base::MainContainerT engineInit(const Configuration& cfg)
 #endif
 	{
 #ifdef BFG_USE_AUDIO
-		BFG::Base::MainContainerT::value_type audioMain(new BFG::Audio::Main);
+		MainContainerT::value_type audioMain(new Audio::Main);
 		mains.push_back(audioMain);
 #endif
 
 #ifdef BFG_USE_CONTROLLER
-		BFG::Base::MainContainerT::value_type controllerMain(new BFG::Controller_::Main(cfg.controllerFrequency));
+		MainContainerT::value_type controllerMain(new Controller_::Main(cfg.controllerFrequency));
 		mains.push_back(controllerMain);
 #endif
 
 		
 #ifdef BFG_USE_PHYSICS
-		BFG::Base::MainContainerT::value_type physicsMain(new BFG::Physics::Main(&loop));
+		MainContainerT::value_type physicsMain(new Physics::Main(&loop));
 		mains.push_back(physicsMain);
 #endif
 
 #ifdef BFG_USE_VIEW
-		BFG::Base::MainContainerT::value_type viewMain(new BFG::View::Main(cfg.appName));
+		MainContainerT::value_type viewMain(new View::Main(cfg.appName));
 		mains.push_back(viewMain);
 #endif
 	}
 
-	BFG::Base::MainContainerT::iterator it = mains.begin();
+	MainContainerT::iterator it = mains.begin();
 	for (; it != mains.end(); ++it)
 		loop.addEntryPoint((*it)->entryPoint());
 	
