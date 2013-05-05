@@ -28,7 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <OgreRoot.h>
 
-#include <Core/Utils.h>
+#include <Core/GameHandle.h>
 #include <View/RenderObject.h>
 
 namespace Tool
@@ -79,7 +79,7 @@ void MeshControl::onLoadOk(MyGUI::Widget* w)
 	mData->mRenderObjects[mData->mRootMesh].reset();
 	mData->mRenderObjects[mData->mRootMesh].reset(new BFG::View::RenderObject
 	(
-		NULL_HANDLE,
+		BFG::NULL_HANDLE,
 		mData->mRootMesh,
 		meshName,
 		BFG::v3::ZERO,

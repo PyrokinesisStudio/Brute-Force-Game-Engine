@@ -33,7 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/ClockUtils.h>
 #include <Core/Path.h>
 #include <Core/Types.h>
-#include <Core/Utils.h>
+#include <Core/GameHandle.h>
 
 #include <Controller/ControllerEvents.h>
 #include <Controller/Interface.h>

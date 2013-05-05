@@ -28,7 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/foreach.hpp>
 
-#include <Core/Utils.h> // generateHandle()
+#include <Core/GameHandle.h>
 
 #include <Model/Adapter.h>
 #include <Model/Environment.h>

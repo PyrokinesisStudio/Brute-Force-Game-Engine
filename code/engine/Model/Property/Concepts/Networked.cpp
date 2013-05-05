@@ -24,12 +24,12 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Core/Utils.h> // generateHandle()
 #include <Model/Property/Concepts/Networked.h>
 
 #include <boost/foreach.hpp>
 
 #include <Core/CharArray.h>
+#include <Core/GameHandle.h>
 #include <Core/Math.h>
 #include <Network/Network.h>
 #include <Physics/Event.h>

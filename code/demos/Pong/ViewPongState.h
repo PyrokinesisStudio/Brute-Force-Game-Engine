@@ -27,7 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef __VIEW_PONG_STATE_H_
 #define __VIEW_PONG_STATE_H_
 
-#include <Core/Utils.h>
+#include <Core/GameHandle.h>
 
 #include <View/Owner.h>
 #include <View/Interface.h>

@@ -29,7 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreRoot.h>
 #include <OgreEntity.h>
 
-#include <Core/Utils.h>
+#include <Core/GameHandle.h>
 
 #include <Actions.h>
 

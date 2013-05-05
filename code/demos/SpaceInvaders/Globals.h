@@ -36,7 +36,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Types.h>
 #include <Core/Math.h>
 
-#include <Core/Utils.h>
+#include <Core/GameHandle.h>
 
 #include <Model/Environment.h>
 #include <Model/GameObject.h>

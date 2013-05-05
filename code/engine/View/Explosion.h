@@ -29,6 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/noncopyable.hpp>
 
+#include <Core/GameHandle.h>
 #include <Core/Types.h>
 #include <Core/v3.h>
 

@@ -49,9 +49,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <MyGUI_OgrePlatform.h>
 
 #include <Base/Logger.h>
+
 #include <Core/Enums.hh>
+#include <Core/GameHandle.h>
 #include <Core/Path.h>
-#include <Core/Utils.h> // generateHandle()
 
 #include <View/Camera.h>
 #include <View/Console.h>
@@ -59,7 +60,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <View/Defs.h>
 #include <View/Enums.hh>
 #include <View/Event.h>
-
 
 namespace BFG {
 namespace View {

@@ -28,7 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/foreach.hpp>
 
-#include <Core/Utils.h>
+#include <Core/GameHandle.h>
 
 #include <Network/Event.h>
 #include <Network/PrintErrorCode.h>

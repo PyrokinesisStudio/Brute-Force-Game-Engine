@@ -27,12 +27,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_NETWORK_SEGMENT_H
 #define BFG_NETWORK_SEGMENT_H
 
+#include <Core/GameHandle.h>
 #include <Core/Types.h>
 
 namespace BFG {
 namespace Network { 
 
-// TODO: replace GameHandle with simpler type
 struct Segment
 {
 	// set biggest datatype to the top to optimize padding

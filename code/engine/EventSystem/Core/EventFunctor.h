@@ -30,6 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/type_traits.hpp>
 #include <boost/utility/enable_if.hpp>
 
+#include <Core/Types.h>
 #include <EventSystem/Core/EventDefs.h>
 
 template < class EventListenerType, class EventType >

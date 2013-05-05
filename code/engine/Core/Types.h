@@ -29,8 +29,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/cstdint.hpp>
 
-#define NULL_HANDLE 0
-
 namespace BFG
 {
 	// Standard types
@@ -41,11 +39,11 @@ namespace BFG
 	typedef boost::int16_t    s16;
 	typedef boost::uint32_t   u32;
 	typedef boost::int32_t    s32;
+	typedef boost::uint64_t   u64;
+	typedef boost::int64_t    s64;
 
 	typedef float             f32;
 	typedef double            f64;
-
-	typedef boost::int64_t    GameHandle;
 	
 	const f32 EPSILON_F = 0.000001f;
 }

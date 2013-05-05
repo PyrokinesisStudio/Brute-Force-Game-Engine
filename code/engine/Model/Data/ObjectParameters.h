@@ -31,6 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/shared_ptr.hpp>
 
+#include <Core/GameHandle.h>
 #include <Core/Location.h>
 #include <Core/Types.h>
 #include <Core/Math.h>

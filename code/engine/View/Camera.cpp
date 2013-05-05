@@ -34,8 +34,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Base/Logger.h>
 
+#include <Core/GameHandle.h>
 #include <Core/Math.h>
-#include <Core/Utils.h> // stringify()
 
 #include <EventSystem/Core/EventLoop.h>
 

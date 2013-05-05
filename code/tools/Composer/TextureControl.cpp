@@ -74,7 +74,7 @@ void TextureControl::activate()
 		load();
 	}
 
-	if (mData->mActiveMesh == NULL_HANDLE)
+	if (mData->mActiveMesh == BFG::NULL_HANDLE)
 		return;
 
 	mActiveHandle = mData->mActiveMesh;

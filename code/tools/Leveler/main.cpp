@@ -39,7 +39,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Path.h>
 #include <Base/ShowException.h>
 #include <Core/Types.h>
-#include <Core/Utils.h>
+#include <Core/GameHandle.h>
 #include <EventSystem/Emitter.h>
 #include <View/View.h>
 

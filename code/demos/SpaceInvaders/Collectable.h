@@ -27,7 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef SI_COLLECTABLE_H
 #define SI_COLLECTABLE_H
 
-#include <Core/Utils.h>
+#include <Core/GameHandle.h>
 #include <EventSystem/Event.h>
 #include <Model/Property/Concept.h>
 

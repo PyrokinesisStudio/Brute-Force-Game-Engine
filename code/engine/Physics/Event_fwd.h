@@ -32,6 +32,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/units/systems/si/mass.hpp>
 
 #include <Core/ExternalTypes.h>
+#include <Core/GameHandle.h>
 #include <Core/Location.h>
 #include <EventSystem/Core/EventDefs.h>
 #include <EventSystem/Event_fwd.h>

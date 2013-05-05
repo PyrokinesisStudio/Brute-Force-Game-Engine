@@ -30,7 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreRoot.h>
 #include <OgreSceneNode.h>
 
-#include <Core/Utils.h> // stringify()
+#include <Core/GameHandle.h>
 
 #include <EventSystem/Core/EventLoop.h>
 

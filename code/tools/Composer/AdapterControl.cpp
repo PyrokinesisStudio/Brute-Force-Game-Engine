@@ -38,7 +38,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/XmlFileHandleFactory.h>
 #include <Core/Mesh.h>
 #include <Core/Types.h>
-#include <Core/Utils.h>
+#include <Core/GameHandle.h>
 #include <Model/Data/AdapterConfig.h>
 #include <Model/Data/AdapterParameters.h>
 #include <View/Convert.h>

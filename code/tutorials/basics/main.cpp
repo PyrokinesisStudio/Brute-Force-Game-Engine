@@ -40,7 +40,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Controller/Controller.h>
 #include <Core/Path.h>
 #include <Base/ShowException.h>
-#include <Core/Utils.h>
+#include <Core/GameHandle.h>
 #include <Model/State.h>
 #include <View/View.h>
 

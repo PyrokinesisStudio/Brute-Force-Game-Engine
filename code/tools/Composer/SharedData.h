@@ -86,10 +86,10 @@ struct SharedData
 	ChangeMapT mTextureChanges;
 
 	SharedData() :
-	mState(NULL_HANDLE),
-	mCamera(NULL_HANDLE),
-	mActiveMesh(NULL_HANDLE),
-	mRootMesh(NULL_HANDLE),
+	mState(BFG::NULL_HANDLE),
+	mCamera(BFG::NULL_HANDLE),
+	mActiveMesh(BFG::NULL_HANDLE),
+	mRootMesh(BFG::NULL_HANDLE),
 	mSelectedSubEntity(NULL),
 	mGameObject(NULL)
 	{

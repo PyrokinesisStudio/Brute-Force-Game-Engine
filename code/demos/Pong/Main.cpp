@@ -45,7 +45,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Math.h>
 #include <Core/Path.h>
 #include <Base/ShowException.h>
-#include <Core/Utils.h>
+#include <Core/GameHandle.h>
 #include <Model/Environment.h>
 #include <Model/GameObject.h>
 #include <Model/Data/GameObjectFactory.h>
@@ -80,8 +80,8 @@ struct SynchronizationTestState: BFG::State
 	SynchronizationTestState(GameHandle handle, EventLoop* loop) :
 	State(loop),
 	mStateHandle(handle),
-	mPlayer(NULL_HANDLE),
-	mPlayer2(NULL_HANDLE),
+	mPlayer(BFG::NULL_HANDLE),
+	mPlayer2(BFG::NULL_HANDLE),
 	mEnvironment(new BFG::Environment)
 	{
 		BFG::Path p;
@@ -184,7 +184,7 @@ struct ServerState: public SynchronizationTestState
 			case A_SHIP_AXIS_Y:
 			{
 				GameHandle playerHandle = getPlayerHandle(e->sender());
-				if (playerHandle == NULL_HANDLE)
+				if (playerHandle == BFG::NULL_HANDLE)
 					return;
 				f32 data;
 				arrayToValue(data, payload.mAppData, 0);
@@ -258,7 +258,7 @@ struct ServerState: public SynchronizationTestState
 		ClientListT::iterator it = mClientList.find(peerId);
 
 		if (it == mClientList.end())
-			return NULL_HANDLE;
+			return BFG::NULL_HANDLE;
 
 		return it->second;
 	}

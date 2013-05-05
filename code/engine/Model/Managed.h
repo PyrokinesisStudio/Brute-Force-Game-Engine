@@ -30,6 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/units/systems/si/time.hpp>
 #include <boost/units/quantity.hpp>
 
+#include <Core/GameHandle.h>
 #include <Core/Types.h>
 #include <Model/Enums.hh>
 #include <Model/Defs.h>

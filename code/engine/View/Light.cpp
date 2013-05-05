@@ -31,7 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreRoot.h>
 #include <OgreSceneManager.h>
 
-#include <Core/Utils.h>
+#include <Core/GameHandle.h>
 
 #include <View/Convert.h>
 #include <View/Defs.h>

@@ -30,6 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/tuple/tuple.hpp>
 #include <boost/variant.hpp>
 #include <Core/CharArray.h>
+#include <Core/GameHandle.h>
 #include <Core/Types.h>
 #include <EventSystem/Core/EventDefs.h>
 #include <EventSystem/Event_fwd.h>

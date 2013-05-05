@@ -31,15 +31,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <MyGUI_ComboBox.h>
 #include <MyGUI_Button.h>
 
+#include <Core/GameHandle.h>
 #include <Core/Types.h>
-#include <Core/Utils.h>
+
 #include <View/Convert.h>
 #include <View/LightParameters.h>
 
-
-
 namespace Tool
 {
+
 using BFG::f32;
 using BFG::v3;
 using BFG::cv4;
@@ -219,7 +219,7 @@ void LightControl::onSetAmbient(MyGUI::Widget*)
 
 BFG::View::LightParameters LightControl::getDirectionalLightValues(BFG::GameHandle handle)
 {
-	if (handle == NULL_HANDLE)
+	if (handle == BFG::NULL_HANDLE)
 		handle = BFG::generateHandle();
 
 	using namespace MyGUI;
@@ -238,7 +238,7 @@ BFG::View::LightParameters LightControl::getDirectionalLightValues(BFG::GameHand
 
 void LightControl::onCreateDirection(MyGUI::Widget*)
 {
-	BFG::View::LightParameters dlc = getDirectionalLightValues(NULL_HANDLE);
+	BFG::View::LightParameters dlc = getDirectionalLightValues(BFG::NULL_HANDLE);
 
 	mLights.insert(std::make_pair(dlc.mHandle, new BFG::View::Light(dlc)));
 	updateLightBox();
@@ -246,7 +246,7 @@ void LightControl::onCreateDirection(MyGUI::Widget*)
 
 BFG::View::LightParameters LightControl::getPointLightValues(BFG::GameHandle handle)
 {
-	if (handle == NULL_HANDLE)
+	if (handle == BFG::NULL_HANDLE)
 		handle = BFG::generateHandle();
 
 	using namespace MyGUI;
@@ -269,7 +269,7 @@ BFG::View::LightParameters LightControl::getPointLightValues(BFG::GameHandle han
 
 void LightControl::onCreatePoint(MyGUI::Widget*)
 {
-	BFG::View::LightParameters plc = getPointLightValues(NULL_HANDLE);
+	BFG::View::LightParameters plc = getPointLightValues(BFG::NULL_HANDLE);
 
 	mLights.insert(std::make_pair(plc.mHandle, new BFG::View::Light(plc)));
 	updateLightBox();
@@ -277,7 +277,7 @@ void LightControl::onCreatePoint(MyGUI::Widget*)
 
 BFG::View::LightParameters LightControl::getSpotLightValues(BFG::GameHandle handle)
 {
-	if (handle == NULL_HANDLE)
+	if (handle == BFG::NULL_HANDLE)
 		handle = BFG::generateHandle();
 
 	using namespace MyGUI;
@@ -304,7 +304,7 @@ BFG::View::LightParameters LightControl::getSpotLightValues(BFG::GameHandle hand
 
 void LightControl::onCreateSpot(MyGUI::Widget*)
 {
-	BFG::View::LightParameters slc = getSpotLightValues(NULL_HANDLE);
+	BFG::View::LightParameters slc = getSpotLightValues(BFG::NULL_HANDLE);
 	
 	mLights.insert(std::make_pair(slc.mHandle, new BFG::View::Light(slc)));
 	updateLightBox();

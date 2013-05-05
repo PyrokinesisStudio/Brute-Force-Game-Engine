@@ -26,7 +26,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include "HumanGeneral.h"
 
-#include <Core/Utils.h>
+#include <Core/GameHandle.h>
 
 #include <Model/Events/SectorEvent.h>
 #include <Model/Data/GameObjectFactory.h>

@@ -28,6 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_VIEW_OBJECTCREATION_H
 
 #include <Core/CharArray.h>
+#include <Core/GameHandle.h>
 #include <Core/Types.h>
 #include <Core/qv4.h>
 #include <Core/v3.h>

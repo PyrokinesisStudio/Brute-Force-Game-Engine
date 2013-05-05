@@ -29,9 +29,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/variant.hpp>
 
+#include <Core/CharArray.h>
+#include <Core/GameHandle.h>
 #include <Core/Types.h>
 #include <Core/v3.h>
-#include <Core/CharArray.h>
 #include <EventSystem/Event_fwd.h>
 
 #include <Audio/Enums.hh>
