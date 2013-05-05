@@ -267,7 +267,7 @@ void OgreInit::initMyGui()
 
 void OgreInit::eventHandler(Event* VE)
 {
-	switch (VE->getId())
+	switch (VE->id())
 	{
 	case ID::VE_SCREENSHOT:
 		onScreenShot();

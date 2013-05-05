@@ -92,7 +92,7 @@ void Client::stop()
 
 void Client::startConnecting(const std::string& ip, const std::string& port)
 {
-	dbglog << "Client::startConnecting";
+	dbglog << "Client::startConnecting(" << ip << ":" << port << ")";
 	boost::asio::ip::tcp::resolver::query query(ip, port);
 	mResolver->async_resolve(query, boost::bind(&Client::resolveHandler, this, _1, _2));
 }

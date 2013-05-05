@@ -60,7 +60,7 @@ static void odeErrorHandling(int errnum, const char* msg, va_list ap)
 
 	vsnprintf(formatted_msg.data(), formatted_msg.size(), msg, ap);
 
-	errlog << "ODE: " << formatted_msg.data();
+	errlog << "ODE [errnum: " << errnum << "]: " << formatted_msg.data();
 }
 
 static void odeMessageHandling(int errnum, const char* msg, va_list ap)
@@ -69,7 +69,7 @@ static void odeMessageHandling(int errnum, const char* msg, va_list ap)
 
 	vsnprintf(formatted_msg.data(), formatted_msg.size(), msg, ap);
 
-	infolog << "ODE: " << formatted_msg.data();
+	infolog << "ODE [errnum: " << errnum << "]: " << formatted_msg.data();
 }
 
 static void odeDebugHandling(int errnum, const char* msg, va_list ap)
@@ -78,7 +78,7 @@ static void odeDebugHandling(int errnum, const char* msg, va_list ap)
 
 	vsnprintf(formatted_msg.data(), formatted_msg.size(), msg, ap);
 
-	dbglog << "ODE: " << formatted_msg.data();
+	dbglog << "ODE [errnum: " << errnum << "]: " << formatted_msg.data();
 }
 
 
