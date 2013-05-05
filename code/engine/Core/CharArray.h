@@ -46,7 +46,7 @@ boost::array<char, ArraySize> stringToArray(const std::string& s)
 }
 
 template <typename T, typename ArrayT>
-void arrayToValue(T& val, const ArrayT& array, size_t offset, typename boost::disable_if<boost::is_pointer<T> >::type* dummy = 0)
+void arrayToValue(T& val, const ArrayT& array, size_t offset, typename boost::disable_if<boost::is_pointer<T> >::type* /*dummy*/ = 0)
 {
 	memcpy(&val, &array[offset], sizeof(T));
 }

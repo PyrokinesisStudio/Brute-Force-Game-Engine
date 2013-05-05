@@ -61,7 +61,7 @@ namespace boost {
 namespace serialization {
 
 template<class Archive>
-void serialize(Archive & ar, BFG::v3& v, const unsigned int version)
+void serialize(Archive & ar, BFG::v3& v, const unsigned int /*version*/)
 {
 	ar & v.x;
 	ar & v.y;
