@@ -179,6 +179,8 @@ public:
 private:
 	friend class Property::Concept;
 
+	//! Updates the GameObject as well as all its Modules
+	//! 
 	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
 	virtual void internalSynchronize();
 

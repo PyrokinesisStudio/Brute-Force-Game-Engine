@@ -584,7 +584,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = Mainpage.h \
+INPUT                  = . \
                          ../code/engine/Audio \
                          ../code/engine/Base \
                          ../code/engine/Controller \
