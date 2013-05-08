@@ -74,6 +74,9 @@ void AutoNavigator::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 
 void AutoNavigator::internalSynchronize()
 {
+	if (mTargets.empty())
+		return;
+
 	emit<GameObjectEvent>(ID::GOE_CONTROL_PITCH, mRotationFactorPitch, ownerHandle());
 	emit<GameObjectEvent>(ID::GOE_CONTROL_YAW, mRotationFactorYaw, ownerHandle());
 	emit<GameObjectEvent>(ID::GOE_CONTROL_THRUST,mAccelerationFactor, ownerHandle());
