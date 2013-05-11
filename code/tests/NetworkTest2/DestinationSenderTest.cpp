@@ -30,7 +30,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <Base/TestAppDeco.h>
 #include "Requisites.h"
-#include <ControllerTest/InputWindowX11.h>
 
 const BFG::GameHandle serverAppHandle = 123;
 const BFG::GameHandle client_1_AppHandle = 456;
