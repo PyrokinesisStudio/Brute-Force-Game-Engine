@@ -154,7 +154,7 @@ protected:
 
 		\param varId    "Variable Id"-Part of the composed ValueId
 		\param moduleId Handle of module owning the value.
-		\return         A copy of the requested Property::Value
+		\return         A reference of the requested Property::Value
 	*/
 	template <typename RetT>
 	RetT& value(ValueId::VarIdT varId,
