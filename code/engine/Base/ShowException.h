@@ -27,11 +27,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_SHOWEXCEPTION_H
 #define BFG_SHOWEXCEPTION_H
 
-#include <Core/Defs.h>
-
 namespace BFG {
 
-BFG_CORE_API void showException(const char* info_text);
+void showException(const char* info_text);
 
 } // namespace BFG
 
