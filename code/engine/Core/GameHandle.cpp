@@ -69,7 +69,11 @@ private:
 	{
 		++Counter;
 		BFG::GameHandle result;
+#if _MSC_VER < 1700
+		std::bitset<28> counter(static_cast<unsigned long long>(Counter));
+#else
 		std::bitset<28> counter(Counter);
+#endif
 		std::bitset<32> handle = concat(counter, flags);
 		result = handle.to_ulong();
 		return result;
