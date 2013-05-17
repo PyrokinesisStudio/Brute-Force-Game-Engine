@@ -57,6 +57,7 @@ private:
 	void synchronizeView() const;
 
 	std::vector<ID::PhysicsAction> mPhysicsActions;
+	bool mFirstFullSync;
 };
 
 } // namespace BFG

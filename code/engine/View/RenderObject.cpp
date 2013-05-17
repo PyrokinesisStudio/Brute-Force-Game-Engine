@@ -74,6 +74,7 @@ mEntity(NULL)
 	);
 
 	mSceneNode->attachObject(mEntity);
+	mSceneNode->setVisible(false);
 	
 	Main::eventLoop()->connect
 	(
