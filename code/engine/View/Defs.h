@@ -30,11 +30,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_SCENEMANAGER "BFG_SceneManager"
 
 #ifdef _WIN32
+
 	#ifndef VIEW_EXPORTS
 		#define VIEW_API __declspec(dllimport)
 	#else
 		#define VIEW_API __declspec(dllexport)
 	#endif //VIEW_EXPORTS
+
+	#define NOMINMAX // This fixes a name collision between WINAPI and OGRE.
+
 #else // UNIX
     #define VIEW_API
 #endif// UNIX

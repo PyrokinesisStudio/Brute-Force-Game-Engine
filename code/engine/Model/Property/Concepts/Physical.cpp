@@ -36,7 +36,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 
 Physical::Physical(GameObject& owner, PluginId pid) :
-Property::Concept(owner, "Physical", pid)
+Property::Concept(owner, "Physical", pid),
+mFirstFullSync(true)
 {
 	mPhysicsActions.push_back(ID::PE_FULL_SYNC);
 	mPhysicsActions.push_back(ID::PE_POSITION);
@@ -66,6 +67,12 @@ void Physical::internalSynchronize()
 	assert(ownerHandle() != NULL_HANDLE);
 	
 	synchronizeView();
+
+	if (mFirstFullSync)
+	{
+		emit<View::Event>(ID::VE_SET_VISIBLE, true, ownerHandle());
+		mFirstFullSync = false;
+	}
 }
 
 void Physical::onPhysicsEvent(Physics::Event* event)
@@ -181,10 +188,6 @@ void Physical::synchronizeView() const
 
 	emit<View::Event>(ID::VE_UPDATE_POSITION, go.position, ownerHandle());
 	emit<View::Event>(ID::VE_UPDATE_ORIENTATION, go.orientation, ownerHandle());
-
-	//! \todo Gui still requires these events
-	emit<GameObjectEvent>(ID::GOE_POSITION, go.position, 0, ownerHandle());
-	emit<GameObjectEvent>(ID::GOE_ORIENTATION, go.orientation, 0, ownerHandle());
 }
 
 } // namespace BFG

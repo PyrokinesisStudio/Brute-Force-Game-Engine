@@ -26,14 +26,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Network/Main.h>
 
-#ifdef _WIN32
-#include <windows.h> 
-#endif //_WIN32
-
 #include <Base/Logger.h>
 #include <EventSystem/Core/EventLoop.h>
 #include <Network/Client.h>
 #include <Network/Server.h>
+
+// This must be included after the "Network" headers because of a winsock.h include problem.
+#ifdef _WIN32
+#include <windows.h> 
+#endif //_WIN32
 
 namespace BFG {
 namespace Network {
