@@ -547,7 +547,7 @@ private:
 			{
 				mDevice->setEventCallback(&mEventCatcher);
 
-				extraInitializer(static_cast<OISObjectT*>(NULL));
+				extraInitializer(mDevice.get());
 				return true;
 			}
 			else
@@ -573,10 +573,32 @@ private:
 	*/
 	static detail::EventCatcher<OISCallbackT, DelegaterT> mEventCatcher;
 
-	//! Does nothing (for other device types than mouse)
+	//! Does nothing (for other device types than mouse or keyboard)
 	template <typename T>
 	void extraInitializer(const T*)
 	{
+	}
+	
+	//! On some systems the TextTranslationMode might be turned off for some
+	//! reason. Better set this always to Unicode.
+	void extraInitializer(OIS::Keyboard* keyboard)
+	{
+		OIS::Keyboard::TextTranslationMode ttm = keyboard->getTextTranslation();
+		if (ttm == OIS::Keyboard::Off)
+		{
+			infolog <<
+				"Controller: Enabling 'text translation mode'"
+				" and setting it to Unicode.";
+			keyboard->setTextTranslation(OIS::Keyboard::Unicode);
+		}
+		else if (ttm == OIS::Keyboard::Ascii)
+		{
+			infolog <<
+				"Controller: The keyboard's 'text translation"
+				" mode' was set to ASCII. Setting it to"
+				" Unicode.";
+			keyboard->setTextTranslation(OIS::Keyboard::Unicode);
+		}
 	}
 	
 	//! OIS::Mouse needs to be extra configured. OIS is unable to figure out
