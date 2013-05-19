@@ -28,7 +28,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define EVENT_LOOP_H
 
 #include <Base/EntryPoint.h>
-#include <Base/Compiler.h>
 
 #include <EventSystem/Core/CommunicationPolicy.h>
 #include <EventSystem/Core/EventDefs.h>
