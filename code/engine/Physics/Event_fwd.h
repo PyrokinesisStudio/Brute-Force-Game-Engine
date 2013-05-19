@@ -27,6 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef PHYSICS_EVENT_FWD_H
 #define PHYSICS_EVENT_FWD_H
 
+#include <boost/tuple/tuple.hpp>
 #include <boost/variant.hpp>
 #include <boost/units/quantity.hpp>
 #include <boost/units/systems/si/mass.hpp>
