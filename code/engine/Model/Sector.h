@@ -64,15 +64,15 @@ public:
 	       const std::string& name,
 	       boost::shared_ptr<GameObjectFactory> gof);
 	       
-	~Sector();
+	virtual ~Sector();
 
 	//! \brief Add an object to sector (takes ownership)
 	//! \param object Pointer to an object which must exist
-	void addObject(boost::shared_ptr<Managed> object);
+	virtual void addObject(boost::shared_ptr<Managed> object);
 
 	//! \brief Remove an object from sector
 	//! \param handle Handle of an object which must exist in the sector
-	void removeObject(GameHandle handle);
+	virtual void removeObject(GameHandle handle);
 
 private:
 	void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
