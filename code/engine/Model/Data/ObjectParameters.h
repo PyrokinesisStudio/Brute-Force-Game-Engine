@@ -31,6 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/shared_ptr.hpp>
 
+#include <Core/CharArray.h>
 #include <Core/GameHandle.h>
 #include <Core/Location.h>
 #include <Core/Types.h>
@@ -62,6 +63,46 @@ struct ObjectParameter
 	{
 		load(tree);
 	}
+
+	ObjectParameter(const CharArray512T& in)
+	{
+		u32 offset = arrayToValue(mHandle, in, 0);
+		offset = arrayToValue(mName, in, offset);
+		offset = arrayToValue(mType, in, offset);
+		offset = arrayToValue(mLocation.position, in, offset);
+		offset = arrayToValue(mLocation.orientation, in, offset);
+		offset = arrayToValue(mLinearVelocity, in, offset);
+		offset = arrayToValue(mAngularVelocity, in, offset);
+		offset = arrayToValue(mConnection.mConnectedLocalAt, in, offset);
+		offset = arrayToValue(mConnection.mConnectedExternToGameObject, in, offset);
+		offset = arrayToValue(mConnection.mConnectedExternToModule, in, offset);
+		offset = arrayToValue(mConnection.mConnectedExternAt, in, offset);
+	}
+
+	void serialize(CharArray512T& output) const
+	{
+		u32 offset = valueToArray(mHandle, output, 0);
+		
+		offset = valueToArray(mName.size(), output, offset);
+		offset = valueToArray(mName, output, offset);
+		
+		offset = valueToArray(mType.size(), output, offset);
+		offset = valueToArray(mType, output, offset);
+
+		offset = valueToArray(mLocation.position, output, offset);
+		offset = valueToArray(mLocation.orientation, output, offset);
+
+		offset = valueToArray(mLinearVelocity, output, offset);
+		offset = valueToArray(mAngularVelocity, output, offset);
+
+		offset = valueToArray(mConnection.mConnectedLocalAt, output, offset);
+		offset = valueToArray(mConnection.mConnectedExternToGameObject.size(), output, offset);
+		offset = valueToArray(mConnection.mConnectedExternToGameObject, output, offset);
+		offset = valueToArray(mConnection.mConnectedExternToModule.size(), output, offset);
+		offset = valueToArray(mConnection.mConnectedExternToModule, output, offset);
+		offset = valueToArray(mConnection.mConnectedExternAt, output, offset);
+	}
+
 
 	GameHandle mHandle;
 	std::string mName;
