@@ -79,7 +79,7 @@ struct ObjectParameter
 		offset = arrayToValue(mConnection.mConnectedExternAt, in, offset);
 	}
 
-	void serialize(CharArray512T& output) const
+	u32 serialize(CharArray512T& output) const
 	{
 		u32 offset = valueToArray(mHandle, output, 0);
 		
@@ -101,6 +101,8 @@ struct ObjectParameter
 		offset = valueToArray(mConnection.mConnectedExternToModule.size(), output, offset);
 		offset = valueToArray(mConnection.mConnectedExternToModule, output, offset);
 		offset = valueToArray(mConnection.mConnectedExternAt, output, offset);
+		
+		return offset;
 	}
 
 
