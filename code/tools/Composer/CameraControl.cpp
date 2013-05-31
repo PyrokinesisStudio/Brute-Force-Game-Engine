@@ -64,50 +64,50 @@ void CameraControl::createDefaultCamera()
 
 void CameraControl::eventHandler(BFG::Controller_::VipEvent* ve)
 {
-	switch(ve->getId())
+	switch(ve->id())
 	{
 	case A_CAMERA_AXIS_X:
 	{
-		onCamX(boost::get<f32>(ve->getData()));
+		onCamX(boost::get<f32>(ve->data()));
 		break;
 	}
 	case A_CAMERA_MOUSE_X:
 	{
 		if (mMouseCamPitchYaw)
 		{
-			onCamX(boost::get<f32>(ve->getData()));
+			onCamX(boost::get<f32>(ve->data()));
 		}
 		break;
 	}
 	case A_CAMERA_AXIS_Y:
 	{
-		onCamY(boost::get<f32>(ve->getData()));
+		onCamY(boost::get<f32>(ve->data()));
 		break;
 	}
 	case A_CAMERA_MOUSE_Y:
 	{
 		if (mMouseCamPitchYaw)
 		{
-			onCamY(boost::get<f32>(ve->getData()));
+			onCamY(boost::get<f32>(ve->data()));
 		}
 		break;
 	}
 	case A_CAMERA_AXIS_Z:
 	{
-		onCamZ(boost::get<f32>(ve->getData()));
+		onCamZ(boost::get<f32>(ve->data()));
 		break;
 	}
 	case A_CAMERA_MOUSE_Z:
 	{
 		if (mMouseCamRoll)
 		{
-			onCamZ(boost::get<f32>(ve->getData()));
+			onCamZ(boost::get<f32>(ve->data()));
 		}
 		break;
 	}
 	case A_CAMERA_MOVE:
 	{
-		f32 value = boost::get<f32>(ve->getData());
+		f32 value = boost::get<f32>(ve->data());
 		if (value > EPSILON_F || value < -EPSILON_F)
 		{
 			mIsZooming = true;
@@ -123,7 +123,7 @@ void CameraControl::eventHandler(BFG::Controller_::VipEvent* ve)
 	case A_CAMERA_MOUSE_MOVE:
 	{
 		mIsZooming = false;
-		mDeltaDis = boost::get<f32>(ve->getData());
+		mDeltaDis = boost::get<f32>(ve->data());
 		break;
 	}
 	case A_CAMERA_RESET:
@@ -133,12 +133,12 @@ void CameraControl::eventHandler(BFG::Controller_::VipEvent* ve)
 	}
 	case A_CAMERA_ORBIT:
 	{
-		mCamOrbit = boost::get<bool>(ve->getData());
+		mCamOrbit = boost::get<bool>(ve->data());
 		break;
 	}
 	case BFG::ID::A_MOUSE_MIDDLE_PRESSED:
 	{
-		if ( boost::get<bool>(ve->getData()) )
+		if ( boost::get<bool>(ve->data()) )
 			mMouseCamPitchYaw = true;
 		else
 			mMouseCamPitchYaw = false;
@@ -147,7 +147,7 @@ void CameraControl::eventHandler(BFG::Controller_::VipEvent* ve)
 	}
 	case BFG::ID::A_MOUSE_RIGHT_PRESSED:
 	{
-		if ( boost::get<bool>(ve->getData()) )
+		if ( boost::get<bool>(ve->data()) )
 			mMouseCamRoll = true;
 		else
 			mMouseCamRoll = false;

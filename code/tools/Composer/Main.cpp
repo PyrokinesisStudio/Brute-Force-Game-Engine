@@ -68,7 +68,7 @@ struct ComposerState : State
 
 	void ControllerEventHandler(Controller_::VipEvent* iCE)
 	{
-		switch(iCE->getId())
+		switch(iCE->id())
 		{
 			case A_QUIT:
 			{
@@ -186,14 +186,14 @@ public:
 		}
 	}
 
-	void viewEventHandler(View::Event* VE)
+	void viewEventHandler(View::Event* e)
 	{
-		dbglog << VE->getId();
+		dbglog << e->id();
 	}
 
-	void toolEventHandler(Tool::Event* TE)
+	void toolEventHandler(Tool::Event* e)
 	{
-		switch(TE->getId())
+		switch(e->id())
 		{
 		case A_UPDATE_FEATURES:
 			onUpdateFeatures();

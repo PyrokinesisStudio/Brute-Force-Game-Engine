@@ -49,12 +49,12 @@ ViewMainState::~ViewMainState()
 }
 
 
-void ViewMainState::viewEventHandler(View::Event* VE)
+void ViewMainState::viewEventHandler(View::Event* e)
 {
-	switch(VE->getId())
+	switch(e->id())
 	{
 	case ID::VE_EFFECT:
-		onEffect(boost::get<View::EffectCreation>(VE->getData()));
+		onEffect(boost::get<View::EffectCreation>(e->data()));
 		break;
 	default:
 		throw std::logic_error("ViewMainState::eventHandler: received unhandled event!");

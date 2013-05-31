@@ -246,15 +246,15 @@ void Camera::toggleWireframe()
 	}
 }
 
-void Camera::viewEventHandler(Event* VE)
+void Camera::viewEventHandler(Event* e)
 {
-	switch (VE->getId())
+	switch (e->id())
 	{
 	case ID::VE_UPDATE_POSITION:
-		updatePosition(boost::get<v3>(VE->getData()));
+		updatePosition(boost::get<v3>(e->data()));
 		break;
 	case ID::VE_UPDATE_ORIENTATION:
-		updateOrientation(boost::get<qv4>(VE->getData()));
+		updateOrientation(boost::get<qv4>(e->data()));
 		break;
 	default:
 		throw std::logic_error("Camera::eventHandler: received unhandled event!");

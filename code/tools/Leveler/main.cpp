@@ -62,9 +62,9 @@ struct LevelerModelState : Emitter
 		mClock->start();
 	}
 
-	void ControllerEventHandler(Controller_::VipEvent* iCE)
+	void ControllerEventHandler(Controller_::VipEvent* e)
 	{
-		switch(iCE->getId())
+		switch(e->id())
 		{
 			case A_QUIT:
 			{
@@ -184,9 +184,9 @@ public:
 		}
 	}
 
-	void toolEventHandler(Tool::Event* TE)
+	void toolEventHandler(Tool::Event* e)
 	{
-		switch(TE->getId())
+		switch(e->id())
 		{
 		case A_UPDATE_FEATURES:
 			onUpdateFeatures();

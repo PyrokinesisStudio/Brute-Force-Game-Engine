@@ -75,41 +75,41 @@ void Physical::internalSynchronize()
 	}
 }
 
-void Physical::onPhysicsEvent(Physics::Event* event)
+void Physical::onPhysicsEvent(Physics::Event* e)
 {
-	switch(event->getId())
+	switch(e->id())
 	{
 	case ID::PE_FULL_SYNC:
-		onFullSync(boost::get<Physics::FullSyncData>(event->getData()));
+		onFullSync(boost::get<Physics::FullSyncData>(e->data()));
 		break;
 
 	case ID::PE_VELOCITY:
-		onVelocity(boost::get<Physics::VelocityComposite>(event->getData()));
+		onVelocity(boost::get<Physics::VelocityComposite>(e->data()));
 		break;
 
 	case ID::PE_ROTATION_VELOCITY:
-		onRotationVelocity(boost::get<Physics::VelocityComposite>(event->getData()));
+		onRotationVelocity(boost::get<Physics::VelocityComposite>(e->data()));
 		break;
 
 	case ID::PE_POSITION:
-		onPosition(boost::get<v3>(event->getData()));
+		onPosition(boost::get<v3>(e->data()));
 		break;
 
 	case ID::PE_ORIENTATION:
-		onOrientation(boost::get<qv4>(event->getData()));
+		onOrientation(boost::get<qv4>(e->data()));
 		break;
 
 	case ID::PE_TOTAL_MASS:
-		onTotalMass(boost::get<f32>(event->getData()));
+		onTotalMass(boost::get<f32>(e->data()));
 		break;
 
 	case ID::PE_TOTAL_INERTIA:
-		onInertia(boost::get<m3x3>(event->getData()));
+		onInertia(boost::get<m3x3>(e->data()));
 		break;
 
 	default:
 		warnlog << "Physical: Can't handle event with ID: "
-		        << event->getId();
+		        << e->id();
 		break;
 	}
 }

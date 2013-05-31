@@ -173,11 +173,11 @@ struct ServerState: public SynchronizationTestState
 
 	void networkPacketEventHandler(BFG::Network::DataPacketEvent* e)
 	{
-		switch(e->getId())
+		switch(e->id())
 		{
 		case BFG::ID::NE_RECEIVED:
 		{
-			const BFG::Network::DataPayload& payload = e->getData();
+			const BFG::Network::DataPayload& payload = e->data();
 
 			switch(payload.mAppEventId)
 			{
@@ -323,17 +323,17 @@ struct ServerState: public SynchronizationTestState
 
 	void networkControlEventHandler(BFG::Network::ControlEvent* e)
 	{
-		switch(e->getId())
+		switch(e->id())
 		{
 		case BFG::ID::NE_CONNECTED:
 		{
-			const BFG::Network::PeerIdT peerId = boost::get<BFG::Network::PeerIdT>(e->getData());
+			const BFG::Network::PeerIdT peerId = boost::get<BFG::Network::PeerIdT>(e->data());
 			onConnected(peerId);
 			break;
 		}
 		case BFG::ID::NE_DISCONNECTED:
 		{
-			const BFG::Network::PeerIdT peerId = boost::get<BFG::Network::PeerIdT>(e->getData());
+			const BFG::Network::PeerIdT peerId = boost::get<BFG::Network::PeerIdT>(e->data());
 			onDisconnected(peerId);
 			break;
 		}
@@ -426,22 +426,22 @@ struct ClientState : public SynchronizationTestState
 
 	void controllerEventHandler(BFG::Controller_::VipEvent* e)
 	{
-		switch(e->getId())
+		switch(e->id())
 		{
 		case A_QUIT:
 			onQuit();
 			break;
 		case A_SHIP_AXIS_Y:
-			onAxisY(boost::get<BFG::f32>(e->getData()));
+			onAxisY(boost::get<BFG::f32>(e->data()));
 			break;
 		case A_FPS:
 		{
-			emit<BFG::View::Event>(BFG::ID::VE_DEBUG_FPS, boost::get<bool>(e->getData()));
+			emit<BFG::View::Event>(BFG::ID::VE_DEBUG_FPS, boost::get<bool>(e->data()));
 			break;
 		}
 		case A_CONSOLE:
 		{
-			emit<BFG::View::Event>(BFG::ID::VE_CONSOLE, boost::get<bool>(e->getData()));
+			emit<BFG::View::Event>(BFG::ID::VE_CONSOLE, boost::get<bool>(e->data()));
 			break;
 		}
 		}
@@ -449,11 +449,11 @@ struct ClientState : public SynchronizationTestState
 
 	void networkEventHandler(BFG::Network::DataPacketEvent* e)
 	{
-		switch(e->getId())
+		switch(e->id())
 		{
 		case BFG::ID::NE_RECEIVED:
 		{
-			const BFG::Network::DataPayload& payload = e->getData();
+			const BFG::Network::DataPayload& payload = e->data();
 
 			switch(payload.mAppEventId)
 			{

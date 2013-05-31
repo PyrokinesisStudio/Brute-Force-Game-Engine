@@ -66,32 +66,32 @@ Owner::~Owner()
 	mLoop->disconnect(ID::VE_SET_AMBIENT, this);
 }
 
-void Owner::eventHandler(Event* VE)
+void Owner::eventHandler(Event* e)
 {
-	switch(VE->getId())
+	switch(e->id())
 	{
 	case ID::VE_CREATE_OBJECT:
-		createObject(boost::get<ObjectCreation>(VE->getData()));
+		createObject(boost::get<ObjectCreation>(e->getData()));
 		break;
 
 	case ID::VE_DESTROY_OBJECT:
-		destroyObject(boost::get<GameHandle>(VE->getData()));
+		destroyObject(boost::get<GameHandle>(e->getData()));
 		break;
 
 	case ID::VE_CREATE_CAMERA:
-		createCamera(boost::get<CameraCreation>(VE->getData()));
+		createCamera(boost::get<CameraCreation>(e->getData()));
 		break;
 
 	case ID::VE_SET_SKY:
-		setSky(boost::get<View::SkyCreation>(VE->getData()));
+		setSky(boost::get<View::SkyCreation>(e->getData()));
 		break;
 
 	case ID::VE_CREATE_LIGHT:
-		createLight(boost::get<View::LightParameters>(VE->getData()));
+		createLight(boost::get<View::LightParameters>(e->getData()));
 		break;
 
 	case ID::VE_SET_AMBIENT:
-		setAmbient(boost::get<BFG::cv4>(VE->getData()));
+		setAmbient(boost::get<BFG::cv4>(e->getData()));
 		break;
 
 	default:

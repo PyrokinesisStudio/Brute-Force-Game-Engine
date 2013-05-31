@@ -182,10 +182,10 @@ void Controller::loopHandler(LoopEvent*)
 
 void Controller::controlHandler(ControlEvent* e)
 {
-	switch(e->getId())
+	switch(e->id())
 	{
 		case ID::CE_ADD_ACTION:
-			addAction(boost::get<ActionDefinition>(e->getData()));
+			addAction(boost::get<ActionDefinition>(e->data()));
 			break;
 	
 		case ID::CE_LOAD_STATE:
@@ -193,11 +193,11 @@ void Controller::controlHandler(ControlEvent* e)
 			break;
 
 		case ID::CE_ACTIVATE_STATE:
-			activateState(boost::get<GameHandle>(e->getData()));
+			activateState(boost::get<GameHandle>(e->data()));
 			break;
 			
 		case ID::CE_DEACTIVATE_STATE:
-			deactivateState(boost::get<GameHandle>(e->getData()));
+			deactivateState(boost::get<GameHandle>(e->data()));
 			break;
 	};
 }

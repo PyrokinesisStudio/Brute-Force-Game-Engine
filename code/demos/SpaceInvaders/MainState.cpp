@@ -92,10 +92,10 @@ mHumanGeneral(loop, mEnvironment)
 
 void MainState::ControllerEventHandler(Controller_::VipEvent* e)
 {
-	switch(e->getId())
+	switch(e->id())
 	{
 		case A_SHIP_AXIS_Y:
-			emit<GameObjectEvent>(ID::GOE_CONTROL_YAW, boost::get<float>(e->getData()), mPlayer);
+			emit<GameObjectEvent>(ID::GOE_CONTROL_YAW, boost::get<float>(e->data()), mPlayer);
 			break;
 
 		case A_SHIP_FIRE:
@@ -107,7 +107,7 @@ void MainState::ControllerEventHandler(Controller_::VipEvent* e)
 			break;
 
 		case A_FPS:
-			emit<BFG::View::Event>(BFG::ID::VE_DEBUG_FPS, boost::get<bool>(e->getData()));
+			emit<BFG::View::Event>(BFG::ID::VE_DEBUG_FPS, boost::get<bool>(e->data()));
 			break;
 	}
 }

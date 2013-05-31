@@ -125,7 +125,7 @@ struct EventNetter : BFG::Emitter
 		oa << e->getData();
 		CharArray512T ca512 = stringToArray<512>(ss.str());
 
-		Network::DataPayload payload(e->getId(), 0, 0, ss.str().size(), ca512);
+		Network::DataPayload payload(e->id(), 0, 0, ss.str().size(), ca512);
 		emit<Network::DataPacketEvent>(ID::NE_SEND, payload);
 	}
 };

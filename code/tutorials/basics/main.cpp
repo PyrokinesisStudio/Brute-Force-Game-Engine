@@ -92,7 +92,7 @@ struct GameState : BFG::State
 	// state, since we told him so (in `initController').
 	void ControllerEventHandler(BFG::Controller_::VipEvent* e)
 	{
-		switch(e->getId())
+		switch(e->id())
 		{
 			// This is the event ID we specified at the top
 			case A_EXIT:

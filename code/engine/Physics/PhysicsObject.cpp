@@ -777,32 +777,32 @@ void PhysicsObject::unregisterEvents()
 	mPhysicsEvents.clear();
 }
 
-void PhysicsObject::eventHandler(Physics::Event* event)
+void PhysicsObject::eventHandler(Physics::Event* e)
 {
-	switch (event->getId())
+	switch (e->id())
 	{
 	case ID::PE_UPDATE_POSITION:
-		setPosition(boost::get<v3>(event->getData()));
+		setPosition(boost::get<v3>(e->data()));
 		break;
 
 	case ID::PE_UPDATE_ORIENTATION:
-		setOrientation(boost::get<qv4>(event->getData()));
+		setOrientation(boost::get<qv4>(e->data()));
 		break;
 		
 	case ID::PE_UPDATE_VELOCITY:
-		setVelocity(boost::get<v3>(event->getData()));
+		setVelocity(boost::get<v3>(e->data()));
 		break;
 
 	case ID::PE_UPDATE_ROTATION_VELOCITY:
-		setRotationVelocity(boost::get<v3>(event->getData()));
+		setRotationVelocity(boost::get<v3>(e->data()));
 		break;
 
 	case ID::PE_INTERPOLATE_POSITION:
-		interpolatePosition(boost::get<InterpolationDataV3>(event->getData()));
+		interpolatePosition(boost::get<InterpolationDataV3>(e->getData()));
 		break;
 		
 	case ID::PE_INTERPOLATE_ORIENTATION:
-		interpolateOrientation(boost::get<InterpolationDataQv4>(event->getData()));
+		interpolateOrientation(boost::get<InterpolationDataQv4>(e->getData()));
 		break;
 
 	case ID::PE_DEBUG:
@@ -814,15 +814,15 @@ void PhysicsObject::eventHandler(Physics::Event* event)
 	}
 
 	case ID::PE_APPLY_FORCE:
-		onForce(boost::get<v3>(event->getData()));
+		onForce(boost::get<v3>(e->data()));
 		break;
 
 	case ID::PE_APPLY_TORQUE:
-		onTorque(boost::get<v3>(event->getData()));
+		onTorque(boost::get<v3>(e->data()));
 		break;
 		
 	case ID::PE_MODULATE_MASS:
-		modulateMass(boost::get<f32>(event->getData()));
+		modulateMass(boost::get<f32>(e->data()));
 		break;
 
 	default:

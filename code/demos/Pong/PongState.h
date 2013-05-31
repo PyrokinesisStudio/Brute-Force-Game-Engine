@@ -170,16 +170,16 @@ struct PongClientState : BFG::Emitter
 
 	}
 
-	void ControllerEventHandler(BFG::Controller_::VipEvent* iCE)
+	void ControllerEventHandler(BFG::Controller_::VipEvent* e)
 	{
-		switch(iCE->getId())
+		switch(e->id())
 		{
 		// Using this as lower bar x-axis controller (Sending to: Lower Bar!)
 		case A_SHIP_AXIS_Y:
 			if (!mPlayer)
 				return;
 
-			emit<BFG::GameObjectEvent>(BFG::ID::GOE_CONTROL_YAW, boost::get<float>(iCE->getData()), mPlayer);
+			emit<BFG::GameObjectEvent>(BFG::ID::GOE_CONTROL_YAW, boost::get<float>(e->data()), mPlayer);
 			break;
 
 		case A_QUIT:
@@ -190,18 +190,18 @@ struct PongClientState : BFG::Emitter
 
 		case A_FPS:
 		{
-			emit<BFG::View::Event>(BFG::ID::VE_DEBUG_FPS, boost::get<bool>(iCE->getData()));
+			emit<BFG::View::Event>(BFG::ID::VE_DEBUG_FPS, boost::get<bool>(e->data()));
 			break;
 		}
 		}
 	}
 
-	void LoopEventHandler(LoopEvent* iLE)
+	void LoopEventHandler(LoopEvent* e)
 	{
 		if (mExitNextTick)
 		{
 			// Error happened, while doing stuff
-			iLE->getData().getLoop()->setExitFlag();
+			e->getData().getLoop()->setExitFlag();
 		}
 	}
 

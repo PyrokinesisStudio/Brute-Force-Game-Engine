@@ -156,13 +156,13 @@ void Console::unregisterSink()
 	boost::log::core::get()->remove_sink(mSink);
 }
 
-void Console::eventHandler(Controller_::VipEvent* event)
+void Console::eventHandler(Controller_::VipEvent* e)
 {
-	switch(event->getId())
+	switch(e->id())
 	{
 	case BFG::ID::A_KEY_PRESSED:
 	{
-		ID::KeyboardButton code = static_cast<ID::KeyboardButton>(boost::get<s32>(event->getData()));
+		ID::KeyboardButton code = static_cast<ID::KeyboardButton>(boost::get<s32>(e->data()));
 		
 		dbglog << "Got key code: " << static_cast<s32>(code);
 		

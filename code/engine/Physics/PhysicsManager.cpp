@@ -465,12 +465,12 @@ void PhysicsManager::unregisterEvents()
 	mPhysicsEvents.clear();
 }
 
-void PhysicsManager::eventHandler(Physics::Event* event)
+void PhysicsManager::eventHandler(Physics::Event* e)
 {
-	switch (event->getId())
+	switch (e->id())
 	{
 	case ID::PE_STEP:
-		move(boost::get<f32>(event->getData()) * si::seconds);
+		move(boost::get<f32>(e->data()) * si::seconds);
 		break;
 
 	case ID::PE_CLEAR:
@@ -478,19 +478,19 @@ void PhysicsManager::eventHandler(Physics::Event* event)
 		break;
 		
 	case ID::PE_CREATE_OBJECT:
-		onCreateObject(boost::get<ObjectCreationParams&>(event->getData()));
+		onCreateObject(boost::get<ObjectCreationParams&>(e->data()));
 		break;
 
 	case ID::PE_DELETE_OBJECT:
-		onDeleteObject(boost::get<GameHandle>(event->getData()));
+		onDeleteObject(boost::get<GameHandle>(e->data()));
 		break;
 
 	case ID::PE_ATTACH_MODULE:
-		onAttachModule(boost::get<ModuleCreationParams&>(event->getData()));
+		onAttachModule(boost::get<ModuleCreationParams&>(e->data()));
 		break;
 
 	case ID::PE_REMOVE_MODULE:
-		onRemoveModule(boost::get<ModuleRemovalParams&>(event->getData()));
+		onRemoveModule(boost::get<ModuleRemovalParams&>(e->data()));
 		break;
 
 	default:

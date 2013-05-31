@@ -71,9 +71,9 @@ void Score::internalUpdate(f32 time)
 {
 }
 
-void Score::viewEventHandler(Event* VE)
+void Score::viewEventHandler(Event* e)
 {
-	switch(VE->getId())
+	switch(e->id())
 	{
 	case A_UPPER_BAR_WIN:
 	{

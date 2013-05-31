@@ -124,12 +124,12 @@ namespace Tool
 		mActive = false;
 	}
 
-	void ModuleControl::toolEventHandler(Event* te)
+	void ModuleControl::toolEventHandler(Event* e)
 	{
 		if (!mLoaded)
 			return;
 
-		switch(te->getId())
+		switch(e->id())
 		{
 		case A_UPDATE_ADAPTER:
 			{

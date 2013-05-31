@@ -65,13 +65,13 @@ ControllerMyGuiAdapter::~ControllerMyGuiAdapter()
 	}	
 }
 
-void ControllerMyGuiAdapter::eventHandler(BFG::Controller_::VipEvent* event)
+void ControllerMyGuiAdapter::eventHandler(BFG::Controller_::VipEvent* e)
 {
-	switch(event->getId())
+	switch(e->id())
 	{
 	case BFG::ID::A_MOUSE_MOVE_X:
 	{
-		mMouseBuffer.x = boost::get<f32>(event->getData());
+		mMouseBuffer.x = boost::get<f32>(e->data());
 		MyGUI::InputManager::getInstance().injectMouseMove
 		(
 			mMouseBuffer.x,
@@ -83,7 +83,7 @@ void ControllerMyGuiAdapter::eventHandler(BFG::Controller_::VipEvent* event)
 	
 	case BFG::ID::A_MOUSE_MOVE_Y:
 	{
-		mMouseBuffer.y = boost::get<f32>(event->getData());
+		mMouseBuffer.y = boost::get<f32>(e->data());
 		MyGUI::InputManager::getInstance().injectMouseMove
 		(
 			mMouseBuffer.x,
@@ -95,7 +95,7 @@ void ControllerMyGuiAdapter::eventHandler(BFG::Controller_::VipEvent* event)
 	
 	case BFG::ID::A_MOUSE_MOVE_Z:
 	{
-		mMouseBuffer.z = boost::get<f32>(event->getData());
+		mMouseBuffer.z = boost::get<f32>(e->data());
 		MyGUI::InputManager::getInstance().injectMouseMove
 		(
 			mMouseBuffer.x,
@@ -107,7 +107,7 @@ void ControllerMyGuiAdapter::eventHandler(BFG::Controller_::VipEvent* event)
 	
 	case BFG::ID::A_MOUSE_LEFT_PRESSED:
 	{
-		if (boost::get<bool>(event->getData()))
+		if (boost::get<bool>(e->data()))
 		{
 			MyGUI::InputManager::getInstance().injectMousePress
 			(
@@ -130,7 +130,7 @@ void ControllerMyGuiAdapter::eventHandler(BFG::Controller_::VipEvent* event)
 	
 	case BFG::ID::A_MOUSE_RIGHT_PRESSED:
 	{
-		if (boost::get<bool>(event->getData()))
+		if (boost::get<bool>(e->data()))
 		{
 			MyGUI::InputManager::getInstance().injectMousePress
 			(
@@ -153,7 +153,7 @@ void ControllerMyGuiAdapter::eventHandler(BFG::Controller_::VipEvent* event)
 
 	case BFG::ID::A_MOUSE_MIDDLE_PRESSED:
 	{
-		if (boost::get<bool>(event->getData()))
+		if (boost::get<bool>(e->data()))
 		{
 			MyGUI::InputManager::getInstance().injectMousePress
 			(
@@ -178,7 +178,7 @@ void ControllerMyGuiAdapter::eventHandler(BFG::Controller_::VipEvent* event)
 	case BFG::ID::A_KEY_PRESSED:
 	case BFG::ID::A_KEY_RELEASED:
 	{
-		BFG::ID::KeyboardButton code = (BFG::ID::KeyboardButton) boost::get<BFG::s32>(event->getData());
+		BFG::ID::KeyboardButton code = (BFG::ID::KeyboardButton) boost::get<BFG::s32>(e->data());
 
 		OIS::KeyCode ois_key;
 		BFG::s32 ois_ch;
@@ -187,7 +187,7 @@ void ControllerMyGuiAdapter::eventHandler(BFG::Controller_::VipEvent* event)
 		MyGUI::KeyCode::Enum mygui_key = (MyGUI::KeyCode::Enum) ois_key;
 		MyGUI::Char mygui_ch = ois_ch;
 		
-		if (event->getId() == BFG::ID::A_KEY_PRESSED)
+		if (e->id() == BFG::ID::A_KEY_PRESSED)
 		{
 			MyGUI::InputManager::getInstance().injectKeyPress(mygui_key, mygui_ch);
 		}

@@ -48,8 +48,8 @@ void EventDumper::Dump(BaseEvent*)
 void EventDumper::Dump(VipEvent* e)
 {
 	std::cout << "CED: Got ControllerEvent"
-	          << " EventId: " << static_cast<EventIdT>(e->getId())
-	          << " Payload: " << static_cast<VipPayloadT>(e->getData())
+	          << " EventId: " << static_cast<EventIdT>(e->id())
+	          << " Payload: " << static_cast<VipPayloadT>(e->data())
 	          << "\n";
 }
 

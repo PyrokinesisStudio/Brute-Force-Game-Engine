@@ -75,20 +75,20 @@ struct Server : Emitter
 	
 	void netControlHandler(Network::ControlEvent* e)
 	{
-		dbglog << "Chat::Server::netControlHandler: " << ID::asStr(static_cast<ID::NetworkAction>(e->getId()));
+		dbglog << "Chat::Server::netControlHandler: " << ID::asStr(static_cast<ID::NetworkAction>(e->id()));
 		
 		switch (e->id())
 		{
 		case ID::NE_CONNECTED:
 		{
-			Network::PeerIdT peerId = boost::get<Network::PeerIdT>(e->getData());
+			Network::PeerIdT peerId = boost::get<Network::PeerIdT>(e->data());
 			dbglog << "Chat::Server: Adding " <<  peerId << " to list.";
 			peers.push_back(peerId);
 			break;
 		}
 		case ID::NE_DISCONNECTED:
 		{
-			Network::PeerIdT peerId = boost::get<Network::PeerIdT>(e->getData());
+			Network::PeerIdT peerId = boost::get<Network::PeerIdT>(e->data());
 			dbglog << "Chat::Server: Removing " << peerId << " from list.";
 			std::vector<Network::PeerIdT>::iterator it = std::find(peers.begin(), peers.end(), peerId);
 			if (it != peers.end())
@@ -105,7 +105,7 @@ struct Server : Emitter
 	
 	void netPacketHandler(Network::DataPacketEvent* e)
 	{
-		dbglog << "Chat::Server::netPacketHandler: " << ID::asStr(static_cast<ID::NetworkAction>(e->getId()));
+		dbglog << "Chat::Server::netPacketHandler: " << ID::asStr(static_cast<ID::NetworkAction>(e->id()));
 
 		Network::DataPayload& payload = e->getData();
 		std::string msg(payload.mAppData.data(), payload.mAppDataLen);
@@ -193,7 +193,7 @@ struct Client : Emitter
 
 	void netControlHandler(Network::ControlEvent* e)
 	{
-		dbglog << "Chat::Client::netControlHandler: " << ID::asStr(static_cast<ID::NetworkAction>(e->getId()));
+		dbglog << "Chat::Client::netControlHandler: " << ID::asStr(static_cast<ID::NetworkAction>(e->id()));
 		
 		switch(e->id())
 		{
@@ -220,9 +220,9 @@ struct Client : Emitter
 
 	void netPacketHandler(Network::DataPacketEvent* e)
 	{
-		dbglog << "Chat::Client::netPacketHandler: " << ID::asStr(static_cast<ID::NetworkAction>(e->getId()));
+		dbglog << "Chat::Client::netPacketHandler: " << ID::asStr(static_cast<ID::NetworkAction>(e->id()));
 
-		const Network::DataPayload& payload = e->getData();
+		const Network::DataPayload& payload = e->data();
 		std::string msg(payload.mAppData.data(), payload.mAppDataLen);
 
 		dbglog << Network::debug(*e);

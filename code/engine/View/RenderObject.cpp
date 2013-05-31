@@ -190,24 +190,24 @@ void RenderObject::removeChildNode(const std::string& name)
 	mSceneNode->removeChild(name);
 }
 
-void RenderObject::viewEventHandler(Event* VE)
+void RenderObject::viewEventHandler(Event* e)
 {
-	switch (VE->getId())
+	switch (e->id())
 	{
 	case ID::VE_UPDATE_POSITION:
-		updatePosition(boost::get<v3>(VE->getData()));
+		updatePosition(boost::get<v3>(e->data()));
 		break;
 	case ID::VE_UPDATE_ORIENTATION:
-		updateOrientation(boost::get<qv4>(VE->getData()));
+		updateOrientation(boost::get<qv4>(e->data()));
 		break;
 	case ID::VE_ATTACH_OBJECT:
-		onAttachObject(boost::get<GameHandle>(VE->getData()));
+		onAttachObject(boost::get<GameHandle>(e->data()));
 		break;
 	case ID::VE_DETACH_OBJECT:
 		onDetachObject();
 		break;
 	case ID::VE_SET_VISIBLE:
-		onSetVisible(boost::get<bool>(VE->getData()));
+		onSetVisible(boost::get<bool>(e->data()));
 		break;
 	default:
 		throw std::logic_error("RenderObject::eventHandler: received unhandled event!");

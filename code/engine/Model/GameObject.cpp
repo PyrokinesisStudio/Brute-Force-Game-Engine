@@ -279,25 +279,25 @@ void GameObject::detachModule(GameHandle handle)
 	deleteVertex(vd);
 }
 
-void GameObject::EventHandler(GameObjectEvent* goe)
+void GameObject::EventHandler(GameObjectEvent* e)
 {
 	// Ignore Events which are not for this GameObject or its Modules.
-	if (! hasModuleWithHandle(goe->destination()))
+	if (! hasModuleWithHandle(e->destination()))
 		return;
 
 	distributeEvent
 	(
-		static_cast<EventIdT>(goe->getId()),
-		goe->getData(),
-		goe->destination(),
-		goe->sender()
+		static_cast<EventIdT>(e->id()),
+		e->data(),
+		e->destination(),
+		e->sender()
 	);
 
-	switch(goe->getId())
+	switch(e->id())
 	{
 	case ID::GOE_REINITIALIZE:
 	{
-		Location sl = boost::get<Location>(goe->getData());
+		Location sl = boost::get<Location>(e->data());
 		
 		emit<Physics::Event>(ID::PE_UPDATE_POSITION, sl.position, getHandle());
 		emit<Physics::Event>(ID::PE_UPDATE_ORIENTATION, sl.orientation, getHandle());
@@ -307,7 +307,7 @@ void GameObject::EventHandler(GameObjectEvent* goe)
 	}
 	case ID::GOE_DETACH_MODULE:
 	{
-		GameHandle child = boost::get<GameHandle>(goe->getData());
+		GameHandle child = boost::get<GameHandle>(e->data());
 		detachModule(child);
 		break;
 	}

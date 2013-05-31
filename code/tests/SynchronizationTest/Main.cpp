@@ -170,11 +170,11 @@ struct ServerState: public SynchronizationTestState
 
 	void networkPacketEventHandler(BFG::Network::DataPacketEvent* e)
 	{
-		switch(e->getId())
+		switch(e->id())
 		{
 		case BFG::ID::NE_RECEIVED:
 		{
-			const BFG::Network::DataPayload& payload = e->getData();
+			const BFG::Network::DataPayload& payload = e->data();
 
 			switch(payload.mAppEventId)
 			{
@@ -324,17 +324,17 @@ struct ServerState: public SynchronizationTestState
 
 	void networkControlEventHandler(BFG::Network::ControlEvent* e)
 	{
-		switch(e->getId())
+		switch(e->id())
 		{
 		case BFG::ID::NE_CONNECTED:
 		{
-			const BFG::Network::PeerIdT peerId = boost::get<BFG::Network::PeerIdT>(e->getData());
+			const BFG::Network::PeerIdT peerId = boost::get<BFG::Network::PeerIdT>(e->data());
 			onConneced(peerId);
 			break;
 		}
 		case BFG::ID::NE_DISCONNECTED:
 		{
-			const BFG::Network::PeerIdT peerId = boost::get<BFG::Network::PeerIdT>(e->getData());
+			const BFG::Network::PeerIdT peerId = boost::get<BFG::Network::PeerIdT>(e->data());
 			onDisconnected(peerId);
 			break;
 		}
@@ -480,7 +480,7 @@ struct ClientState : public SynchronizationTestState
 	
 	void controllerEventHandler(BFG::Controller_::VipEvent* e)
 	{
-		switch(e->getId())
+		switch(e->id())
 		{
 		case A_EXIT:
 			onExit();
@@ -511,11 +511,11 @@ struct ClientState : public SynchronizationTestState
 
 	void networkEventHandler(BFG::Network::DataPacketEvent* e)
 	{
-		switch(e->getId())
+		switch(e->id())
 		{
 		case BFG::ID::NE_RECEIVED:
 		{
-			const BFG::Network::DataPayload& payload = e->getData();
+			const BFG::Network::DataPayload& payload = e->data();
 
 			switch(payload.mAppEventId)
 			{

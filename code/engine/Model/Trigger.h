@@ -97,12 +97,12 @@ public:
 		}
 	}
 	
-	void EventHandler(Trigger::Event* te)
+	void EventHandler(Trigger::Event* e)
 	{
-		if (FilterPolicy::Applies(mFilter, te))
+		if (FilterPolicy::Applies(mFilter, e))
 			return;
 		
-		switch(te->getId())
+		switch(e->id())
 		{
 		case ID::TE_CHECK_LOCATION:
 			if (! mActivated)

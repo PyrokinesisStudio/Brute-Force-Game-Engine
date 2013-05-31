@@ -54,21 +54,21 @@ OpenALListener::~OpenALListener()
 	Main::eventLoop()->doLoop();
 }
 
-void OpenALListener::eventHandler(AudioEvent* AE)	
+void OpenALListener::eventHandler(AudioEvent* e)	
 {
-	switch (AE->getId())
+	switch (e->id())
 	{
 	case ID::AE_MASTER_GAIN:
-		onEventMasterGain(AE->getData());
+		onEventMasterGain(e->data());
 		break;
 	case ID::AE_POSITION_PLAYER:
-		onEventPositionPlayer(AE->getData());
+		onEventPositionPlayer(e->data());
 		break;
 	case ID::AE_ORIENTATION_PLAYER:
-		onOrientationPlayer(AE->getData());
+		onOrientationPlayer(e->data());
 		break;
 	case ID::AE_VELOCITY_PLAYER:
-		onVelocityPlayer(AE->getData());
+		onVelocityPlayer(e->data());
 		break;
 	default:
 		throw std::logic_error("Unhandled event!");

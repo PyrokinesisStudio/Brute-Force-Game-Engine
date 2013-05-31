@@ -59,15 +59,15 @@ AudioState::~AudioState()
 	Audio::Main::eventLoop()->disconnect(ID::AE_SOUND_EFFECT, this);
 }
 
-void AudioState::audioStateEventHandler(Audio::AudioEvent* AE)
+void AudioState::audioStateEventHandler(Audio::AudioEvent* e)
 {
-	switch(AE->getId())
+	switch(e->id())
 	{
 		case ID::AE_SOUND_EMITTER_PROCESS_SOUND:
-			mSoundEmitter.processSound(boost::get<std::string>(AE->getData()));
+			mSoundEmitter.processSound(boost::get<std::string>(e->data()));
 			break;
 		case ID::AE_SOUND_EFFECT:
-			onSoundEffect(AE->getData());			
+			onSoundEffect(e->data());			
 			break;
 		default:
 			throw std::logic_error("AudioState::eventHandler: received unhandled event!");

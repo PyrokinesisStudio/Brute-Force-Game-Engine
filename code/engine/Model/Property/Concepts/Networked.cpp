@@ -176,36 +176,36 @@ void Networked::onNetworkEvent(Network::DataPacketEvent* e)
 
 		}
 	}
-	} // switch e->getId()
+	} // switch e->id()
 }
 
 void Networked::onPhysicsEvent(Physics::Event* e)
 {
-	switch(e->getId())
+	switch(e->id())
 	{
 		// 		case ID::PE_FULL_SYNC:
 		// 			onFullSync(boost::get<Physics::FullSyncData>(e->getData()));
 		// 			break;
 
 	case ID::PE_POSITION:
-		onPosition(boost::get<v3>(e->getData()));
+		onPosition(boost::get<v3>(e->data()));
 		break;
 
 	case ID::PE_ORIENTATION:
-		onOrientation(boost::get<qv4>(e->getData()));
+		onOrientation(boost::get<qv4>(e->data()));
 		break;
 
 	case ID::PE_VELOCITY:
-		onVelocity(boost::get<Physics::VelocityComposite>(e->getData()));
+		onVelocity(boost::get<Physics::VelocityComposite>(e->data()));
 		break;
 
 	case ID::PE_ROTATION_VELOCITY:
-		onRotationVelocity(boost::get<Physics::VelocityComposite>(e->getData()));
+		onRotationVelocity(boost::get<Physics::VelocityComposite>(e->data()));
 		break;
 
 	default:
 		warnlog << "Networked: Can't handle event with ID: "
-			<< e->getId();
+			<< e->id();
 		break;
 	}
 }
