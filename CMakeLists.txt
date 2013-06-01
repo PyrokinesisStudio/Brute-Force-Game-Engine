@@ -16,7 +16,10 @@ ENUMINIT()
 # ---------------------- #
 
 SET (BFG_DEPENDENCY_BUNDLE_PATH "" CACHE PATH "This is useful for Win32 users, the location of the dependency bundle may be hinted with this variable.")
-OPTION(BFG_SDK "Package target makes a packet with release and debug binaries. Relevant only for Win32" ON)
+
+IF (WIN32)
+	OPTION(BFG_SDK "Package target makes a packet with release and debug binaries. Relevant only for Win32" ON)
+ENDIF()
 
 # -------- #
 # Includes #
