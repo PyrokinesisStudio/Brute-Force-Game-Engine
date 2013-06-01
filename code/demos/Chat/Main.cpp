@@ -107,13 +107,14 @@ struct Server : Emitter
 	{
 		dbglog << "Chat::Server::netPacketHandler: " << ID::asStr(static_cast<ID::NetworkAction>(e->id()));
 
-		Network::DataPayload& payload = e->getData();
+		const Network::DataPayload& payload = e->data();
 		std::string msg(payload.mAppData.data(), payload.mAppDataLen);
 		
 		dbglog << Network::debug(*e);
 		
-		payload.mAppDestination = payload.mAppSender;
-		payload.mAppSender = mHandle;
+		Network::DataPayload answer = payload;
+		answer.mAppDestination = payload.mAppSender;
+		answer.mAppSender = mHandle;
 		
 		dbglog << "Chat::Server: Sending NOT to " << e->sender();
 		for (size_t i=0; i<peers.size(); ++i)
@@ -121,7 +122,7 @@ struct Server : Emitter
 			if (peers[i] != e->sender())
 			{
 				dbglog << "Chat::Server: Sending to " << peers[i];
-				emit<Network::DataPacketEvent>(ID::NE_SEND, payload, peers[i], 0);
+				emit<Network::DataPacketEvent>(ID::NE_SEND, answer, peers[i], 0);
 			}
 		}
 // 		dbglog << "Chat::Server: Sending broadcast.";

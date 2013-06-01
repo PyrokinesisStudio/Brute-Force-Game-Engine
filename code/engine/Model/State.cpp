@@ -54,7 +54,7 @@ State::~State()
 void State::LoopEventHandler(LoopEvent* e)
 {
 	if (mExitNextTick)
-		e->getData().getLoop()->setExitFlag();
+		e->data().getLoop()->setExitFlag();
 
 	long timeSinceLastFrame = mClock->stop();
 	if (timeSinceLastFrame)

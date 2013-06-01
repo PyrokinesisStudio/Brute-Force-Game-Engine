@@ -503,7 +503,7 @@ struct ClientState : public SynchronizationTestState
 			break;
 		case A_CONSOLE:
 		{
-			emit<BFG::View::Event>(BFG::ID::VE_CONSOLE, boost::get<bool>(e->getData()));
+			emit<BFG::View::Event>(BFG::ID::VE_CONSOLE, boost::get<bool>(e->data()));
 			break;
 		}
 		}
