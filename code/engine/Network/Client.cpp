@@ -215,7 +215,7 @@ void Client::controlEventHandler(ControlEvent* e)
 	switch(e->id())
 	{
 	case ID::NE_CONNECT:
-		onConnect(boost::get<EndpointT>(e->getData()));
+		onConnect(boost::get<EndpointT>(e->data()));
 		break;
 	case ID::NE_DISCONNECT:
 	case ID::NE_SHUTDOWN:
@@ -226,7 +226,6 @@ void Client::controlEventHandler(ControlEvent* e)
 			<< e->id();
 		break;
 	}
-
 }
 
 void Client::onConnect(const EndpointT& endpoint)

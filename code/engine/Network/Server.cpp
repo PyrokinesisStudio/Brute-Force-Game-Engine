@@ -144,10 +144,10 @@ void Server::controlEventHandler(ControlEvent* e)
 	switch(e->id())
 	{
 	case ID::NE_LISTEN:
-		onListen(boost::get<u16>(e->getData()));
+		onListen(boost::get<u16>(e->data()));
 		break;
 	case ID::NE_DISCONNECT:
-		onDisconnect(boost::get<PeerIdT>(e->getData()));
+		onDisconnect(boost::get<PeerIdT>(e->data()));
 		break;
 	case ID::NE_SHUTDOWN:
 		stop();

@@ -98,7 +98,7 @@ void Networked::onNetworkEvent(Network::DataPacketEvent* e)
 		if (!mInitialized)
 			return;
 
-		const BFG::Network::DataPayload& payload = e->getData();
+		const BFG::Network::DataPayload& payload = e->data();
 
 		dbglog << "Current Server Time: " << payload.mTimestamp;
 
@@ -184,7 +184,7 @@ void Networked::onPhysicsEvent(Physics::Event* e)
 	switch(e->id())
 	{
 		// 		case ID::PE_FULL_SYNC:
-		// 			onFullSync(boost::get<Physics::FullSyncData>(e->getData()));
+		// 			onFullSync(boost::get<Physics::FullSyncData>(e->data()));
 		// 			break;
 
 	case ID::PE_POSITION:

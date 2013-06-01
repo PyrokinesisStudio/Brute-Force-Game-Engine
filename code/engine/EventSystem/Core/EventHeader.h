@@ -27,9 +27,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef __EVENT_HEADER_H_
 #define __EVENT_HEADER_H_
 
-#include <iostream>
-#include <Base/Deprecated.h>
-
 struct LocalEventHeader
 {
 	typedef long IdT;
@@ -45,21 +42,13 @@ struct LocalEventHeader
 
 	virtual ~LocalEventHeader() {}
 
-	BFG_DEPRECATED("Use : Event::id()")
-	IdT getId() const {return mId;}
+	IdT id() const {return mId;}
 
 	void setId(const IdT newID) {mId = newID;}
 
-	BFG_DEPRECATED("Use : Event::destination()")
-	ReceiverIdT getReceiver() const {return mReceiver;}
+	ReceiverIdT destination() const {return mReceiver;}
 
 	void setReceiver(const ReceiverIdT newReceiver) {mReceiver = newReceiver;}
-
-	friend std::ostream& operator << (std::ostream& os, LocalEventHeader& ev)
-	{
-		os << ev.mId << ev.mReceiver;
-		return os;
-	}
 
 protected:
 	IdT         mId;

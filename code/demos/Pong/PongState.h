@@ -201,7 +201,7 @@ struct PongClientState : BFG::Emitter
 		if (mExitNextTick)
 		{
 			// Error happened, while doing stuff
-			e->getData().getLoop()->setExitFlag();
+			e->data().getLoop()->setExitFlag();
 		}
 	}
 

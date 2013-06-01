@@ -106,8 +106,8 @@ private:
 	void setPosition(const v3& pos);
 	void setOrientation(const qv4& rot);
 
-	void interpolatePosition(InterpolationDataV3& pos);
-	void interpolateOrientation(InterpolationDataQv4& interpData);
+	void interpolatePosition(const InterpolationDataV3& pos);
+	void interpolateOrientation(const InterpolationDataQv4& interpData);
 
 	void setOffsetPosition(GameHandle moduleHandle, const v3& pos);
 	void setOffsetOrientation(GameHandle moduleHandle, const qv4& rot);

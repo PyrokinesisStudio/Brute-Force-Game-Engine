@@ -522,13 +522,13 @@ void PhysicsObject::setOffsetOrientation(GameHandle moduleHandle, const qv4& rot
 	dGeomSetOffsetQuaternion(mGeometry[moduleHandle].geomId, rot.ptr());
 }
 
-void PhysicsObject::interpolatePosition(InterpolationDataV3& interpData)
+void PhysicsObject::interpolatePosition(const InterpolationDataV3& interpData)
 {
 	mInterpolatePosition = true;
 	
 	u32 timeStamp = interpData.get<0>(); // TODO: Unused parameter
 	u16 age = interpData.get<1>();
-	v3& pos = interpData.get<2>();
+	const v3& pos = interpData.get<2>();
 
 	v3 deltaVelocity = getVelocity() * static_cast<f32>(age) / 1000.0f;
 	dbglog << "dv/dt: " << deltaVelocity;
@@ -545,13 +545,13 @@ void PhysicsObject::interpolatePosition(InterpolationDataV3& interpData)
 	       << " (" << static_cast<f32>(age)/1000.0f << "s)";
 }
 
-void PhysicsObject::interpolateOrientation(InterpolationDataQv4& interpData)
+void PhysicsObject::interpolateOrientation(const InterpolationDataQv4& interpData)
 {
 	mInterpolateOrientation = true;
 
 	u32 timeStamp = interpData.get<0>();
 	u16 age = interpData.get<1>();
-	qv4& ori = interpData.get<2>();
+	const qv4& ori = interpData.get<2>();
 
 	qv4 estimatedOrientation = ori * eulerToQuaternion(getRotationVelocity() * static_cast<f32>(age) / 1000.0f);
 
@@ -798,11 +798,11 @@ void PhysicsObject::eventHandler(Physics::Event* e)
 		break;
 
 	case ID::PE_INTERPOLATE_POSITION:
-		interpolatePosition(boost::get<InterpolationDataV3>(e->getData()));
+		interpolatePosition(boost::get<InterpolationDataV3>(e->data()));
 		break;
 		
 	case ID::PE_INTERPOLATE_ORIENTATION:
-		interpolateOrientation(boost::get<InterpolationDataQv4>(e->getData()));
+		interpolateOrientation(boost::get<InterpolationDataQv4>(e->data()));
 		break;
 
 	case ID::PE_DEBUG:

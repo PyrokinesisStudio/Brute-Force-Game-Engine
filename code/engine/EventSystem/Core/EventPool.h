@@ -232,17 +232,6 @@ public:
 		return wRet;
 	}
 
-	friend std::ostream& operator << (std::ostream& os, MyType& es)
-	{
-		os << "EventPool(" << es.size() << " Events) ";
-		for ( size_t i = 0; i < es.size(); ++i )
-		{
-			os << i << ":" << *(es[i]) << " ";
-		}
-		os << std::endl;
-		return os;
-	}
-
 private:
 	void transferDataTo(MyType* cloned) const
 	{

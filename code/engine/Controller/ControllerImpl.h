@@ -69,7 +69,7 @@ private:
 	
 	void sendFeedback(long microseconds_passed);
 
-	void insertState(StateInsertion& si);
+	void insertState(const StateInsertion& si);
 	void removeState(GameHandle state);
 
 	void activateState(GameHandle state);

@@ -118,7 +118,7 @@ void Sector::onCreateObject(SectorEvent* se)
 {
 	boost::shared_ptr<GameObject> go = mGameObjectFactory->createGameObject
 	(	
-		boost::get<ObjectParameter>(se->getData())
+		boost::get<ObjectParameter>(se->data())
 	);
 	
 	addObject(go);
@@ -126,7 +126,7 @@ void Sector::onCreateObject(SectorEvent* se)
 
 void Sector::onDestroyObject(SectorEvent* se)
 {
-	GameHandle handle = boost::get<GameHandle>(se->getData());
+	GameHandle handle = boost::get<GameHandle>(se->data());
 	removeObject(handle);
 }
 
