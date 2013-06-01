@@ -94,8 +94,9 @@ template <typename ArrayT>
 BFG::u32 valueToArray(const std::string& val, ArrayT& array, const size_t offset)
 {
 	assert( val.size() <= array.size() - offset );
-	memcpy(array.data() + offset, val.c_str(), val.size());
-	return offset + val.size();
+	BFG::u32 newOffset = valueToArray(val.length(), array, offset);
+	memcpy(array.data() + newOffset, val.c_str(), val.length());
+	return newOffset + val.length();
 }
 
 template <typename ArrayT>

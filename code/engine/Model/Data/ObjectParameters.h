@@ -82,11 +82,7 @@ struct ObjectParameter
 	u32 serialize(CharArray512T& output) const
 	{
 		u32 offset = valueToArray(mHandle, output, 0);
-		
-		offset = valueToArray(mName.size(), output, offset);
 		offset = valueToArray(mName, output, offset);
-		
-		offset = valueToArray(mType.size(), output, offset);
 		offset = valueToArray(mType, output, offset);
 
 		offset = valueToArray(mLocation.position, output, offset);
@@ -96,9 +92,7 @@ struct ObjectParameter
 		offset = valueToArray(mAngularVelocity, output, offset);
 
 		offset = valueToArray(mConnection.mConnectedLocalAt, output, offset);
-		offset = valueToArray(mConnection.mConnectedExternToGameObject.size(), output, offset);
 		offset = valueToArray(mConnection.mConnectedExternToGameObject, output, offset);
-		offset = valueToArray(mConnection.mConnectedExternToModule.size(), output, offset);
 		offset = valueToArray(mConnection.mConnectedExternToModule, output, offset);
 		offset = valueToArray(mConnection.mConnectedExternAt, output, offset);
 		
