@@ -59,10 +59,9 @@ mHandle(cameraHandle),
 mNodeCreated(false),
 mRenderTargetCreated(false)
 {
-	Ogre::SceneManager* sceneMgr;
+	Ogre::SceneManager* sceneMgr = Ogre::Root::getSingleton().getSceneManager(BFG_SCENEMANAGER);
 	if (mCameraNode == NULL) // Create SceneNode
 	{
-		sceneMgr = Ogre::Root::getSingleton().getSceneManager(BFG_SCENEMANAGER);
 		if (sceneMgr->hasSceneNode(stringify(mHandle)))
 		{
 			mCameraNode = sceneMgr->getSceneNode(stringify(mHandle));
@@ -72,10 +71,6 @@ mRenderTargetCreated(false)
 			mCameraNode = sceneMgr->getRootSceneNode()->createChildSceneNode(stringify(mHandle));
 			mNodeCreated = true;
 		}
-	}
-	else
-	{
-		sceneMgr = mCameraNode->getCreator();
 	}
 	mCameraNode->resetOrientation();
 	mCameraNode->setPosition(toOgre(v3::ZERO));
