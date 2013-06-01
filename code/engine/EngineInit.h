@@ -202,6 +202,7 @@ MainContainerT engineInit(const Configuration& cfg)
 #endif
 	
 	cfg.handler(loop);
+	return mains;
 }
 
 } // namespace BFG
