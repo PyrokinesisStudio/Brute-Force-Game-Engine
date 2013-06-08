@@ -40,7 +40,7 @@ public:
     // Dispatch an event over all entries
     virtual size_t call(IEvent* event) = 0;
     // Number of stored functors
-    virtual long getSize() const = 0;    
+    virtual size_t getSize() const = 0;
     //virtual void AddEntry (BaseEventFunctor*) = 0;
     // Delete an specific entry
     virtual void deleteEntry (void* listener) = 0;
@@ -83,7 +83,10 @@ public:
 		return mEventCounter;
 	}
 
-	long getSize() const {return mEventCounter;}
+	size_t getSize() const
+	{
+		return mEventCounter;
+	}
 
 	//template<class EventListener, class EventType>
 	//void AddEntry( SpecificEventFunctor<EventListener,EventType> * EventEntry )
