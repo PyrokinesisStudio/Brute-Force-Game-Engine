@@ -31,6 +31,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/shared_ptr.hpp>
 
+#include <Base/Deprecated.h>
+
 #include <Core/CharArray.h>
 #include <Core/GameHandle.h>
 #include <Core/Location.h>
@@ -44,29 +46,9 @@ namespace BFG {
 
 struct ObjectParameter;
 
+//! \todo Deprecated usage in serialize. Remove when nobody uses this mehthod.
 template <typename ArrayT>
-u32 valueToArray(const ObjectParameter& val, ArrayT& output, const size_t offset)
-{
-	using ::valueToArray;
-
-	u32 newOffset = offset;
-	newOffset = valueToArray(val.mHandle, output, newOffset);
-	newOffset = valueToArray(val.mName, output, newOffset);
-	newOffset = valueToArray(val.mType, output, newOffset);
-
-	newOffset = valueToArray(val.mLocation.position, output, newOffset);
-	newOffset = valueToArray(val.mLocation.orientation, output, newOffset);
-
-	newOffset = valueToArray(val.mLinearVelocity, output, newOffset);
-	newOffset = valueToArray(val.mAngularVelocity, output, newOffset);
-
-	newOffset = valueToArray(val.mConnection.mConnectedLocalAt, output, newOffset);
-	newOffset = valueToArray(val.mConnection.mConnectedExternToGameObject, output, newOffset);
-	newOffset = valueToArray(val.mConnection.mConnectedExternToModule, output, newOffset);
-	newOffset = valueToArray(val.mConnection.mConnectedExternAt, output, newOffset);
-		
-	return newOffset;
-}
+u32 valueToArray(const ObjectParameter& val, ArrayT& output, const size_t offset);
 
 //! This struct saves the interpreted object data which is not(!) defined by PropertyConcepts.
 struct ObjectParameter
@@ -105,6 +87,7 @@ struct ObjectParameter
 		offset = arrayToValue(mConnection.mConnectedExternAt, in, offset);
 	}
 
+	BFG_DEPRECATED("Use : valueToArray instead.") 
 	u32 serialize(CharArray512T& output) const
 	{
 		return valueToArray(*this, output, 0);
@@ -156,6 +139,31 @@ protected:
 };
 
 typedef std::vector<boost::shared_ptr<ObjectParameter> > ObjectDefinitionsT;
+
+
+template <typename ArrayT>
+u32 valueToArray(const ObjectParameter& val, ArrayT& output, const size_t offset)
+{
+	using ::valueToArray;
+
+	u32 newOffset = offset;
+	newOffset = valueToArray(val.mHandle, output, newOffset);
+	newOffset = valueToArray(val.mName, output, newOffset);
+	newOffset = valueToArray(val.mType, output, newOffset);
+
+	newOffset = valueToArray(val.mLocation.position, output, newOffset);
+	newOffset = valueToArray(val.mLocation.orientation, output, newOffset);
+
+	newOffset = valueToArray(val.mLinearVelocity, output, newOffset);
+	newOffset = valueToArray(val.mAngularVelocity, output, newOffset);
+
+	newOffset = valueToArray(val.mConnection.mConnectedLocalAt, output, newOffset);
+	newOffset = valueToArray(val.mConnection.mConnectedExternToGameObject, output, newOffset);
+	newOffset = valueToArray(val.mConnection.mConnectedExternToModule, output, newOffset);
+	newOffset = valueToArray(val.mConnection.mConnectedExternAt, output, newOffset);
+		
+	return newOffset;
+}
 
 } // namespace BFG
 
