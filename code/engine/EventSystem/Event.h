@@ -29,6 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <EventSystem/Event_fwd.h>
 
+#include <Base/Deprecated.h>
 #include <EventSystem/Get.h>
 #include <EventSystem/Core/EventDefs.h>
 
@@ -49,8 +50,7 @@ public:
 	typedef _DestinationT DestinationT;
 	typedef _SenderT      SenderT;
 
-	// The following is deprecated. The term "payload" is now used within a
-	// networking context.
+	BFG_DEPRECATED("Use: DataT. The term Payload is used within a networking context.")
 	typedef _DataT        PayloadT;
 	
 	typedef typename TBaseEvent<_DataT>::IdT IdT;
