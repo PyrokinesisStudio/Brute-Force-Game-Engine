@@ -478,7 +478,7 @@ void PhysicsManager::eventHandler(Physics::Event* e)
 		break;
 		
 	case ID::PE_CREATE_OBJECT:
-		onCreateObject(boost::get<ObjectCreationParams&>(e->data()));
+		onCreateObject(boost::get<const ObjectCreationParams&>(e->data()));
 		break;
 
 	case ID::PE_DELETE_OBJECT:
@@ -486,11 +486,11 @@ void PhysicsManager::eventHandler(Physics::Event* e)
 		break;
 
 	case ID::PE_ATTACH_MODULE:
-		onAttachModule(boost::get<ModuleCreationParams&>(e->data()));
+		onAttachModule(boost::get<const ModuleCreationParams&>(e->data()));
 		break;
 
 	case ID::PE_REMOVE_MODULE:
-		onRemoveModule(boost::get<ModuleRemovalParams&>(e->data()));
+		onRemoveModule(boost::get<const ModuleRemovalParams&>(e->data()));
 		break;
 
 	default:
