@@ -92,9 +92,4 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 #endif // _WIN32
 
 } // namespace Network
-
 } // namespace BFG
-
-#ifdef _MSC_VER
-  #pragma warning (pop)
-#endif
