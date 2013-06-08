@@ -503,8 +503,8 @@ GameObject::VD GameObject::findVertex(GameHandle handle) const
 		if (*vi == mDummy)
 			continue;
 
-		using namespace boost;
-		GameHandle current = get<shared_ptr<Managed> >(mModules[*vi])->getHandle();
+		GameHandle current = boost::get<boost::shared_ptr<Managed> >
+			(mModules[*vi])->getHandle();
 
 		if (current == handle)
 			return *vi;
