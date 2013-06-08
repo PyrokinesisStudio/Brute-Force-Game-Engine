@@ -242,7 +242,7 @@ struct EventSystemSetup
 //! Generates a port as u16 and as std::string
 static void generateRandomPort(BFG::u16& port, std::string& portString)
 {
-	srand(time(NULL));
+	srand(static_cast<unsigned int>(time(NULL)));
 
 	// Use something between 20000 and 30000
 	port = 20000 + rand()%10000;
