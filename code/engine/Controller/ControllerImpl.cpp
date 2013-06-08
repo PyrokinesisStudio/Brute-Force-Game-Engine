@@ -88,10 +88,10 @@ void Controller::init(int maxFrameratePerSec)
 	);
 }
 
-void Controller::insertState(StateInsertion& si)
+void Controller::insertState(const StateInsertion& si)
 {
-	std::string name            = si.mStateName.c_array();
-	std::string config_filename = si.mConfigurationFilename.c_array();
+	std::string name            = si.mStateName.data();
+	std::string config_filename = si.mConfigurationFilename.data();
 
 	dbglog << "Controller: Inserting state \"" << name << "\"";
 
@@ -189,7 +189,7 @@ void Controller::controlHandler(ControlEvent* e)
 			break;
 	
 		case ID::CE_LOAD_STATE:
-			insertState(boost::get<StateInsertion>(e->getData()));
+			insertState(boost::get<StateInsertion>(e->data()));
 			break;
 
 		case ID::CE_ACTIVATE_STATE:

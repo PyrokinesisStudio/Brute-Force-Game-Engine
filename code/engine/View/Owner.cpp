@@ -71,27 +71,27 @@ void Owner::eventHandler(Event* e)
 	switch(e->id())
 	{
 	case ID::VE_CREATE_OBJECT:
-		createObject(boost::get<ObjectCreation>(e->getData()));
+		createObject(boost::get<ObjectCreation>(e->data()));
 		break;
 
 	case ID::VE_DESTROY_OBJECT:
-		destroyObject(boost::get<GameHandle>(e->getData()));
+		destroyObject(boost::get<GameHandle>(e->data()));
 		break;
 
 	case ID::VE_CREATE_CAMERA:
-		createCamera(boost::get<CameraCreation>(e->getData()));
+		createCamera(boost::get<CameraCreation>(e->data()));
 		break;
 
 	case ID::VE_SET_SKY:
-		setSky(boost::get<View::SkyCreation>(e->getData()));
+		setSky(boost::get<View::SkyCreation>(e->data()));
 		break;
 
 	case ID::VE_CREATE_LIGHT:
-		createLight(boost::get<View::LightParameters>(e->getData()));
+		createLight(boost::get<View::LightParameters>(e->data()));
 		break;
 
 	case ID::VE_SET_AMBIENT:
-		setAmbient(boost::get<BFG::cv4>(e->getData()));
+		setAmbient(boost::get<BFG::cv4>(e->data()));
 		break;
 
 	default:
@@ -99,14 +99,14 @@ void Owner::eventHandler(Event* e)
 	}
 }
 
-void Owner::createObject(ObjectCreation& OC)
+void Owner::createObject(const ObjectCreation& OC)
 {
 	boost::shared_ptr<RenderObject> ro;
 	ro.reset(new RenderObject
 	(
 		OC.mParent,
 		OC.mHandle,
-		OC.mMeshName.c_array(),
+		OC.mMeshName.data(),
 		OC.mPosition,
 		OC.mOrientation
 	));
@@ -122,7 +122,7 @@ void Owner::destroyObject(GameHandle handle)
 	}
 }
 
-void Owner::createCamera(CameraCreation& CC)
+void Owner::createCamera(const CameraCreation& CC)
 {
 	Ogre::Root& root = Ogre::Root::getSingleton();
 
@@ -152,20 +152,20 @@ void Owner::createCamera(CameraCreation& CC)
 	mCameras.push_back(cam);
 }
 
-void Owner::setSky(SkyCreation& SC)
+void Owner::setSky(const SkyCreation& SC)
 {
 	mSky.reset();   // fix (skybox dtor must be called explicitly) 
-	mSky.reset(new Skybox(SC.mMatName.c_array()));
+	mSky.reset(new Skybox(SC.mMatName.data()));
 }
 
-void Owner::createLight(LightParameters& LC)
+void Owner::createLight(const LightParameters& LC)
 {
 	boost::shared_ptr<Light> light;
 	light.reset(new Light(LC));
 	mLights[LC.mHandle] = light;
 }
 
-void Owner::setAmbient(cv4& colour)
+void Owner::setAmbient(const cv4& colour)
 {
 	Ogre::Root& root = Ogre::Root::getSingleton();
 	Ogre::SceneManager* sceneMgr =

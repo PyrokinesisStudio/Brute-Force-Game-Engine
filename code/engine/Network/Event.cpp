@@ -40,7 +40,7 @@ std::string NETWORK_API debug(const DataPacketEvent& e)
 	ss << "e.destination: " << e.destination() << "\n";
 	ss << "e.sender: " << e.sender() << "\n";
 
-	const DataPayload& payload = e.getData();
+	const DataPayload& payload = e.data();
 	ss << "payload.AppId: " << payload.mAppEventId << "\n";
 	ss << "payload.Destination: " << payload.mAppDestination << "\n";
 	ss << "payload.Sender: " << payload.mAppSender << "\n";

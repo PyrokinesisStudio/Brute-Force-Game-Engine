@@ -43,7 +43,7 @@ void EventProcessor::processEvent(BaseEvent* event)
 
 	MultiIndexEventMapType::const_iterator it = mEventMap.find
 	(
-		boost::make_tuple(event->getId(), event->getReceiver())
+		boost::make_tuple(event->id(), event->destination())
 	);
 
 	if (mEventMap.end() != it)
@@ -73,7 +73,7 @@ long EventProcessor::processEventCount(BaseEvent* event)
 	//EventMapType::iterator iter = m_EventMap.find(EventId);
 	MultiIndexEventMapType::const_iterator it = mEventMap.find
 	(
-		boost::make_tuple(event->getId(), event->getReceiver())
+		boost::make_tuple(event->id(), event->destination())
 	);
 
 	if (it != mEventMap.end())

@@ -105,7 +105,7 @@ void OgreInit::loopEventHandler(LoopEvent* iLE)
 	if (! doRenderTick() || mShutdown)
 	{
 		// Error happend, while Rendering
-		iLE->getData().getLoop()->setExitFlag();
+		iLE->data().getLoop()->setExitFlag();
 	}
 }
 
@@ -278,11 +278,11 @@ void OgreInit::eventHandler(Event* VE)
 		break;
 		
 	case ID::VE_DEBUG_FPS:
-		onDebugFps(boost::get<bool>(VE->getData()));
+		onDebugFps(boost::get<bool>(VE->data()));
 		break;
 
 	case ID::VE_CONSOLE:
-		onConsole(boost::get<bool>(VE->getData()));
+		onConsole(boost::get<bool>(VE->data()));
 		break;
 
 	default:

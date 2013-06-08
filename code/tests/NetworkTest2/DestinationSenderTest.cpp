@@ -71,14 +71,14 @@ struct Server : BFG::Emitter
 	{
 		mStatus.gotConnected = true;
 		BOOST_CHECK_EQUAL(e->id(), BFG::ID::NE_CONNECTED);
-		BOOST_CHECK_NE(boost::get<BFG::Network::PeerIdT>(e->getData()), 0);
+		BOOST_CHECK_NE(boost::get<BFG::Network::PeerIdT>(e->data()), 0);
 	}
 	
 	void netDisconnectHandler(BFG::Network::ControlEvent* e)
 	{
 		mStatus.gotDisconnected = true;
 		BOOST_CHECK_EQUAL(e->id(), BFG::ID::NE_DISCONNECTED);
-		BOOST_CHECK_NE(boost::get<BFG::Network::PeerIdT>(e->getData()), 0);
+		BOOST_CHECK_NE(boost::get<BFG::Network::PeerIdT>(e->data()), 0);
 	}
 
 	void netPacketHandler(BFG::Network::DataPacketEvent* e)
@@ -88,7 +88,7 @@ struct Server : BFG::Emitter
 		BOOST_CHECK_EQUAL(e->destination(), serverAppHandle);
 		BOOST_CHECK_NE(e->sender(), 0);
 		
-		const BFG::Network::DataPayload& payload = e->getData();
+		const BFG::Network::DataPayload& payload = e->data();
 
 		EventIdT appId = payload.mAppEventId;
 
@@ -147,14 +147,14 @@ struct Client : BFG::Emitter
 	{
 		mStatus.gotConnected = true;
 		BOOST_CHECK_EQUAL(e->id(), BFG::ID::NE_CONNECTED);
-		BOOST_CHECK_NE(boost::get<BFG::Network::PeerIdT>(e->getData()), 0);
+		BOOST_CHECK_NE(boost::get<BFG::Network::PeerIdT>(e->data()), 0);
 	}
 
 	void netDisconnectHandler(BFG::Network::ControlEvent* e)
 	{
 		mStatus.gotDisconnected = true;
 		BOOST_CHECK_EQUAL(e->id(), BFG::ID::NE_DISCONNECTED);
-		BOOST_CHECK_EQUAL(boost::get<BFG::Network::PeerIdT>(e->getData()), 0);
+		BOOST_CHECK_EQUAL(boost::get<BFG::Network::PeerIdT>(e->data()), 0);
 	}
 
 	void netPacketHandler(BFG::Network::DataPacketEvent* e)
@@ -166,7 +166,7 @@ struct Client : BFG::Emitter
 		BOOST_CHECK_EQUAL(e->destination(), mAppHandle);
 		BOOST_CHECK_EQUAL(e->sender(), 0);
 		
-		const BFG::Network::DataPayload& payload = e->getData();
+		const BFG::Network::DataPayload& payload = e->data();
 
 		EventIdT appId = payload.mAppEventId;
 

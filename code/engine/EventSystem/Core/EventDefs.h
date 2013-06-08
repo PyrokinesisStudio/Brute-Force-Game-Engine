@@ -63,30 +63,18 @@ public:
 	TBaseEvent(const typename Header::IdT id, const DataType& data, const ReceiverIdT receiver = 0) : 
 		Header(id, receiver), mData(data){}
 
-	virtual ~TBaseEvent(){}
-	// Base Interface
-	//inline const DataType& getData() const { return m_Data; }
-	// changed to non-const, to avoid problems
-	DataType& getData() {return mData;}
-	const DataType& getData() const {return mData;}
-	void setData(const DataType& data) {mData = data;}
+	virtual ~TBaseEvent()
+	{}
 
-	// BaseEvent can not Copy itself
-	virtual bool canCopy() const {return true;}
-	virtual inline TBaseEvent* copy() 
-	{ 
-		TBaseEvent* wRet = new TBaseEvent(Header::mId, getData(), Header::mReceiver); 
-		return wRet; 
-	}
-
-	virtual void copy(TBaseEvent* newPlace)
+	const DataType& data() const
 	{
-		newPlace->setData(getData());
-		newPlace->setId(Header::getId());
-		newPlace->setReceiver(Header::getReceiver());
+		return mData;
 	}
-
-	operator const DataType&() const {return mData;}
+	
+	void setData(const DataType& data)
+	{
+		mData = data;
+	}
 
 	virtual unsigned int getSize(void) const
 	{
@@ -97,7 +85,6 @@ public:
 	Header(),
 	mData(event.mData)
 	{} 
-
 
 private:
 	TBaseEvent operator=(const TBaseEvent&);// {};

@@ -42,7 +42,7 @@ static void resetGlobals()
 
 // ---------------------------------------------------------------------------
 
-static void* entryPoint(void* p)
+static void* entryPoint(void*)
 {
 	++gEntryPointCalled;
 	return 0;

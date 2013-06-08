@@ -26,6 +26,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Controller/EventDumper.h>
 
+#include <iostream>
+
 #include <Controller/Enums.hh>
 #include <Controller/ControllerEvents.h>
 

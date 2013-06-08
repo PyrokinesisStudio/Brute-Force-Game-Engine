@@ -104,7 +104,7 @@ protected:
 	//! With this method the data is queued and flushes automatically every few milliseconds 
 	//! or if the queue is full
 	//! \param[in] payload Data to send
-	void onSend(DataPayload& payload)
+	void onSend(const DataPayload& payload)
 	{
 		dbglog << "NetworkModule::onSend(): Current Time: " << mLocalTime->stop();
 
@@ -206,7 +206,7 @@ private:
 		switch(e->id())
 		{
 		case ProtocolT::EVENT_ID_FOR_SENDING:
-			onSend(e->getData());
+			onSend(e->data());
 			break;
 		default:
 			warnlog << "NetworkModule: Can't handle event with ID: "

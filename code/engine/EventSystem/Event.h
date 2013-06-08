@@ -69,27 +69,22 @@ public:
 	
 	ActionT id() const
 	{
-		return static_cast<ActionT>(TBaseEvent<DataT>::getId());
+		return static_cast<ActionT>(TBaseEvent<DataT>::id());
 	}
 
 	const DataT& data() const
 	{
-		return TBaseEvent<DataT>::getData();
+		return TBaseEvent<DataT>::data();
 	}
 
 	DestinationT destination() const
 	{
-		return TBaseEvent<DataT>::getReceiver();
+		return TBaseEvent<DataT>::destination();
 	}
 
 	SenderT sender() const
 	{
 		return mSender;
-	}
-
-	Event* copy()
-	{
-		return new Event<ActionT, DataT, DestinationT, SenderT>(*this);
 	}
 
 private:

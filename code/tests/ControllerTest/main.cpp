@@ -122,7 +122,7 @@ struct EventNetter : BFG::Emitter
 	{
 		std::stringstream ss;
 		boost::archive::text_oarchive oa(ss);
-		oa << e->getData();
+		oa << e->data();
 		CharArray512T ca512 = stringToArray<512>(ss.str());
 
 		Network::DataPayload payload(e->id(), 0, 0, ss.str().size(), ca512);
@@ -145,7 +145,7 @@ struct NetEventer : BFG::Emitter
 
 	void eventHandler(BFG::Network::DataPacketEvent* npe)
 	{
-		BFG::Network::DataPayload payload = npe->getData();
+		BFG::Network::DataPayload payload = npe->data();
 
 		std::stringstream ss;
 		ss.str(payload.mAppData.data());

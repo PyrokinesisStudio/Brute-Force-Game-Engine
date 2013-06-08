@@ -85,7 +85,7 @@ struct LevelerModelState : Emitter
 		if (mExitNextTick)
 		{
 			// Error happened, while doing stuff
-			iLE->getData().getLoop()->setExitFlag();
+			iLE->data().getLoop()->setExitFlag();
 		}
 
 		long timeSinceLastFrame = mClock->stop();
