@@ -42,6 +42,32 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace BFG {
 
+struct ObjectParameter;
+
+template <typename ArrayT>
+u32 valueToArray(const ObjectParameter& val, ArrayT& output, const size_t offset)
+{
+	using ::valueToArray;
+
+	u32 newOffset = offset;
+	newOffset = valueToArray(val.mHandle, output, newOffset);
+	newOffset = valueToArray(val.mName, output, newOffset);
+	newOffset = valueToArray(val.mType, output, newOffset);
+
+	newOffset = valueToArray(val.mLocation.position, output, newOffset);
+	newOffset = valueToArray(val.mLocation.orientation, output, newOffset);
+
+	newOffset = valueToArray(val.mLinearVelocity, output, newOffset);
+	newOffset = valueToArray(val.mAngularVelocity, output, newOffset);
+
+	newOffset = valueToArray(val.mConnection.mConnectedLocalAt, output, newOffset);
+	newOffset = valueToArray(val.mConnection.mConnectedExternToGameObject, output, newOffset);
+	newOffset = valueToArray(val.mConnection.mConnectedExternToModule, output, newOffset);
+	newOffset = valueToArray(val.mConnection.mConnectedExternAt, output, newOffset);
+		
+	return newOffset;
+}
+
 //! This struct saves the interpreted object data which is not(!) defined by PropertyConcepts.
 struct ObjectParameter
 {
@@ -81,22 +107,7 @@ struct ObjectParameter
 
 	u32 serialize(CharArray512T& output) const
 	{
-		u32 offset = valueToArray(mHandle, output, 0);
-		offset = valueToArray(mName, output, offset);
-		offset = valueToArray(mType, output, offset);
-
-		offset = valueToArray(mLocation.position, output, offset);
-		offset = valueToArray(mLocation.orientation, output, offset);
-
-		offset = valueToArray(mLinearVelocity, output, offset);
-		offset = valueToArray(mAngularVelocity, output, offset);
-
-		offset = valueToArray(mConnection.mConnectedLocalAt, output, offset);
-		offset = valueToArray(mConnection.mConnectedExternToGameObject, output, offset);
-		offset = valueToArray(mConnection.mConnectedExternToModule, output, offset);
-		offset = valueToArray(mConnection.mConnectedExternAt, output, offset);
-		
-		return offset;
+		return valueToArray(*this, output, 0);
 	}
 
 
@@ -108,7 +119,7 @@ struct ObjectParameter
 	v3 mAngularVelocity;
 	Connection mConnection;
 
-	protected:
+protected:
 	
 	void load(XmlTreeT tree)
 	{

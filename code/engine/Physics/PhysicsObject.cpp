@@ -347,7 +347,7 @@ void PhysicsObject::performInterpolation(quantity<si::time, f32> timeSinceLastFr
 {
 	// Depends on UPDATES_PER_SECOND in Networked::internalUpdate
 	// This is UPDATE_DELAY / 1000
-	const quantity<si::time, f32> INTERPOLATION_DURATION = 0.05f * si::seconds;
+	const quantity<si::time, f32> INTERPOLATION_DURATION = 1.0f * si::seconds;
 
 	// We interpolate from 0.0f to 1.0f
 	const f32 INTERPOLATION_SCALE = 1.0f;
