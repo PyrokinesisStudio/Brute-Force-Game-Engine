@@ -674,9 +674,9 @@ public:
 	{		
 	}
 	
-	virtual void FeedButtonData(ID::DeviceType dt,
+	virtual void FeedButtonData(ID::DeviceType /*dt*/,
 	                            ID::ButtonState bs,
-	                            ButtonCodeT code)
+	                            ButtonCodeT /*code*/)
 	{
 		if (mHoldLogic)
 			performHoldLogic();
