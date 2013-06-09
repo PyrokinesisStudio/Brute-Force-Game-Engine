@@ -67,4 +67,38 @@ T get(const EventT& e)
 
 } // namespace BFG
 
+//! Default handler for switch directives in event handler functions.
+/**
+	This will log information about unhandled events plus the name of the
+	handler which received the event.
+
+	In order to make this work, a logger must have been initialized and
+	the preprocessor symbol \ref warnlog must have been defined by including
+	\ref Base/Logger.h.
+
+	Example of usage within C++ code:
+
+	\code
+	default:
+		DEFAULT_HANDLE_EVENT(e);
+	}
+	\endcode
+
+	Use \c &e if e is not of a pointer type.
+
+	\param e A pointer to an event.
+*/
+#define DEFAULT_HANDLE_EVENT(e)                                             \
+    warnlog << BOOST_CURRENT_FUNCTION << ": Unable to handle EventId: "     \
+            << (e)->id()                                                    \
+            << " Destination: " << (e)->destination()                       \
+            << " Sender: " << (e)->sender();
+
+//! Special default handler for switch directives in event handler functions for
+//! \c Event 's which use \c EmptyType as \c DestinationT and \c SenderT.
+//! Works like DEFAULT_HANDLE_EVENT, but without destination and sender info.
+#define DEFAULT_HANDLE_EVENT_ET(e)                                          \
+    warnlog << BOOST_CURRENT_FUNCTION << ": Unable to handle EventId: "     \
+            << (e)->id();                                                   \
+
 #endif

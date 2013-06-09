@@ -29,6 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/variant.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <Base/Logger.h>
 #include <Core/GameHandle.h>
 
 // ---------------------------------------------------------------------------
@@ -86,6 +87,17 @@ BOOST_AUTO_TEST_CASE (TestSuccessfulGet)
 
 	// Expect no exception with BFG::get for Type1
 	BOOST_REQUIRE_NO_THROW(BFG::get<Type1>(e));
+}
+
+BOOST_AUTO_TEST_CASE (DefaultHandleEventTest)
+{
+	BFG::Base::Logger::Init(BFG::Base::Logger::SL_DEBUG);
+	
+	TestEvent e(1, Type1(), 2, 3);
+	TestEvent* ep = &e;
+	
+	DEFAULT_HANDLE_EVENT(&e);
+	DEFAULT_HANDLE_EVENT(ep);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
