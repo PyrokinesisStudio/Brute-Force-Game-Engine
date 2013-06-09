@@ -219,6 +219,8 @@ struct ServerState: public SynchronizationTestState
 			}
 
 		}
+		default:
+			DEFAULT_HANDLE_EVENT(e);
 		}
 	}
 
@@ -338,7 +340,8 @@ struct ServerState: public SynchronizationTestState
 			onDisconnected(peerId);
 			break;
 		}
-
+		default:
+			DEFAULT_HANDLE_EVENT(e);
 		}
 
 	}
@@ -506,6 +509,8 @@ struct ClientState : public SynchronizationTestState
 			emit<BFG::View::Event>(BFG::ID::VE_CONSOLE, boost::get<bool>(e->data()));
 			break;
 		}
+		default:
+			DEFAULT_HANDLE_EVENT_ET(e);
 		}
 	}
 

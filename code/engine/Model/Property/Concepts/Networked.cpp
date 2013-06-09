@@ -171,11 +171,14 @@ void Networked::onNetworkEvent(Network::DataPacketEvent* e)
 		}
 		default:
 		{
-			warnlog << "Networked::onNetworkEvent: Got unhandled event: " << e->id();
+			warnlog << "Networked::onNetworkEvent: Received unknown EventId: "
+			        << payload.mAppEventId;
 		}
 
 		}
-	}
+	} // case ID::NE_RECEIVED
+	default:
+		DEFAULT_HANDLE_EVENT(e);
 	} // switch e->id()
 }
 
@@ -204,9 +207,7 @@ void Networked::onPhysicsEvent(Physics::Event* e)
 		break;
 
 	default:
-		warnlog << "Networked: Can't handle event with ID: "
-			<< e->id();
-		break;
+		DEFAULT_HANDLE_EVENT(e);
 	}
 }
 

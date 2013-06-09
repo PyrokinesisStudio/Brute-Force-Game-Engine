@@ -199,6 +199,8 @@ void Controller::controlHandler(ControlEvent* e)
 		case ID::CE_DEACTIVATE_STATE:
 			deactivateState(boost::get<GameHandle>(e->data()));
 			break;
+		default:
+			DEFAULT_HANDLE_EVENT_ET(e);
 	};
 }
 
