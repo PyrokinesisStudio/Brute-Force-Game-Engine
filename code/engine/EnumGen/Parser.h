@@ -196,7 +196,7 @@ namespace Parse
 	} // namespace detail
 
 	//! Checks enumgen header and version.
-	//! \return Handle to the <enumgen> node
+	//! \return Handle to the \<enumgen\> node
 	TiXmlHandle Header(TiXmlHandle hDoc)
 	{
 		TiXmlElement* E = hDoc.FirstChildElement().Element();
