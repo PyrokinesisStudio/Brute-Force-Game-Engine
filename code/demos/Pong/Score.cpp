@@ -87,6 +87,8 @@ void Score::viewEventHandler(Event* e)
 		onScoreUpdate();
 		break;
 	}
+	default:
+		DEFAULT_HANDLE_EVENT(e);
 	}
 }
 
