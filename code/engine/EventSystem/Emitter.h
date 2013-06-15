@@ -34,13 +34,19 @@ namespace BFG {
 class Emitter
 {
 public:
-	Emitter(EventLoop* loop) :
+	explicit Emitter(EventLoop* loop) :
 	mLoop(loop)
 	{
 		assert(loop);
 	}
+	
+	virtual ~Emitter()
+	{}
 
-	EventLoop* loop() const { return mLoop; }
+	EventLoop* loop() const
+	{
+		return mLoop;
+	}
 	
 	template <typename EventT, typename PayloadT>
 	void emit(typename EventT::ActionT action,
@@ -71,7 +77,7 @@ public:
 	}
 
 private:
-	EventLoop* const mLoop;
+	EventLoop* mLoop;
 };
 
 } // namespace BFG
