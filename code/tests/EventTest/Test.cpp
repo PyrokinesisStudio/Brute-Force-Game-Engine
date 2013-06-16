@@ -63,6 +63,36 @@ struct HelloWorld
 			std::cout << "Hello, " << s << std::endl;
 		}
 	}
+	void data3(const std::vector<std::string>& v) const
+	{
+		BOOST_FOREACH(const std::string& s, v)
+		{
+			std::cout << "Ok, " << s << std::endl;
+		}
+	}
+};
+
+template <typename PayloadT>
+struct Binding
+{
+	typedef boost::signals2::signal<void (const PayloadT&)> SignalT;
+	
+	Binding() :
+	mSignal(new SignalT)
+	{}
+	
+	template <typename FnT>
+	void connect(FnT fn)
+	{
+		mSignal->connect(fn);
+	}
+	
+	const SignalT& signal() const
+	{
+		return *mSignal;
+	}
+
+	boost::shared_ptr<SignalT> mSignal;
 };
 
 struct SignalHolder
@@ -70,26 +100,25 @@ struct SignalHolder
 	template <typename PayloadT, typename FnT>
 	void connect(int id, FnT fn)
 	{
-		typedef boost::signals2::signal<void (const PayloadT&)> SignalT;
-		boost::shared_ptr<SignalT> sig(new SignalT);
-		sig->connect(fn);
+		if (mSignals.count(id) == 0)
+			mSignals[id] = Binding<PayloadT>();
 		
-		mSignals[id] = sig;
+		Binding<PayloadT> b = boost::any_cast<Binding<PayloadT> >(mSignals[id]);
+		b.connect(fn);
 	}
 	
 	template <typename PayloadT>
 	void call(int id, const PayloadT& payload)
 	{
-		typedef boost::signals2::signal<void (const PayloadT&)> SignalT;
 		boost::any a = mSignals[id];
 		try
 		{
-			boost::shared_ptr<SignalT> sig = boost::any_cast<boost::shared_ptr<SignalT> >(a);
-			const SignalT& s = *sig.get();
-			s(payload);
+			Binding<PayloadT> b = boost::any_cast<Binding<PayloadT> >(a);
+			b.signal()(payload);
 		}
 		catch(const boost::bad_any_cast& ex)
 		{
+			typedef typename Binding<PayloadT>::SignalT SignalT;
 			std::cout << "EX: " << ex.what() << std::endl;
 			std::cout << "is      : " << a.type().name() << std::endl;
 			std::cout << "expected: " << typeid(boost::shared_ptr<SignalT>).name() << std::endl;
@@ -117,9 +146,9 @@ BOOST_AUTO_TEST_CASE (Test)
 
 	sh.connect<std::string>(1, boost::bind(&HelloWorld::data, boost::ref(hello), _1));
 	sh.call(1, std::string("Lala"));
-	sh.call(1, 1234);
 	
 	sh.connect<std::vector<std::string> >(2, boost::bind(&HelloWorld::data2, boost::ref(hello), _1));
+	sh.connect<std::vector<std::string> >(2, boost::bind(&HelloWorld::data3, boost::ref(hello), _1));
 	// Call all of the slots
 	sig();
 	ssig("Andreas");
