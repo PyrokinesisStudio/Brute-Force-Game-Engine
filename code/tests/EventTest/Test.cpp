@@ -72,13 +72,22 @@ struct HelloWorld
 	}
 };
 
+struct Callable
+{
+	virtual ~Callable()
+	{}
+	
+	virtual void call() = 0;
+};
+
 template <typename PayloadT>
-struct Binding
+struct Binding : public Callable
 {
 	typedef boost::signals2::signal<void (const PayloadT&)> SignalT;
 	
 	Binding() :
-	mSignal(new SignalT)
+	mSignal(new SignalT),
+	mTypeInfo(&typeid(PayloadT))
 	{}
 	
 	template <typename FnT>
@@ -86,13 +95,32 @@ struct Binding
 	{
 		mSignal->connect(fn);
 	}
+
+	void emit(const PayloadT& payload)
+	{
+		if (typeid(PayloadT) != *mTypeInfo)
+			throw std::runtime_error("Incompatible types");
+		
+		mPayloads.push_back(payload);
+	}
+	
+	virtual void call()
+	{
+		BOOST_FOREACH(const PayloadT& payload, mPayloads)
+		{
+			signal()(payload);
+		}
+		mPayloads.clear();
+	}
 	
 	const SignalT& signal() const
 	{
 		return *mSignal;
 	}
 
+	std::vector<PayloadT> mPayloads;
 	boost::shared_ptr<SignalT> mSignal;
+	const std::type_info* mTypeInfo;
 };
 
 struct SignalHolder
@@ -101,32 +129,40 @@ struct SignalHolder
 	void connect(int id, FnT fn)
 	{
 		if (mSignals.count(id) == 0)
-			mSignals[id] = Binding<PayloadT>();
+		{
+			Callable* c = new Binding<PayloadT>();
+			mSignals[id] = c;
+		}
 		
-		Binding<PayloadT> b = boost::any_cast<Binding<PayloadT> >(mSignals[id]);
-		b.connect(fn);
+		Callable* c = boost::any_cast<Callable*>(mSignals[id]);
+		Binding<PayloadT>* b = static_cast<Binding<PayloadT>*>(c);
+		b->connect(fn);
 	}
 	
 	template <typename PayloadT>
-	void call(int id, const PayloadT& payload)
+	void emit(int id, const PayloadT& payload)
 	{
-		boost::any a = mSignals[id];
-		try
+		Callable* c = boost::any_cast<Callable*>(mSignals[id]);
+		Binding<PayloadT>* b = static_cast<Binding<PayloadT>*>(c);
+		b->emit(payload);
+	}
+
+	void call(int id)
+	{
+		Callable* c = boost::any_cast<Callable*>(mSignals[id]);
+		c->call();
+	}
+	
+	void tick()
+	{
+		BOOST_FOREACH(SignalMapT::value_type& pair, mSignals)
 		{
-			Binding<PayloadT> b = boost::any_cast<Binding<PayloadT> >(a);
-			b.signal()(payload);
-		}
-		catch(const boost::bad_any_cast& ex)
-		{
-			typedef typename Binding<PayloadT>::SignalT SignalT;
-			std::cout << "EX: " << ex.what() << std::endl;
-			std::cout << "is      : " << a.type().name() << std::endl;
-			std::cout << "expected: " << typeid(boost::shared_ptr<SignalT>).name() << std::endl;
-			std::cout << "Same: " << (a.type() == typeid(boost::shared_ptr<SignalT>)) << std::endl;
+			call(pair.first);
 		}
 	}
 	
-	std::map<int, boost::any> mSignals;
+	typedef std::map<int, boost::any> SignalMapT;
+	SignalMapT mSignals;
 };
 
 BOOST_AUTO_TEST_SUITE(TestSuite)
@@ -145,7 +181,8 @@ BOOST_AUTO_TEST_CASE (Test)
 	sig.connect(boost::bind(&HelloWorld::test, boost::ref(hello)));
 
 	sh.connect<std::string>(1, boost::bind(&HelloWorld::data, boost::ref(hello), _1));
-	sh.call(1, std::string("Lala"));
+	sh.emit(1, std::string("Lala"));
+	sh.emit(1, std::string("Lulu"));
 	
 	sh.connect<std::vector<std::string> >(2, boost::bind(&HelloWorld::data2, boost::ref(hello), _1));
 	sh.connect<std::vector<std::string> >(2, boost::bind(&HelloWorld::data3, boost::ref(hello), _1));
@@ -157,7 +194,19 @@ BOOST_AUTO_TEST_CASE (Test)
 	v.push_back("Trululu");
 	v.push_back("Trilili");
 	v.push_back("Tralala");
-	sh.call(2, v);
+	sh.emit(2, v);
+	std::vector<std::string> v2;
+	v2.push_back("Miau");
+	v2.push_back("Wuff");
+	sh.emit(2, v2);
+	
+	std::cout << "TICK" << std::endl;
+	sh.tick();
+
+	BOOST_CHECK_THROW(sh.emit(1, v2), std::runtime_error);
+
+	std::cout << "TICK" << std::endl;
+	sh.tick();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
