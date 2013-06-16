@@ -24,11 +24,14 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined (_WIN32)
+#define BOOST_PARAMETER_MAX_ARITY 7
+#endif
+
 #include <EventSystem/Event.h>
 #include <EventSystem/Core/EventLoop.h>
 #include <EventSystem/Emitter.h>
 #include <Core/GameHandle.h>
-#include <ControllerTest/InputWindowX11.h>
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
