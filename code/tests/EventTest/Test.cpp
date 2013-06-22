@@ -39,6 +39,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/signals2.hpp>
 #include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/barrier.hpp>
 
 const EventIdT testEventId = 5;
 const BFG::GameHandle testDestinationId = 1234;
@@ -47,9 +48,23 @@ const BFG::GameHandle testSenderId = 5678;
 bool o1 = false;
 bool o2 = false;
 
+struct Pillar;
 // ---------------------------------------------------------------------------
 struct HelloWorld
 {
+	HelloWorld(Pillar* pillar) :
+	c1(0),
+	c2(0),
+	c3(0),
+	c4(0),
+	mPillar(pillar)
+	{}
+	
+	~HelloWorld()
+	{
+		std::cout << std::dec << "Received " << c1+c2+c3+c4 << " events.\n";
+	}
+	
 	void operator()() const
 	{
 		std::cout << "operator(), World!" << std::endl;
@@ -80,26 +95,26 @@ struct HelloWorld
 		}
 	}
 	
-	void other1(const std::string& s) const
+	void other1(const std::string& s);
+	
+	void other2(const std::string& s)
 	{
-		std::cout << "audio, " << s << std::endl;
-		o1 = true;
+		std::cout << "physics (" << c2 << "), " << s << std::endl;
+		++c2;
 	}
-	void other2(const std::string& s) const
+	void other3(const std::string& s)
 	{
-		std::cout << "physics, " << s << std::endl;
-		o2 = true;
+		std::cout << "view (" << c3 << "), " << s << std::endl;
+		++c3;
 	}
-	void other3(const std::string& s) const
+	void other4(const std::string& s)
 	{
-		std::cout << "view, " << s << std::endl;
-		o1 = true;
+		std::cout << "game (" << c4 << "), " << s << std::endl;
+		++c4;
 	}
-	void other4(const std::string& s) const
-	{
-		std::cout << "game, " << s << std::endl;
-		o2 = true;
-	}
+	
+	int c1,c2,c3,c4;
+	Pillar* mPillar;
 };
 
 struct Callable
@@ -247,6 +262,8 @@ private:
 	std::vector<boost::shared_ptr<boost::thread> > mThreads;
 	
 	bool mFinishing;
+	
+	std::vector<boost::shared_ptr<boost::barrier> > mBarrier;
 };
 
 struct Pillar
@@ -352,7 +369,11 @@ void Synchronizer::distributeToOthers(int id, const PayloadT& payload, Pillar* p
 
 void Synchronizer::finish()
 {
+	for (size_t i=0; i<10; ++i)
+		mBarrier.push_back(boost::make_shared<boost::barrier>(mThreads.size()));
+
 	mFinishing = true;
+	
 	BOOST_FOREACH(boost::shared_ptr<boost::thread> t, mThreads)
 	{
 		std::cout << "Joining thread " << t->get_id() << "\n";
@@ -364,7 +385,6 @@ void Synchronizer::loop(Pillar* pillar)
 {
 	BFG::Clock::StopWatch sw(BFG::Clock::milliSecond);
 
-	//! \todo stop condition
 	while (!mFinishing)
 	{
 		sw.start();
@@ -373,6 +393,22 @@ void Synchronizer::loop(Pillar* pillar)
 
 		pillar->waitRemainingTime(passedTime);
 	}
+	
+	for (std::size_t i=0; i<mBarrier.size(); ++i)
+	{
+		std::cout << "Joining Barrier #" << i << " - " << boost::this_thread::get_id() << std::endl;
+		mBarrier[i]->wait();
+		std::cout << "TICK #" << i << " - " << boost::this_thread::get_id() << std::endl;
+		pillar->tick();
+	}
+	// -- Thread exists here --
+}
+
+void HelloWorld::other1(const std::string& s)
+{
+	std::cout << "audio (" << c1 << "), " << s << std::endl;
+	++c1;
+	mPillar->emit(2, std::string("To View from Audio"));
 }
 
 BOOST_AUTO_TEST_SUITE(TestSuite)
@@ -382,8 +418,6 @@ BOOST_AUTO_TEST_CASE (Test)
 	EventBinder sh;
 	EventBinder sh2;
 
-	// Connect a HelloWorld slot
-	HelloWorld hello;
 /*	
 	sh.connect<std::string>(1, boost::bind(&HelloWorld::data, boost::ref(hello), _1));
 	sh.emit(1, std::string("s1"));
@@ -418,6 +452,9 @@ BOOST_AUTO_TEST_CASE (Test)
 	Pillar physics(sync, ticksPerSecond100);
 	Pillar view(sync, ticksPerSecond100);
 	Pillar game(sync, ticksPerSecond100);
+
+	// Connect a HelloWorld slot
+	HelloWorld hello(&audio);
 	
 	audio.connect<std::string>(1, boost::bind(&HelloWorld::other1, boost::ref(hello), _1));
 	physics.connect<std::string>(1, boost::bind(&HelloWorld::other2, boost::ref(hello), _1));
@@ -425,7 +462,7 @@ BOOST_AUTO_TEST_CASE (Test)
 	game.connect<std::string>(2, boost::bind(&HelloWorld::other4, boost::ref(hello), _1));
 	
 	//audio.connect<std::string>(1, &HelloWorld::other1, hello);
-	for (int i=0; i<300000; ++i)
+	for (int i=0; i<1000000; ++i)
 	{
 		physics.emit(1, std::string("Physics Boom"));
 		audio.emit(2, std::string("Audio Boom"));
