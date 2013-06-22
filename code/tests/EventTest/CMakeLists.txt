@@ -27,6 +27,7 @@ SET_TARGET_PROPERTIES(bfgEventTest PROPERTIES OUTPUT_NAME_DEBUG "bfgEventTest_d"
 TARGET_LINK_LIBRARIES(bfgEventTest
 	${Boost_LIBRARIES}
 	${BoostLog_LIBRARIES}
+	bfgCore
 	bfgEventCore
 )
 
