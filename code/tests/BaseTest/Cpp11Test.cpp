@@ -12,6 +12,21 @@ struct Cpp11Notification
 	}
 };
 
+//! Testing move semantics: An object which can only be moved, but not copied.
+struct Object : boost::noncopyable
+{
+	Object(const std::string& msg) : msg(msg) {}
+	Object(Object&& o) : msg(std::move(o.msg)) {}
+	Object& operator = (Object&& o){ msg = std::move(o.msg); return *this; }
+	std::string msg;
+};
+
+//! Testing move semantics: Creates an 'Object' and returns it by moving it back.
+Object createObject()
+{
+	return std::move(Object("Testing move semantics"));
+}
+
 BOOST_GLOBAL_FIXTURE (Cpp11Notification);
 
 BOOST_AUTO_TEST_SUITE(Cpp11TestSuite)
@@ -31,10 +46,18 @@ BOOST_AUTO_TEST_CASE (testLambda)
 	std::for_each(v.begin(), v.end(), [&](int& i) { return i=i*i; });
 }
 
+BOOST_AUTO_TEST_CASE (testMoveSemantics)
+{
+	std::vector<Object> v;
+	v.emplace_back(createObject());
+	BOOST_CHECK_EQUAL(v.size(), 1);
+	BOOST_CHECK(v[0].msg == "Testing move semantics");
+}
+
 BOOST_AUTO_TEST_CASE (testNullPtr)
 {
 	int* p = nullptr;
-	p = p;
+	std::cout << "nullptr: " << p << std::endl;
 }
 
 BOOST_AUTO_TEST_CASE (testStaticAssert)
