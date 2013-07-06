@@ -30,6 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/test/unit_test.hpp>
 
 #include <Base/Logger.h>
+#include <EventSystem/Get.h>
 #include <Core/GameHandle.h>
 
 // ---------------------------------------------------------------------------

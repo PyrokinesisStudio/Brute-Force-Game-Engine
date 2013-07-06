@@ -195,7 +195,10 @@ struct ServerState: public SynchronizationTestState
 			}
 		}
 		default:
-			DEFAULT_HANDLE_EVENT(e);
+			warnlog << BOOST_CURRENT_FUNCTION << ": Unable to handle EventId: "
+            << (e)->id()
+            << " Destination: " << (e)->destination()
+            << " Sender: " << (e)->sender();
 		}
 	}
 
@@ -340,7 +343,10 @@ struct ServerState: public SynchronizationTestState
 			break;
 		}
 		default:
-			DEFAULT_HANDLE_EVENT(e);
+			warnlog << BOOST_CURRENT_FUNCTION << ": Unable to handle EventId: "
+            << (e)->id()
+            << " Destination: " << (e)->destination()
+            << " Sender: " << (e)->sender();
 	}
 
 	}
@@ -449,7 +455,8 @@ struct ClientState : public SynchronizationTestState
 			break;
 		}
 		default:
-			DEFAULT_HANDLE_EVENT_ET(e);
+			warnlog << BOOST_CURRENT_FUNCTION << ": Unable to handle EventId: "
+            << (e)->id();   
 		}
 	}
 

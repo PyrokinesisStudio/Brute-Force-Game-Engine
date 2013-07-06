@@ -31,6 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/CharArray.h>
 #include <Core/GameHandle.h>
 #include <Core/Math.h>
+#include <EventSystem/Get.h>
 #include <Network/Network.h>
 #include <Physics/Event.h>
 #include <View/Event.h>

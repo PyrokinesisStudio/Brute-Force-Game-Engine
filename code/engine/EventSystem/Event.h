@@ -30,7 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <EventSystem/Event_fwd.h>
 
 #include <Base/Deprecated.h>
-#include <EventSystem/Get.h>
+//#include <EventSystem/Get.h>
 #include <EventSystem/Core/EventDefs.h>
 
 namespace BFG {

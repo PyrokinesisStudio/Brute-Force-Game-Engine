@@ -29,6 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/Logger.h>
 #include <Core/ClockUtils.h>
 #include <EventSystem/Core/EventLoop.h>
+#include <EventSystem/Get.h>
 #include <Controller/State.h>
 #include <Controller/ControllerEvents.h>
 
