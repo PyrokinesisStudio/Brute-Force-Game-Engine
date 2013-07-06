@@ -48,6 +48,15 @@ const BFG::GameHandle testSenderId = 5678;
 bool o1 = false;
 bool o2 = false;
 
+struct LoopData
+{
+	LoopData(BFG::s32 tslt) :
+	mTimeSinceLastTick(tslt)
+	{}
+
+	BFG::s32 mTimeSinceLastTick;
+};
+
 struct Pillar;
 // ---------------------------------------------------------------------------
 struct HelloWorld
@@ -113,6 +122,11 @@ struct HelloWorld
 		++c4;
 	}
 	
+	void update(const LoopData ld)
+	{
+		std::cout << "++++++++++update+++++++++++(" << ld.mTimeSinceLastTick << ")" << std::endl;
+	}
+
 	int c1,c2,c3,c4;
 	Pillar* mPillar;
 };
@@ -124,6 +138,33 @@ struct Callable
 	
 	virtual void call() = 0;
 };
+
+// struct LoopBinding : public Callable
+// {
+// 	typedef boost::signals2::signal<void (LoopData)> SignalT;
+// 
+// 	LoopBinding() : 
+// 	mSignal(new SignalT)
+// 	{}
+// 
+// 	template <typename FnT>
+// 	void connect(FnT fn)
+// 	{
+// 		mSignal->connect(fn);
+// 	}
+// 
+// 	virtual void call()
+// 	{
+// 		signal()();
+// 	}
+// private:
+// 	const SignalT& signal() const
+// 	{
+// 		return *mSignal;
+// 	}
+// 
+// 	boost::shared_ptr<SignalT> mSignal;
+// };
 
 template <typename PayloadT>
 struct Binding : public Callable
@@ -257,7 +298,7 @@ struct Synchronizer
 private:
 	void loop(Pillar* pillar);
 
-	int mNumberThreads;
+	int mNumberThreads; //! \todo unused
 	std::vector<Pillar*> mPillars;
 	std::vector<boost::shared_ptr<boost::thread> > mThreads;
 	
@@ -268,11 +309,13 @@ private:
 
 struct Pillar
 {
-	Pillar(Synchronizer& synchronizer, int ticksPerSecond) :
+	Pillar(Synchronizer& synchronizer, BFG::s32 ticksPerSecond) :
 	mSynchronizer(synchronizer),
-	mTicksPerSecond(ticksPerSecond)
+	mTicksPerSecond(ticksPerSecond),
+	sw(BFG::Clock::milliSecond)
 	{
 		mSynchronizer.add(this);
+		sw.start();
 	}
 	
 	// Speichert ein Payload, das später ausgeliefert wird an einen Handler.
@@ -299,6 +342,12 @@ struct Pillar
 		mEventBinder.connect<PayloadT>(id, fn);
 	}
 */
+	template <typename FnT>
+	void connectLoop(FnT loopFn)
+	{
+		mLoopBinding.connect(loopFn);
+	}
+
 	template <typename PayloadT, typename FnT>
 	void connect(int id, FnT fn)
 	{
@@ -320,10 +369,28 @@ struct Pillar
 
 	void tick()
 	{
+		mLoopBinding.emit(LoopData(sw.restart()));
+		mLoopBinding.call();
+
 		mEventBinder.tick();
+
+		waitRemainingTime(sw.stop());
+
+			// | TTTLLW | TTTTTL |
+			// | LLTTTW | LTTTTT |
 	}
 	
-	void waitRemainingTime(int consumedTime)
+// 	void calculateFrameTime(BFG::s32 consumedTime)
+// 	{
+// 		BFG::s32 plannedTime = 1000 / mTicksPerSecond;
+// 		BFG::s32 remainingTime = plannedTime - consumedTime;
+// 		if (remainingTime > 0)
+// 			mTimeSinceLastTick = plannedTime;
+// 		else
+// 			mTimeSinceLastTick = consumedTime;
+// 	}
+
+	void waitRemainingTime(BFG::s32 consumedTime)
 	{
 		BFG::s32 plannedTime = 1000 / mTicksPerSecond;
 		BFG::s32 remainingTime = plannedTime - consumedTime;
@@ -335,10 +402,13 @@ struct Pillar
 	}
 	
 private:
-	int mTicksPerSecond;
+	BFG::Clock::StopWatch sw;
+	BFG::s32 mTicksPerSecond;
 	Synchronizer& mSynchronizer;
 	EventBinder mEventBinder;
 	boost::mutex mEmitLocker;
+
+	Binding<LoopData> mLoopBinding;
 };
 
 Synchronizer::~Synchronizer()
@@ -383,15 +453,9 @@ void Synchronizer::finish()
 
 void Synchronizer::loop(Pillar* pillar)
 {
-	BFG::Clock::StopWatch sw(BFG::Clock::milliSecond);
-
 	while (!mFinishing)
 	{
-		sw.start();
 		pillar->tick();
-		BFG::s32 passedTime = sw.stop();
-
-		pillar->waitRemainingTime(passedTime);
 	}
 	
 	for (std::size_t i=0; i<mBarrier.size(); ++i)
@@ -401,13 +465,15 @@ void Synchronizer::loop(Pillar* pillar)
 		std::cout << "TICK #" << i << " - " << boost::this_thread::get_id() << std::endl;
 		pillar->tick();
 	}
-	// -- Thread exists here --
+	// -- Thread exits here --
 }
 
 void HelloWorld::other1(const std::string& s)
 {
 	std::cout << "audio (" << c1 << "), " << s << std::endl;
 	++c1;
+	boost::this_thread::sleep(boost::posix_time::milliseconds(300));
+	std::cout << "audio slept 300ms" << std::endl;
 	mPillar->emit(2, std::string("To View from Audio"));
 }
 
@@ -456,19 +522,20 @@ BOOST_AUTO_TEST_CASE (Test)
 	// Connect a HelloWorld slot
 	HelloWorld hello(&audio);
 	
+	audio.connectLoop(boost::bind(&HelloWorld::update, boost::ref(hello), _1));
 	audio.connect<std::string>(1, boost::bind(&HelloWorld::other1, boost::ref(hello), _1));
 	physics.connect<std::string>(1, boost::bind(&HelloWorld::other2, boost::ref(hello), _1));
 	view.connect<std::string>(2, boost::bind(&HelloWorld::other3, boost::ref(hello), _1));
 	game.connect<std::string>(2, boost::bind(&HelloWorld::other4, boost::ref(hello), _1));
 	
 	//audio.connect<std::string>(1, &HelloWorld::other1, hello);
-	for (int i=0; i<1000000; ++i)
+	for (int i=0; i<5; ++i)
 	{
 		physics.emit(1, std::string("Physics Boom"));
 		audio.emit(2, std::string("Audio Boom"));
 		view.emit(2, std::string("View Boom"));
 		game.emit(1, std::string("Game Boom"));
-//		boost::this_thread::sleep(boost::posix_time::milliseconds(300));
+		boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 	}
 	physics.emit(1, std::string("Ende"));
 	sync.finish();
