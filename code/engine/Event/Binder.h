@@ -78,7 +78,7 @@ struct Binder
 
 	
 	template <typename PayloadT, typename FnT>
-	void connect(int id, FnT fn, const int destination)
+	void connect(IdT id, FnT fn, const DestinationIdT destination)
 	{
 		Callable* c = NULL;
 		typename ConnectionMapT::iterator it = mSignals.find(boost::make_tuple(id, destination));
@@ -99,7 +99,7 @@ struct Binder
 	
 	// Speichert ein Payload, das später ausgeliefert wird an einen Handler.
 	template <typename PayloadT>
-	void emit(int id, const PayloadT& payload, const int destination)
+	void emit(IdT id, const PayloadT& payload, const DestinationIdT destination)
 	{
 		typename ConnectionMapT::iterator it = mSignals.find(boost::make_tuple(id, destination));
 		if (it != mSignals.end())
