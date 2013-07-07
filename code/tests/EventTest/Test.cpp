@@ -106,12 +106,12 @@ BOOST_AUTO_TEST_CASE (Test)
 	HelloWorld hello(&audio, testDestinationId);
 	HelloWorld hello2(&audio, testDestinationId2);
 	
-	audio.connectLoop(boost::bind(&HelloWorld::update, boost::ref(hello), _1));
-	audio.connect<std::string>(1, boost::bind(&HelloWorld::other1, boost::ref(hello), _1, _2), testDestinationId);
-	audio.connect<std::string>(1, boost::bind(&HelloWorld::other1, boost::ref(hello2), _1, _2));
-	physics.connect<std::string>(1, boost::bind(&HelloWorld::other2, boost::ref(hello), _1, _2));
-	view.connect<std::string>(2, boost::bind(&HelloWorld::other3, boost::ref(hello), _1, _2));
-	game.connect<std::string>(2, boost::bind(&HelloWorld::other4, boost::ref(hello), _1, _2));
+	audio.connectLoop(&hello, &HelloWorld::update);
+	audio.connect(1, &hello, &HelloWorld::other1, testDestinationId);
+ 	audio.connect(1, &hello2, &HelloWorld::other1);
+ 	physics.connect(1, &hello, &HelloWorld::other2);
+ 	view.connect(2, &hello, &HelloWorld::other3);
+ 	game.connect(2, &hello, &HelloWorld::other4);
 	
 	//audio.connect<std::string>(1, &HelloWorld::other1, hello);
 	for (int i=0; i<2; ++i)

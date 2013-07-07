@@ -78,18 +78,20 @@ struct BasicLane
 		mBinder.template emit<PayloadT>(id, payload, destination, sender);
 	}
 
-	template <typename FnT>
-	void connectLoop(FnT loopFn)
+	template <typename ObjectT>
+	void connectLoop(ObjectT* object,
+	                 void(ObjectT::*fn)(const TickData))
 	{
-		mLoopBinding.connect(loopFn);
+		mLoopBinding.connect(boost::bind(fn, boost::ref(object), _1));
 	}
 
-	template <typename PayloadT, typename FnT>
-	void connect(const IdT id, 
-	             FnT fn,
+	template <typename PayloadT, typename ObjectT>
+	void connect(const IdT id,
+	             ObjectT* object,
+	             void(ObjectT::*fn)(const PayloadT&, const SenderIdT&),
 	             const DestinationIdT destination = static_cast<DestinationIdT>(0))
 	{
-		mBinder.template connect<PayloadT>(id, fn, destination);
+		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1, _2), destination);
 	}
 
 	void tick()
