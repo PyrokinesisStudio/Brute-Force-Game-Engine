@@ -54,36 +54,6 @@ struct HelloWorld
 		std::cout << std::dec << "Received " << c1+c2+c3+c4 << " events.\n";
 	}
 	
-	void operator()() const
-	{
-		std::cout << "operator(), World!" << std::endl;
-	}
-	
-	void test() const
-	{
-		std::cout << "test, Test!" << std::endl;
-	}
-	
-	void data(const std::string& s) const
-	{
-		std::cout << "data, " << s << std::endl;
-	}
-	
-	void data2(const std::vector<std::string>& v) const
-	{
-		BOOST_FOREACH(const std::string& s, v)
-		{
-			std::cout << "data2, " << s << std::endl;
-		}
-	}
-	void data3(const std::vector<std::string>& v) const
-	{
-		BOOST_FOREACH(const std::string& s, v)
-		{
-			std::cout << "data3, " << s << std::endl;
-		}
-	}
-	
 	void other1(const std::string& s);
 	
 	void other2(const std::string& s)
