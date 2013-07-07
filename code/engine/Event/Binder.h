@@ -81,12 +81,12 @@ struct Binder
 	void connect(IdT id, FnT fn, const DestinationIdT destination)
 	{
 		Callable* c = NULL;
-		typename ConnectionMapT::iterator it = mSignals.find(boost::make_tuple(id, destination));
-		if (it == mSignals.end())
+		typename ConnectionMapT::iterator it = mBindings.find(boost::make_tuple(id, destination));
+		if (it == mBindings.end())
 		{
 			c = new Binding<PayloadT>(); 
 			ConnectionT ea = {id, destination, c};
-			mSignals.insert(ea);
+			mBindings.insert(ea);
 		}
 		else
 		{
@@ -101,8 +101,8 @@ struct Binder
 	template <typename PayloadT>
 	void emit(IdT id, const PayloadT& payload, const DestinationIdT destination)
 	{
-		typename ConnectionMapT::iterator it = mSignals.find(boost::make_tuple(id, destination));
-		if (it != mSignals.end())
+		typename ConnectionMapT::iterator it = mBindings.find(boost::make_tuple(id, destination));
+		if (it != mBindings.end())
 		{
 			Callable* c = boost::any_cast<Callable*>(it->mBinding);
 			Binding<PayloadT>* b = static_cast<Binding<PayloadT>*>(c);
@@ -123,14 +123,14 @@ struct Binder
 	// Verarbeitet alle events, die mit emit() gequeued wurden.
 	void tick()
 	{
-		BOOST_FOREACH(const ConnectionT& connection, mSignals)
+		BOOST_FOREACH(const ConnectionT& connection, mBindings)
 		{
 			Callable* c = boost::any_cast<Callable*>(connection.mBinding);
 			c->call();
 		}
 	}
 	
-	ConnectionMapT mSignals;
+	ConnectionMapT mBindings;
 };
 
 } // namespace Event
