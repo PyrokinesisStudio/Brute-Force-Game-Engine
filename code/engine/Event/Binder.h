@@ -40,45 +40,52 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Event { 
 
-typedef boost::multi_index_container
-<
-	Connection, 
-	boost::multi_index::indexed_by
+//! The Binder holds the map of EventIds with its corresponding Bindings 
+template <typename _IdT, typename _DestinationIdT>
+struct Binder
+{
+	typedef _IdT IdT;
+	typedef _DestinationIdT DestinationIdT;
+	
+	typedef Connection<IdT, DestinationIdT> ConnectionT;
+	
+	typedef boost::multi_index_container
 	<
-		boost::multi_index::ordered_unique
+		ConnectionT, 
+		boost::multi_index::indexed_by
 		<
-			boost::multi_index::composite_key
-			< 
-				Connection,
-				boost::multi_index::member
-				<
-					Connection,
-					Connection::EventIdT,
-					&Connection::mEventId
-				>,
-				boost::multi_index::member
-				<
-					Connection,
-					Connection::DestionationIdT,
-					&Connection::mDestinationId
+			boost::multi_index::ordered_unique
+			<
+				boost::multi_index::composite_key
+				< 
+					ConnectionT,
+					boost::multi_index::member
+					<
+						ConnectionT,
+						IdT,
+						&ConnectionT::mEventId
+					>,
+					boost::multi_index::member
+					<
+						ConnectionT,
+						DestinationIdT,
+						&ConnectionT::mDestinationId
+					>
 				>
 			>
 		>
-	>
-> ConnectionMapT;
+	> ConnectionMapT;
 
-//! The Binder holds the map of EventIds with its corresponding Bindings 
-struct Binder
-{
+	
 	template <typename PayloadT, typename FnT>
 	void connect(int id, FnT fn, const int destination)
 	{
 		Callable* c = NULL;
-		ConnectionMapT::iterator it = mSignals.find(boost::make_tuple(id, destination));
+		typename ConnectionMapT::iterator it = mSignals.find(boost::make_tuple(id, destination));
 		if (it == mSignals.end())
 		{
 			c = new Binding<PayloadT>(); 
-			Connection ea = {id, destination, c};
+			ConnectionT ea = {id, destination, c};
 			mSignals.insert(ea);
 		}
 		else
@@ -94,7 +101,7 @@ struct Binder
 	template <typename PayloadT>
 	void emit(int id, const PayloadT& payload, const int destination)
 	{
-		ConnectionMapT::iterator it = mSignals.find(boost::make_tuple(id, destination));
+		typename ConnectionMapT::iterator it = mSignals.find(boost::make_tuple(id, destination));
 		if (it != mSignals.end())
 		{
 			Callable* c = boost::any_cast<Callable*>(it->mBinding);
@@ -107,7 +114,7 @@ struct Binder
 	// Verarbeitet alle events, die mit emit() gequeued wurden.
 	void tick()
 	{
-		BOOST_FOREACH(const ConnectionMapT::value_type& connection, mSignals)
+		BOOST_FOREACH(const ConnectionT& connection, mSignals)
 		{
 			Callable* c = boost::any_cast<Callable*>(connection.mBinding);
 			c->call();

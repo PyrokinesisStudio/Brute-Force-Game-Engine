@@ -32,18 +32,16 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Event { 
 
-template <typename _EventIdT, typename _DestionationIdT>
-struct BasicConnection
+template <typename _IdT, typename _DestionationIdT>
+struct Connection
 {
-	typedef _EventIdT EventIdT;
+	typedef _IdT IdT;
 	typedef _DestionationIdT DestionationIdT;
 
-	EventIdT mEventId;
+	IdT mEventId;
 	DestionationIdT mDestinationId;
 	boost::any mBinding;
 };
-
-typedef BasicConnection<int,int> Connection;
 
 } // namespace Event
 } // namespace BFG

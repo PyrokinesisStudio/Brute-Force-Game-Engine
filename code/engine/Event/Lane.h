@@ -46,6 +46,7 @@ struct BasicLane
 	typedef _IdT IdT;
 	typedef _DestinationIdT DestinationIdT;
 	typedef BasicSynchronizer<BasicLane<IdT, DestinationIdT> > SynchronizerT;
+	typedef Binder<IdT, DestinationIdT> BinderT;
 	
 	BasicLane(SynchronizerT& synchronizer, s32 ticksPerSecond) :
 	mSynchronizer(synchronizer),
@@ -60,14 +61,14 @@ struct BasicLane
 	template <typename PayloadT>
 	void emit(IdT id, const PayloadT& payload, const DestinationIdT destination = static_cast<DestinationIdT>(0))
 	{
-		mBinder.emit<PayloadT>(id, payload, destination);
+		mBinder.template emit<PayloadT>(id, payload, destination);
 		mSynchronizer.distributeToOthers(id, payload, this, destination);
 	}
 	
 	template <typename PayloadT>
 	void emitFromOther(IdT id, const PayloadT& payload, const DestinationIdT destination)
 	{
-		mBinder.emit<PayloadT>(id, payload, destination);
+		mBinder.template emit<PayloadT>(id, payload, destination);
 	}
 
 	template <typename FnT>
@@ -79,7 +80,7 @@ struct BasicLane
 	template <typename PayloadT, typename FnT>
 	void connect(IdT id, FnT fn, DestinationIdT destination = static_cast<DestinationIdT>(0))
 	{
-		mBinder.connect<PayloadT>(id, fn, destination);
+		mBinder.template connect<PayloadT>(id, fn, destination);
 	}
 
 	void tick()
@@ -105,7 +106,7 @@ private:
 	Clock::StopWatch sw;
 	s32 mPlannedTimeInMs;
 	SynchronizerT& mSynchronizer;
-	Binder mBinder;
+	BinderT mBinder;
 
 	Binding<TickData> mLoopBinding;
 };
