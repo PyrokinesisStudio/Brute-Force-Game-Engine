@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE (Test)
 	//audio.connect<std::string>(1, &HelloWorld::other1, hello);
 	for (int i=0; i<2; ++i)
 	{
-		physics.emit(1, std::string("Physics Boom"));
+		physics.emit(1, 5); // provoking an IncompatibleTypeException
 		audio.emit(2, std::string("Audio Boom"));
 		view.emit(2, std::string("View Boom"));
 		game.emit(1, std::string("Game Boom"), 15);
