@@ -106,7 +106,16 @@ struct Binder
 		{
 			Callable* c = boost::any_cast<Callable*>(it->mBinding);
 			Binding<PayloadT>* b = static_cast<Binding<PayloadT>*>(c);
-			b->emit(payload);
+			try
+			{
+				b->emit(payload);
+			}
+			catch (IncompatibleTypeException& ex)
+			{
+				//! \todo Report about type differences.
+				//!       Also mention id and destination.
+				std::cout << ex.what() << std::endl;
+			}
 		}
 		//! \todo Else: event id not found in this EventBinder
 	}

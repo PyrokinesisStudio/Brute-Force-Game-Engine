@@ -36,9 +36,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/thread/mutex.hpp>
 
 #include <Event/Callable.h>
+#include <Event/IncompatibleTypeException.h>
 
 namespace BFG {
-namespace Event { 
+namespace Event {
 
 //! This is the binding of a collection of functions (boost::signals) with a collection of payloads
 template <typename PayloadT>
@@ -62,7 +63,12 @@ struct Binding : public Callable
 		boost::mutex::scoped_lock sl(mFlipLocker);
 		
 		if (typeid(PayloadT) != *mTypeInfo)
-			throw std::runtime_error("Incompatible types");
+			throw IncompatibleTypeException
+			(
+				"Binding::emit: Types incompatible.",
+				&typeid(PayloadT),
+				mTypeInfo
+			);
 		
 		mBackPayloads.push_back(payload);
 	}
