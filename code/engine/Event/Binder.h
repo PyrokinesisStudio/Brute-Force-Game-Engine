@@ -40,7 +40,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Event { 
 
-//! The Binder holds the map of EventIds with its corresponding Bindings 
+//! The Binder holds the map of EventIds with its corresponding Bindings
 template <typename _IdT, typename _DestinationIdT>
 struct Binder
 {
@@ -51,13 +51,13 @@ struct Binder
 	
 	typedef boost::multi_index_container
 	<
-		ConnectionT, 
+		ConnectionT,
 		boost::multi_index::indexed_by
 		<
 			boost::multi_index::ordered_unique
 			<
 				boost::multi_index::composite_key
-				< 
+				<
 					ConnectionT,
 					boost::multi_index::member
 					<
