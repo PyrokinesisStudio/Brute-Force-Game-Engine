@@ -341,8 +341,8 @@ struct Pillar
 	mTicksPerSecond(ticksPerSecond),
 	sw(BFG::Clock::milliSecond)
 	{
-		mSynchronizer.add(this);
 		sw.start();
+		mSynchronizer.add(this);
 	}
 	
 	// Speichert ein Payload, das später ausgeliefert wird an einen Handler.
