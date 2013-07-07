@@ -42,11 +42,13 @@ namespace BFG {
 namespace Event {
 
 //! This is the binding of a collection of functions (boost::signals) with a collection of payloads
-template <typename PayloadT>
+template <typename PayloadT, typename _SenderIdT>
 struct Binding : public Callable
 {
-	typedef boost::signals2::signal<void (const PayloadT&)> SignalT;
-	
+	typedef _SenderIdT SenderIdT;
+	typedef boost::signals2::signal<void (const PayloadT&, const SenderIdT&)> SignalT;
+	typedef boost::tuple<PayloadT, SenderIdT> BufferT;
+
 	Binding() :
 	mSignal(new SignalT),
 	mTypeInfo(&typeid(PayloadT))
@@ -58,7 +60,7 @@ struct Binding : public Callable
 		mSignal->connect(fn);
 	}
 
-	void emit(const PayloadT& payload)
+	void emit(const PayloadT& payload, const SenderIdT& sender)
 	{
 		boost::mutex::scoped_lock sl(mFlipLocker);
 		
@@ -70,15 +72,15 @@ struct Binding : public Callable
 				mTypeInfo
 			);
 		
-		mBackPayloads.push_back(payload);
+		mBackPayloads.push_back(boost::make_tuple(payload, sender));
 	}
 	
 	virtual void call()
 	{
 		flipPayloads();
-		BOOST_FOREACH(const PayloadT& payload, mFrontPayloads)
+		BOOST_FOREACH(const BufferT& buffer, mFrontPayloads)
 		{
-			signal()(payload);
+			signal()(buffer.get<0>(), buffer.get<1>());
 		}
 		mFrontPayloads.clear();
 	}
@@ -95,8 +97,8 @@ private:
 		return *mSignal;
 	}
 
-	std::vector<PayloadT> mFrontPayloads;
-	std::vector<PayloadT> mBackPayloads;
+	std::vector<BufferT> mFrontPayloads;
+	std::vector<BufferT> mBackPayloads;
 
 	boost::shared_ptr<SignalT> mSignal;
 	const std::type_info* mTypeInfo;

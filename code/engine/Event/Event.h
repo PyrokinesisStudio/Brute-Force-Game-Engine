@@ -33,7 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Event {
 
-typedef BasicLane<u32, GameHandle> Lane; 
+typedef BasicLane<u32, GameHandle, GameHandle> Lane; 
 typedef BasicSynchronizer<Lane> Synchronizer;
 
 } // namespace Event

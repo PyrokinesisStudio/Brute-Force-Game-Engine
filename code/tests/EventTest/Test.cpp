@@ -34,6 +34,7 @@ const int testEventId = 5;
 const BFG::GameHandle testDestinationId = 15;
 const BFG::GameHandle testDestinationId2 = 16;
 const BFG::GameHandle testSenderId = 5678;
+const BFG::GameHandle testSenderId2 = 91011;
 
 struct HelloWorld
 {
@@ -51,21 +52,21 @@ struct HelloWorld
 		std::cout << std::dec << "Received " << c1+c2+c3+c4 << " events.\n";
 	}
 	
-	void other1(const std::string& s);
+	void other1(const std::string& s, const BFG::GameHandle& sender);
 	
-	void other2(const std::string& s)
+	void other2(const std::string& s, const BFG::GameHandle& sender)
 	{
-		std::cout << "physics (" << c2 << "), " << s << std::endl;
+		std::cout << "physics (#" << c2 << ") from (" << BFG::stringify(sender) << ") , " << s << std::endl;
 		++c2;
 	}
-	void other3(const std::string& s)
+	void other3(const std::string& s, const BFG::GameHandle& sender)
 	{
-		std::cout << "view (" << c3 << "), " << s << std::endl;
+		std::cout << "view (#" << c3 << ") from (" << BFG::stringify(sender) << ") , " << s << std::endl;
 		++c3;
 	}
-	void other4(const std::string& s)
+	void other4(const std::string& s, const BFG::GameHandle& sender)
 	{
-		std::cout << "game (" << c4 << "), " << s << std::endl;
+		std::cout << "game (#" << c4 << ") from (" << BFG::stringify(sender) << "), " << s << std::endl;
 		++c4;
 	}
 	
@@ -78,9 +79,9 @@ struct HelloWorld
 	BFG::Event::Lane* mLane;
 };
 
-void HelloWorld::other1(const std::string& s)
+void HelloWorld::other1(const std::string& s, const BFG::GameHandle& sender)
 {
-	std::cout << "audio[" << mId << "]" << "(" << c1 << "), " << s << std::endl;
+	std::cout << "audio[" << mId << "]" << "(#" << c1 << ") from (" << BFG::stringify(sender) << ") , " << s << std::endl;
 	++c1;
 	boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 	std::cout << "audio slept 300ms" << std::endl;
@@ -106,18 +107,18 @@ BOOST_AUTO_TEST_CASE (Test)
 	HelloWorld hello2(&audio, testDestinationId2);
 	
 	audio.connectLoop(boost::bind(&HelloWorld::update, boost::ref(hello), _1));
-	audio.connect<std::string>(1, boost::bind(&HelloWorld::other1, boost::ref(hello), _1), testDestinationId);
-	audio.connect<std::string>(1, boost::bind(&HelloWorld::other1, boost::ref(hello2), _1));
-	physics.connect<std::string>(1, boost::bind(&HelloWorld::other2, boost::ref(hello), _1));
-	view.connect<std::string>(2, boost::bind(&HelloWorld::other3, boost::ref(hello), _1));
-	game.connect<std::string>(2, boost::bind(&HelloWorld::other4, boost::ref(hello), _1));
+	audio.connect<std::string>(1, boost::bind(&HelloWorld::other1, boost::ref(hello), _1, _2), testDestinationId);
+	audio.connect<std::string>(1, boost::bind(&HelloWorld::other1, boost::ref(hello2), _1, _2));
+	physics.connect<std::string>(1, boost::bind(&HelloWorld::other2, boost::ref(hello), _1, _2));
+	view.connect<std::string>(2, boost::bind(&HelloWorld::other3, boost::ref(hello), _1, _2));
+	game.connect<std::string>(2, boost::bind(&HelloWorld::other4, boost::ref(hello), _1, _2));
 	
 	//audio.connect<std::string>(1, &HelloWorld::other1, hello);
 	for (int i=0; i<2; ++i)
 	{
 		physics.emit(1, 5); // provoking an IncompatibleTypeException
-		audio.emit(2, std::string("Audio Boom"));
-		view.emit(2, std::string("View Boom"));
+		audio.emit(2, std::string("Audio Boom"), 0, testSenderId2);
+		view.emit(2, std::string("View Boom"), 0, testSenderId);
 		game.emit(1, std::string("Game Boom"), testDestinationId);
 		boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 	}

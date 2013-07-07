@@ -41,11 +41,12 @@ namespace BFG {
 namespace Event { 
 
 //! The Binder holds the map of EventIds with its corresponding Bindings
-template <typename _IdT, typename _DestinationIdT>
+template <typename _IdT, typename _DestinationIdT, typename _SenderIdT>
 struct Binder
 {
 	typedef _IdT IdT;
 	typedef _DestinationIdT DestinationIdT;
+	typedef _SenderIdT SenderIdT;
 	
 	typedef Connection<IdT, DestinationIdT> ConnectionT;
 	
@@ -78,13 +79,15 @@ struct Binder
 
 	
 	template <typename PayloadT, typename FnT>
-	void connect(IdT id, FnT fn, const DestinationIdT destination)
+	void connect(const IdT id,
+	             FnT fn, 
+	             const DestinationIdT destination)
 	{
 		Callable* c = NULL;
 		typename ConnectionMapT::iterator it = mBindings.find(boost::make_tuple(id, destination));
 		if (it == mBindings.end())
 		{
-			c = new Binding<PayloadT>(); 
+			c = new Binding<PayloadT, SenderIdT>(); 
 			ConnectionT ea = {id, destination, c};
 			mBindings.insert(ea);
 		}
@@ -93,22 +96,25 @@ struct Binder
 			c = boost::any_cast<Callable*>(it->mBinding);
 		}
 
-		Binding<PayloadT>* b = static_cast<Binding<PayloadT>*>(c);
+		Binding<PayloadT, SenderIdT>* b = static_cast<Binding<PayloadT, SenderIdT>*>(c);
 		b->connect(fn);
 	}
 	
 	// Speichert ein Payload, das später ausgeliefert wird an einen Handler.
 	template <typename PayloadT>
-	void emit(IdT id, const PayloadT& payload, const DestinationIdT destination)
+	void emit(const IdT id,
+	          const PayloadT& payload,
+	          const DestinationIdT destination,
+	          const SenderIdT sender)
 	{
 		typename ConnectionMapT::iterator it = mBindings.find(boost::make_tuple(id, destination));
 		if (it != mBindings.end())
 		{
 			Callable* c = boost::any_cast<Callable*>(it->mBinding);
-			Binding<PayloadT>* b = static_cast<Binding<PayloadT>*>(c);
+			Binding<PayloadT, SenderIdT>* b = static_cast<Binding<PayloadT, SenderIdT>*>(c);
 			try
 			{
-				b->emit(payload);
+				b->emit(payload, sender);
 			}
 			catch (IncompatibleTypeException& ex)
 			{

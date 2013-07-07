@@ -40,13 +40,14 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Event { 
 
-template <typename _IdT, typename _DestinationIdT>
+template <typename _IdT, typename _DestinationIdT, typename _SenderIdT>
 struct BasicLane
 {
 	typedef _IdT IdT;
 	typedef _DestinationIdT DestinationIdT;
-	typedef BasicSynchronizer<BasicLane<IdT, DestinationIdT> > SynchronizerT;
-	typedef Binder<IdT, DestinationIdT> BinderT;
+	typedef _SenderIdT SenderIdT;
+	typedef BasicSynchronizer<BasicLane<IdT, DestinationIdT, SenderIdT> > SynchronizerT;
+	typedef Binder<IdT, DestinationIdT, SenderIdT> BinderT;
 	
 	BasicLane(SynchronizerT& synchronizer, s32 ticksPerSecond) :
 	mSynchronizer(synchronizer),
@@ -59,16 +60,22 @@ struct BasicLane
 	
 	// Speichert ein Payload, das später ausgeliefert wird an einen Handler.
 	template <typename PayloadT>
-	void emit(IdT id, const PayloadT& payload, const DestinationIdT destination = static_cast<DestinationIdT>(0))
+	void emit(const IdT id, 
+	          const PayloadT& payload, 
+	          const DestinationIdT destination = static_cast<DestinationIdT>(0), 
+	          const SenderIdT sender = static_cast<SenderIdT>(0))
 	{
-		mBinder.template emit<PayloadT>(id, payload, destination);
-		mSynchronizer.distributeToOthers(id, payload, this, destination);
+		mBinder.template emit<PayloadT>(id, payload, destination, sender);
+		mSynchronizer.distributeToOthers(id, payload, this, destination, sender);
 	}
 	
 	template <typename PayloadT>
-	void emitFromOther(IdT id, const PayloadT& payload, const DestinationIdT destination)
+	void emitFromOther(const IdT id,
+	                   const PayloadT& payload,
+	                   const DestinationIdT destination,
+	                   const SenderIdT sender)
 	{
-		mBinder.template emit<PayloadT>(id, payload, destination);
+		mBinder.template emit<PayloadT>(id, payload, destination, sender);
 	}
 
 	template <typename FnT>
@@ -78,14 +85,16 @@ struct BasicLane
 	}
 
 	template <typename PayloadT, typename FnT>
-	void connect(IdT id, FnT fn, DestinationIdT destination = static_cast<DestinationIdT>(0))
+	void connect(const IdT id, 
+	             FnT fn,
+	             const DestinationIdT destination = static_cast<DestinationIdT>(0))
 	{
 		mBinder.template connect<PayloadT>(id, fn, destination);
 	}
 
 	void tick()
 	{
-		mLoopBinding.emit(TickData(mTickWatch.restart()));
+		mLoopBinding.emit(TickData(mTickWatch.restart()), static_cast<SenderIdT>(0));
 		mLoopBinding.call();
 
 		mBinder.tick();
@@ -107,7 +116,7 @@ private:
 	s32               mPlannedTimeInMs;
 	Clock::StopWatch  mTickWatch;
 	BinderT           mBinder;
-	Binding<TickData> mLoopBinding;
+	Binding<TickData, SenderIdT> mLoopBinding;
 };
 
 } // namespace Event

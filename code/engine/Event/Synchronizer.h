@@ -46,6 +46,7 @@ struct BasicSynchronizer
 	typedef _LaneT                         LaneT;
 	typedef typename LaneT::IdT            IdT;
 	typedef typename LaneT::DestinationIdT DestinationIdT;
+	typedef typename LaneT::SenderIdT      SenderIdT;
 	
 	BasicSynchronizer() :
 	mFinishing(false)
@@ -78,14 +79,18 @@ struct BasicSynchronizer
 	}
 	
 	template <typename PayloadT>
-	void distributeToOthers(IdT id, const PayloadT& payload, LaneT* lane, const IdT destination)
+	void distributeToOthers(const IdT id, 
+	                        const PayloadT& payload, 
+	                        LaneT* lane, 
+	                        const DestinationIdT destination,
+	                        const SenderIdT sender)
 	{
 		BOOST_FOREACH(LaneT* other, mLanes)
 		{
 			if (other != lane)
 			{
 				std::cout << ".";
-				other->emitFromOther(id, payload, destination);
+				other->emitFromOther(id, payload, destination, sender);
 			}
 		}
 	}
@@ -110,10 +115,9 @@ private:
 
 	std::vector<LaneT*> mLanes;
 	std::vector<boost::shared_ptr<boost::thread> > mThreads;
-	
-	bool mFinishing;
-	
 	std::vector<boost::shared_ptr<boost::barrier> > mBarrier;
+
+	bool mFinishing;
 };
 
 } // namespace Event
