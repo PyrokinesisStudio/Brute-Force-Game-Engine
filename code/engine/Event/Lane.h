@@ -51,9 +51,9 @@ struct BasicLane
 	BasicLane(SynchronizerT& synchronizer, s32 ticksPerSecond) :
 	mSynchronizer(synchronizer),
 	mPlannedTimeInMs(1000/ticksPerSecond),
-	sw(Clock::milliSecond)
+	mTickWatch(Clock::milliSecond)
 	{
-		sw.start();
+		mTickWatch.start();
 		mSynchronizer.add(this);
 	}
 	
@@ -85,12 +85,12 @@ struct BasicLane
 
 	void tick()
 	{
-		mLoopBinding.emit(TickData(sw.restart()));
+		mLoopBinding.emit(TickData(mTickWatch.restart()));
 		mLoopBinding.call();
 
 		mBinder.tick();
 
-		waitRemainingTime(sw.stop());
+		waitRemainingTime(mTickWatch.stop());
 	}
 
 	void waitRemainingTime(s32 consumedTime)
@@ -103,11 +103,10 @@ struct BasicLane
 	}
 	
 private:
-	Clock::StopWatch sw;
-	s32 mPlannedTimeInMs;
-	SynchronizerT& mSynchronizer;
-	BinderT mBinder;
-
+	SynchronizerT&    mSynchronizer;
+	s32               mPlannedTimeInMs;
+	Clock::StopWatch  mTickWatch;
+	BinderT           mBinder;
 	Binding<TickData> mLoopBinding;
 };
 
