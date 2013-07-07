@@ -48,6 +48,47 @@ const BFG::GameHandle testSenderId = 5678;
 bool o1 = false;
 bool o2 = false;
 
+template <typename _EventIdT, typename _DestionationIdT>
+struct BasicEventAddress
+{
+	typedef _EventIdT EventIdT;
+	typedef _DestionationIdT DestionationIdT;
+
+	EventIdT mEventId;
+	DestionationIdT mDestinationId;
+	boost::any mBinding;
+};
+
+typedef BasicEventAddress<int,int> EventAddress;
+
+
+typedef boost::multi_index_container
+<
+	EventAddress, 
+	boost::multi_index::indexed_by
+	<
+		boost::multi_index::ordered_unique
+		<
+			boost::multi_index::composite_key
+			< 
+				EventAddress,
+				boost::multi_index::member
+				<
+					EventAddress,
+					EventAddress::EventIdT,
+					&EventAddress::mEventId
+				>,
+				boost::multi_index::member
+				<
+					EventAddress,
+					EventAddress::DestionationIdT,
+					&EventAddress::mDestinationId
+				>
+			>
+		>
+	>
+> EventAddressMapT;
+
 struct LoopData
 {
 	LoopData(BFG::s32 tslt) :
@@ -61,12 +102,13 @@ struct Pillar;
 // ---------------------------------------------------------------------------
 struct HelloWorld
 {
-	HelloWorld(Pillar* pillar) :
+	HelloWorld(Pillar* pillar, int id) :
 	c1(0),
 	c2(0),
 	c3(0),
 	c4(0),
-	mPillar(pillar)
+	mPillar(pillar),
+	mId(id)
 	{}
 	
 	~HelloWorld()
@@ -127,7 +169,7 @@ struct HelloWorld
 		std::cout << "++++++++++update+++++++++++(" << ld.mTimeSinceLastTick << ")" << std::endl;
 	}
 
-	int c1,c2,c3,c4;
+	int c1,c2,c3,c4,mId;
 	Pillar* mPillar;
 };
 
@@ -139,33 +181,7 @@ struct Callable
 	virtual void call() = 0;
 };
 
-// struct LoopBinding : public Callable
-// {
-// 	typedef boost::signals2::signal<void (LoopData)> SignalT;
-// 
-// 	LoopBinding() : 
-// 	mSignal(new SignalT)
-// 	{}
-// 
-// 	template <typename FnT>
-// 	void connect(FnT fn)
-// 	{
-// 		mSignal->connect(fn);
-// 	}
-// 
-// 	virtual void call()
-// 	{
-// 		signal()();
-// 	}
-// private:
-// 	const SignalT& signal() const
-// 	{
-// 		return *mSignal;
-// 	}
-// 
-// 	boost::shared_ptr<SignalT> mSignal;
-// };
-
+//! This is the binding of a collection of functions (boost::signals) with a collection of payloads
 template <typename PayloadT>
 struct Binding : public Callable
 {
@@ -223,30 +239,40 @@ private:
 	boost::mutex mFlipLocker;
 };
 
-// Säule
+//! The EventBinder holds the map of EventIds with its corresponding Bindings 
 struct EventBinder
 {
 	template <typename PayloadT, typename FnT>
-	void connect(int id, FnT fn)
+	void connect(int id, FnT fn, const int destination)
 	{
-		if (mSignals.count(id) == 0)
+		Callable* c = NULL;
+	//	Binding<PayloadT>* c = NULL;
+		EventAddressMapT::iterator it = mSignals.find(boost::make_tuple(id, destination));
+		if (it == mSignals.end())
 		{
-			Callable* c = new Binding<PayloadT>();
-			mSignals[id] = c;
+			c = new Binding<PayloadT>(); 
+			EventAddress ea = {id, destination, c};
+			mSignals.insert(ea);
 		}
-		
-		Callable* c = boost::any_cast<Callable*>(mSignals[id]);
+		else
+		{
+			c = boost::any_cast<Callable*>(it->mBinding);
+		}
+
+// 		Callable* c = boost::any_cast<Callable*>(mSignals[id]);
+//
 		Binding<PayloadT>* b = static_cast<Binding<PayloadT>*>(c);
 		b->connect(fn);
 	}
 	
 	// Speichert ein Payload, das später ausgeliefert wird an einen Handler.
 	template <typename PayloadT>
-	void emit(int id, const PayloadT& payload)
+	void emit(int id, const PayloadT& payload, const int destination)
 	{
-		if (mSignals.find(id) != mSignals.end())
+		EventAddressMapT::iterator it = mSignals.find(boost::make_tuple(id, destination));
+		if (it != mSignals.end())
 		{
-			Callable* c = boost::any_cast<Callable*>(mSignals[id]);
+			Callable* c = boost::any_cast<Callable*>(it->mBinding);
 			Binding<PayloadT>* b = static_cast<Binding<PayloadT>*>(c);
 			b->emit(payload);
 		}
@@ -254,27 +280,28 @@ struct EventBinder
 	}
 
 	// Callt alle Handler für ein Event
-	void call(int id)
-	{
-		//! \todo Das hier in tick() rein?
-		Callable* c = boost::any_cast<Callable*>(mSignals[id]);
-		c->call();
-	}
+// 	void call(int id)
+// 	{
+// 		//! \todo Das hier in tick() rein?
+// 		Callable* c = boost::any_cast<Callable*>(mSignals[id]);
+// 		c->call();
+// 	}
 	
 	// Verarbeitet alle events, die mit emit() gequeued wurden.
 	void tick()
 	{
-		BOOST_FOREACH(SignalMapT::value_type& pair, mSignals)
+		BOOST_FOREACH(const EventAddressMapT::value_type& addressMapValue, mSignals)
 		{
-			call(pair.first);
+			Callable* c = boost::any_cast<Callable*>(addressMapValue.mBinding);
+			c->call();
 		}
 	}
 	
 	// Welche Events können von dieser Säule abgearbeitet werden?
 	// Welche Callback-Funktionen existieren für diese Säule?
-	typedef std::map<int, boost::any> SignalMapT;
+//	typedef std::map<int, boost::any> SignalMapT;
 
-	SignalMapT mSignals;
+	EventAddressMapT mSignals;
 };
 
 struct Pillar;
@@ -293,7 +320,7 @@ struct Synchronizer
 	void finish();
 	
 	template <typename PayloadT>
-	void distributeToOthers(int id, const PayloadT& payload, Pillar* pillar);
+	void distributeToOthers(int id, const PayloadT& payload, Pillar* pillar, const int destination = 0);
 
 private:
 	void loop(Pillar* pillar);
@@ -320,28 +347,20 @@ struct Pillar
 	
 	// Speichert ein Payload, das später ausgeliefert wird an einen Handler.
 	template <typename PayloadT>
-	void emit(int id, const PayloadT& payload)
+	void emit(int id, const PayloadT& payload, const int destination = 0)
 	{
 		//boost::mutex::scoped_lock sl(mEmitLocker);
-		mEventBinder.emit<PayloadT>(id, payload);
-		mSynchronizer.distributeToOthers(id, payload, this);
+		mEventBinder.emit<PayloadT>(id, payload, destination);
+		mSynchronizer.distributeToOthers(id, payload, this, destination);
 	}
 	
 	template <typename PayloadT>
-	void emitFromOther(int id, const PayloadT& payload)
+	void emitFromOther(int id, const PayloadT& payload, const int destination)
 	{
 		//boost::mutex::scoped_lock sl(mEmitLocker);
-		mEventBinder.emit<PayloadT>(id, payload);
+		mEventBinder.emit<PayloadT>(id, payload, destination);
 	}
 
-/*
-	template <typename FnT>
-	void connect(int id, FnT fn)
-	{
-		typedef typename boost::function_traits<FnT>::arg1_type PayloadT; 
-		mEventBinder.connect<PayloadT>(id, fn);
-	}
-*/
 	template <typename FnT>
 	void connectLoop(FnT loopFn)
 	{
@@ -349,10 +368,10 @@ struct Pillar
 	}
 
 	template <typename PayloadT, typename FnT>
-	void connect(int id, FnT fn)
+	void connect(int id, FnT fn, int destination = 0)
 	{
 		//typedef typename boost::function_traits<FnT>::arg1_type PayloadT; 
-		mEventBinder.connect<PayloadT>(id, fn);
+		mEventBinder.connect<PayloadT>(id, fn, destination);
 	}
 	// audio.connect(1, &HelloWorld::other1, hello);
 //	template <typename FnT, typename ObjectT>
@@ -375,20 +394,7 @@ struct Pillar
 		mEventBinder.tick();
 
 		waitRemainingTime(sw.stop());
-
-			// | TTTLLW | TTTTTL |
-			// | LLTTTW | LTTTTT |
 	}
-	
-// 	void calculateFrameTime(BFG::s32 consumedTime)
-// 	{
-// 		BFG::s32 plannedTime = 1000 / mTicksPerSecond;
-// 		BFG::s32 remainingTime = plannedTime - consumedTime;
-// 		if (remainingTime > 0)
-// 			mTimeSinceLastTick = plannedTime;
-// 		else
-// 			mTimeSinceLastTick = consumedTime;
-// 	}
 
 	void waitRemainingTime(BFG::s32 consumedTime)
 	{
@@ -396,7 +402,7 @@ struct Pillar
 		BFG::s32 remainingTime = plannedTime - consumedTime;
 		if (remainingTime > 0)
 		{
-			std::cout << "Thread " << boost::this_thread::get_id() << " sleeping " << remainingTime << std::endl;
+			//std::cout << "Thread " << boost::this_thread::get_id() << " sleeping " << remainingTime << std::endl;
 			boost::this_thread::sleep(boost::posix_time::milliseconds(remainingTime));
 		}
 	}
@@ -424,14 +430,14 @@ void Synchronizer::add(Pillar* pillar)
 }
 
 template <typename PayloadT>
-void Synchronizer::distributeToOthers(int id, const PayloadT& payload, Pillar* pillar)
+void Synchronizer::distributeToOthers(int id, const PayloadT& payload, Pillar* pillar, const int destination)
 {
 	BOOST_FOREACH(Pillar* other, mPillars)
 	{
 		if (other != pillar)
 		{
 			std::cout << ".";
-			other->emitFromOther(id, payload);
+			other->emitFromOther(id, payload, destination);
 		}
 	}
 }
@@ -470,7 +476,7 @@ void Synchronizer::loop(Pillar* pillar)
 
 void HelloWorld::other1(const std::string& s)
 {
-	std::cout << "audio (" << c1 << "), " << s << std::endl;
+	std::cout << "audio[" << mId << "]" << "(" << c1 << "), " << s << std::endl;
 	++c1;
 	boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 	std::cout << "audio slept 300ms" << std::endl;
@@ -481,35 +487,6 @@ BOOST_AUTO_TEST_SUITE(TestSuite)
 
 BOOST_AUTO_TEST_CASE (Test)
 {
-	EventBinder sh;
-	EventBinder sh2;
-
-/*	
-	sh.connect<std::string>(1, boost::bind(&HelloWorld::data, boost::ref(hello), _1));
-	sh.emit(1, std::string("s1"));
-	sh.emit(1, std::string("s1"));
-	
-	sh.connect<std::vector<std::string> >(2, boost::bind(&HelloWorld::data2, boost::ref(hello), _1));
-	sh.connect<std::vector<std::string> >(2, boost::bind(&HelloWorld::data3, boost::ref(hello), _1));
-	
-	sh2.connect<std::string>(3, boost::bind(&HelloWorld::data, boost::ref(hello), _1));
-
-	std::vector<std::string> v;
-	v.push_back("v a");
-	v.push_back("v b");
-	v.push_back("v c");
-	sh.emit(2, v);
-	
-	std::vector<std::string> v2;
-	v2.push_back("v2 a");
-	v2.push_back("v2 b");
-	sh.emit(2, v2);
-
-	sh2.emit(3, std::string("s3"));
-	
-	//BOOST_CHECK_THROW(sh.emit(1, v2), std::runtime_error);
-*/	
-
 	const int nThreads = 2;
 	const int ticksPerSecond100 = 100;
 	const int ticksPerSecond5 = 5;
@@ -520,55 +497,28 @@ BOOST_AUTO_TEST_CASE (Test)
 	Pillar game(sync, ticksPerSecond100);
 
 	// Connect a HelloWorld slot
-	HelloWorld hello(&audio);
+	HelloWorld hello(&audio, 15);
+	HelloWorld hello2(&audio, 16);
 	
 	audio.connectLoop(boost::bind(&HelloWorld::update, boost::ref(hello), _1));
-	audio.connect<std::string>(1, boost::bind(&HelloWorld::other1, boost::ref(hello), _1));
+	audio.connect<std::string>(1, boost::bind(&HelloWorld::other1, boost::ref(hello), _1), 15);
+	audio.connect<std::string>(1, boost::bind(&HelloWorld::other1, boost::ref(hello2), _1));
 	physics.connect<std::string>(1, boost::bind(&HelloWorld::other2, boost::ref(hello), _1));
 	view.connect<std::string>(2, boost::bind(&HelloWorld::other3, boost::ref(hello), _1));
 	game.connect<std::string>(2, boost::bind(&HelloWorld::other4, boost::ref(hello), _1));
 	
 	//audio.connect<std::string>(1, &HelloWorld::other1, hello);
-	for (int i=0; i<5; ++i)
+	for (int i=0; i<2; ++i)
 	{
 		physics.emit(1, std::string("Physics Boom"));
 		audio.emit(2, std::string("Audio Boom"));
 		view.emit(2, std::string("View Boom"));
-		game.emit(1, std::string("Game Boom"));
+		game.emit(1, std::string("Game Boom"), 15);
 		boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 	}
 	physics.emit(1, std::string("Ende"));
 	sync.finish();
 
-//	sh.connect<std::string>(1, boost::bind(&HelloWorld::other1, boost::ref(hello), _1));
-//	sh2.connect<std::string>(1, boost::bind(&HelloWorld::other2, boost::ref(hello), _1));
-
-//	sh.emit(1, std::string("1"));
-	
-	//boost::thread t1(boost::bind(&loop, boost::ref(sh)));
-	//loop(sh2);
-	
-	//t1.join();
-	//boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
-	
-	//BOOST_CHECK_EQUAL(o1, true);
-	//BOOST_CHECK_EQUAL(o2, true);
-	
-/*
-	sync client;
-	sync server;
-
-	object Audio(client);
-	object GameC(client); // current thread
-	object GameS(server);
-	object NetworkC(client);
-	object NetworkS(server);
-	object Physics(server);
-	object View(client);
-	
-	Physics.emit(POSITION, "123");
-	View.connect(POSITION, &onPosition);
-*/
 }
 
 BOOST_AUTO_TEST_SUITE_END()
