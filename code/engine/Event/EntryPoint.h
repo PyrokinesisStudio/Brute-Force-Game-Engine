@@ -24,21 +24,22 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_EVENT_TICKDATA_H
-#define BFG_EVENT_TICKDATA_H
-
-#include <Core/Types.h>
+#ifndef BFG_EVENT_ENTRYPOINT_H
+#define BFG_EVENT_ENTRYPOINT_H
 
 namespace BFG {
 namespace Event { 
 
-struct TickData
+template <typename _LaneT>
+struct EntryPoint
 {
-	TickData(const s32 timeSinceLastTick) :
-	mTimeSinceLastTick(timeSinceLastTick)
+	typedef _LaneT LaneT;
+
+	virtual void run(LaneT* lane)
 	{}
 
-	s32 mTimeSinceLastTick;
+	virtual void stop()
+	{}
 };
 
 } // namespace Event

@@ -27,6 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_EVENT_LANE_H
 #define BFG_EVENT_LANE_H
 
+#include <boost/type_traits/is_base_of.hpp>
 #include <boost/thread.hpp>
 
 #include <Core/ClockUtils.h>
@@ -34,11 +35,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Event/Binder.h>
 #include <Event/Binding.h>
+#include <Event/EntryPoint.h>
 #include <Event/Synchronizer.h>
 #include <Event/TickData.h>
 
 namespace BFG {
-namespace Event { 
+namespace Event {
 
 template <typename _IdT, typename _DestinationIdT, typename _SenderIdT>
 struct BasicLane
@@ -48,16 +50,20 @@ struct BasicLane
 	typedef _SenderIdT SenderIdT;
 	typedef BasicSynchronizer<BasicLane<IdT, DestinationIdT, SenderIdT> > SynchronizerT;
 	typedef Binder<IdT, DestinationIdT, SenderIdT> BinderT;
+	typedef EntryPoint<BasicLane<IdT, DestinationIdT, SenderIdT> > EntryPointT;
 	
 	BasicLane(SynchronizerT& synchronizer, s32 ticksPerSecond) :
 	mSynchronizer(synchronizer),
 	mPlannedTimeInMs(1000/ticksPerSecond),
-	mTickWatch(Clock::milliSecond)
+	mTickWatch(Clock::milliSecond),
+	mEntriesStarted(false)
 	{
 		mTickWatch.start();
 		mSynchronizer.add(this);
 	}
 	
+	friend struct SynchronizerT;
+
 	// Speichert ein Payload, das später ausgeliefert wird an einen Handler.
 	template <typename PayloadT>
 	void emit(const IdT id, 
@@ -69,20 +75,11 @@ struct BasicLane
 		mSynchronizer.distributeToOthers(id, payload, this, destination, sender);
 	}
 	
-	template <typename PayloadT>
-	void emitFromOther(const IdT id,
-	                   const PayloadT& payload,
-	                   const DestinationIdT destination,
-	                   const SenderIdT sender)
-	{
-		mBinder.template emit<PayloadT>(id, payload, destination, sender);
-	}
-
 	template <typename ObjectT>
 	void connectLoop(ObjectT* object,
 	                 void(ObjectT::*fn)(const TickData))
 	{
-		mLoopBinding.connect(boost::bind(fn, boost::ref(object), _1));
+		mLoopBinding.connect(boost::bind(fn, boost::ref(*object), _1));
 	}
 
 	template <typename PayloadT, typename ObjectT>
@@ -94,17 +91,45 @@ struct BasicLane
 		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1, _2), destination);
 	}
 
+	template <typename EntryT>
+	void addEntry()
+	{
+		mEntryPoints.push_back(new EntryT());
+	}
+
+private:
+
+	void startEntries()
+	{
+		BOOST_FOREACH(EntryPointT* entryPoint, mEntryPoints)
+		{
+			entryPoint->run(this);
+		}
+		mEntriesStarted = true;
+	}
+
+	template <typename PayloadT>
+	void emitFromOther(const IdT id,
+		const PayloadT& payload,
+		const DestinationIdT destination,
+		const SenderIdT sender)
+	{
+		mBinder.template emit<PayloadT>(id, payload, destination, sender);
+	}
+
 	void tick()
 	{
+		if (!mEntriesStarted)
+			return;
+
 		mLoopBinding.emit(TickData(mTickWatch.restart()), static_cast<SenderIdT>(0));
 		mLoopBinding.call();
 
 		mBinder.tick();
-
 		waitRemainingTime(mTickWatch.stop());
 	}
 
-	void waitRemainingTime(s32 consumedTime)
+	void waitRemainingTime(const s32 consumedTime) const
 	{
 		s32 remainingTime = mPlannedTimeInMs - consumedTime;
 		if (remainingTime > 0)
@@ -113,12 +138,13 @@ struct BasicLane
 		}
 	}
 	
-private:
 	SynchronizerT&    mSynchronizer;
 	s32               mPlannedTimeInMs;
 	Clock::StopWatch  mTickWatch;
 	BinderT           mBinder;
 	Binding<TickData, SenderIdT> mLoopBinding;
+	std::vector<EntryPointT* > mEntryPoints;
+	bool mEntriesStarted;
 };
 
 } // namespace Event

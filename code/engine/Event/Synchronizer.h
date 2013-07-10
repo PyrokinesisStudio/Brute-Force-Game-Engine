@@ -48,6 +48,8 @@ struct BasicSynchronizer
 	typedef typename LaneT::DestinationIdT DestinationIdT;
 	typedef typename LaneT::SenderIdT      SenderIdT;
 	
+	friend typename LaneT;
+
 	BasicSynchronizer() :
 	mFinishing(false)
 	{}
@@ -64,6 +66,14 @@ struct BasicSynchronizer
 		boost::thread t;
 	}
 
+	void startEntries()
+	{
+		BOOST_FOREACH(LaneT* lane, mLanes)
+		{
+			lane->startEntries();
+		}
+	}
+
 	void finish()
 	{
 		for (size_t i=0; i<10; ++i)
@@ -78,6 +88,8 @@ struct BasicSynchronizer
 		}
 	}
 	
+private:
+
 	template <typename PayloadT>
 	void distributeToOthers(const IdT id, 
 	                        const PayloadT& payload, 
@@ -95,7 +107,6 @@ struct BasicSynchronizer
 		}
 	}
 	
-private:
 	void loop(LaneT* lane)
 	{
 		while (!mFinishing)
@@ -105,9 +116,9 @@ private:
 		
 		for (std::size_t i=0; i<mBarrier.size(); ++i)
 		{
-			std::cout << "Joining Barrier #" << i << " - " << boost::this_thread::get_id() << std::endl;
+//			std::cout << "Joining Barrier #" << i << " - " << boost::this_thread::get_id() << std::endl;
 			mBarrier[i]->wait();
-			std::cout << "TICK #" << i << " - " << boost::this_thread::get_id() << std::endl;
+//			std::cout << "TICK #" << i << " - " << boost::this_thread::get_id() << std::endl;
 			lane->tick();
 		}
 		// -- Thread exits here --

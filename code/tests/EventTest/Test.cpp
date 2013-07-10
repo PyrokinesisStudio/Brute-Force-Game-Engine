@@ -88,6 +88,88 @@ void HelloWorld::other1(const std::string& s, const BFG::GameHandle& sender)
 	mLane->emit(2, std::string("To View from Audio"));
 }
 
+
+struct TestModulAudio1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		mLane = lane;
+		std::cout << "TestModulAudio1-Run" << std::endl;
+		mLane->connect(1, this, &TestModulAudio1::event1Handler);
+		mLane->connectLoop(this, &TestModulAudio1::update);
+	}
+
+	void stop()
+	{
+		std::cout << "TestModulAudio1-Stop" << std::endl;
+	}
+
+	void update(const BFG::Event::TickData ld)
+	{
+		std::cout << "TestModulAudio1-update(" << ld.mTimeSinceLastTick << ")" << std::endl;
+		mLane->emit(2, std::string("a1Emit2"));
+	}
+
+	void event1Handler(const std::string& s, const BFG::GameHandle& sender)
+	{
+		std::cout << "TestModulAudio1: from (" << BFG::stringify(sender) << ") , " << s << std::endl;
+	}
+
+	BFG::Event::Lane* mLane;
+};
+
+struct TestModulAudio2 : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		std::cout << "TestModulAudio2-Run" << std::endl;
+	}
+};
+
+struct TestModulView1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		mLane = lane;
+		std::cout << "TestModulView1-Run" << std::endl;
+
+		mLane->connect(2, this, &TestModulView1::event2Handler);
+	}
+
+	void event2Handler(const std::string& s, const BFG::GameHandle& sender)
+	{
+		std::cout << "TestModulView1: from (" << BFG::stringify(sender) << ") , " << s << std::endl;
+		mLane->emit(1, std::string("v1Emit1"));
+	}
+
+	BFG::Event::Lane* mLane;
+};
+
+struct TestModulPhysics1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		mLane = lane;
+		std::cout << "TestModulPhysics1-Run" << std::endl;
+
+		mLane->connect(2, this, &TestModulPhysics1::event2Handler);
+	}
+
+	void event2Handler(const std::string& s, const BFG::GameHandle& sender)
+	{
+		std::cout << "TestModulPhysics1: from (" << BFG::stringify(sender) << ") , " << s << std::endl;
+	}
+
+	BFG::Event::Lane* mLane;
+};
+
+struct TestModulGame1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		std::cout << "TestModulGame1-Run" << std::endl;
+	}
+};
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE(TestSuite)
@@ -102,27 +184,37 @@ BOOST_AUTO_TEST_CASE (Test)
 	BFG::Event::Lane view(sync, ticksPerSecond100);
 	BFG::Event::Lane game(sync, ticksPerSecond100);
 
+	// EntryPoints
+
+	audio.addEntry<TestModulAudio1>();
+	audio.addEntry<TestModulAudio2>();
+	physics.addEntry<TestModulPhysics1>();
+	view.addEntry<TestModulView1>();
+	game.addEntry<TestModulGame1>();
+
+	sync.startEntries();
+
 	// Connect a HelloWorld slot
-	HelloWorld hello(&audio, testDestinationId);
-	HelloWorld hello2(&audio, testDestinationId2);
-	
-	audio.connectLoop(&hello, &HelloWorld::update);
-	audio.connect(1, &hello, &HelloWorld::other1, testDestinationId);
- 	audio.connect(1, &hello2, &HelloWorld::other1);
- 	physics.connect(1, &hello, &HelloWorld::other2);
- 	view.connect(2, &hello, &HelloWorld::other3);
- 	game.connect(2, &hello, &HelloWorld::other4);
-	
-	//audio.connect<std::string>(1, &HelloWorld::other1, hello);
-	for (int i=0; i<2; ++i)
-	{
-		physics.emit(1, 5); // provoking an IncompatibleTypeException
-		audio.emit(2, std::string("Audio Boom"), 0, testSenderId2);
-		view.emit(2, std::string("View Boom"), 0, testSenderId);
-		game.emit(1, std::string("Game Boom"), testDestinationId);
-		boost::this_thread::sleep(boost::posix_time::milliseconds(300));
-	}
-	physics.emit(1, std::string("Ende"));
+// 	HelloWorld hello(&audio, testDestinationId);
+// 	HelloWorld hello2(&audio, testDestinationId2);
+// 	
+// 	audio.connectLoop(&hello, &HelloWorld::update);
+// 	audio.connect(1, &hello, &HelloWorld::other1, testDestinationId);
+//  	audio.connect(1, &hello2, &HelloWorld::other1);
+//  	physics.connect(1, &hello, &HelloWorld::other2);
+//  	view.connect(2, &hello, &HelloWorld::other3);
+//  	game.connect(2, &hello, &HelloWorld::other4);
+// 	
+// 	//audio.connect<std::string>(1, &HelloWorld::other1, hello);
+// 	for (int i=0; i<2; ++i)
+// 	{
+// 		physics.emit(1, 5); // provoking an IncompatibleTypeException
+// 		audio.emit(2, std::string("Audio Boom"), 0, testSenderId2);
+// 		view.emit(2, std::string("View Boom"), 0, testSenderId);
+// 		game.emit(1, std::string("Game Boom"), testDestinationId);
+// 		boost::this_thread::sleep(boost::posix_time::milliseconds(300));
+// 	}
+// 	physics.emit(1, std::string("Ende"));
 	sync.finish();
 }
 

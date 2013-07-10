@@ -85,13 +85,14 @@ struct Binding : public Callable
 		mFrontPayloads.clear();
 	}
 
+private:
+
 	void flipPayloads()
 	{
 		boost::mutex::scoped_lock sl(mFlipLocker);
 		std::swap(mFrontPayloads, mBackPayloads);
 	}
 
-private:
 	const SignalT& signal() const
 	{
 		return *mSignal;
