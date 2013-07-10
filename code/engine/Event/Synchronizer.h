@@ -35,7 +35,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/thread.hpp>
 #include <boost/thread/barrier.hpp>
 
-#include <Core/GameHandle.h>
 
 namespace BFG {
 namespace Event { 

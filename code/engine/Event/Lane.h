@@ -27,11 +27,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_EVENT_LANE_H
 #define BFG_EVENT_LANE_H
 
-#include <boost/type_traits/is_base_of.hpp>
 #include <boost/thread.hpp>
 
 #include <Core/ClockUtils.h>
-#include <Core/GameHandle.h>
 
 #include <Event/Binder.h>
 #include <Event/Binding.h>

@@ -27,8 +27,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_EVENT_EVENT_H
 #define BFG_EVENT_EVENT_H
 
+#include <Core/GameHandle.h>
 #include <Event/Lane.h>
 #include <Event/Synchronizer.h>
+
 
 namespace BFG {
 namespace Event {

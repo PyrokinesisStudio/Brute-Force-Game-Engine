@@ -95,8 +95,6 @@ struct Binder
 		{
 			c = boost::any_cast<Callable*>(it->mBinding);
 		}
-
-		std::cout << "Binder::connect(" << id << ") to " << c << std::endl;
 		
 		Binding<PayloadT, SenderIdT>* b = static_cast<Binding<PayloadT, SenderIdT>*>(c);
 		b->connect(fn);
@@ -134,7 +132,6 @@ struct Binder
 		BOOST_FOREACH(const ConnectionT& connection, mBindings)
 		{
 			Callable* c = boost::any_cast<Callable*>(connection.mBinding);
-//			std::cout << "call (" << c << ")" << std::endl;
 			c->call();
 		}
 	}
