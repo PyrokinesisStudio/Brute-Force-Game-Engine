@@ -91,6 +91,15 @@ struct BasicLane
 		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1, _2), destination);
 	}
 
+	template <typename PayloadT, typename ObjectT>
+	void connect(const IdT id,
+		ObjectT* object,
+		void(ObjectT::*fn)(const PayloadT&),
+		const DestinationIdT destination = static_cast<DestinationIdT>(0))
+	{
+		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1), destination);
+	}
+
 	template <typename EntryT>
 	void addEntry()
 	{

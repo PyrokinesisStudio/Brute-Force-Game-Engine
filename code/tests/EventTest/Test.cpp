@@ -136,9 +136,9 @@ struct TestModulView1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 		mLane->connect(2, this, &TestModulView1::event2Handler);
 	}
 
-	void event2Handler(const std::string& s, const BFG::GameHandle& sender)
+	void event2Handler(const std::string& s)
 	{
-		std::cout << "TestModulView1: from (" << BFG::stringify(sender) << ") , " << s << std::endl;
+		std::cout << "TestModulView1: " << s << std::endl;
 		mLane->emit(1, std::string("v1Emit1"));
 	}
 
