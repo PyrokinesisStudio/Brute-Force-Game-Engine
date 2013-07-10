@@ -108,6 +108,15 @@ private:
 		mEntriesStarted = true;
 	}
 
+	void stopEntries()
+	{
+		mEntriesStarted = false;
+		BOOST_FOREACH(EntryPointT* entryPoint, mEntryPoints)
+		{
+			entryPoint->stop();
+		}
+	}
+
 	template <typename PayloadT>
 	void emitFromOther(const IdT id,
 		const PayloadT& payload,

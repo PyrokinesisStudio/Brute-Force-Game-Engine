@@ -155,6 +155,11 @@ struct TestModulPhysics1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 		mLane->connect(2, this, &TestModulPhysics1::event2Handler);
 	}
 
+	void stop()
+	{
+		std::cout << "TestModulPhysics1-Stop" << std::endl;
+	}
+
 	void event2Handler(const std::string& s, const BFG::GameHandle& sender)
 	{
 		std::cout << "TestModulPhysics1: from (" << BFG::stringify(sender) << ") , " << s << std::endl;

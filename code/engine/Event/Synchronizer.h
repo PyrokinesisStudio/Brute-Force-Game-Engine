@@ -121,6 +121,8 @@ private:
 //			std::cout << "TICK #" << i << " - " << boost::this_thread::get_id() << std::endl;
 			lane->tick();
 		}
+
+		lane->stopEntries();
 		// -- Thread exits here --
 	}
 
