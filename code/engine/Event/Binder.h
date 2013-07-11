@@ -77,6 +77,14 @@ struct Binder
 		>
 	> ConnectionMapT;
 
+	~Binder()
+	{
+		BOOST_FOREACH(ConnectionMapT::value_type vt, mBindings)
+		{
+			Callable* c = boost::any_cast<Callable*>(vt.mBinding);
+			delete c;
+		}
+	}
 	
 	template <typename PayloadT, typename FnT>
 	void connect(const IdT id,

@@ -59,6 +59,15 @@ struct BasicLane
 		mTickWatch.start();
 		mSynchronizer.add(this);
 	}
+
+	~BasicLane()
+	{
+		BOOST_FOREACH(EntryPointT* entryPoint, mEntryPoints)
+		{
+			delete entryPoint;
+		}
+		mEntryPoints.clear();
+	}
 	
 	friend struct SynchronizerT;
 
