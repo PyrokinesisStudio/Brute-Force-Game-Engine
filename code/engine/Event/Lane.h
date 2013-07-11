@@ -64,6 +64,7 @@ struct BasicLane
 	{
 		BOOST_FOREACH(EntryPointT* entryPoint, mEntryPoints)
 		{
+			entryPoint->stop();
 			delete entryPoint;
 		}
 		mEntryPoints.clear();

@@ -82,7 +82,7 @@ struct BasicSynchronizer
 		
 		BOOST_FOREACH(boost::shared_ptr<boost::thread> t, mThreads)
 		{
-			std::cout << "Joining thread " << t->get_id() << "\n";
+//			std::cout << "Joining thread " << t->get_id() << "\n";
 			t->join();
 		}
 	}
@@ -100,7 +100,7 @@ private:
 		{
 			if (other != lane)
 			{
-				std::cout << ".";
+//				std::cout << ".";
 				other->emitFromOther(id, payload, destination, sender);
 			}
 		}
@@ -120,8 +120,6 @@ private:
 //			std::cout << "TICK #" << i << " - " << boost::this_thread::get_id() << std::endl;
 			lane->tick();
 		}
-
-		lane->stopEntries();
 		// -- Thread exits here --
 	}
 

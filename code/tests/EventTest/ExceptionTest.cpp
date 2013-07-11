@@ -99,7 +99,7 @@ public:
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE(ExceptionTestSuite)
-
+#if 0
 BOOST_AUTO_TEST_CASE (TestExceptionInEntryPoint)
 {
 	resetGlobals();
@@ -197,5 +197,7 @@ BOOST_AUTO_TEST_CASE (TestExceptionInEventHandler)
 	BOOST_CHECK_EQUAL(gUnknownExceptionsCatched, 0);
 }
 
+
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()

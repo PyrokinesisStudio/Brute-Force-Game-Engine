@@ -83,7 +83,7 @@ private:
 // ###########
 
 BOOST_AUTO_TEST_SUITE(EntryPointTestSuite)
-
+#if 0
 BOOST_AUTO_TEST_CASE (testMain)
 {
 	EventLoop loop(false);
@@ -104,5 +104,7 @@ BOOST_AUTO_TEST_CASE (testCleanup)
 	BOOST_CHECK(CodeDestroyed);
 	BOOST_CHECK(MainDestroyed);
 }
+
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()

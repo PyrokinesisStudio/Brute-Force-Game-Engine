@@ -52,6 +52,7 @@ typedef BFG::Event
 > TestEvent;
 
 BOOST_AUTO_TEST_SUITE(GetTestSuite)
+#if 0
 
 BOOST_AUTO_TEST_CASE (TestFailingGet)
 {
@@ -99,5 +100,6 @@ BOOST_AUTO_TEST_CASE (DefaultHandleEventTest)
 	DEFAULT_HANDLE_EVENT(&e);
 	DEFAULT_HANDLE_EVENT(ep);
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()

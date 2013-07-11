@@ -53,7 +53,7 @@ static void manyLoops(const std::string& name, IEventLoop* p)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE(MultiThreadTestSuite)
-
+#if 0
 BOOST_AUTO_TEST_CASE (TestTwoLoopsWithoutCommunication)
 {
 	EventLoop loop1(false);
@@ -96,6 +96,8 @@ BOOST_AUTO_TEST_CASE (TestTwoLoopsWithOneWayCommunication)
 	// not poll if other pools are available.
 	BOOST_REQUIRE_EQUAL(tec.receivedEvents(), 0);
 }
+
+#endif
 
 #ifndef SKIP_BROKEN_TESTS
 BOOST_AUTO_TEST_CASE (TestTwoLoopsWithCommunication)

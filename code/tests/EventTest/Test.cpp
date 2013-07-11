@@ -29,6 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Event/Event.h>
 
 #include <boost/test/unit_test.hpp>
+#include <boost/thread/mutex.hpp>
 
 const int testEventId = 5;
 const BFG::GameHandle testDestinationId = 15;
@@ -36,6 +37,8 @@ const BFG::GameHandle testDestinationId2 = 16;
 const BFG::GameHandle testSenderId = 5678;
 const BFG::GameHandle testSenderId2 = 91011;
 
+static BFG::u32 gf32EventCounter = 0;
+static BFG::u32 gu32EventCounter = 0;
 
 struct TestModulAudio1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
@@ -123,10 +126,44 @@ struct TestModulGame1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 		std::cout << "TestModulGame1-Run" << std::endl;
 	}
 };
+
+struct TestModule : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		lane->connect(1, this, &TestModule::testEventHandler);
+	}
+
+	void testEventHandler(const BFG::f32&)
+	{
+		boost::mutex::scoped_lock(mMutex);
+		++gf32EventCounter;
+	}
+
+	boost::mutex mMutex;
+};
+
+struct TestModule2 : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		lane->connect(2, this, &TestModule2::testEventHandler);
+	}
+
+	void testEventHandler(const BFG::u32&)
+	{
+		boost::mutex::scoped_lock(mMutex);
+		++gu32EventCounter;
+	}
+
+	boost::mutex mMutex;
+};
+
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE(TestSuite)
 
+#if 0
 BOOST_AUTO_TEST_CASE (Test)
 {
 	const int ticksPerSecond100 = 100;
@@ -149,5 +186,181 @@ BOOST_AUTO_TEST_CASE (Test)
 
 	sync.finish();
 }
+#endif
+
+BOOST_AUTO_TEST_CASE (OneLaneWithOneEvent)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+
+	TestModule t;
+	gf32EventCounter = 0;
+
+	lane.connect(1, &t, &TestModule::testEventHandler);
+
+	sync.startEntries();
+
+	lane.emit(1, 1.0f);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 1);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 1);
+
+	sync.finish();
+}
+
+BOOST_AUTO_TEST_CASE (OneLaneWithOneUnconnectedEvent)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+
+	TestModule t;
+	gf32EventCounter = 0;
+
+	lane.connect(1, &t, &TestModule::testEventHandler);
+
+	sync.startEntries();
+
+	lane.emit(2, 1.0f);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 0);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 0);
+
+	sync.finish();
+}
+
+BOOST_AUTO_TEST_CASE (OneLaneWithEntryPointAndOneEvent)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+
+	gf32EventCounter = 0;
+
+	lane.addEntry<TestModule>();
+
+	sync.startEntries();
+
+	lane.emit(1, 1.0f);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 1);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 1);
+
+	sync.finish();
+}
+
+BOOST_AUTO_TEST_CASE (OneLaneTwoEntryPointOneEvent)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+
+	gf32EventCounter = 0;
+
+	lane.addEntry<TestModule>();
+	lane.addEntry<TestModule>();
+
+	sync.startEntries();
+
+	lane.emit(1, 1.0f);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 2);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 2);
+
+	sync.finish();
+}
+
+BOOST_AUTO_TEST_CASE (TwoLanesOneEntryPointOneEvent)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane1(sync, 100);
+	BFG::Event::Lane lane2(sync, 100);
+
+	gf32EventCounter = 0;
+
+	lane2.addEntry<TestModule>();
+
+	sync.startEntries();
+
+	lane1.emit(1, 1.0f);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 1);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 1);
+
+	sync.finish();
+}
+
+BOOST_AUTO_TEST_CASE (TwoLanesTwoEntryPointsOneEvent)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane1(sync, 100);
+	BFG::Event::Lane lane2(sync, 100);
+
+	gf32EventCounter = 0;
+
+	lane1.addEntry<TestModule>();
+	lane2.addEntry<TestModule>();
+
+	sync.startEntries();
+
+	lane1.emit(1, 1.0f);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 2);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 2);
+
+	sync.finish();
+}
+
+#if 0
+
+BOOST_AUTO_TEST_CASE (TwoConnectsSameEvent){}
+BOOST_AUTO_TEST_CASE (TwoConnectsSameEventButDifferentPayloads){}
+BOOST_AUTO_TEST_CASE (TwoLanesOneConnectPerLaneSameEvent){}
+BOOST_AUTO_TEST_CASE (TwoLanesOneConnectPerLaneSameEventButDifferentPayload){}
+
+// This won't work because the required exception is caught in Binder.
+BOOST_AUTO_TEST_CASE (OneLaneWithOneEventWithTheWrongPayload)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+
+	TestModule t;
+
+	lane.connect(1, &t, &TestModule::testEventHandler);
+
+	sync.startEntries();
+
+	BOOST_REQUIRE_THROW(lane.emit(1, std::string("Hello")), BFG::Event::IncompatibleTypeException);
+
+	sync.finish();
+}
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()

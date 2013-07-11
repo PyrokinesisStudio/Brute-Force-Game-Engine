@@ -51,7 +51,7 @@ static void* entryPoint(void*)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE(SingleThreadTestSuite)
-
+#if 0
 BOOST_AUTO_TEST_CASE (TestLoopWithOneEvent)
 {
 	resetGlobals();
@@ -180,5 +180,7 @@ BOOST_AUTO_TEST_CASE (TestBroadcastEvent)
 	BOOST_REQUIRE_EQUAL(ter1.receivedEvents(), 1);
 	BOOST_REQUIRE_EQUAL(ter2.receivedEvents(), 1);
 }
+
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
