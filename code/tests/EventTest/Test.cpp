@@ -159,6 +159,22 @@ struct TestModule2 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 	boost::mutex mMutex;
 };
 
+struct TestModule3 : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		lane->connect(1, this, &TestModule3::testEventHandler);
+	}
+
+	void testEventHandler(const BFG::u32&)
+	{
+		boost::mutex::scoped_lock(mMutex);
+		++gu32EventCounter;
+	}
+
+	boost::mutex mMutex;
+};
+
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE(TestSuite)
@@ -338,15 +354,36 @@ BOOST_AUTO_TEST_CASE (TwoLanesTwoEntryPointsOneEvent)
 	sync.finish();
 }
 
-#if 0
+BOOST_AUTO_TEST_CASE (TwoLanesTwoEntryPointsTwoHandlerWithDifferentPayloadsForSameEvent)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane1(sync, 100);
+	BFG::Event::Lane lane2(sync, 100);
 
-BOOST_AUTO_TEST_CASE (TwoConnectsSameEvent){}
-BOOST_AUTO_TEST_CASE (TwoConnectsSameEventButDifferentPayloads){}
-BOOST_AUTO_TEST_CASE (TwoLanesOneConnectPerLaneSameEvent){}
-BOOST_AUTO_TEST_CASE (TwoLanesOneConnectPerLaneSameEventButDifferentPayload){}
+	gf32EventCounter = 0;
 
-// This won't work because the required exception is caught in Binder.
-BOOST_AUTO_TEST_CASE (OneLaneWithOneEventWithTheWrongPayload)
+	lane1.addEntry<TestModule>();
+	lane2.addEntry<TestModule3>(); // shouldn't this cause an IncompatibleTypeException?
+
+	sync.startEntries();
+
+	// this causes one IncompatibleTypeException
+	BOOST_REQUIRE_THROW(lane1.emit(1, 1.0f), BFG::Event::IncompatibleTypeException);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 1);
+	BOOST_REQUIRE_EQUAL(gu32EventCounter, 0);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gf32EventCounter, 1);
+	BOOST_REQUIRE_EQUAL(gu32EventCounter, 0);
+
+	sync.finish();
+}
+
+BOOST_AUTO_TEST_CASE (OneLaneOneEventWrongPayload)
 {
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane lane(sync, 100);
@@ -361,6 +398,15 @@ BOOST_AUTO_TEST_CASE (OneLaneWithOneEventWithTheWrongPayload)
 
 	sync.finish();
 }
+
+#if 0
+
+BOOST_AUTO_TEST_CASE (TwoConnectsSameEvent){}
+BOOST_AUTO_TEST_CASE (TwoConnectsSameEventButDifferentPayloads){}
+BOOST_AUTO_TEST_CASE (TwoLanesOneConnectPerLaneSameEvent){}
+BOOST_AUTO_TEST_CASE (TwoLanesOneConnectPerLaneSameEventButDifferentPayload){}
 #endif
+
+
 
 BOOST_AUTO_TEST_SUITE_END()

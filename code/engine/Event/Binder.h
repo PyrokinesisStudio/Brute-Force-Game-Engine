@@ -126,9 +126,16 @@ struct Binder
 			}
 			catch (IncompatibleTypeException& ex)
 			{
-				//! \todo Report about type differences.
-				//!       Also mention id and destination.
-				std::cout << ex.what() << std::endl;
+				std::cout << ex.what() 
+					<< " Trying to cast (" 
+					<< ex.mEmittedType->name() 
+					<< ") to (" 
+					<< ex.mExpectedType->name() 
+					<< "). "
+					<< "Id/Dest: "
+					<< id << "/" << destination
+					<< std::endl;
+				throw;
 			}
 		}
 		//! \todo Else: event id not found in this EventBinder

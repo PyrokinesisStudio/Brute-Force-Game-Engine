@@ -79,7 +79,14 @@ struct BasicLane
 	          const DestinationIdT destination = static_cast<DestinationIdT>(0), 
 	          const SenderIdT sender = static_cast<SenderIdT>(0))
 	{
-		mBinder.template emit<PayloadT>(id, payload, destination, sender);
+		try
+		{
+			mBinder.template emit<PayloadT>(id, payload, destination, sender);
+		}
+		catch (BFG::Event::IncompatibleTypeException&)
+		{
+			throw;
+		}
 		mSynchronizer.distributeToOthers(id, payload, this, destination, sender);
 	}
 	
