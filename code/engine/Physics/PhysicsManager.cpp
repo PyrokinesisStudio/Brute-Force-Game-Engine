@@ -139,7 +139,7 @@ dWorldID PhysicsManager::getWorldID() const
 	return mWorldID;
 }
 
-void PhysicsManager::clear()
+void PhysicsManager::clear(const BFG::Event::Void&)
 {
 	mPhysicsObjects.clear();
 }

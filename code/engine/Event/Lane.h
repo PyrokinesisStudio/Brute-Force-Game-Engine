@@ -100,6 +100,7 @@ struct BasicLane : boost::noncopyable
 		mLoopBinding.connect(boost::bind(fn, boost::ref(*object), _1));
 	}
 
+	//! Connect: const Payload, with Sender, non-const handler
 	template <typename PayloadT, typename ObjectT>
 	void connect(const IdT id,
 	             ObjectT* object,
@@ -109,10 +110,71 @@ struct BasicLane : boost::noncopyable
 		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1, _2), destination);
 	}
 
+	//! Connect: non-const Payload, with Sender, non-const handler
+	template <typename PayloadT, typename ObjectT>
+	void connect(const IdT id,
+	             ObjectT* object,
+	             void(ObjectT::*fn)(PayloadT, const SenderIdT&),
+	             const DestinationIdT destination = static_cast<DestinationIdT>(0))
+	{
+		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1, _2), destination);
+	}
+
+	//! Connect: const Payload, with Sender, const handler
+	template <typename PayloadT, typename ObjectT>
+	void connect(const IdT id,
+	             ObjectT* object,
+	             void(ObjectT::*fn)(const PayloadT&, const SenderIdT&) const,
+	             const DestinationIdT destination = static_cast<DestinationIdT>(0))
+	{
+		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1, _2), destination);
+	}
+
+	//! Connect: non-const Payload, with Sender, const handler
+	template <typename PayloadT, typename ObjectT>
+	void connect(const IdT id,
+	             ObjectT* object,
+	             void(ObjectT::*fn)(PayloadT, const SenderIdT&) const,
+	             const DestinationIdT destination = static_cast<DestinationIdT>(0))
+	{
+		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1, _2), destination);
+	}
+	
+	//! Connect: const Payload, without Sender, non-const handler
 	template <typename PayloadT, typename ObjectT>
 	void connect(const IdT id,
 		ObjectT* object,
 		void(ObjectT::*fn)(const PayloadT&),
+		const DestinationIdT destination = static_cast<DestinationIdT>(0))
+	{
+		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1), destination);
+	}
+
+	//! Connect: non-const Payload, without Sender, non-const handler
+	template <typename PayloadT, typename ObjectT>
+	void connect(const IdT id,
+		ObjectT* object,
+		void(ObjectT::*fn)(PayloadT),
+		const DestinationIdT destination = static_cast<DestinationIdT>(0))
+	{
+		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1), destination);
+	}
+
+	//! Connect: const Payload, without Sender, const handler
+	template <typename PayloadT, typename ObjectT>
+	void connect(const IdT id,
+		ObjectT* object,
+		void(ObjectT::*fn)(const PayloadT&) const,
+		const DestinationIdT destination = static_cast<DestinationIdT>(0))
+	{
+		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1), destination);
+	}
+
+	//! Connect: non-const Payload, without Sender, const handler
+	template <typename PayloadT, typename ObjectT>
+	void connect(const IdT id,
+		ObjectT* object,
+		void(ObjectT::*fn)(PayloadT) const,
 		const DestinationIdT destination = static_cast<DestinationIdT>(0))
 	{
 		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1), destination);

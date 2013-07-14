@@ -804,6 +804,13 @@ void PhysicsObject::onTorque(const v3& torque)
 	mTorque = torque;
 }
 
+void PhysicsObject::onDebug(const Event::Void&)
+{
+	std::string s;
+	debugOutput(s);
+	dbglog << s;
+}
+
 std::ostream& operator << (std::ostream& lhs, const PhysicsObject& rhs)
 {
 	std::string s;

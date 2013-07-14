@@ -184,6 +184,34 @@ struct TestModule4 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 	BFG::u32 mFrequency;
 };
 
+struct TestModuleCopy : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		lane->connect(3, this, &TestModuleCopy::testEventHandler);
+	}
+
+	void testEventHandler(BFG::u32)
+	{
+		boost::mutex::scoped_lock(mMutex);
+		++gu32EventCounter;
+	}
+};
+
+struct TestModuleConst : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		lane->connect(4, this, &TestModuleConst::testEventHandler);
+	}
+
+	void testEventHandler(BFG::u32) const
+	{
+		boost::mutex::scoped_lock(mMutex);
+		++gu32EventCounter;
+	}
+};
+
 
 // ---------------------------------------------------------------------------
 
@@ -213,6 +241,54 @@ BOOST_AUTO_TEST_CASE (Test)
 	sync.finish();
 }
 #endif
+
+BOOST_AUTO_TEST_CASE (CopyParameter)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+
+	lane.addEntry<TestModuleCopy>();
+	gu32EventCounter = 0;
+
+	sync.startEntries();
+
+	BFG::u32 value = 1;
+	lane.emit(3, value);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gu32EventCounter, 1);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gu32EventCounter, 1);
+
+	sync.finish();
+}
+
+BOOST_AUTO_TEST_CASE (ConstFunction)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+
+	lane.addEntry<TestModuleConst>();
+	gu32EventCounter = 0;
+
+	sync.startEntries();
+
+	BFG::u32 value = 1;
+	lane.emit(4, value);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gu32EventCounter, 1);
+
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+
+	BOOST_REQUIRE_EQUAL(gu32EventCounter, 1);
+
+	sync.finish();
+}
 
 BOOST_AUTO_TEST_CASE (OneLaneWithOneEvent)
 {
@@ -371,6 +447,7 @@ BOOST_AUTO_TEST_CASE (TwoLanesTwoEntryPointsTwoHandlerWithDifferentPayloadsForSa
 	BFG::Event::Lane lane2(sync, 100);
 
 	gf32EventCounter = 0;
+	gu32EventCounter = 0;
 
 	lane1.addEntry<TestModule>();
 	lane2.addEntry<TestModule3>(); // shouldn't this cause an IncompatibleTypeException?

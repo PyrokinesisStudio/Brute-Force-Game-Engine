@@ -150,6 +150,8 @@ private:
 
 	void onForce(const v3& force);
 	void onTorque(const v3& torque);
+	
+	void onDebug(const BFG::Event::Void&);
 
 	typedef std::map
 	<

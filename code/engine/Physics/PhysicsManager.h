@@ -80,7 +80,7 @@ public:
 	//! return the ODE world
 	dWorldID getWorldID() const;
 
-	void clear();
+	void clear(const Event::Void&);
 
 	void move(quantity<si::time, f32> timeSinceLastFrame);
 
