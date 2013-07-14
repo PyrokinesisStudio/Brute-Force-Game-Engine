@@ -121,6 +121,12 @@ struct BasicLane
 		mEntryPoints.push_back(new EntryT());
 	}
 
+	template <typename EntryT, typename ParameterT>
+	void addEntry(ParameterT startParameter)
+	{
+		mEntryPoints.push_back(new EntryT(startParameter));
+	}
+
 private:
 
 	void startEntries()

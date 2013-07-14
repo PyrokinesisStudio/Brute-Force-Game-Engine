@@ -175,6 +175,16 @@ struct TestModule3 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 	boost::mutex mMutex;
 };
 
+struct TestModule4 : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	TestModule4(BFG::u32 frequency) :
+	mFrequency(frequency)
+	{}
+
+	BFG::u32 mFrequency;
+};
+
+
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE(TestSuite)
@@ -398,6 +408,20 @@ BOOST_AUTO_TEST_CASE (OneLaneOneEventWrongPayload)
 
 	sync.finish();
 }
+
+BOOST_AUTO_TEST_CASE (EntryWithStartParameter)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+
+	BFG::u32 frequency = 100;
+	lane.addEntry<TestModule4>(frequency);
+
+	sync.startEntries();
+
+	sync.finish();
+}
+
 
 #if 0
 
