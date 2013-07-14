@@ -71,7 +71,7 @@ struct TestModulAudio1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 
 struct TestModulAudio2 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
-	void run(BFG::Event::Lane* lane)
+	void run(BFG::Event::Lane*)
 	{
 		std::cout << "TestModulAudio2-Run" << std::endl;
 	}
@@ -121,7 +121,7 @@ struct TestModulPhysics1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 
 struct TestModulGame1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
-	void run(BFG::Event::Lane* lane)
+	void run(BFG::Event::Lane*)
 	{
 		std::cout << "TestModulGame1-Run" << std::endl;
 	}

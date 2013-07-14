@@ -79,7 +79,7 @@ struct Binder
 
 	~Binder()
 	{
-		BOOST_FOREACH(ConnectionMapT::value_type vt, mBindings)
+		BOOST_FOREACH(typename ConnectionMapT::value_type vt, mBindings)
 		{
 			Callable* c = boost::any_cast<Callable*>(vt.mBinding);
 			delete c;

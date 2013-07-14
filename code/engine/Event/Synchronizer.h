@@ -35,9 +35,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/thread.hpp>
 #include <boost/thread/barrier.hpp>
 
-
 namespace BFG {
 namespace Event { 
+
+template <typename _IdT, typename _DestinationIdT, typename _SenderIdT>
+struct BasicLane;
 
 template <typename _LaneT>
 struct BasicSynchronizer
@@ -46,8 +48,9 @@ struct BasicSynchronizer
 	typedef typename LaneT::IdT            IdT;
 	typedef typename LaneT::DestinationIdT DestinationIdT;
 	typedef typename LaneT::SenderIdT      SenderIdT;
-	
-	friend typename LaneT;
+
+	template<typename _IdT, typename _DestinationIdT, typename _SenderIdT>
+	friend struct BasicLane;
 
 	BasicSynchronizer() :
 	mFinishing(false)

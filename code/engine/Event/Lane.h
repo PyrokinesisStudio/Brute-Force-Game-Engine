@@ -40,6 +40,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Event {
 
+template <typename _LaneT>
+struct BasicSynchronizer;
+
 template <typename _IdT, typename _DestinationIdT, typename _SenderIdT>
 struct BasicLane
 {
@@ -70,7 +73,8 @@ struct BasicLane
 		mEntryPoints.clear();
 	}
 	
-	friend struct SynchronizerT;
+	template <typename _LaneT>
+	friend struct BasicSynchronizer;
 
 	// Speichert ein Payload, das später ausgeliefert wird an einen Handler.
 	template <typename PayloadT>

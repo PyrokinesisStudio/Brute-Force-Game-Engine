@@ -35,7 +35,10 @@ struct EntryPoint
 {
 	typedef _LaneT LaneT;
 
-	virtual void run(LaneT* lane)
+	virtual ~EntryPoint()
+	{}
+	
+	virtual void run(LaneT*)
 	{}
 
 	virtual void stop()

@@ -80,7 +80,7 @@ struct Binding : public Callable
 		flipPayloads();
 		BOOST_FOREACH(const BufferT& buffer, mFrontPayloads)
 		{
-			signal()(buffer.get<0>(), buffer.get<1>());
+			signal()(buffer.template get<0>(), buffer.template get<1>());
 		}
 		mFrontPayloads.clear();
 	}
