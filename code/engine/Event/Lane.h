@@ -45,7 +45,7 @@ template <typename _LaneT>
 struct BasicSynchronizer;
 
 template <typename _IdT, typename _DestinationIdT, typename _SenderIdT>
-struct BasicLane
+struct BasicLane : boost::noncopyable
 {
 	typedef _IdT IdT;
 	typedef _DestinationIdT DestinationIdT;

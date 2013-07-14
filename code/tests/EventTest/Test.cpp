@@ -424,11 +424,11 @@ BOOST_AUTO_TEST_CASE (EntryWithStartParameter)
 
 
 #if 0
-
 BOOST_AUTO_TEST_CASE (TwoConnectsSameEvent){}
 BOOST_AUTO_TEST_CASE (TwoConnectsSameEventButDifferentPayloads){}
 BOOST_AUTO_TEST_CASE (TwoLanesOneConnectPerLaneSameEvent){}
 BOOST_AUTO_TEST_CASE (TwoLanesOneConnectPerLaneSameEventButDifferentPayload){}
+BOOST_AUTO_TEST_CASE (OneLaneWithoutFinish){}
 #endif
 
 

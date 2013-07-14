@@ -31,10 +31,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Event/Lane.h>
 #include <Event/Synchronizer.h>
 
-
 namespace BFG {
 namespace Event {
 
+//! \todo This should be automatic.
+struct Void {};
+	
 typedef BasicLane<u32, GameHandle, GameHandle> Lane; 
 typedef BasicSynchronizer<Lane> Synchronizer;
 
