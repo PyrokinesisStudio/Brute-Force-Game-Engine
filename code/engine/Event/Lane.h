@@ -27,6 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_EVENT_LANE_H
 #define BFG_EVENT_LANE_H
 
+#include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/thread.hpp>
 
 #include <Core/ClockUtils.h>
@@ -65,12 +66,10 @@ struct BasicLane
 
 	~BasicLane()
 	{
-		BOOST_FOREACH(EntryPointT* entryPoint, mEntryPoints)
+		BOOST_FOREACH(EntryPointT& entryPoint, mEntryPoints)
 		{
-			entryPoint->stop();
-			delete entryPoint;
+			entryPoint.stop();
 		}
-		mEntryPoints.clear();
 	}
 	
 	template <typename _LaneT>
@@ -135,9 +134,9 @@ private:
 
 	void startEntries()
 	{
-		BOOST_FOREACH(EntryPointT* entryPoint, mEntryPoints)
+		BOOST_FOREACH(EntryPointT& entryPoint, mEntryPoints)
 		{
-			entryPoint->run(this);
+			entryPoint.run(this);
 		}
 		mEntriesStarted = true;
 	}
@@ -186,7 +185,7 @@ private:
 	Clock::StopWatch  mTickWatch;
 	BinderT           mBinder;
 	Binding<TickData, SenderIdT> mLoopBinding;
-	std::vector<EntryPointT* > mEntryPoints;
+	boost::ptr_vector<EntryPointT> mEntryPoints;
 	bool mEntriesStarted;
 };
 
