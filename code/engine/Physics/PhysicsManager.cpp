@@ -35,8 +35,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/Logger.h>
 #include <Base/Cpp.h>
 
-#include <Model/Events/GameObjectEvent.h>
-
+#include <Physics/Event_fwd.h>
 #include <Physics/OdeTriMesh.h>
 #include <Physics/PhysicsObject.h>
 
@@ -82,8 +81,8 @@ static void odeDebugHandling(int errnum, const char* msg, va_list ap)
 }
 
 
-PhysicsManager::PhysicsManager(EventLoop* loop, u32 maxContactsPerCollision) :
-Emitter(loop),
+PhysicsManager::PhysicsManager(Event::Lane& lane, u32 maxContactsPerCollision) :
+mLane(lane),
 mMaxContactsPerCollision(maxContactsPerCollision),
 mSimulationStepSize(0.001f * si::seconds),
 mWorldID(0),
@@ -119,8 +118,6 @@ mCollisionJointsID(0)
 
 PhysicsManager::~PhysicsManager()
 {
-	unregisterEvents();
-
 	// Ensure that this gets done before ODE is closed
 	mPhysicsObjects.clear();
 
@@ -419,7 +416,7 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 	if (b1)
 	{
 		//! Hack: Abusing Sender-ID as additional payload!
-		emit<GameObjectEvent>
+		mLane.emit
 		(
 			ID::PE_CONTACT,
 			totalPenetrationDepth,
@@ -430,7 +427,7 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 	if (b2)
 	{
 		//! Hack: Abusing Sender-ID as additional payload!
-		emit<GameObjectEvent>
+		mLane.emit
 		(
 			ID::PE_CONTACT,
 			totalPenetrationDepth,
@@ -442,61 +439,12 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 
 void PhysicsManager::registerEvents()
 {
-	mPhysicsEvents.push_back(ID::PE_STEP);
-	mPhysicsEvents.push_back(ID::PE_CLEAR);
-	mPhysicsEvents.push_back(ID::PE_CREATE_OBJECT);
-	mPhysicsEvents.push_back(ID::PE_DELETE_OBJECT);
-	mPhysicsEvents.push_back(ID::PE_ATTACH_MODULE);
-	mPhysicsEvents.push_back(ID::PE_REMOVE_MODULE);
-
-	BOOST_FOREACH(ID::PhysicsAction action, mPhysicsEvents)
-	{
-		loop()->connect(action, this, &PhysicsManager::eventHandler);
-	}
-}
-
-void PhysicsManager::unregisterEvents()
-{
-	BOOST_FOREACH(ID::PhysicsAction action, mPhysicsEvents)
-	{
-		loop()->disconnect(action, this);
-	}
-
-	mPhysicsEvents.clear();
-}
-
-void PhysicsManager::eventHandler(Physics::Event* e)
-{
-	switch (e->id())
-	{
-	case ID::PE_STEP:
-		move(boost::get<f32>(e->data()) * si::seconds);
-		break;
-
-	case ID::PE_CLEAR:
-		clear();
-		break;
-		
-	case ID::PE_CREATE_OBJECT:
-		onCreateObject(boost::get<const ObjectCreationParams&>(e->data()));
-		break;
-
-	case ID::PE_DELETE_OBJECT:
-		onDeleteObject(boost::get<GameHandle>(e->data()));
-		break;
-
-	case ID::PE_ATTACH_MODULE:
-		onAttachModule(boost::get<const ModuleCreationParams&>(e->data()));
-		break;
-
-	case ID::PE_REMOVE_MODULE:
-		onRemoveModule(boost::get<const ModuleRemovalParams&>(e->data()));
-		break;
-
-	default:
-		throw std::logic_error
-			("PhysicsManager::eventHandler: Received unknown event!");
-	}
+	mLane.connect(ID::PE_ATTACH_MODULE, this, &PhysicsManager::onAttachModule);
+	mLane.connect(ID::PE_CLEAR, this, &PhysicsManager::clear);
+	mLane.connect(ID::PE_CREATE_OBJECT, this, &PhysicsManager::onCreateObject);
+	mLane.connect(ID::PE_DELETE_OBJECT, this, &PhysicsManager::onDeleteObject);
+	mLane.connect(ID::PE_REMOVE_MODULE, this, &PhysicsManager::onRemoveModule);
+	mLane.connect(ID::PE_STEP, this, &PhysicsManager::move);
 }
 
 void PhysicsManager::onCreateObject(const ObjectCreationParams& ocp)
@@ -508,7 +456,7 @@ void PhysicsManager::onCreateObject(const ObjectCreationParams& ocp)
 	(
 		new PhysicsObject
 		(
-			loop(),
+			mLane,
 			getWorldID(),
 			getSpaceID(),
 			location

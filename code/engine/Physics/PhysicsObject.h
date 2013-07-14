@@ -41,7 +41,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/qv4.h>
 #include <Core/ExternalTypes_fwd.h>
 
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 
 #include <Physics/Defs.h>
 #include <Physics/Event_fwd.h>
@@ -60,10 +60,10 @@ struct PHYSICS_API GeomData
 	ID::CollisionMode collisionMode;
 };
 
-class PHYSICS_API PhysicsObject : Emitter
+class PHYSICS_API PhysicsObject
 {
 public:
-	PhysicsObject(EventLoop* loop,
+	PhysicsObject(Event::Lane& lane,
 	              dWorldID worldId,
 	              dSpaceID spaceId,
 	              const Location& location);
@@ -142,9 +142,6 @@ private:
 	typedef std::map<std::string, boost::shared_ptr<OdeTriMesh> > MeshCacheT;
 
 	void registerEvents();
-	void unregisterEvents();
-
-	void eventHandler(Physics::Event*);
 
 	void notifyControlAboutChangeInMass() const;
 
@@ -160,6 +157,8 @@ private:
 		GeomData
 	> GeomMapT;
 
+	Event::Lane&      mLane;
+	
 	dBodyID           mOdeBody;
 	GeomMapT          mGeometry;
 	dSpaceID          mSpaceId;

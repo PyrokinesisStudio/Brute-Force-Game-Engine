@@ -35,8 +35,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/ExternalTypes.h>
 #include <Core/GameHandle.h>
 #include <Core/Location.h>
-#include <EventSystem/Core/EventDefs.h>
-#include <EventSystem/Event_fwd.h>
+
 #include <Physics/Enums.hh>
 
 namespace BFG {
@@ -107,33 +106,6 @@ typedef boost::tuple
 	qv4                  // Offset Orientation
 > ObjectAttachmentParams;
 
-typedef boost::variant
-<
-	bool,
-	s32,
-	f32,
-	v3,
-	qv4,
-	m3x3,
-	GameHandle,
-	FullSyncData,
-	VelocityComposite,
-	ObjectCreationParams,
-	ModuleCreationParams,
-	ModuleRemovalParams,
-	ObjectAttachmentParams,
-	InterpolationDataV3,
-	InterpolationDataQv4
-> PayloadT;
-
-typedef Event
-<
-	EventIdT,
-	PayloadT,
-	GameHandle,
-	GameHandle
->
-Event;
 } // namespace Physics
 } // namespace BFG
 

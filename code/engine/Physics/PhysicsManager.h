@@ -37,7 +37,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <ode/common.h>
 #include <utility>
 
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 
 #include <Core/Types.h>
 #include <Core/v3.h>
@@ -68,11 +68,10 @@ typedef boost::variant <
 	std::string
 > CollisionTypeData;
 
-class PHYSICS_API PhysicsManager : Emitter
+class PHYSICS_API PhysicsManager
 {
-
 public:
-	PhysicsManager(EventLoop* loop, u32 maxContactsPerCollision = 30);
+	PhysicsManager(Event::Lane& lane, u32 maxContactsPerCollision = 30);
 	~PhysicsManager();
 
 	//! return the ODE HashSpaceID
@@ -110,8 +109,6 @@ private:
 	void collideGeoms(dGeomID geo1, dGeomID geo2) const;
 
 	void registerEvents();
-	void unregisterEvents();
-	void eventHandler(Physics::Event*);
 
 	void onCreateObject(const ObjectCreationParams& ocp);
 	void onDeleteObject(GameHandle);
@@ -134,6 +131,8 @@ private:
 	friend void globalOdeNearCollisionCallback(void* additionalData,
 	                                           dGeomID geo1,
 	                                           dGeomID geo2);
+	
+	Event::Lane& mLane;
 };
 
 } // namespace Physics
