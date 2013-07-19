@@ -95,7 +95,7 @@ struct BasicLane : boost::noncopyable
 	
 	template <typename ObjectT>
 	void connectLoop(ObjectT* object,
-	                 void(ObjectT::*fn)(const TickData))
+	                 void(ObjectT::*fn)(TickData))
 	{
 		mLoopBinding.connect(boost::bind(fn, boost::ref(*object), _1));
 	}
