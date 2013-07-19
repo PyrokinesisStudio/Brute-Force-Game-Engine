@@ -24,113 +24,50 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_EVENT_LANE_H
-#define BFG_EVENT_LANE_H
+#ifndef BFG_EVENT_SUBLANE_H
+#define BFG_EVENT_SUBLANE_H
 
-#include <boost/ptr_container/ptr_vector.hpp>
-#include <boost/thread.hpp>
-
-#include <Core/ClockUtils.h>
-
-#include <Event/Binder.h>
-#include <Event/Binding.h>
-#include <Event/EntryPoint.h>
-#include <Event/Synchronizer.h>
-#include <Event/TickData.h>
-#include <Event/Void.h>
+#include <boost/noncopyable.hpp>
 
 namespace BFG {
-namespace Event {
+namespace Event { 
 
 template <typename _LaneT>
-struct BasicSynchronizer;
-
-template <typename _LaneT>
-struct BasicSubLane;
-
-template <typename _IdT, typename _DestinationIdT, typename _SenderIdT>
-struct BasicLane : boost::noncopyable
+struct BasicSubLane : boost::noncopyable
 {
-	typedef _IdT IdT;
-	typedef _DestinationIdT DestinationIdT;
-	typedef _SenderIdT SenderIdT;
-	typedef BasicLane<IdT, DestinationIdT, SenderIdT> This;
-	typedef BasicSynchronizer<This> SynchronizerT;
-	typedef BasicSubLane<This> SubLaneT;
-	typedef Binder<IdT, DestinationIdT, SenderIdT> BinderT;
-	typedef EntryPoint<BasicLane<IdT, DestinationIdT, SenderIdT> > EntryPointT;
+	typedef _LaneT LaneT;
+	typedef typename LaneT::IdT            IdT;
+	typedef typename LaneT::DestinationIdT DestinationIdT;
+	typedef typename LaneT::SenderIdT      SenderIdT;
+	typedef typename LaneT::BinderT        BinderT;
 	
-	template <typename _LaneT>
-	friend struct BasicSynchronizer;
-
-	template <typename _LaneT>
-	friend struct BasicSubLane;
-
-	BasicLane(SynchronizerT& synchronizer, s32 ticksPerSecond) :
-	mSynchronizer(synchronizer),
-	mPlannedTimeInMs(1000/ticksPerSecond),
-	mTickWatch(Clock::milliSecond),
-	mEntriesStarted(false)
+	explicit BasicSubLane(LaneT& lane) :
+	mLane(lane)
+	{}
+	
+	~BasicSubLane()
 	{
-		mTickWatch.start();
-		mSynchronizer.add(this);
-	}
-
-	~BasicLane()
-	{
-		BOOST_FOREACH(EntryPointT& entryPoint, mEntryPoints)
-		{
-			entryPoint.stop();
-		}
+		mLane.removeSubLane(this);
 	}
 	
-	boost::shared_ptr<SubLaneT> createSubLane()
-	{
-		boost::shared_ptr<SubLaneT> sublane(new SubLaneT(*this));
-		mSubLanes.push_back(sublane);
-		return sublane;
-	}
-	
-	void removeSubLane(SubLaneT* sublanePtr)
-	{
-		typename std::vector<boost::shared_ptr<SubLaneT> >::iterator it;
-		for (it = mSubLanes.begin(); it != mSubLanes.end(); ++it)
-		{
-			if (it->get() == sublanePtr)
-			{
-				mSubLanes.erase(it);
-				return;
-			}
-		}
-		//! \todo Throw
-	}
-	
-	// Speichert ein Payload, das später ausgeliefert wird an einen Handler.
 	template <typename PayloadT>
 	void emit(const IdT id, 
 	          const PayloadT& payload, 
 	          const DestinationIdT destination = static_cast<DestinationIdT>(0), 
 	          const SenderIdT sender = static_cast<SenderIdT>(0))
 	{
-		try
-		{
-			mBinder.template emit<PayloadT>(id, payload, destination, sender);
-		}
-		catch (BFG::Event::IncompatibleTypeException&)
-		{
-			throw;
-		}
-		mSynchronizer.distributeToOthers(id, payload, this, destination, sender);
-		subEmit(id, payload, destination, sender);
+		mLane.emit(id, payload, destination, sender);
 	}
 	
-	template <typename ObjectT>
-	void connectLoop(ObjectT* object,
-	                 void(ObjectT::*fn)(TickData))
+	template <typename PayloadT>
+	void subEmit(const IdT id, 
+	          const PayloadT& payload, 
+	          const DestinationIdT destination = static_cast<DestinationIdT>(0), 
+	          const SenderIdT sender = static_cast<SenderIdT>(0))
 	{
-		mLoopBinding.connect(boost::bind(fn, boost::ref(*object), _1));
+		mBinder.template emit(id, payload, destination, sender);
 	}
-
+	
 	//! Connect: handler with Payload
 	template <typename ObjectT, typename FnT>
 	void connect(const IdT& id,
@@ -167,17 +104,10 @@ struct BasicLane : boost::noncopyable
 		Connector c;
 		c.template connect<Void>(mBinder, id, object, fn, destination);
 	}
-
-	template <typename EntryT>
-	void addEntry()
+	
+	void tick()
 	{
-		mEntryPoints.push_back(new EntryT());
-	}
-
-	template <typename EntryT, typename ParameterT>
-	void addEntry(ParameterT startParameter)
-	{
-		mEntryPoints.push_back(new EntryT(startParameter));
+		mBinder.tick();
 	}
 
 private:
@@ -291,94 +221,8 @@ private:
 		}
 	};
 
-	void startEntries()
-	{
-		BOOST_FOREACH(EntryPointT& entryPoint, mEntryPoints)
-		{
-			entryPoint.run(this);
-		}
-		mEntriesStarted = true;
-	}
-
-	void stopEntries()
-	{
-		mEntriesStarted = false;
-		BOOST_FOREACH(EntryPointT* entryPoint, mEntryPoints)
-		{
-			entryPoint->stop();
-		}
-	}
-
-	template <typename PayloadT>
-	void emitFromOther(const IdT id,
-		const PayloadT& payload,
-		const DestinationIdT destination,
-		const SenderIdT sender)
-	{
-		mBinder.template emit<PayloadT>(id, payload, destination, sender);
-		subEmit(id, payload, destination, sender);
-	}
-	
-	template <typename PayloadT>
-	void subEmit(const IdT id,
-		const PayloadT& payload,
-		const DestinationIdT destination,
-		const SenderIdT sender)
-	{
-		std::for_each
-		(
-			mSubLanes.begin(),
-			mSubLanes.end(),
-			boost::bind
-			(
-				&SubLaneT::template subEmit<PayloadT>,
-				boost::bind(&boost::shared_ptr<SubLaneT>::get, _1),
-				id, boost::ref(payload), destination, sender
-			)
-		);
-	}
-
-	void tick()
-	{
-		if (!mEntriesStarted)
-			return;
-
-		mLoopBinding.emit(TickData(mTickWatch.restart()), static_cast<SenderIdT>(0));
-		mLoopBinding.call();
-
-		mBinder.tick();
-		
-		std::for_each
-		(
-			mSubLanes.begin(),
-			mSubLanes.end(),
-			boost::bind
-			(
-				&SubLaneT::tick,
-				boost::bind(&boost::shared_ptr<SubLaneT>::get, _1)
-			)
-		);
-		
-		waitRemainingTime(mTickWatch.stop());
-	}
-
-	void waitRemainingTime(const s32 consumedTime) const
-	{
-		s32 remainingTime = mPlannedTimeInMs - consumedTime;
-		if (remainingTime > 0)
-		{
-			boost::this_thread::sleep(boost::posix_time::milliseconds(remainingTime));
-		}
-	}
-	
-	SynchronizerT&    mSynchronizer;
-	s32               mPlannedTimeInMs;
-	Clock::StopWatch  mTickWatch;
+	LaneT&            mLane;
 	BinderT           mBinder;
-	Binding<TickData, SenderIdT> mLoopBinding;
-	boost::ptr_vector<EntryPointT> mEntryPoints;
-	bool mEntriesStarted;
-	std::vector<boost::shared_ptr<SubLaneT> > mSubLanes;
 };
 
 } // namespace Event

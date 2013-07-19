@@ -252,10 +252,68 @@ struct ModuleConnect : public BFG::Event::EntryPoint<BFG::Event::Lane>
 	void extendedVoid(const BFG::GameHandle& sender){std::cout << "extendedVoid(" << sender << ")" << std::endl;}
 	void extendedVoidConst(const BFG::GameHandle& sender) const {std::cout << "extendedVoidConst(" << sender << ")" << std::endl;}
 };
+
+struct SubModuleConnect : ModuleConnect
+{
+	void run(BFG::Event::Lane* l)
+	{
+		lane = l;
+		sublane = l->createSubLane();
+		
+ 		sublane->connect(1, this, &ModuleConnect::simpleCopy);
+ 		sublane->connect(2, this, &ModuleConnect::simpleCopyConst);
+ 		sublane->connect(3, this, &ModuleConnect::extendedCopy);
+ 		sublane->connect(4, this, &ModuleConnect::extendedCopyConst);
+
+		sublane->connect(5, this, &ModuleConnect::simpleReference);
+		sublane->connect(6, this, &ModuleConnect::simpleReferenceConst);
+		sublane->connect(7, this, &ModuleConnect::extendedReference);
+		sublane->connect(8, this, &ModuleConnect::extendedReferenceConst);
+
+		sublane->connectV(9, this, &ModuleConnect::simpleVoid);
+		sublane->connectV(10, this, &ModuleConnect::simpleVoidConst);
+		sublane->connectV(11, this, &ModuleConnect::extendedVoid);
+		sublane->connectV(12, this, &ModuleConnect::extendedVoidConst);
+		
+		sublane->connectV(13, this, &SubModuleConnect::onDestroy);
+	}
+	
+	void onDestroy()
+	{
+		std::cout << "SubModuleConnect.onDestroy -> removeSubLane" << std::endl;
+		lane->removeSubLane(sublane.get());
+	}
+	
+	BFG::Event::Lane* lane;
+	boost::shared_ptr<BFG::Event::SubLane> sublane;
+};
+
 // ---------------------------------------------------------------------------
 
 
 BOOST_AUTO_TEST_SUITE(TestSuite)
+
+BOOST_AUTO_TEST_CASE (SubLaneTest)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+	boost::shared_ptr<BFG::Event::SubLane> sublane(lane.createSubLane());
+	
+	// EntryPoints
+	lane.addEntry<SubModuleConnect>();
+	sync.startEntries();
+	
+	sublane->emit(5, std::string("SubLane to SubLane"));
+	sublane->emit(6, std::string("SubLane to SubLane (again)"));
+	lane.emit(7, std::string("Lane to SubLane"));
+	lane.emit(13, BFG::Event::Void());
+	
+	boost::this_thread::sleep(boost::posix_time::millisec(100));
+	
+	lane.emit(5, std::string("Should not be emitted"));
+	
+	sync.finish();
+}
 
 BOOST_AUTO_TEST_CASE (BindingTest)
 {

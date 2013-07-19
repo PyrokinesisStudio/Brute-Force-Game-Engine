@@ -30,6 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/GameHandle.h>
 #include <Event/Lane.h>
 #include <Event/Synchronizer.h>
+#include <Event/SubLane.h>
 
 namespace BFG {
 namespace Event {
@@ -40,6 +41,7 @@ typedef GameHandle SenderT;
 
 typedef BasicLane<IdT, DestinationT, SenderT> Lane;
 typedef BasicSynchronizer<Lane> Synchronizer;
+typedef BasicSubLane<Lane> SubLane;
 
 } // namespace Event
 } // namespace BFG
