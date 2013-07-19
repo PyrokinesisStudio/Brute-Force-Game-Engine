@@ -34,10 +34,14 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Event {
 
+typedef u32 IdT;
+typedef GameHandle DestinationT;
+typedef GameHandle SenderT;
+
 //! \todo This should be automatic.
 struct Void {};
-	
-typedef BasicLane<u32, GameHandle, GameHandle> Lane; 
+
+typedef BasicLane<IdT, DestinationT, SenderT> Lane;
 typedef BasicSynchronizer<Lane> Synchronizer;
 
 } // namespace Event
