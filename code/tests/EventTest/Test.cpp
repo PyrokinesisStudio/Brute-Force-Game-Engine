@@ -31,6 +31,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/mutex.hpp>
 
+#include <Event/Binding.h>
+
 const int testEventId = 5;
 const BFG::GameHandle testDestinationId = 15;
 const BFG::GameHandle testDestinationId2 = 16;
@@ -40,13 +42,16 @@ const BFG::GameHandle testSenderId2 = 91011;
 static BFG::u32 gf32EventCounter = 0;
 static BFG::u32 gu32EventCounter = 0;
 
+
+
+
 struct TestModulAudio1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
 	void run(BFG::Event::Lane* lane)
 	{
 		mLane = lane;
 		std::cout << "TestModulAudio1-Run" << std::endl;
-		mLane->connect(1, this, &TestModulAudio1::event1Handler);
+		mLane->connectP(1, this, &TestModulAudio1::event1Handler);
 		mLane->connectLoop(this, &TestModulAudio1::update);
 	}
 
@@ -84,7 +89,7 @@ struct TestModulView1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 		mLane = lane;
 		std::cout << "TestModulView1-Run" << std::endl;
 
-		mLane->connect(2, this, &TestModulView1::event2Handler);
+		mLane->connectP(2, this, &TestModulView1::event2Handler);
 	}
 
 	void event2Handler(const std::string& s)
@@ -103,7 +108,7 @@ struct TestModulPhysics1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 		mLane = lane;
 		std::cout << "TestModulPhysics1-Run" << std::endl;
 
-		mLane->connect(2, this, &TestModulPhysics1::event2Handler);
+		mLane->connectP(2, this, &TestModulPhysics1::event2Handler);
 	}
 
 	void stop()
@@ -131,7 +136,7 @@ struct TestModule : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
 	void run(BFG::Event::Lane* lane)
 	{
-		lane->connect(1, this, &TestModule::testEventHandler);
+		lane->connectP(1, this, &TestModule::testEventHandler);
 	}
 
 	void testEventHandler(const BFG::f32&)
@@ -147,7 +152,7 @@ struct TestModule2 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
 	void run(BFG::Event::Lane* lane)
 	{
-		lane->connect(2, this, &TestModule2::testEventHandler);
+		lane->connectP(2, this, &TestModule2::testEventHandler);
 	}
 
 	void testEventHandler(const BFG::u32&)
@@ -163,7 +168,7 @@ struct TestModule3 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
 	void run(BFG::Event::Lane* lane)
 	{
-		lane->connect(1, this, &TestModule3::testEventHandler);
+		lane->connectP(1, this, &TestModule3::testEventHandler);
 	}
 
 	void testEventHandler(const BFG::u32&)
@@ -188,7 +193,7 @@ struct TestModuleCopy : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
 	void run(BFG::Event::Lane* lane)
 	{
-		lane->connect(3, this, &TestModuleCopy::testEventHandler);
+		lane->connectP(3, this, &TestModuleCopy::testEventHandler);
 	}
 
 	void testEventHandler(BFG::u32)
@@ -202,7 +207,7 @@ struct TestModuleConst : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
 	void run(BFG::Event::Lane* lane)
 	{
-		lane->connect(4, this, &TestModuleConst::testEventHandler);
+		lane->connectP(4, this, &TestModuleConst::testEventHandler);
 	}
 
 	void testEventHandler(BFG::u32) const
@@ -212,12 +217,288 @@ struct TestModuleConst : public BFG::Event::EntryPoint<BFG::Event::Lane>
 	}
 };
 
+struct ModuleConnect : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+ 		lane->connectP(1, this, &ModuleConnect::simpleCopy);
+ 		lane->connectP(2, this, &ModuleConnect::simpleCopyConst);
+ 		lane->connectP(3, this, &ModuleConnect::extendedCopy);
+ 		lane->connectP(4, this, &ModuleConnect::extendedCopyConst);
 
+		lane->connectP(5, this, &ModuleConnect::simpleReference);
+		lane->connectP(6, this, &ModuleConnect::simpleReferenceConst);
+		lane->connectP(7, this, &ModuleConnect::extendedReference);
+		lane->connectP(8, this, &ModuleConnect::extendedReferenceConst);
+
+		lane->connectV<BFG::Event::Void>(9, this, &ModuleConnect::simpleVoid);
+		lane->connectV<BFG::Event::Void>(10, this, &ModuleConnect::simpleVoidConst);
+		lane->connectV<BFG::Event::Void>(11, this, &ModuleConnect::extendedVoid);
+		lane->connectV<BFG::Event::Void>(12, this, &ModuleConnect::extendedVoidConst);
+	}
+
+	void simpleCopy(BFG::u32 u){std::cout << "simpleCopy(" << u << ")" << std::endl;}
+	void simpleCopyConst(BFG::u32 u) const {std::cout << "simpleCopyConst(" << u << ")" << std::endl;}
+	void extendedCopy(BFG::u32 u, const BFG::GameHandle& sender){std::cout << "extendedCopy(" << u << "," << sender << ")" << std::endl;}
+	void extendedCopyConst(BFG::u32 u, const BFG::GameHandle& sender) const {std::cout << "extendedCopyConst(" << u << "," << sender << ")" << std::endl;}
+
+	void simpleReference(const std::string& s){std::cout << "simpleReference(" << s << ")" << std::endl;}
+	void simpleReferenceConst(const std::string& s) const {std::cout << "simpleReferenceConst(" << s << ")" << std::endl;}
+	void extendedReference(const std::string& s, const BFG::GameHandle& sender){std::cout << "extendedReference(" << s << "," << sender << ")" << std::endl;}
+	void extendedReferenceConst(const std::string& s, const BFG::GameHandle& sender) const {std::cout << "extendedReferenceConst(" << s << "," << sender << ")" << std::endl;}
+
+	void simpleVoid(){std::cout << "simpleVoid" << std::endl;}
+	void simpleVoidConst() const {std::cout << "simpleVoidConst" << std::endl;}
+	void extendedVoid(const BFG::GameHandle& sender){std::cout << "extendedVoid(" << sender << ")" << std::endl;}
+	void extendedVoidConst(const BFG::GameHandle& sender) const {std::cout << "extendedVoidConst(" << sender << ")" << std::endl;}
+};
 // ---------------------------------------------------------------------------
+
 
 BOOST_AUTO_TEST_SUITE(TestSuite)
 
-#if 0
+BOOST_AUTO_TEST_CASE (BindingTest)
+{
+	ModuleConnect mc;
+	BFG::GameHandle senderHandle = 83;
+	// copy
+	BFG::Event::Binding<BFG::u32, BFG::GameHandle> bu;
+
+	bu.connect(boost::bind(&ModuleConnect::simpleCopy, &mc, _1));
+	bu.connect(boost::bind(&ModuleConnect::simpleCopyConst, &mc, _1));
+	bu.connect(boost::bind(&ModuleConnect::extendedCopy, &mc, _1, _2));
+	bu.connect(boost::bind(&ModuleConnect::extendedCopyConst, &mc, _1, _2));
+
+	BFG::u32 u = 15;
+	bu.emit(u, senderHandle);
+
+	bu.call();
+
+	// reference
+	BFG::Event::Binding<std::string, BFG::GameHandle> bs;
+
+	bs.connect(boost::bind(&ModuleConnect::simpleReference, &mc, _1));
+	bs.connect(boost::bind(&ModuleConnect::simpleReferenceConst, &mc, _1));
+	bs.connect(boost::bind(&ModuleConnect::extendedReference, &mc, _1, _2));
+	bs.connect(boost::bind(&ModuleConnect::extendedReferenceConst, &mc, _1, _2));
+
+	std::string s = "Hello";
+	bs.emit(s, senderHandle);
+
+	bs.call();
+
+	// void
+	BFG::Event::Binding<BFG::Event::Void, BFG::GameHandle> bv;
+
+	bv.connect(boost::bind(&ModuleConnect::simpleVoid, &mc));
+	bv.connect(boost::bind(&ModuleConnect::simpleVoidConst, &mc));
+	bv.connect(boost::bind(&ModuleConnect::extendedVoid, &mc, _2));
+	bv.connect(boost::bind(&ModuleConnect::extendedVoidConst, &mc, _2));
+
+	BFG::Event::Void v;
+	bv.emit(v, senderHandle);
+
+	bv.call();
+}
+
+BOOST_AUTO_TEST_CASE (ConnectionTestU32)
+{
+	ModuleConnect mc;
+	BFG::u32 id = 32;
+	BFG::GameHandle senderHandle = 123;
+	BFG::GameHandle dest = BFG::NULL_HANDLE;
+
+	BFG::Event::Callable* cu1 = new BFG::Event::Binding<BFG::u32, BFG::GameHandle>();
+
+	BFG::Event::Connection<BFG::u32, BFG::GameHandle> con1 = {id, dest, cu1};
+
+	BFG::Event::Binding<BFG::u32, BFG::GameHandle>* bu1 = static_cast<BFG::Event::Binding<BFG::u32, BFG::GameHandle>*>(cu1);
+
+	bu1->connect(boost::bind(&ModuleConnect::simpleCopy, &mc, _1));
+	bu1->connect(boost::bind(&ModuleConnect::simpleCopyConst, &mc, _1));
+	bu1->connect(boost::bind(&ModuleConnect::extendedCopy, &mc, _1, _2));
+	bu1->connect(boost::bind(&ModuleConnect::extendedCopyConst, &mc, _1, _2));
+
+	BFG::Event::Callable* cu2 = boost::any_cast<BFG::Event::Callable*>(con1.mBinding);
+	BFG::Event::Binding<BFG::u32, BFG::GameHandle>* bu2 = static_cast<BFG::Event::Binding<BFG::u32, BFG::GameHandle>*>(cu2);
+
+	BFG::u32 u = 55;
+	bu2->emit(u, senderHandle);
+	u = 43;
+	bu2->emit(u, senderHandle);
+
+	BFG::Event::Callable* cu3 = boost::any_cast<BFG::Event::Callable*>(con1.mBinding);
+	BFG::Event::Binding<BFG::u32, BFG::GameHandle>* bu3 = static_cast<BFG::Event::Binding<BFG::u32, BFG::GameHandle>*>(cu3);
+
+	bu3->call();
+
+	BFG::Event::Callable* cu4 = boost::any_cast<BFG::Event::Callable*>(con1.mBinding);
+	delete cu4;
+}
+
+BOOST_AUTO_TEST_CASE (ConnectionTestString)
+{
+	ModuleConnect mc;
+	BFG::u32 id = 18;
+	BFG::GameHandle senderHandle = 225;
+	BFG::GameHandle dest = BFG::NULL_HANDLE;
+
+	BFG::Event::Callable* cs1 = new BFG::Event::Binding<std::string, BFG::GameHandle>();
+
+	BFG::Event::Connection<BFG::u32, BFG::GameHandle> con1 = {id, dest, cs1};
+
+	BFG::Event::Binding<std::string, BFG::GameHandle>* bs1 = static_cast<BFG::Event::Binding<std::string, BFG::GameHandle>*>(cs1);
+
+	bs1->connect(boost::bind(&ModuleConnect::simpleReference, &mc, _1));
+	bs1->connect(boost::bind(&ModuleConnect::simpleReferenceConst, &mc, _1));
+	bs1->connect(boost::bind(&ModuleConnect::extendedReference, &mc, _1, _2));
+	bs1->connect(boost::bind(&ModuleConnect::extendedReferenceConst, &mc, _1, _2));
+
+	BFG::Event::Callable* cs2 = boost::any_cast<BFG::Event::Callable*>(con1.mBinding);
+	BFG::Event::Binding<std::string, BFG::GameHandle>* bs2 = static_cast<BFG::Event::Binding<std::string, BFG::GameHandle>*>(cs2);
+
+	std::string s = "Hello";
+	bs2->emit(s, senderHandle);
+	s = "Du";
+	bs2->emit(s, senderHandle);
+
+	BFG::Event::Callable* cs3 = boost::any_cast<BFG::Event::Callable*>(con1.mBinding);
+	BFG::Event::Binding<std::string, BFG::GameHandle>* bs3 = static_cast<BFG::Event::Binding<std::string, BFG::GameHandle>*>(cs3);
+
+	bs3->call();
+
+	BFG::Event::Callable* cs4 = boost::any_cast<BFG::Event::Callable*>(con1.mBinding);
+	delete cs4;
+}
+
+BOOST_AUTO_TEST_CASE (ConnectionTestVoid)
+{
+	ModuleConnect mc;
+	BFG::u32 id = 18;
+	BFG::GameHandle senderHandle = 225;
+	BFG::GameHandle dest = BFG::NULL_HANDLE;
+
+	BFG::Event::Callable* cv1 = new BFG::Event::Binding<BFG::Event::Void, BFG::GameHandle>();
+
+	BFG::Event::Connection<BFG::u32, BFG::GameHandle> con1 = {id, dest, cv1};
+
+	BFG::Event::Binding<BFG::Event::Void, BFG::GameHandle>* bv1 = static_cast<BFG::Event::Binding<BFG::Event::Void, BFG::GameHandle>*>(cv1);
+
+	bv1->connect(boost::bind(&ModuleConnect::simpleVoid, &mc));
+	bv1->connect(boost::bind(&ModuleConnect::simpleVoidConst, &mc));
+	bv1->connect(boost::bind(&ModuleConnect::extendedVoid, &mc, _2));
+	bv1->connect(boost::bind(&ModuleConnect::extendedVoidConst, &mc, _2));
+
+	BFG::Event::Callable* cv2 = boost::any_cast<BFG::Event::Callable*>(con1.mBinding);
+	BFG::Event::Binding<BFG::Event::Void, BFG::GameHandle>* bv2 = static_cast<BFG::Event::Binding<BFG::Event::Void, BFG::GameHandle>*>(cv2);
+
+	BFG::Event::Void v;
+	bv2->emit(v, senderHandle);
+	bv2->emit(v, senderHandle + 1);
+
+	BFG::Event::Callable* cv3 = boost::any_cast<BFG::Event::Callable*>(con1.mBinding);
+	BFG::Event::Binding<BFG::Event::Void, BFG::GameHandle>* bv3 = static_cast<BFG::Event::Binding<BFG::Event::Void, BFG::GameHandle>*>(cv3);
+
+	bv3->call();
+
+	BFG::Event::Callable* cv4 = boost::any_cast<BFG::Event::Callable*>(con1.mBinding);
+	delete cv4;
+}
+
+BOOST_AUTO_TEST_CASE (BinderTest)
+{
+	ModuleConnect mc;
+	BFG::u32 idU = 92;
+	BFG::u32 idS = 192;
+	BFG::u32 idV = 292;
+	BFG::GameHandle senderHandle = 8;
+	BFG::GameHandle dest = BFG::NULL_HANDLE;
+
+	BFG::Event::Binder<BFG::u32, BFG::GameHandle, BFG::GameHandle> b;
+
+	b.connect<BFG::u32>(idU, boost::bind(&ModuleConnect::simpleCopy, &mc, _1), dest);
+	b.connect<BFG::u32>(idU, boost::bind(&ModuleConnect::simpleCopyConst, &mc, _1), dest);
+	b.connect<BFG::u32>(idU, boost::bind(&ModuleConnect::extendedCopy, &mc, _1, _2), dest);
+	b.connect<BFG::u32>(idU, boost::bind(&ModuleConnect::extendedCopyConst, &mc, _1, _2), dest);
+
+	b.connect<std::string>(idS, boost::bind(&ModuleConnect::simpleReference, &mc, _1), dest);
+	b.connect<std::string>(idS, boost::bind(&ModuleConnect::simpleReferenceConst, &mc, _1), dest);
+	b.connect<std::string>(idS, boost::bind(&ModuleConnect::extendedReference, &mc, _1, _2), dest);
+	b.connect<std::string>(idS, boost::bind(&ModuleConnect::extendedReferenceConst, &mc, _1, _2), dest);
+
+	b.connect<BFG::Event::Void>(idV, boost::bind(&ModuleConnect::simpleVoid, &mc), dest);
+	b.connect<BFG::Event::Void>(idV, boost::bind(&ModuleConnect::simpleVoidConst, &mc), dest);
+	b.connect<BFG::Event::Void>(idV, boost::bind(&ModuleConnect::extendedVoid, &mc, _2), dest);
+	b.connect<BFG::Event::Void>(idV, boost::bind(&ModuleConnect::extendedVoidConst, &mc, _2), dest);
+
+	BFG::u32 pu = 77;
+	std::string ps = "StringPayload";
+	BFG::Event::Void pv;
+
+	b.emit(idU, pu, dest, senderHandle);
+	b.emit(idS, ps, dest, senderHandle);
+	b.emit(idV, pv, dest, senderHandle);
+
+	b.tick();
+}
+
+BOOST_AUTO_TEST_CASE (ManualBind)
+{
+	boost::signals2::signal<void (const BFG::u32&, const BFG::GameHandle&)> sigU32;
+	boost::signals2::signal<void (const std::string&, const BFG::GameHandle&)> sigString;
+	boost::signals2::signal<void (const BFG::Event::Void&, const BFG::GameHandle&)> sigVoid;
+
+	ModuleConnect mc;
+
+ 	sigU32.connect(boost::bind(&ModuleConnect::simpleCopy, &mc, _1));
+	sigU32.connect(boost::bind(&ModuleConnect::simpleCopyConst, &mc, _1));
+	sigU32.connect(boost::bind(&ModuleConnect::extendedCopy, &mc, _1, _2));
+	sigU32.connect(boost::bind(&ModuleConnect::extendedCopyConst, &mc, _1, _2));
+
+	sigString.connect(boost::bind(&ModuleConnect::simpleReference, &mc, _1));
+	sigString.connect(boost::bind(&ModuleConnect::simpleReferenceConst, &mc, _1));
+	sigString.connect(boost::bind(&ModuleConnect::extendedReference, &mc, _1, _2));
+	sigString.connect(boost::bind(&ModuleConnect::extendedReferenceConst, &mc, _1, _2));
+
+	sigVoid.connect(boost::bind(&ModuleConnect::simpleVoid, &mc));
+	sigVoid.connect(boost::bind(&ModuleConnect::simpleVoidConst, &mc));
+	sigVoid.connect(boost::bind(&ModuleConnect::extendedVoid, &mc, _2));
+	sigVoid.connect(boost::bind(&ModuleConnect::extendedVoidConst, &mc, _2));
+
+	sigU32(5, 22);
+	sigString(std::string("Bla"), 15);
+	sigVoid(BFG::Event::Void(), 48);
+}
+
+
+BOOST_AUTO_TEST_CASE (Connect)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+
+	// EntryPoints
+	lane.addEntry<ModuleConnect>();
+
+	sync.startEntries();
+
+	BFG::u32 u = 5;
+	std::string s("Hallo");
+	BFG::Event::Void v;
+	lane.emit(1, u);
+	lane.emit(2, u);
+	lane.emit(3, u);
+	lane.emit(4, u);
+	lane.emit(5, s);
+	lane.emit(6, s);
+	lane.emit(7, s);
+	lane.emit(8, s);
+	lane.emit(9, v);
+	lane.emit(10, v);
+	lane.emit(11, v);
+	lane.emit(12, v);
+	sync.finish();
+}
+
 BOOST_AUTO_TEST_CASE (Test)
 {
 	const int ticksPerSecond100 = 100;
@@ -240,7 +521,6 @@ BOOST_AUTO_TEST_CASE (Test)
 
 	sync.finish();
 }
-#endif
 
 BOOST_AUTO_TEST_CASE (CopyParameter)
 {
@@ -298,7 +578,7 @@ BOOST_AUTO_TEST_CASE (OneLaneWithOneEvent)
 	TestModule t;
 	gf32EventCounter = 0;
 
-	lane.connect(1, &t, &TestModule::testEventHandler);
+	lane.connectP(1, &t, &TestModule::testEventHandler);
 
 	sync.startEntries();
 
@@ -323,7 +603,7 @@ BOOST_AUTO_TEST_CASE (OneLaneWithOneUnconnectedEvent)
 	TestModule t;
 	gf32EventCounter = 0;
 
-	lane.connect(1, &t, &TestModule::testEventHandler);
+	lane.connectP(1, &t, &TestModule::testEventHandler);
 
 	sync.startEntries();
 
@@ -477,7 +757,7 @@ BOOST_AUTO_TEST_CASE (OneLaneOneEventWrongPayload)
 
 	TestModule t;
 
-	lane.connect(1, &t, &TestModule::testEventHandler);
+	lane.connectP(1, &t, &TestModule::testEventHandler);
 
 	sync.startEntries();
 
@@ -498,6 +778,7 @@ BOOST_AUTO_TEST_CASE (EntryWithStartParameter)
 
 	sync.finish();
 }
+
 
 
 #if 0

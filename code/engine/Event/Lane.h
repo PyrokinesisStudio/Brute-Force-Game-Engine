@@ -100,84 +100,46 @@ struct BasicLane : boost::noncopyable
 		mLoopBinding.connect(boost::bind(fn, boost::ref(*object), _1));
 	}
 
-	//! Connect: const Payload, with Sender, non-const handler
-	template <typename PayloadT, typename ObjectT>
-	void connect(const IdT id,
-	             ObjectT* object,
-	             void(ObjectT::*fn)(const PayloadT&, const SenderIdT&),
-	             const DestinationIdT destination = static_cast<DestinationIdT>(0))
+	//! Connect: handler with Payload
+	template <typename ObjectT, typename FnT>
+	void connectP(const IdT& id,
+	              ObjectT* object,
+	              FnT fn,
+	              const DestinationIdT& destination = static_cast<DestinationIdT>(0))
 	{
-		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1, _2), destination);
+		typedef BasicLane<_IdT,_DestinationIdT,_SenderIdT> LaneT;
+		typedef member_arity<FnT>::arg1_type crPayloadT;
+		typedef std::remove_reference<crPayloadT>::type cPayloadT;
+		typedef std::remove_const<cPayloadT>::type PayloadT;
+		typedef boost::mpl::if_c<
+			member_arity<FnT>::arity == 2,
+			ConnectorPS,
+			ConnectorP
+		>::type Connector;
+
+		Connector c;
+		c.template connect<PayloadT>(mBinder, id, object, fn, destination);
 	}
 
-	//! Connect: non-const Payload, with Sender, non-const handler
-	template <typename PayloadT, typename ObjectT>
-	void connect(const IdT id,
-	             ObjectT* object,
-	             void(ObjectT::*fn)(PayloadT, const SenderIdT&),
-	             const DestinationIdT destination = static_cast<DestinationIdT>(0))
+	//! Connect: handler without Payload
+	template <typename crPayloadT, typename ObjectT, typename FnT>
+	void connectV(const IdT& id,
+	              ObjectT* object,
+	              FnT fn,
+	              const DestinationIdT& destination = static_cast<DestinationIdT>(0))
 	{
-		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1, _2), destination);
-	}
+		typedef BasicLane<_IdT,_DestinationIdT,_SenderIdT> LaneT;
+		typedef std::remove_reference<crPayloadT>::type cPayloadT;
+		typedef std::remove_const<cPayloadT>::type PayloadT;
+		typedef boost::mpl::if_c<
+			member_arity<FnT>::arity == 1,
+			ConnectorVS,
+			ConnectorV
+		>::type Connector;
 
-	//! Connect: const Payload, with Sender, const handler
-	template <typename PayloadT, typename ObjectT>
-	void connect(const IdT id,
-	             ObjectT* object,
-	             void(ObjectT::*fn)(const PayloadT&, const SenderIdT&) const,
-	             const DestinationIdT destination = static_cast<DestinationIdT>(0))
-	{
-		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1, _2), destination);
-	}
+		Connector c;
 
-	//! Connect: non-const Payload, with Sender, const handler
-	template <typename PayloadT, typename ObjectT>
-	void connect(const IdT id,
-	             ObjectT* object,
-	             void(ObjectT::*fn)(PayloadT, const SenderIdT&) const,
-	             const DestinationIdT destination = static_cast<DestinationIdT>(0))
-	{
-		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1, _2), destination);
-	}
-	
-	//! Connect: const Payload, without Sender, non-const handler
-	template <typename PayloadT, typename ObjectT>
-	void connect(const IdT id,
-		ObjectT* object,
-		void(ObjectT::*fn)(const PayloadT&),
-		const DestinationIdT destination = static_cast<DestinationIdT>(0))
-	{
-		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1), destination);
-	}
-
-	//! Connect: non-const Payload, without Sender, non-const handler
-	template <typename PayloadT, typename ObjectT>
-	void connect(const IdT id,
-		ObjectT* object,
-		void(ObjectT::*fn)(PayloadT),
-		const DestinationIdT destination = static_cast<DestinationIdT>(0))
-	{
-		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1), destination);
-	}
-
-	//! Connect: const Payload, without Sender, const handler
-	template <typename PayloadT, typename ObjectT>
-	void connect(const IdT id,
-		ObjectT* object,
-		void(ObjectT::*fn)(const PayloadT&) const,
-		const DestinationIdT destination = static_cast<DestinationIdT>(0))
-	{
-		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1), destination);
-	}
-
-	//! Connect: non-const Payload, without Sender, const handler
-	template <typename PayloadT, typename ObjectT>
-	void connect(const IdT id,
-		ObjectT* object,
-		void(ObjectT::*fn)(PayloadT) const,
-		const DestinationIdT destination = static_cast<DestinationIdT>(0))
-	{
-		mBinder.template connect<PayloadT>(id, boost::bind(fn, boost::ref(*object), _1), destination);
+		c.template connect<PayloadT>(mBinder, id, object, fn, destination);
 	}
 
 	template <typename EntryT>
@@ -193,6 +155,115 @@ struct BasicLane : boost::noncopyable
 	}
 
 private:
+	template <typename Class> struct member_arity {};
+
+	template <typename Class, typename R>
+	struct member_arity<R (Class::*) (void)>
+	{
+		typedef R result_type;
+		static const int arity = 0;
+		static const bool c = false;
+		typedef void arg1_type;
+		typedef void arg2_type;
+	};
+
+	template <typename Class, typename R>
+	struct member_arity<R (Class::*) (void) const>
+	{
+		typedef R result_type;
+		static const int arity = 0;
+		static const bool c = true;
+		typedef void arg1_type;
+		typedef void arg2_type;
+	};
+
+	template <typename Class, typename R, typename T1>
+	struct member_arity<R (Class::*) (T1)>
+	{
+		typedef R result_type;
+		static const int arity = 1;
+		static const bool c = false;
+		typedef T1 arg1_type;
+		typedef void arg2_type;
+	};
+
+	template <typename Class, typename R, typename T1>
+	struct member_arity<R (Class::*) (T1) const>
+	{
+		typedef R result_type;
+		static const int arity = 1;
+		static const bool c = true;
+		typedef T1 arg1_type;
+		typedef void arg2_type;
+	};
+
+	template <typename Class, typename R, typename T1, typename T2>
+	struct member_arity<R (Class::*) (T1, T2)>
+	{
+		typedef R result_type;
+		static const int arity = 2;
+		static const bool c = false;
+		typedef T1 arg1_type;
+		typedef T2 arg2_type;
+	};
+
+	template <typename Class, typename R, typename T1, typename T2>
+	struct member_arity<R (Class::*) (T1, T2) const>
+	{
+		typedef R result_type;
+		static const int arity = 2;
+		static const bool c = true;
+		typedef T1 arg1_type;
+		typedef T2 arg2_type;
+	};
+
+	struct ConnectorV
+	{
+		template <typename PayloadT, typename ObjectT, typename FnT>
+		void connect(BinderT& binder, const IdT& id,
+		             ObjectT* object,
+		             FnT fn,
+		             const DestinationIdT& destination = static_cast<DestinationIdT>(0))
+		{
+			binder.template connect<PayloadT>(id, boost::bind(fn, object), destination);
+		}
+	};
+
+	struct ConnectorVS
+	{
+		template <typename PayloadT, typename ObjectT, typename FnT>
+		void connect(BinderT& binder, const IdT& id,
+		             ObjectT* object,
+		             FnT fn,
+		             const DestinationIdT& destination = static_cast<DestinationIdT>(0))
+		{
+			binder.template connect<PayloadT>(id, boost::bind(fn, object, _2), destination);
+		}
+	};
+
+	struct ConnectorP
+	{
+		template <typename PayloadT, typename ObjectT, typename FnT>
+		void connect(BinderT& binder, const IdT& id,
+		             ObjectT* object,
+		             FnT fn,
+		             const DestinationIdT& destination = static_cast<DestinationIdT>(0))
+		{
+			binder.template connect<PayloadT>(id, boost::bind(fn, object, _1), destination);
+		}
+	};
+
+	struct ConnectorPS
+	{
+		template <typename PayloadT, typename ObjectT, typename FnT>
+		void connect(BinderT& binder, const IdT& id,
+		             ObjectT* object,
+		             FnT fn,
+		             const DestinationIdT& destination = static_cast<DestinationIdT>(0))
+		{
+			binder.template connect<PayloadT>(id, boost::bind(fn, object, _1, _2), destination);
+		}
+	};
 
 	void startEntries()
 	{
