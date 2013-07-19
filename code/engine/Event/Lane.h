@@ -108,10 +108,10 @@ struct BasicLane : boost::noncopyable
 	              const DestinationIdT& destination = static_cast<DestinationIdT>(0))
 	{
 		typedef BasicLane<_IdT,_DestinationIdT,_SenderIdT> LaneT;
-		typedef member_arity<FnT>::arg1_type crPayloadT;
-		typedef std::remove_reference<crPayloadT>::type cPayloadT;
-		typedef std::remove_const<cPayloadT>::type PayloadT;
-		typedef boost::mpl::if_c<
+		typedef typename member_arity<FnT>::arg1_type crPayloadT;
+		typedef typename boost::remove_reference<crPayloadT>::type cPayloadT;
+		typedef typename boost::remove_const<cPayloadT>::type PayloadT;
+		typedef typename boost::mpl::if_c<
 			member_arity<FnT>::arity == 2,
 			ConnectorPS,
 			ConnectorP
@@ -129,9 +129,9 @@ struct BasicLane : boost::noncopyable
 	              const DestinationIdT& destination = static_cast<DestinationIdT>(0))
 	{
 		typedef BasicLane<_IdT,_DestinationIdT,_SenderIdT> LaneT;
-		typedef std::remove_reference<crPayloadT>::type cPayloadT;
-		typedef std::remove_const<cPayloadT>::type PayloadT;
-		typedef boost::mpl::if_c<
+		typedef typename boost::remove_reference<crPayloadT>::type cPayloadT;
+		typedef typename boost::remove_const<cPayloadT>::type PayloadT;
+		typedef typename boost::mpl::if_c<
 			member_arity<FnT>::arity == 1,
 			ConnectorVS,
 			ConnectorV
