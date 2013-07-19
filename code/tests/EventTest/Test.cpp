@@ -51,7 +51,7 @@ struct TestModulAudio1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 	{
 		mLane = lane;
 		std::cout << "TestModulAudio1-Run" << std::endl;
-		mLane->connectP(1, this, &TestModulAudio1::event1Handler);
+		mLane->connect(1, this, &TestModulAudio1::event1Handler);
 		mLane->connectLoop(this, &TestModulAudio1::update);
 	}
 
@@ -89,7 +89,7 @@ struct TestModulView1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 		mLane = lane;
 		std::cout << "TestModulView1-Run" << std::endl;
 
-		mLane->connectP(2, this, &TestModulView1::event2Handler);
+		mLane->connect(2, this, &TestModulView1::event2Handler);
 	}
 
 	void event2Handler(const std::string& s)
@@ -108,7 +108,7 @@ struct TestModulPhysics1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 		mLane = lane;
 		std::cout << "TestModulPhysics1-Run" << std::endl;
 
-		mLane->connectP(2, this, &TestModulPhysics1::event2Handler);
+		mLane->connect(2, this, &TestModulPhysics1::event2Handler);
 	}
 
 	void stop()
@@ -136,7 +136,7 @@ struct TestModule : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
 	void run(BFG::Event::Lane* lane)
 	{
-		lane->connectP(1, this, &TestModule::testEventHandler);
+		lane->connect(1, this, &TestModule::testEventHandler);
 	}
 
 	void testEventHandler(const BFG::f32&)
@@ -152,7 +152,7 @@ struct TestModule2 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
 	void run(BFG::Event::Lane* lane)
 	{
-		lane->connectP(2, this, &TestModule2::testEventHandler);
+		lane->connect(2, this, &TestModule2::testEventHandler);
 	}
 
 	void testEventHandler(const BFG::u32&)
@@ -168,7 +168,7 @@ struct TestModule3 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
 	void run(BFG::Event::Lane* lane)
 	{
-		lane->connectP(1, this, &TestModule3::testEventHandler);
+		lane->connect(1, this, &TestModule3::testEventHandler);
 	}
 
 	void testEventHandler(const BFG::u32&)
@@ -193,7 +193,7 @@ struct TestModuleCopy : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
 	void run(BFG::Event::Lane* lane)
 	{
-		lane->connectP(3, this, &TestModuleCopy::testEventHandler);
+		lane->connect(3, this, &TestModuleCopy::testEventHandler);
 	}
 
 	void testEventHandler(BFG::u32)
@@ -207,7 +207,7 @@ struct TestModuleConst : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
 	void run(BFG::Event::Lane* lane)
 	{
-		lane->connectP(4, this, &TestModuleConst::testEventHandler);
+		lane->connect(4, this, &TestModuleConst::testEventHandler);
 	}
 
 	void testEventHandler(BFG::u32) const
@@ -221,20 +221,20 @@ struct ModuleConnect : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
 	void run(BFG::Event::Lane* lane)
 	{
- 		lane->connectP(1, this, &ModuleConnect::simpleCopy);
- 		lane->connectP(2, this, &ModuleConnect::simpleCopyConst);
- 		lane->connectP(3, this, &ModuleConnect::extendedCopy);
- 		lane->connectP(4, this, &ModuleConnect::extendedCopyConst);
+ 		lane->connect(1, this, &ModuleConnect::simpleCopy);
+ 		lane->connect(2, this, &ModuleConnect::simpleCopyConst);
+ 		lane->connect(3, this, &ModuleConnect::extendedCopy);
+ 		lane->connect(4, this, &ModuleConnect::extendedCopyConst);
 
-		lane->connectP(5, this, &ModuleConnect::simpleReference);
-		lane->connectP(6, this, &ModuleConnect::simpleReferenceConst);
-		lane->connectP(7, this, &ModuleConnect::extendedReference);
-		lane->connectP(8, this, &ModuleConnect::extendedReferenceConst);
+		lane->connect(5, this, &ModuleConnect::simpleReference);
+		lane->connect(6, this, &ModuleConnect::simpleReferenceConst);
+		lane->connect(7, this, &ModuleConnect::extendedReference);
+		lane->connect(8, this, &ModuleConnect::extendedReferenceConst);
 
-		lane->connectV<BFG::Event::Void>(9, this, &ModuleConnect::simpleVoid);
-		lane->connectV<BFG::Event::Void>(10, this, &ModuleConnect::simpleVoidConst);
-		lane->connectV<BFG::Event::Void>(11, this, &ModuleConnect::extendedVoid);
-		lane->connectV<BFG::Event::Void>(12, this, &ModuleConnect::extendedVoidConst);
+		lane->connectV(9, this, &ModuleConnect::simpleVoid);
+		lane->connectV(10, this, &ModuleConnect::simpleVoidConst);
+		lane->connectV(11, this, &ModuleConnect::extendedVoid);
+		lane->connectV(12, this, &ModuleConnect::extendedVoidConst);
 	}
 
 	void simpleCopy(BFG::u32 u){std::cout << "simpleCopy(" << u << ")" << std::endl;}
@@ -578,7 +578,7 @@ BOOST_AUTO_TEST_CASE (OneLaneWithOneEvent)
 	TestModule t;
 	gf32EventCounter = 0;
 
-	lane.connectP(1, &t, &TestModule::testEventHandler);
+	lane.connect(1, &t, &TestModule::testEventHandler);
 
 	sync.startEntries();
 
@@ -603,7 +603,7 @@ BOOST_AUTO_TEST_CASE (OneLaneWithOneUnconnectedEvent)
 	TestModule t;
 	gf32EventCounter = 0;
 
-	lane.connectP(1, &t, &TestModule::testEventHandler);
+	lane.connect(1, &t, &TestModule::testEventHandler);
 
 	sync.startEntries();
 
@@ -757,7 +757,7 @@ BOOST_AUTO_TEST_CASE (OneLaneOneEventWrongPayload)
 
 	TestModule t;
 
-	lane.connectP(1, &t, &TestModule::testEventHandler);
+	lane.connect(1, &t, &TestModule::testEventHandler);
 
 	sync.startEntries();
 

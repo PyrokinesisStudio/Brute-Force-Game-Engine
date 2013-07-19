@@ -37,6 +37,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Event/EntryPoint.h>
 #include <Event/Synchronizer.h>
 #include <Event/TickData.h>
+#include <Event/Void.h>
 
 namespace BFG {
 namespace Event {
@@ -102,12 +103,11 @@ struct BasicLane : boost::noncopyable
 
 	//! Connect: handler with Payload
 	template <typename ObjectT, typename FnT>
-	void connectP(const IdT& id,
-	              ObjectT* object,
-	              FnT fn,
-	              const DestinationIdT& destination = static_cast<DestinationIdT>(0))
+	void connect(const IdT& id,
+	             ObjectT* object,
+	             FnT fn,
+	             const DestinationIdT& destination = static_cast<DestinationIdT>(0))
 	{
-		typedef BasicLane<_IdT,_DestinationIdT,_SenderIdT> LaneT;
 		typedef typename member_arity<FnT>::arg1_type crPayloadT;
 		typedef typename boost::remove_reference<crPayloadT>::type cPayloadT;
 		typedef typename boost::remove_const<cPayloadT>::type PayloadT;
@@ -122,15 +122,12 @@ struct BasicLane : boost::noncopyable
 	}
 
 	//! Connect: handler without Payload
-	template <typename crPayloadT, typename ObjectT, typename FnT>
+	template <typename ObjectT, typename FnT>
 	void connectV(const IdT& id,
 	              ObjectT* object,
 	              FnT fn,
 	              const DestinationIdT& destination = static_cast<DestinationIdT>(0))
 	{
-		typedef BasicLane<_IdT,_DestinationIdT,_SenderIdT> LaneT;
-		typedef typename boost::remove_reference<crPayloadT>::type cPayloadT;
-		typedef typename boost::remove_const<cPayloadT>::type PayloadT;
 		typedef typename boost::mpl::if_c<
 			member_arity<FnT>::arity == 1,
 			ConnectorVS,
@@ -138,8 +135,7 @@ struct BasicLane : boost::noncopyable
 		>::type Connector;
 
 		Connector c;
-
-		c.template connect<PayloadT>(mBinder, id, object, fn, destination);
+		c.template connect<Void>(mBinder, id, object, fn, destination);
 	}
 
 	template <typename EntryT>

@@ -24,22 +24,14 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_EVENT_EVENT_H
-#define BFG_EVENT_EVENT_H
-
-#include <Core/GameHandle.h>
-#include <Event/Lane.h>
-#include <Event/Synchronizer.h>
+#ifndef BFG_EVENT_VOID_H
+#define BFG_EVENT_VOID_H
 
 namespace BFG {
-namespace Event {
+namespace Event { 
 
-typedef u32 IdT;
-typedef GameHandle DestinationT;
-typedef GameHandle SenderT;
-
-typedef BasicLane<IdT, DestinationT, SenderT> Lane;
-typedef BasicSynchronizer<Lane> Synchronizer;
+//! \todo This should be automatic.
+struct Void {};
 
 } // namespace Event
 } // namespace BFG
