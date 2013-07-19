@@ -741,16 +741,16 @@ void PhysicsObject::getTotalInertia(m3x3& inertia) const
 
 void PhysicsObject::registerEvents()
 {
-	mLane.connectP(ID::PE_UPDATE_POSITION, this, &PhysicsObject::setPosition, mRootModule);
-	mLane.connectP(ID::PE_UPDATE_ORIENTATION, this, &PhysicsObject::setOrientation, mRootModule);
-	mLane.connectP(ID::PE_UPDATE_VELOCITY, this, &PhysicsObject::setVelocity, mRootModule);
-	mLane.connectP(ID::PE_UPDATE_ROTATION_VELOCITY, this, &PhysicsObject::setRotationVelocity, mRootModule);
-	mLane.connectP(ID::PE_INTERPOLATE_POSITION, this, &PhysicsObject::interpolatePosition, mRootModule);
-	mLane.connectP(ID::PE_INTERPOLATE_ORIENTATION, this, &PhysicsObject::interpolateOrientation, mRootModule);
+	mLane.connect(ID::PE_UPDATE_POSITION, this, &PhysicsObject::setPosition, mRootModule);
+	mLane.connect(ID::PE_UPDATE_ORIENTATION, this, &PhysicsObject::setOrientation, mRootModule);
+	mLane.connect(ID::PE_UPDATE_VELOCITY, this, &PhysicsObject::setVelocity, mRootModule);
+	mLane.connect(ID::PE_UPDATE_ROTATION_VELOCITY, this, &PhysicsObject::setRotationVelocity, mRootModule);
+	mLane.connect(ID::PE_INTERPOLATE_POSITION, this, &PhysicsObject::interpolatePosition, mRootModule);
+	mLane.connect(ID::PE_INTERPOLATE_ORIENTATION, this, &PhysicsObject::interpolateOrientation, mRootModule);
 	mLane.connectV<BFG::Event::Void>(ID::PE_DEBUG, this, &PhysicsObject::onDebug, mRootModule);
-	mLane.connectP(ID::PE_APPLY_FORCE, this, &PhysicsObject::onForce, mRootModule);
-	mLane.connectP(ID::PE_APPLY_TORQUE, this, &PhysicsObject::onTorque, mRootModule);
-	mLane.connectP(ID::PE_MODULATE_MASS, this, &PhysicsObject::modulateMass, mRootModule);
+	mLane.connect(ID::PE_APPLY_FORCE, this, &PhysicsObject::onForce, mRootModule);
+	mLane.connect(ID::PE_APPLY_TORQUE, this, &PhysicsObject::onTorque, mRootModule);
+	mLane.connect(ID::PE_MODULATE_MASS, this, &PhysicsObject::modulateMass, mRootModule);
 }
 
 void PhysicsObject::setVelocity(const v3& velocity)

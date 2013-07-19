@@ -439,12 +439,12 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 
 void PhysicsManager::registerEvents()
 {
-	mLane.connectP(ID::PE_ATTACH_MODULE, this, &PhysicsManager::onAttachModule);
+	mLane.connect(ID::PE_ATTACH_MODULE, this, &PhysicsManager::onAttachModule);
 	mLane.connectV<BFG::Event::Void>(ID::PE_CLEAR, this, &PhysicsManager::clear);
-	mLane.connectP(ID::PE_CREATE_OBJECT, this, &PhysicsManager::onCreateObject);
-	mLane.connectP(ID::PE_DELETE_OBJECT, this, &PhysicsManager::onDeleteObject);
-	mLane.connectP(ID::PE_REMOVE_MODULE, this, &PhysicsManager::onRemoveModule);
-	mLane.connectP(ID::PE_STEP, this, &PhysicsManager::move);
+	mLane.connect(ID::PE_CREATE_OBJECT, this, &PhysicsManager::onCreateObject);
+	mLane.connect(ID::PE_DELETE_OBJECT, this, &PhysicsManager::onDeleteObject);
+	mLane.connect(ID::PE_REMOVE_MODULE, this, &PhysicsManager::onRemoveModule);
+	mLane.connect(ID::PE_STEP, this, &PhysicsManager::move);
 }
 
 void PhysicsManager::onCreateObject(const ObjectCreationParams& ocp)
