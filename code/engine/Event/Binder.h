@@ -123,6 +123,7 @@ struct Binder
 			try
 			{
 				b->emit(payload, sender);
+				mCallSequence.push_back(c);
 			}
 			catch (IncompatibleTypeException& ex)
 			{
@@ -144,14 +145,19 @@ struct Binder
 	// Verarbeitet alle events, die mit emit() gequeued wurden.
 	void tick() const
 	{
-		BOOST_FOREACH(const ConnectionT& connection, mBindings)
-		{
-			Callable* c = boost::any_cast<Callable*>(connection.mBinding);
-			c->call();
-		}
+		std::for_each
+		(
+			mCallSequence.begin(),
+			mCallSequence.end(),
+			std::mem_fun(&Callable::call)
+		);
+		mCallSequence.clear();
 	}
 	
 	ConnectionMapT mBindings;
+	
+	//! \todo Probably not thread-safe!
+	mutable std::vector<Callable*> mCallSequence;
 };
 
 } // namespace Event
