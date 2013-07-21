@@ -113,9 +113,9 @@ struct Binder
 	void emit(const IdT id,
 	          const PayloadT& payload,
 	          const DestinationIdT destination,
-	          const SenderIdT sender)
+	          const SenderIdT sender) const
 	{
-		typename ConnectionMapT::iterator it = mBindings.find(boost::make_tuple(id, destination));
+		typename ConnectionMapT::const_iterator it = mBindings.find(boost::make_tuple(id, destination));
 		if (it != mBindings.end())
 		{
 			Callable* c = boost::any_cast<Callable*>(it->mBinding);
