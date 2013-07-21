@@ -43,6 +43,8 @@ typedef BasicLane<IdT, DestinationT, SenderT> Lane;
 typedef BasicSynchronizer<Lane> Synchronizer;
 typedef BasicSubLane<Lane> SubLane;
 
+typedef boost::shared_ptr<SubLane> SubLanePtr;
+
 } // namespace Event
 } // namespace BFG
 

@@ -440,7 +440,7 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 void PhysicsManager::registerEvents()
 {
 	mLane.connect(ID::PE_ATTACH_MODULE, this, &PhysicsManager::onAttachModule);
-	mLane.connectV<BFG::Event::Void>(ID::PE_CLEAR, this, &PhysicsManager::clear);
+	mLane.connectV(ID::PE_CLEAR, this, &PhysicsManager::clear);
 	mLane.connect(ID::PE_CREATE_OBJECT, this, &PhysicsManager::onCreateObject);
 	mLane.connect(ID::PE_DELETE_OBJECT, this, &PhysicsManager::onDeleteObject);
 	mLane.connect(ID::PE_REMOVE_MODULE, this, &PhysicsManager::onRemoveModule);

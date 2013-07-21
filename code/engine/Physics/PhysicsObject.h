@@ -159,7 +159,7 @@ private:
 		GeomData
 	> GeomMapT;
 
-	Event::Lane&      mLane;
+	Event::SubLanePtr mSubLane;
 	
 	dBodyID           mOdeBody;
 	GeomMapT          mGeometry;
@@ -187,8 +187,6 @@ private:
 	mutable FullSyncData mDeltaStorage;
 
 	ID::CollisionMode mCollisionMode;
-	
-	std::vector<ID::PhysicsAction> mPhysicsEvents;
 	
 	static MeshCacheT mMeshCache;
 	
