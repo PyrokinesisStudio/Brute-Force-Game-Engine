@@ -280,8 +280,8 @@ struct SubModuleConnect : ModuleConnect
 	
 	void onDestroy()
 	{
-		std::cout << "SubModuleConnect.onDestroy -> removeSubLane" << std::endl;
-		lane->removeSubLane(sublane.get());
+		std::cout << "SubModuleConnect.onDestroy -> sublane.reset" << std::endl;
+		sublane.reset();
 	}
 	
 	BFG::Event::Lane* lane;
@@ -296,7 +296,8 @@ BOOST_AUTO_TEST_SUITE(TestSuite)
 BOOST_AUTO_TEST_CASE (SubLaneTest)
 {
 	BFG::Event::Synchronizer sync;
-	BFG::Event::Lane lane(sync, 100);
+	BFG::Event::Lane* lane_ptr = new BFG::Event::Lane(sync, 100);
+	BFG::Event::Lane& lane = *lane_ptr;
 	boost::shared_ptr<BFG::Event::SubLane> sublane(lane.createSubLane());
 	
 	// EntryPoints
@@ -313,6 +314,10 @@ BOOST_AUTO_TEST_CASE (SubLaneTest)
 	lane.emit(5, std::string("Should not be emitted"));
 	
 	sync.finish();
+
+	delete lane_ptr;
+
+	sublane->emit(5, std::string("Sublane after finish"));
 }
 
 BOOST_AUTO_TEST_CASE (BindingTest)
