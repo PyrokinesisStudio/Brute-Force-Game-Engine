@@ -83,7 +83,7 @@ struct BasicLane : boost::noncopyable
 			entryPoint.stop();
 		}
 
-		SubLaneContainerT::iterator it = mSubLanes.begin();
+		typename SubLaneContainerT::iterator it = mSubLanes.begin();
 		for (; it != mSubLanes.end();)
 		{
 			boost::shared_ptr<SubLaneT> sublane = it->lock();
@@ -326,7 +326,7 @@ private:
 		const DestinationIdT destination,
 		const SenderIdT sender)
 	{
-		SubLaneContainerT::iterator it = mSubLanes.begin();
+		typename SubLaneContainerT::iterator it = mSubLanes.begin();
 		for (; it != mSubLanes.end();)
 		{
 			boost::shared_ptr<SubLaneT> sublane = it->lock();
@@ -352,7 +352,7 @@ private:
 
 		mBinder.tick();
 	
-		SubLaneContainerT::iterator it = mSubLanes.begin();
+		typename SubLaneContainerT::iterator it = mSubLanes.begin();
 		for (; it != mSubLanes.end();)
 		{
 			boost::shared_ptr<SubLaneT> sublane = it->lock();
