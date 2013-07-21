@@ -82,6 +82,21 @@ struct BasicLane : boost::noncopyable
 		{
 			entryPoint.stop();
 		}
+
+		SubLaneContainerT::iterator it = mSubLanes.begin();
+		for (; it != mSubLanes.end();)
+		{
+			boost::shared_ptr<SubLaneT> sublane = it->lock();
+			if (sublane)
+			{
+				sublane->invalidateLane();
+				++it;
+			}
+			else
+			{
+				it = mSubLanes.erase(it);
+			}
+		}
 	}
 	
 	boost::shared_ptr<SubLaneT> createSubLane()
@@ -89,20 +104,6 @@ struct BasicLane : boost::noncopyable
 		boost::shared_ptr<SubLaneT> sublane(new SubLaneT(*this));
 		mSubLanes.push_back(sublane);
 		return sublane;
-	}
-	
-	void removeSubLane(SubLaneT* sublanePtr)
-	{
-		typename std::vector<boost::shared_ptr<SubLaneT> >::iterator it;
-		for (it = mSubLanes.begin(); it != mSubLanes.end(); ++it)
-		{
-			if (it->get() == sublanePtr)
-			{
-				mSubLanes.erase(it);
-				return;
-			}
-		}
-		//! \todo Throw
 	}
 	
 	// Speichert ein Payload, das später ausgeliefert wird an einen Handler.
@@ -325,17 +326,20 @@ private:
 		const DestinationIdT destination,
 		const SenderIdT sender)
 	{
-		std::for_each
-		(
-			mSubLanes.begin(),
-			mSubLanes.end(),
-			boost::bind
-			(
-				&SubLaneT::template subEmit<PayloadT>,
-				boost::bind(&boost::shared_ptr<SubLaneT>::get, _1),
-				id, boost::ref(payload), destination, sender
-			)
-		);
+		SubLaneContainerT::iterator it = mSubLanes.begin();
+		for (; it != mSubLanes.end();)
+		{
+			boost::shared_ptr<SubLaneT> sublane = it->lock();
+			if (sublane)
+			{
+				sublane->subEmit(id, payload, destination, sender);
+				++it;
+			}
+			else
+			{
+				it = mSubLanes.erase(it);
+			}
+		}
 	}
 
 	void tick()
@@ -347,17 +351,21 @@ private:
 		mLoopBinding.call();
 
 		mBinder.tick();
-		
-		std::for_each
-		(
-			mSubLanes.begin(),
-			mSubLanes.end(),
-			boost::bind
-			(
-				&SubLaneT::tick,
-				boost::bind(&boost::shared_ptr<SubLaneT>::get, _1)
-			)
-		);
+	
+		SubLaneContainerT::iterator it = mSubLanes.begin();
+		for (; it != mSubLanes.end();)
+		{
+			boost::shared_ptr<SubLaneT> sublane = it->lock();
+			if (sublane)
+			{
+				sublane->tick();
+				++it;
+			}
+			else
+			{
+				it = mSubLanes.erase(it);
+			}
+		}
 		
 		waitRemainingTime(mTickWatch.stop());
 	}
@@ -378,7 +386,9 @@ private:
 	Binding<TickData, SenderIdT> mLoopBinding;
 	boost::ptr_vector<EntryPointT> mEntryPoints;
 	bool mEntriesStarted;
-	std::vector<boost::shared_ptr<SubLaneT> > mSubLanes;
+
+	typedef std::vector<boost::weak_ptr<SubLaneT> > SubLaneContainerT;	
+	SubLaneContainerT mSubLanes;
 };
 
 } // namespace Event

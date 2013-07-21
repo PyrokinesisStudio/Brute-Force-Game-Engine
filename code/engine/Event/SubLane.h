@@ -42,13 +42,9 @@ struct BasicSubLane : boost::noncopyable
 	typedef typename LaneT::BinderT        BinderT;
 	
 	explicit BasicSubLane(LaneT& lane) :
-	mLane(lane)
+	mLane(lane),
+	mValidLane(true)
 	{}
-	
-	~BasicSubLane()
-	{
-		mLane.removeSubLane(this);
-	}
 	
 	template <typename PayloadT>
 	void emit(const IdT id, 
@@ -56,7 +52,9 @@ struct BasicSubLane : boost::noncopyable
 	          const DestinationIdT destination = static_cast<DestinationIdT>(0), 
 	          const SenderIdT sender = static_cast<SenderIdT>(0))
 	{
-		mLane.emit(id, payload, destination, sender);
+		if (mValidLane)
+			mLane.emit(id, payload, destination, sender);
+		//! \todo else? Lane doesn't exist anymore. This call is invalid.
 	}
 	
 	template <typename PayloadT>
@@ -65,7 +63,7 @@ struct BasicSubLane : boost::noncopyable
 	          const DestinationIdT destination = static_cast<DestinationIdT>(0), 
 	          const SenderIdT sender = static_cast<SenderIdT>(0))
 	{
-		mBinder.template emit(id, payload, destination, sender);
+		mBinder.emit(id, payload, destination, sender);
 	}
 	
 	//! Connect: handler with Payload
@@ -108,6 +106,11 @@ struct BasicSubLane : boost::noncopyable
 	void tick()
 	{
 		mBinder.tick();
+	}
+
+	void invalidateLane()
+	{
+		mValidLane = false;
 	}
 
 private:
@@ -221,8 +224,9 @@ private:
 		}
 	};
 
-	LaneT&            mLane;
-	BinderT           mBinder;
+	LaneT&  mLane;
+	BinderT mBinder;
+	bool    mValidLane;
 };
 
 } // namespace Event
