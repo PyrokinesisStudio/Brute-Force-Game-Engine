@@ -47,8 +47,8 @@ void debugOut(VipPtrT vip, const ActionMapT& actions)
 	       << " (" << actionStr << ")";
 }
 	
-State::State(EventLoop* loop) :
-mEventLoop(loop)
+State::State(Event::Lane& eventLane) :
+mEventSubLane(eventLane.createSubLane())
 {}
 
 State::~State()
@@ -149,9 +149,9 @@ void State::sendFeedback(long microseconds_passed)
 	);
 }
 
-EventLoop* State::eventLoop() const
+Event::SubLanePtr State::eventSubLane() const
 {
-	return mEventLoop;
+	return mEventSubLane;
 }
 
 const std::string& State::getStateID() const

@@ -31,7 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 
 #include <Controller/ControllerEvents_fwd.h>
 #include <Controller/Enums.hh>
@@ -48,18 +48,17 @@ class State;
 
 namespace VIP {
 
-class CommonBase : Emitter
+class CommonBase
 {
 public:
-	CommonBase(EventIdT aAid,
+	CommonBase(Event::IdT aAid,
 	           State* aState,
 	           std::set<ButtonCodeT> aRelevantButtons,
 	           std::set<AxisNumeratorT> aRelevantAxis,
 	           ID::DeviceType aDevice);
 	
 	virtual ~CommonBase()
-	{
-	}
+	{}
 	
 	//! \note There's no way around. A VIP must be able to receive
 	//!       all types of data in order to work correctly.
@@ -78,7 +77,7 @@ public:
 	{
 	}
 
-	EventIdT getAction() const
+	Event::IdT getAction() const
 	{
 		return mAid;
 	}
@@ -114,11 +113,12 @@ public:
 	ID::DeviceType           mDevice;
 
 protected:
-	EventIdT mAid;
-	State*   mState;
+	Event::IdT mAid;
+	State*     mState;
 
 private:
-	bool     mUsingFeedback;
+	bool              mUsingFeedback;
+	Event::SubLanePtr mEventSubLane;
 };
 
 } // namespace VIP

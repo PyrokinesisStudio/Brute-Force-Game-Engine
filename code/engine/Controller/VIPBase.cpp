@@ -33,37 +33,29 @@ namespace Controller_ {
 namespace VIP {
 
 CommonBase::CommonBase(
-	EventIdT aAid,
+	Event::IdT aAid,
 	State* aState,
 	std::set<ButtonCodeT> aRelevantButtons,
 	std::set<AxisNumeratorT> aRelevantAxis,
 	ID::DeviceType aDevice
 ) :
-Emitter(aState->eventLoop()),
 mRelevantButtons(aRelevantButtons),
 mRelevantAxis(aRelevantAxis),
 mDevice(aDevice),
 mAid(aAid),
 mState(aState),
-mUsingFeedback(false)
-{
-}
+mUsingFeedback(false),
+mEventSubLane(aState->eventSubLane())
+{}
 
 void CommonBase::Emit()
 {
-	try
-	{
 #ifdef CONTROLLER_DEBUG
-		dbglog << "EMITTER WILL SEND: " << getAction()
-			   << " WITH RESULT: " << getResult();
+	dbglog << "EMITTER WILL SEND: " << getAction()
+		   << " WITH RESULT: " << getResult();
 #endif
 
-		emit<VipEvent>(getAction(), getResult());
-	}
-	catch (EventCreationEx& ex)
-	{
-		errlog << "Controller: " << ex.what();
-	}
+	mEventSubLane->emit(getAction(), getResult());
 }
 
 } // namespace VIP

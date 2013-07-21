@@ -35,8 +35,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Controller/Action.h>
 #include <Controller/ControllerEvents_fwd.h>
 
-class LoopEvent;
-class EventLoop; // Confused?
+#include <Event/Event.h>
 
 namespace BFG {
 
@@ -51,7 +50,7 @@ class State;
 class CONTROLLER_API Controller
 {
 public:
-	Controller(EventLoop* loop);
+	Controller(Event::Lane& eventLane);
 	~Controller();
 
 	void init(int maxFrameratePerSec);
@@ -60,9 +59,7 @@ public:
 
 	void resetInternalClock();
 
-	void loopHandler(LoopEvent*);
-
-	void controlHandler(ControlEvent* iLE);
+	void loopHandler(const Event::TickData td);
 
 private:
 	void capture();
@@ -90,7 +87,7 @@ private:
 
 	boost::scoped_ptr<Clock::SleepFrequently> mClock;
 
-	EventLoop*                                mEventLoop;
+	Event::Lane&                              mEventLane;
 };
 
 } // namespace Controller_

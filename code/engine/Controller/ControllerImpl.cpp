@@ -28,9 +28,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Base/Logger.h>
 #include <Core/ClockUtils.h>
-#include <EventSystem/Core/EventLoop.h>
+
 #include <Controller/State.h>
-#include <Controller/ControllerEvents.h>
+#include <Controller/ControllerEvents_fwd.h>
+#include <Controller/StateInsertion.h>
 
 namespace BFG {
 namespace Controller_ {
@@ -41,40 +42,25 @@ namespace posix_time = boost::posix_time;
 //                        The almighty Controller
 //#############################################################################
 
-Controller::Controller(EventLoop* loop) :
-mEventLoop(loop)
+Controller::Controller(Event::Lane& eventLane) :
+mEventLane(eventLane)
 {
-	assert(loop && "Controller: EventLoop not initialized!");
+	eventLane.connectLoop(this, &Controller::loopHandler);
 	
-	loop->registerLoopEventListener(this, &Controller::loopHandler);
+	eventLane.connect(ID::CE_ADD_ACTION, this, &Controller::addAction);
+	eventLane.connect(ID::CE_LOAD_STATE, this, &Controller::insertState);
+	eventLane.connect(ID::CE_ACTIVATE_STATE, this, &Controller::activateState);
+	eventLane.connect(ID::CE_DEACTIVATE_STATE, this, &Controller::deactivateState);
 }
 
 Controller::~Controller()
-{
-	mEventLoop->unregisterLoopEventListener(this);
-
-	int first = ID::CE_FIRST_CONTROLLER_EVENT + 1;
-	int last = ID::CE_LAST_CONTROLLER_EVENT;
-	
-	for (int i=first; i < last; ++i)
-	{
-		mEventLoop->disconnect(i, this);
-	}
-}
+{}
 
 void Controller::init(int maxFrameratePerSec)
 {
 	dbglog << "Controller: Initializing with "
 	       << maxFrameratePerSec << " FPS";
 
-	int first = ID::CE_FIRST_CONTROLLER_EVENT + 1;
-	int last = ID::CE_LAST_CONTROLLER_EVENT;
-
-	for (int i=first; i < last; ++i)
-	{
-		mEventLoop->connect(i, this, &Controller::controlHandler);
-	}
-	
 	if (maxFrameratePerSec <= 0)
 		throw std::logic_error("Controller: Invalid maxFrameratePerSec param");
 
@@ -95,7 +81,7 @@ void Controller::insertState(const StateInsertion& si)
 
 	dbglog << "Controller: Inserting state \"" << name << "\"";
 
-	boost::shared_ptr<State> state(new State(mEventLoop));
+	boost::shared_ptr<State> state(new State(mEventLane));
 
 	mStates.insert(std::make_pair(si.mHandle, state));
 
@@ -175,33 +161,11 @@ void Controller::addAction(const ActionDefinition& ad)
 	);
 }
 
-void Controller::loopHandler(LoopEvent*)
+void Controller::loopHandler(const Event::TickData td)
 {
+	//! \todo: Use td.mTimeSinceLastTick and adapt the whole Controller
+	//!        timing logic.
 	nextTick();
-}
-
-void Controller::controlHandler(ControlEvent* e)
-{
-	switch(e->id())
-	{
-		case ID::CE_ADD_ACTION:
-			addAction(boost::get<ActionDefinition>(e->data()));
-			break;
-	
-		case ID::CE_LOAD_STATE:
-			insertState(boost::get<StateInsertion>(e->data()));
-			break;
-
-		case ID::CE_ACTIVATE_STATE:
-			activateState(boost::get<GameHandle>(e->data()));
-			break;
-			
-		case ID::CE_DEACTIVATE_STATE:
-			deactivateState(boost::get<GameHandle>(e->data()));
-			break;
-		default:
-			DEFAULT_HANDLE_EVENT_ET(e);
-	};
 }
 
 void Controller::nextTick()
