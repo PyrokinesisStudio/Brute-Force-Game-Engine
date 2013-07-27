@@ -34,6 +34,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/foreach.hpp>
 #include <boost/signals2.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/tuple/tuple.hpp>
 
 #include <Event/Callable.h>
 #include <Event/IncompatibleTypeException.h>
