@@ -40,6 +40,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 //! Helper module for automatic unit tests.
 struct Case
 {
+	Case() :
+	mCalls(0)
+	{}
+
 	BFG::u32 mCalls;
 	std::vector<std::string> mStrings;
 	std::vector<BFG::u32> mU32;
