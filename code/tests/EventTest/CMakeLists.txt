@@ -28,7 +28,6 @@ TARGET_LINK_LIBRARIES(bfgEventTest
 	${Boost_LIBRARIES}
 	${BoostLog_LIBRARIES}
 	bfgCore
-	bfgEventCore
 )
 
 INSTALL(TARGETS bfgEventTest
