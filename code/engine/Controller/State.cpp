@@ -38,7 +38,7 @@ void debugOut(VipPtrT vip, const ActionMapT& actions)
 {
 	const std::string deviceStr = ID::asStr(vip->mDevice);
 	
-	EventIdT action = vip->getAction();
+	BFG::Event::IdT action = vip->getAction();
 	ActionMapT::const_iterator it = actions.find(action);
 	const std::string actionStr = it == actions.end()?"Unserializable":it->second;
 	

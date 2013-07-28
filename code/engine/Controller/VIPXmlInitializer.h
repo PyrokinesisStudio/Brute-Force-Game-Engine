@@ -93,7 +93,7 @@ private:
 	//! \param[out] actionId ID of the action
 	//! \param[out] vips     Adds all constructed Vips to this container
 	void onActionElement(TiXmlElement* element,
-	                     EventIdT& actionId,
+	                     BFG::Event::IdT& actionId,
 	                     std::vector<VipPtrT>& vips) const;
 	
 	void onIncludeElement(TiXmlElement* element,
@@ -103,7 +103,7 @@ private:
 	//! \param[in] element  TinyXML pointer to a vip element
 	//! \param[in] actionId ID of the action
 	//! \return    Fully constructed VIP
-	VipPtrT onVipElement(TiXmlElement* element, EventIdT actionId) const;
+	VipPtrT onVipElement(TiXmlElement* element, BFG::Event::IdT actionId) const;
 
 	//! Gets called when the parser stumbles upon a special element.
 	//! Currently, every vip element has a special element.
@@ -120,7 +120,7 @@ private:
 	//! \param[in] actionId ID of the action
 	//! \param[in] vipData  Must contain all parsed vip data
 	//! \return    Fully constructed VIP
-	VipPtrT createVip(EventIdT actionId, const VipData& vipData) const;
+	VipPtrT createVip(BFG::Event::IdT actionId, const VipData& vipData) const;
 
 	void Init(SteerEnv& env, const VipData& vipData) const;
 	void Init(ClickEnv& env, const VipData& vipData) const;

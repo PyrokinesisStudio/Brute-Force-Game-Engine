@@ -160,7 +160,7 @@ void XmlInitializer::traverse(const std::string& fullConfigPath,
 		{
 			const std::string& currentTag = element->ValueStr();
 
-			EventIdT eventId;
+			BFG::Event::IdT eventId;
 			if (currentTag == Tag::action)
 			{
 				onActionElement(element, eventId, vips);
@@ -182,7 +182,7 @@ void XmlInitializer::traverse(const std::string& fullConfigPath,
 }
 
 void XmlInitializer::onActionElement(TiXmlElement* element,
-                                     EventIdT& actionId,
+                                     BFG::Event::IdT& actionId,
                                      std::vector<VipPtrT>& vips) const
 {
 	assert(element);
@@ -268,7 +268,7 @@ void XmlInitializer::onIncludeElement(TiXmlElement* element,
 }
 
 VipPtrT XmlInitializer::onVipElement(TiXmlElement* element,
-                                     EventIdT actionId) const
+                                     BFG::Event::IdT actionId) const
 {
 	assert(element);
 
@@ -335,7 +335,7 @@ void XmlInitializer::onUnknownElement(const std::string& tagName) const
 	}                                            \
 	break;
 
-VipPtrT XmlInitializer::createVip(EventIdT actionId,
+VipPtrT XmlInitializer::createVip(BFG::Event::IdT actionId,
 				  const VipData& vipData) const
 {
 	VipPtrT vip;

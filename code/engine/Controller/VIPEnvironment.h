@@ -29,7 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 #include <set>
-#include <EventSystem/Core/EventDefs.h>
+#include <Event/Event.h>
 #include <Controller/Enums.hh>
 #include <Controller/Axis.h>
 #include <Controller/Button.h>
@@ -46,7 +46,7 @@ namespace VIP {
 //! See VIPGenerator.h for how to create new ones. 
 struct DefaultEnv
 {
-	EventIdT mAction;
+	BFG::Event::IdT mAction;
 	State*   mState;
 	
 	//! This is a filter. Only buttons and axis which were put into these
