@@ -37,6 +37,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 struct PhysicsClient
 {
+	PhysicsClient() :
+	mCount(0)
+	{}
+
 	void onFullSync(const BFG::Physics::FullSyncData& fsd)
 	{
 		++mCount;
