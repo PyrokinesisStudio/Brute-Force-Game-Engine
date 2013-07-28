@@ -27,7 +27,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_VIEW_OBJECTCREATION_H
 #define BFG_VIEW_OBJECTCREATION_H
 
-#include <Core/CharArray.h>
 #include <Core/GameHandle.h>
 #include <Core/Types.h>
 #include <Core/qv4.h>
@@ -49,7 +48,7 @@ struct VIEW_API ObjectCreation
 
 	GameHandle mParent;
 	GameHandle mHandle;
-	CharArray128T mMeshName;
+	std::string mMeshName;
 	v3 mPosition;
 	qv4 mOrientation;
 };

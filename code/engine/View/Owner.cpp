@@ -31,72 +31,36 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <MyGUI.h>
 
-#include <EventSystem/Core/EventLoop.h>
-#include <Core/GameHandle.h>
-
-#include <View/Event.h>
-
 #include <View/Camera.h>
+#include <View/CameraCreation.h>
+#include <View/Light.h>
+#include <View/LightParameters.h>
+#include <View/ObjectCreation.h>
 #include <View/RenderObject.h>
 #include <View/Skybox.h>
+#include <View/SkyCreation.h>
+
 
 namespace BFG {
 namespace View {
 
-Owner::Owner(GameHandle stateHandle, EventLoop* loop) :
-mLoop(loop)
+Owner::Owner(GameHandle stateHandle, Event::Lane* lane) :
+mLane(lane),
+mSubLane(lane->createSubLane())
 {
 	//! \note
 	//! VE_DESTROY_OBJECT makes no use of stateHandle
-	loop->connect(ID::VE_CREATE_OBJECT, this, &Owner::eventHandler, stateHandle);
-	loop->connect(ID::VE_DESTROY_OBJECT, this, &Owner::eventHandler);
-	loop->connect(ID::VE_CREATE_CAMERA, this, &Owner::eventHandler, stateHandle);
-	loop->connect(ID::VE_SET_SKY, this, &Owner::eventHandler, stateHandle);
-	loop->connect(ID::VE_CREATE_LIGHT, this, &Owner::eventHandler, stateHandle);
-	loop->connect(ID::VE_SET_AMBIENT, this, &Owner::eventHandler, stateHandle);
+	mSubLane->connect(ID::VE_CREATE_OBJECT, this, &Owner::createObject, stateHandle);
+	mSubLane->connect(ID::VE_DESTROY_OBJECT, this, &Owner::destroyObject);
+	mSubLane->connect(ID::VE_CREATE_CAMERA, this, &Owner::createCamera, stateHandle);
+	mSubLane->connect(ID::VE_SET_SKY, this, &Owner::setSky, stateHandle);
+	mSubLane->connect(ID::VE_CREATE_LIGHT, this, &Owner::createLight, stateHandle);
+	mSubLane->connect(ID::VE_SET_AMBIENT, this, &Owner::setAmbient, stateHandle);
 }
 
 Owner::~Owner()
 {
-	mLoop->disconnect(ID::VE_CREATE_OBJECT, this);
-	mLoop->disconnect(ID::VE_DESTROY_OBJECT, this);
-	mLoop->disconnect(ID::VE_CREATE_CAMERA, this);
-	mLoop->disconnect(ID::VE_SET_SKY, this);
-	mLoop->disconnect(ID::VE_CREATE_LIGHT, this);
-	mLoop->disconnect(ID::VE_SET_AMBIENT, this);
-}
-
-void Owner::eventHandler(Event* e)
-{
-	switch(e->id())
-	{
-	case ID::VE_CREATE_OBJECT:
-		createObject(boost::get<ObjectCreation>(e->data()));
-		break;
-
-	case ID::VE_DESTROY_OBJECT:
-		destroyObject(boost::get<GameHandle>(e->data()));
-		break;
-
-	case ID::VE_CREATE_CAMERA:
-		createCamera(boost::get<CameraCreation>(e->data()));
-		break;
-
-	case ID::VE_SET_SKY:
-		setSky(boost::get<View::SkyCreation>(e->data()));
-		break;
-
-	case ID::VE_CREATE_LIGHT:
-		createLight(boost::get<View::LightParameters>(e->data()));
-		break;
-
-	case ID::VE_SET_AMBIENT:
-		setAmbient(boost::get<BFG::cv4>(e->data()));
-		break;
-
-	default:
-		throw std::logic_error("Unhandled event at Owner::eventHandler!");
-	}
+	mSubLane.reset();
 }
 
 void Owner::createObject(const ObjectCreation& OC)
@@ -104,6 +68,7 @@ void Owner::createObject(const ObjectCreation& OC)
 	boost::shared_ptr<RenderObject> ro;
 	ro.reset(new RenderObject
 	(
+		mLane,
 		OC.mParent,
 		OC.mHandle,
 		OC.mMeshName.data(),
@@ -143,6 +108,7 @@ void Owner::createCamera(const CameraCreation& CC)
 	boost::shared_ptr<Camera> cam;
 	cam.reset(new Camera
 	(
+		mLane,
 		CC.mHandle,
 		node,
 		target,

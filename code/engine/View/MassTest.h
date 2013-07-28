@@ -23,7 +23,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
-
+#if 0
 #ifndef BFG_MASSTEST_H
 #define BFG_MASSTEST_H
 
@@ -56,5 +56,7 @@ private:
 
 } // namespace View
 } // namespace BFG
+
+#endif
 
 #endif

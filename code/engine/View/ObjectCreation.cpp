@@ -36,11 +36,10 @@ ObjectCreation::ObjectCreation(GameHandle parent,
                                const qv4& orientation) :
 mParent(parent),
 mHandle(handle),
+mMeshName(meshName),
 mPosition(position),
 mOrientation(orientation)
-{
-	mMeshName = stringToArray<128>(meshName);
-}
+{}
 
 } // namespace View
 } // namespace BFG

@@ -29,10 +29,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace View {
 
-SkyCreation::SkyCreation(const std::string& materialName)
-{
-	mMatName = stringToArray<128>(materialName);
-}
+SkyCreation::SkyCreation(const std::string& materialName) :
+mMatName(materialName)
+{}
 
 } // namespace View
 } // namespace BFG

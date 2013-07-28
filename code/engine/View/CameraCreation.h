@@ -27,11 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_VIEW_CAMERACREATION_H
 #define BFG_VIEW_CAMERACREATION_H
 
-#include <boost/array.hpp>
-
 #include <Core/Types.h>
-
-#include <View/Enums.hh>
 
 namespace BFG {
 namespace View {

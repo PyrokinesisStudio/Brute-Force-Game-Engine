@@ -29,10 +29,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace View {
 
-MenuEventData::MenuEventData(const std::string& level)
-{
-	mLevel = stringToArray<128>(level);
-}
+MenuEventData::MenuEventData(const std::string& level) :
+mLevel(level)
+{}
 
 } // namespace View
 } // namespace BFG

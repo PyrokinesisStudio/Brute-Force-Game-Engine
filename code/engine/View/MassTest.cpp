@@ -23,8 +23,9 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
-
+#if 0
 #include <View/MassTest.h>
+
 
 #include <OgreRoot.h>
 #include <OgreSceneManager.h>
@@ -111,3 +112,4 @@ void MassTest::update(f32 timeSinceLastFrame)
 
 } // namespace View
 } // namespace BFG
+#endif

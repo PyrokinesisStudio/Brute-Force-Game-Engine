@@ -59,7 +59,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <View/Fps.h>
 #include <View/Defs.h>
 #include <View/Enums.hh>
-#include <View/Event.h>
 
 namespace BFG {
 namespace View {
@@ -73,39 +72,36 @@ struct ShutdownDeleter
 	}
 };
 
-OgreInit::OgreInit(EventLoop* loop, const std::string& windowTitle) :
-mLoop(loop),
+OgreInit::OgreInit(Event::Lane* lane, const std::string& windowTitle) :
+mLane(lane),
+mSubLane(lane->createSubLane()),
 mShutdown(false),
 mWindowTitle(windowTitle),
 mSceneMgr(NULL)
 {
-	mLoop->connect(ID::VE_SHUTDOWN, this, &OgreInit::eventHandler);
-	mLoop->connect(ID::VE_DEBUG_FPS, this, &OgreInit::eventHandler);
-	mLoop->connect(ID::VE_SCREENSHOT, this, &OgreInit::eventHandler);
-	mLoop->connect(ID::VE_CONSOLE, this, &OgreInit::eventHandler);
+	mSubLane->connectV(ID::VE_SHUTDOWN, this, &OgreInit::onShutdown);
+	mSubLane->connect(ID::VE_DEBUG_FPS, this, &OgreInit::onDebugFps);
+	mSubLane->connectV(ID::VE_SCREENSHOT, this, &OgreInit::onScreenShot);
+	mSubLane->connect(ID::VE_CONSOLE, this, &OgreInit::onConsole);
 	
 	initOgre();
 	initMyGui();
 
-	mLoop->registerLoopEventListener<OgreInit>(this, &OgreInit::loopEventHandler);
+	mLane->connectLoop(this, &OgreInit::onTick);
 }
 
 OgreInit::~OgreInit()
 {
-	mLoop->disconnect(ID::VE_SHUTDOWN, this);
-	mLoop->disconnect(ID::VE_DEBUG_FPS, this);
-	mLoop->disconnect(ID::VE_SCREENSHOT, this);
-	mLoop->disconnect(ID::VE_CONSOLE, this);
-	
-	mLoop->unregisterLoopEventListener(this);
+	mSubLane.reset();
 }
 
-void OgreInit::loopEventHandler(LoopEvent* iLE)
+void OgreInit::onTick(Event::TickData)
 {
 	if (! doRenderTick() || mShutdown)
 	{
+		// \todo shutdown lane??
 		// Error happend, while Rendering
-		iLE->data().getLoop()->setExitFlag();
+//		iLE->data().getLoop()->setExitFlag();
 	}
 }
 
@@ -238,7 +234,7 @@ void OgreInit::createMainCamera()
 
 	GameHandle camHandle = generateHandle();
 	
-	mMainCamera.reset(new Camera(camHandle, NULL, mRoot->getAutoCreatedWindow()));
+	mMainCamera.reset(new Camera(mLane, camHandle, NULL, mRoot->getAutoCreatedWindow()));
 
 	infolog << "OGRE: Create main camera done.";
 }
@@ -265,31 +261,6 @@ void OgreInit::initMyGui()
 	infolog << "MyGui: Initialize MyGui done.";
 }
 
-void OgreInit::eventHandler(Event* VE)
-{
-	switch (VE->id())
-	{
-	case ID::VE_SCREENSHOT:
-		onScreenShot();
-		break;
-		
-	case ID::VE_SHUTDOWN:
-		mShutdown = true;
-		break;
-		
-	case ID::VE_DEBUG_FPS:
-		onDebugFps(boost::get<bool>(VE->data()));
-		break;
-
-	case ID::VE_CONSOLE:
-		onConsole(boost::get<bool>(VE->data()));
-		break;
-
-	default:
-		throw std::logic_error("View::OgreInit::eventHandler: received unhandled event!");
-	}
-}
-
 void OgreInit::onDebugFps(bool enable)
 {
 	if (enable)
@@ -301,9 +272,13 @@ void OgreInit::onDebugFps(bool enable)
 void OgreInit::onConsole(bool enable)
 {
 	if (!mConsole)
-		mConsole.reset(new Console(mLoop, mRoot));
+		mConsole.reset(new Console(mLane, mRoot));
 
 	mConsole->toggleVisible(enable);
+}
+void OgreInit::onShutdown()
+{
+	mShutdown = true;
 }
 
 void OgreInit::onScreenShot()

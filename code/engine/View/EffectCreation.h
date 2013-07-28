@@ -24,36 +24,24 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef BFG_VIEWEFFECTCREATION_H
+#define BFG_VIEWEFFECTCREATION_H
 
-#ifndef BFG_VIEW_CONTROLLERMYGUIADAPTER_H
-#define BFG_VIEW_CONTROLLERMYGUIADAPTER_H
+#include <string>
+#include <boost/tuple/tuple.hpp>
 
+#include <Core/Types.h>
 #include <Core/v3.h>
-#include <Controller/ControllerEvents_fwd.h>
-#include <Event/Event.h>
-#include <View/Defs.h>
 
 namespace BFG {
 namespace View {
 
-class VIEW_API ControllerMyGuiAdapter
-{
-public:
-	ControllerMyGuiAdapter(BFG::GameHandle stateHandle, Event::Lane*);
-
-private:
-	void onMouseMoveX(f32 value);
-	void onMouseMoveY(f32 value);
-	void onMouseMoveZ(f32 value);
-	void onMouseLeftPressed(bool value);
-	void onMouseRightPressed(bool isPressed);
-	void onMouseMiddlePressed(bool isPressed);
-	void onKeyPressed(s32 key);
-	void onKeyReleased(s32 key);
-
-	Event::SubLanePtr mSubLane;
-	BFG::v3    mMouseBuffer;
-};
+typedef boost::tuple
+<
+	std::string // Name
+	v3,         // Position
+	f32         // Intensity
+> EffectCreation;
 
 } // namespace View
 } // namespace BFG

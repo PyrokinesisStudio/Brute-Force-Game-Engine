@@ -27,30 +27,16 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <View/Main.h>
 #include <View/OgreInit.h>
 
-#include <stdexcept>
-
 namespace BFG {
 namespace View {
-
-EventLoop* Main::mLoop = NULL;
 
 Main::Main(const std::string& windowTitle) :
 mWindowTitle(windowTitle)
 {}
 
-EventLoop* Main::eventLoop()
+void Main::main(Event::Lane* lane)
 {
-	return Main::mLoop;
-}
-
-void Main::main(EventLoop* loop)
-{
-	if (mLoop)
-		throw std::logic_error("Main gets initialized twice!");
-	
-	Main::mLoop = loop;
-	
-	mMain.reset(new OgreInit(loop, mWindowTitle));
+	mMain.reset(new OgreInit(lane, mWindowTitle));
 }
 
 } // namespace View

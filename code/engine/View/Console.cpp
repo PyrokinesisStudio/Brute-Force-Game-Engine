@@ -26,8 +26,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <View/Console.h>
 
-#include <EventSystem/Core/EventLoop.h>
-
 #include <boost/log/common.hpp>
 #include <boost/log/formatters/message.hpp>
 #include <boost/log/formatters/stream.hpp>
@@ -41,8 +39,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/Path.h>
 
+#include <View/Enums.hh>
 #include <View/HudElement.h>
-#include <View/Event.h>
 
 namespace logging = boost::log;
 namespace fmt = boost::log::formatters;
@@ -74,11 +72,10 @@ static std::wstring atow(const std::string& str)
 	return wstrm.str();
 }
 
-Console::Console(EventLoop* loop, boost::shared_ptr<Ogre::Root> root) :
-Emitter(loop),
+Console::Console(Event::Lane* lane, boost::shared_ptr<Ogre::Root> root) :
+mSubLane(lane->createSubLane()),
 mHasNewContent(false),
 mIsVisible(false),
-mLoop(loop),
 mRoot(root),
 mHeight(1.0f),
 mDisplayedLines(15)
@@ -86,14 +83,14 @@ mDisplayedLines(15)
 	createUI();
 	registerSink();
 	mRoot->addFrameListener(this);
-	mLoop->connect(BFG::ID::A_KEY_PRESSED, this, &Console::eventHandler);
+
+	mSubLane->connect(ID::A_KEY_PRESSED, this, &Console::onKeyPressed);
 }
 
 Console::~Console()
 {
 	unregisterSink();
 	mRoot->removeFrameListener(this);
-	mLoop->disconnect(BFG::ID::A_KEY_PRESSED, this);
 }
 
 void Console::toggleVisible(bool show)
@@ -156,30 +153,23 @@ void Console::unregisterSink()
 	boost::log::core::get()->remove_sink(mSink);
 }
 
-void Console::eventHandler(Controller_::VipEvent* e)
+void Console::onKeyPressed(s32 _code)
 {
-	switch(e->id())
-	{
-	case BFG::ID::A_KEY_PRESSED:
-	{
-		ID::KeyboardButton code = static_cast<ID::KeyboardButton>(boost::get<s32>(e->data()));
-		
-		dbglog << "Got key code: " << static_cast<s32>(code);
-		
-		if (code == ID::KB_RETURN)
-			onReturn();
-		else if (code == ID::KB_BACKSPACE)
-			onBackspace();
-		else if (isprint(code))
-			onPrintable(static_cast<unsigned char>(code));
-		break;
-	}
-	}
+	ID::KeyboardButton code = static_cast<ID::KeyboardButton>(_code);
+
+	dbglog << "Got key code: " << static_cast<s32>(code);
+
+	if (code == ID::KB_RETURN)
+		onReturn();
+	else if (code == ID::KB_BACKSPACE)
+		onBackspace();
+	else if (isprint(code))
+		onPrintable(static_cast<unsigned char>(code));
 }
 
 void Console::onReturn()
 {
-	emit<View::Event>(BFG::ID::VE_CONSOLE_COMMAND, mInput);
+	mSubLane->emit(ID::VE_CONSOLE_COMMAND, mInput);
 	mInput.clear();
 	mHasNewContent = true;
 }
