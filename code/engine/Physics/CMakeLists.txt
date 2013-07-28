@@ -44,7 +44,6 @@ TARGET_LINK_LIBRARIES(bfgPhysics
 	${ODE_LIBRARY}
 	bfgBase
 	bfgCore
-	bfgEventCore
 	bfgView              # View::loadMesh()
 )
 
