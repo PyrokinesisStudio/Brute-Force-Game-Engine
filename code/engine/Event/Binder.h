@@ -115,6 +115,8 @@ struct Binder
 	          const DestinationIdT destination,
 	          const SenderIdT sender) const
 	{
+		boost::mutex::scoped_lock(mFlipLocker);
+		
 		typename ConnectionMapT::const_iterator it = mBindings.find(boost::make_tuple(id, destination));
 		if (it != mBindings.end())
 		{
@@ -123,7 +125,7 @@ struct Binder
 			try
 			{
 				b->emit(payload, sender);
-				mCallSequence.push_back(c);
+				mCallSequenceBack.push_back(c);
 			}
 			catch (IncompatibleTypeException& ex)
 			{
@@ -145,19 +147,29 @@ struct Binder
 	// Verarbeitet alle events, die mit emit() gequeued wurden.
 	void tick() const
 	{
+		flipCallSequence();
 		std::for_each
 		(
-			mCallSequence.begin(),
-			mCallSequence.end(),
+			mCallSequenceFront.begin(),
+			mCallSequenceFront.end(),
 			std::mem_fun(&Callable::call)
 		);
-		mCallSequence.clear();
+		mCallSequenceFront.clear();
 	}
 	
+	void flipCallSequence() const
+	{
+		boost::mutex::scoped_lock sl(mFlipLocker);
+		std::swap(mCallSequenceFront, mCallSequenceBack);
+	}
+
 	ConnectionMapT mBindings;
 	
 	//! \todo Probably not thread-safe!
-	mutable std::vector<Callable*> mCallSequence;
+	mutable std::vector<Callable*> mCallSequenceFront;
+	mutable std::vector<Callable*> mCallSequenceBack;
+
+	mutable boost::mutex mFlipLocker;
 };
 
 } // namespace Event
