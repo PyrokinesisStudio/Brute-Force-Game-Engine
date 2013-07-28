@@ -31,6 +31,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 	#define BOOST_PARAMETER_MAX_ARITY 7
 #endif
 
+#include <queue>
+
 #include <boost/foreach.hpp>
 #include <boost/signals2.hpp>
 #include <boost/thread/mutex.hpp>
@@ -63,8 +65,6 @@ struct Binding : public Callable
 
 	void emit(const PayloadT& payload, const SenderIdT& sender)
 	{
-		boost::mutex::scoped_lock sl(mFlipLocker);
-		
 		if (typeid(PayloadT) != *mTypeInfo)
 			throw IncompatibleTypeException
 			(
@@ -73,39 +73,35 @@ struct Binding : public Callable
 				mTypeInfo
 			);
 		
-		mBackPayloads.push_back(boost::make_tuple(payload, sender));
+		boost::mutex::scoped_lock(mBufferMutex);
+		mPayloads.push(boost::make_tuple(payload, sender));
 	}
 	
 	virtual void call()
 	{
-		flipPayloads();
-		BOOST_FOREACH(const BufferT& buffer, mFrontPayloads)
-		{
-			signal()(buffer.template get<0>(), buffer.template get<1>());
-		}
-		mFrontPayloads.clear();
+		if (mPayloads.empty())
+			return;
+
+		const BufferT& payload = mPayloads.front();
+		signal()(payload.template get<0>(), payload.template get<1>());
+
+		boost::mutex::scoped_lock(mBufferMutex);
+		mPayloads.pop();
 	}
 
 private:
-
-	void flipPayloads()
-	{
-		boost::mutex::scoped_lock sl(mFlipLocker);
-		std::swap(mFrontPayloads, mBackPayloads);
-	}
 
 	const SignalT& signal() const
 	{
 		return *mSignal;
 	}
 
-	std::vector<BufferT> mFrontPayloads;
-	std::vector<BufferT> mBackPayloads;
+	std::queue<BufferT> mPayloads;
 
 	boost::shared_ptr<SignalT> mSignal;
 	const std::type_info* mTypeInfo;
 	
-	boost::mutex mFlipLocker;
+	boost::mutex mBufferMutex;
 };
 
 } // namespace Event

@@ -199,6 +199,110 @@ struct SubModuleConnect : ModuleConnect
 
 BOOST_AUTO_TEST_SUITE(TestSuite)
 
+//! Testing the correct emit order
+BOOST_AUTO_TEST_CASE (EmitOrder)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+
+	// EntryPoints
+	EventCounter ec;
+	lane.addEntry<ModuleConnect>(ec);
+
+	sync.startEntries();
+
+	std::vector<std::string> testData;
+	testData.push_back("Hello");
+	testData.push_back("adfasdf");
+	testData.push_back("acv");
+	testData.push_back("adfetrweasdf");
+	testData.push_back("ret");
+	testData.push_back("retrt");
+	testData.push_back("rtztrz");
+	testData.push_back("wrtwrt");
+	testData.push_back("4564gs");
+	testData.push_back("3466");
+	testData.push_back("456356");
+	testData.push_back("456");
+	testData.push_back("shh");
+	testData.push_back("ertze45");
+	testData.push_back("d");
+	testData.push_back("3456sfghs");
+	testData.push_back("fxbn6");
+	testData.push_back(",lgg");
+	testData.push_back("fzud");
+	testData.push_back("xghx");
+
+	std::vector<BFG::u32> testData2;
+	testData2.push_back(55);
+	testData2.push_back(43);
+	testData2.push_back(24);
+	testData2.push_back(6);
+	testData2.push_back(2345);
+	testData2.push_back(63456);
+	testData2.push_back(34);
+	testData2.push_back(5867);
+	testData2.push_back(555);
+	testData2.push_back(5678);
+	testData2.push_back(365);
+	testData2.push_back(896);
+	testData2.push_back(24);
+	testData2.push_back(574);
+	testData2.push_back(5432);
+	testData2.push_back(74);
+	testData2.push_back(4567);
+	testData2.push_back(256);
+	testData2.push_back(347);
+	testData2.push_back(373);
+
+	lane.emit(1, testData2[0]);
+	lane.emit(5, testData[0]);
+	lane.emit(1, testData2[1]);
+	lane.emit(5, testData[1]);
+	lane.emit(1, testData2[2]);
+	lane.emit(1, testData2[3]);
+	lane.emit(5, testData[2]);
+	lane.emit(5, testData[3]);
+	lane.emit(1, testData2[4]);
+	lane.emit(5, testData[4]);
+	lane.emit(1, testData2[5]);
+	lane.emit(1, testData2[6]);
+	lane.emit(5, testData[5]);
+	lane.emit(1, testData2[7]);
+	lane.emit(5, testData[6]);
+	lane.emit(1, testData2[8]);
+	lane.emit(1, testData2[9]);
+	lane.emit(1, testData2[10]);
+	lane.emit(5, testData[7]);
+	lane.emit(1, testData2[11]);
+	lane.emit(5, testData[8]);
+	lane.emit(5, testData[9]);
+	lane.emit(1, testData2[12]);
+	lane.emit(5, testData[10]);
+	lane.emit(1, testData2[13]);
+	lane.emit(5, testData[11]);
+	lane.emit(5, testData[12]);
+	lane.emit(1, testData2[14]);
+	lane.emit(5, testData[13]);
+	lane.emit(1, testData2[15]);
+	lane.emit(5, testData[14]);
+	lane.emit(5, testData[15]);
+	lane.emit(1, testData2[16]);
+	lane.emit(5, testData[16]);
+	lane.emit(1, testData2[17]);
+	lane.emit(1, testData2[18]);
+	lane.emit(5, testData[17]);
+	lane.emit(1, testData2[19]);
+	lane.emit(5, testData[18]);
+	lane.emit(5, testData[19]);
+
+	sync.finish();
+
+	CHECK_EQUAL_COLLECTIONS(ec["simpleCopy"].mU32, testData2);
+	CHECK_EQUAL_COLLECTIONS(ec["simpleReference"].mStrings, testData);
+
+}
+
 //! Testing basic SubLane functionality: Emits, Proper Destruction etc.
 BOOST_AUTO_TEST_CASE (SubLaneTest)
 {
@@ -364,6 +468,7 @@ BOOST_AUTO_TEST_CASE (ConnectionTestU32)
 
 	// Perform event delivery
 	bu3->call();
+	bu3->call();
 
 	// Due to 2 emits we expect 2 calls.
 	BOOST_CHECK_EQUAL(ec["simpleCopy"].mCalls, 2);
@@ -433,6 +538,7 @@ BOOST_AUTO_TEST_CASE (ConnectionTestString)
 
 	// Perform event delivery
 	bs3->call();
+	bs3->call();
 
 	// Due to 2 emits we expect 2 calls.
 	BOOST_CHECK_EQUAL(ec["simpleReference"].mCalls, 2);
@@ -492,6 +598,7 @@ BOOST_AUTO_TEST_CASE (ConnectionTestVoid)
 	BFG::Event::Callable* cv3 = boost::any_cast<BFG::Event::Callable*>(con1.mBinding);
 	BFG::Event::Binding<BFG::Event::Void, BFG::GameHandle>* bv3 = static_cast<BFG::Event::Binding<BFG::Event::Void, BFG::GameHandle>*>(cv3);
 
+	bv3->call();
 	bv3->call();
 
 	// Correctly called?
