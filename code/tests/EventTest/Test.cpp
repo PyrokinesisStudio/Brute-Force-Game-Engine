@@ -42,6 +42,7 @@ const BFG::GameHandle testSenderId2 = 91011;
 
 static BFG::u32 gf32EventCounter = 0;
 static BFG::u32 gu32EventCounter = 0;
+static BFG::u32 gVoidEventCounter = 0;
 
 
 struct TestModulAudio1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
@@ -184,6 +185,16 @@ struct TestModule4 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 	TestModule4(BFG::u32 frequency) :
 	mFrequency(frequency)
 	{}
+
+	void run(LaneT* lane)
+	{
+		lane->connectV(1, this, &TestModule4::handleVoidEvent);
+	}
+
+	void handleVoidEvent()
+	{
+		gVoidEventCounter = mFrequency;
+	}
 
 	BFG::u32 mFrequency;
 };
@@ -489,6 +500,8 @@ BOOST_AUTO_TEST_CASE (OneLaneOneEventWrongPayload)
 
 BOOST_AUTO_TEST_CASE (EntryWithStartParameter)
 {
+	gVoidEventCounter = 0;
+
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane lane(sync, 100);
 
@@ -497,7 +510,10 @@ BOOST_AUTO_TEST_CASE (EntryWithStartParameter)
 
 	sync.startEntries();
 
+	lane.emit(1, BFG::Event::Void());
 	sync.finish();
+
+	BOOST_REQUIRE_EQUAL(gVoidEventCounter, frequency);
 }
 
 
