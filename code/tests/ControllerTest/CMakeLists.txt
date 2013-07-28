@@ -27,7 +27,6 @@ TARGET_LINK_LIBRARIES(bfgControllerTest
 	bfgBase
 	bfgController
 	bfgCore
-	bfgEventCore
 #	bfgNetwork
 )
 

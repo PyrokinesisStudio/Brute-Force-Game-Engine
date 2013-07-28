@@ -458,10 +458,11 @@ void startSingleThreaded()
 
 void startMultiThreaded()
 {
+	u32 frequency = 100;
 	Event::Synchronizer sync;
-	Event::Lane controllerLane(sync, 100);
+	Event::Lane controllerLane(sync, frequency);
 	
-	controllerLane.addEntry<Controller_::Main>(100);
+	controllerLane.addEntry<Controller_::Main>(frequency);
 	controllerLane.addEntry<Main>();
 	sync.startEntries();
 	
