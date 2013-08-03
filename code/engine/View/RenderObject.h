@@ -46,7 +46,7 @@ namespace View {
 class VIEW_API RenderObject
 {
 public:
-	RenderObject(Event::Lane* lane,
+	RenderObject(Event::Lane& lane,
 	             GameHandle parent,
 	             GameHandle handle,
 	             const std::string& meshName,

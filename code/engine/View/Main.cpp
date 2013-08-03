@@ -36,7 +36,7 @@ mWindowTitle(windowTitle)
 
 void Main::main(Event::Lane* lane)
 {
-	mMain.reset(new OgreInit(lane, mWindowTitle));
+	mMain.reset(new OgreInit(*lane, mWindowTitle));
 }
 
 } // namespace View
