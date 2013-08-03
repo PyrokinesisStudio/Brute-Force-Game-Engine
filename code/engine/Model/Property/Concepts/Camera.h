@@ -139,7 +139,8 @@ public:
 private:
 	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
 	virtual void internalSynchronize();
-	virtual void internalOnEvent(EventIdT action, Property::Value payload, GameHandle module, GameHandle sender);
+
+	void onSetCameraTarget(GameHandle target);
 
 	virtual void internalOnModuleAttached(GameHandle module);
 

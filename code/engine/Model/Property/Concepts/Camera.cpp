@@ -66,7 +66,8 @@ mInterpol(0.0f, parameter.mMaxDistance.value())
 	requestEvent(ID::GOE_CONTROL_MAGIC_STOP);
 	requestEvent(ID::GOE_TOGGLE_WIREFRAME);
 #endif
-	requestEvent(ID::GOE_SET_CAMERA_TARGET);
+	subLane()->connect(ID::GOE_SET_CAMERA_TARGET, this, &Camera::onSetCameraTarget, ownerHandle());
+
 	initvar(ID::PV_CameraMode);
 	require("Physical");
 
@@ -88,18 +89,10 @@ Camera::~Camera()
 	stopDelivery(ID::GOE_SET_CAMERA_TARGET);
 }
 
-void Camera::internalOnEvent(EventIdT action,
-                             Property::Value payload,
-                             GameHandle module,
-                             GameHandle sender)
+void Camera::onSetCameraTarget(GameHandle target)
 {
-	switch(action)
-	{
-	case ID::GOE_SET_CAMERA_TARGET:
-	{
-		mTarget = payload;
-		break;
-	}
+	mTarget = target;
+}
 
 #if 0
 	case ID::GOE_CONTROL_PITCH:
@@ -155,12 +148,6 @@ void Camera::internalOnEvent(EventIdT action,
 		break;
 #endif
 
-	default:
-		warnlog << "Camera: Can't handle event with ID: "
-		        << action;
-	}
-}
-
 void Camera::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 {
 	assert(mModules.begin()->first == rootModule() &&
@@ -173,8 +160,8 @@ void Camera::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 
 void Camera::internalSynchronize()
 {
-	emit<Physics::Event>(ID::PE_UPDATE_ORIENTATION, mNewLocation.orientation, ownerHandle());
-	emit<Physics::Event>(ID::PE_UPDATE_POSITION, mNewLocation.position, ownerHandle());
+	subLane()->emit(ID::PE_UPDATE_ORIENTATION, mNewLocation.orientation, ownerHandle());
+	subLane()->emit(ID::PE_UPDATE_POSITION, mNewLocation.position, ownerHandle());
 }
 
 void Camera::internalOnModuleAttached(GameHandle module)
@@ -273,21 +260,31 @@ void Camera::updateFree(quantity<si::time, f32> timeSinceLastFrame)
 
 void Camera::updateFixed(quantity<si::time, f32> timeSinceLastFrame)
 {
-	Location target;
-
 	if (! environment()->exists(mTarget))
 		return;
 
 	if (mTarget != NULL_HANDLE)
-		target = environment()->getGoValue<Location>(mTarget, ID::PV_Location, pluginId());
+	{
+		const Location& target = environment()->getGoValue<Location>(mTarget, ID::PV_Location, pluginId());
 
-	updateOwnLocation(timeSinceLastFrame);
+		updateOwnLocation(timeSinceLastFrame);
 
-	mNewLocation.orientation = target.orientation * mOwnLocation.orientation;
-	mNewLocation.position = target.position + (mNewLocation.orientation * mOffset);
+		mNewLocation.orientation = target.orientation * mOwnLocation.orientation;
+		mNewLocation.position = target.position + (mNewLocation.orientation * mOffset);
 #if 0
-	v3 newPos = target.position + (newOri * (mOffset * mOffsetFactor));
+		v3 newPos = target.position + (newOri * (mOffset * mOffsetFactor));
 #endif
+	}
+	else
+	{
+		updateOwnLocation(timeSinceLastFrame);
+
+		mNewLocation.orientation = mOwnLocation.orientation;
+		mNewLocation.position = (mNewLocation.orientation * mOffset);
+#if 0
+		v3 newPos = (newOri * (mOffset * mOffsetFactor));
+#endif
+	}
 }
 
 #if 0
