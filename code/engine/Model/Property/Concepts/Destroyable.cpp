@@ -26,21 +26,23 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Model/Property/Concepts/Destroyable.h>
 
+#include <boost/foreach.hpp>
 #include <boost/units/systems/si/mass.hpp>
 
-#include <Base/Logger.h>
-#include <Core/Math.h>
+#include <Audio/Audio.h>
 
-#include <Audio/AudioEvent.h>
+#include <Base/Logger.h>
+
+#include <Core/Math.h>
 
 #include <Model/Environment.h>
 #include <Model/GameObject.h>
 #include <Model/Module.h>
 
-#include <Model/Events/GameObjectEvent.h>
-#include <Model/Events/SectorEvent.h>
-#include <View/Event.h>
-#include <Physics/Event.h>
+#include <Physics/Physics.h>
+
+#include <View/EffectCreation.h>
+#include <View/Enums.hh>
 
 namespace BFG {
 
@@ -55,8 +57,8 @@ mDamageMultiplier(100.0f)
 	initvar(ID::PV_RespawnCountdown);
 	initvar(ID::PV_Effect);
 
-	requestEvent(ID::PE_CONTACT);
-	requestEvent(ID::GOE_REINITIALIZE);
+	subLane()->connect(ID::PE_CONTACT, this, &Destroyable::onContact, ownerHandle());
+	subLane()->connectV(ID::GOE_REINITIALIZE, this, &Destroyable::onReinitialize, ownerHandle());
 	
 	require("Physical");
 }
@@ -68,33 +70,22 @@ void Destroyable::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 		updateModule(it->first, timeSinceLastFrame);
 }
 
-void Destroyable::internalOnEvent(EventIdT action,
-                                  Property::Value payload,
-                                  GameHandle module,
-                                  GameHandle sender)
+void Destroyable::onContact(const Physics::ModulePenetration& mp)
 {
-	if (mModules.find(module) == mModules.end())
-		return;
-
-	switch(action)
-	{
-	case ID::PE_CONTACT:
-	{
-		f32 newDamage = payload * mDamageMultiplier;
-		value<f32>(ID::PV_Damage, module) += newDamage;
-		break;
-	}
+	GameHandle ownModule        = mp.get<0>();
+	f32        penetrationDepth = mp.get<2>();
 	
-	case ID::GOE_REINITIALIZE:
+	f32 newDamage = penetrationDepth * mDamageMultiplier;
+	value<f32>(ID::PV_Damage, ownModule) += newDamage;
+}
+
+void Destroyable::onReinitialize()
+{
+	BOOST_FOREACH(ModuleMapT::value_type pair, mModules)
 	{
+		GameHandle module = pair.first;
 		value<f32>(ID::PV_Damage, module)     = 0.0f;
 		value<bool>(ID::PV_Destroyed, module) = false;
-		break;
-	}
-	
-	default:
-		throw std::logic_error
-			("Destroyable::internalOnEvent: Got unknown event!");
 	}
 }
 
@@ -127,13 +118,13 @@ void Destroyable::updateGui(f32 damage, f32 armor)
 {
 	f32 remainingArmor = (1.0f - damage / armor) * 100;
 	s32 value = clamp((s32)remainingArmor, 0, 100);
-	// TODO: separate calculation and emitting
-	emit<GameObjectEvent>(ID::GOE_ARMOR, value, 0, ownerHandle());
+	// TODO: separate calculation and subLane()->emitting
+	subLane()->emit(ID::GOE_ARMOR, value, NULL_HANDLE, ownerHandle());
 }
 
-bool Destroyable::isHeavy(GameHandle handle) const
+bool Destroyable::isHeavy(GameHandle /*module*/) const
 {
-	//! \note
+	//! \todo
 	//! Using weight of the whole object for now (which is not correct - it
 	//! should be the weight of the individual module)
 	
@@ -152,27 +143,27 @@ void Destroyable::destroy(GameHandle module, bool respawns)
 
 	const Location& go = getGoValue<Location>(ID::PV_Location, pluginId());
 
-	CharArray128T effect = value<CharArray128T>(ID::PV_Effect, module);
-	CharArray128T soundEffect = value<CharArray128T>(ID::PV_SoundEffect, module);
+	std::string effect = value<std::string>(ID::PV_Effect, module);
+	std::string soundEffect = value<std::string>(ID::PV_SoundEffect, module);
 	
 	//! \todo calculate intensity
 	f32 intensity = 1.0f + (f32)isHeavy(module);
 	
 	View::EffectCreation ec(effect, go.position, intensity);
 	warnlog << "Destroyable: VE_EFFECT event may arrive at undesired locations due to unknown view state handle";
-	// TODO: separate calculation and emitting
-	emit<View::Event>(ID::VE_EFFECT, ec);
-	emit<Audio::AudioEvent>(ID::AE_SOUND_EFFECT, soundEffect);
+	// TODO: separate calculation and subLane()->emitting
+	subLane()->emit(ID::VE_EFFECT, ec);
+	subLane()->emit(ID::AE_SOUND_EFFECT, soundEffect);
 
 	if (respawns)
 	{
-		emit<Physics::Event>(ID::PE_UPDATE_COLLISION_MODE, (s32) ID::CM_Disabled, module);
-		emit<Physics::Event>(ID::PE_UPDATE_SIMULATION_FLAG, false, module);
-		emit<View::Event>(ID::VE_SET_VISIBLE, false, module);
+		subLane()->emit(ID::PE_UPDATE_COLLISION_MODE, (s32) ID::CM_Disabled, module);
+		subLane()->emit(ID::PE_UPDATE_SIMULATION_FLAG, false, module);
+		subLane()->emit(ID::VE_SET_VISIBLE, false, module);
 	}
 	else
 	{
-		emit<SectorEvent>(ID::S_DESTROY_GO, ownerHandle());
+		subLane()->emit(ID::S_DESTROY_GO, ownerHandle());
 	}
 }
 
@@ -190,12 +181,12 @@ void Destroyable::respawn(GameHandle module)
 	nextSpawn.position -= go.orientation.zAxis() * distance_in_meters;
 	nextSpawn.orientation = go.orientation;
 
-	emit<GameObjectEvent>(ID::GOE_REINITIALIZE, nextSpawn, ownerHandle());
+	subLane()->emit(ID::GOE_REINITIALIZE, nextSpawn, ownerHandle());
 
-	emit<Physics::Event>(ID::PE_UPDATE_COLLISION_MODE, (s32) ID::CM_Standard, module);
-	emit<Physics::Event>(ID::PE_UPDATE_SIMULATION_FLAG, true, module);
+	subLane()->emit(ID::PE_UPDATE_COLLISION_MODE, (s32) ID::CM_Standard, module);
+	subLane()->emit(ID::PE_UPDATE_SIMULATION_FLAG, true, module);
 
-	emit<View::Event>(ID::VE_SET_VISIBLE, true, module);
+	subLane()->emit(ID::VE_SET_VISIBLE, true, module);
 	
 	mTimeSinceDestruction[module]         = 0.0f;
 	value<bool>(ID::PV_Destroyed, module) = false;

@@ -56,12 +56,7 @@ Property::Concept(owner, "AutoNavigator", pid)
 }
 
 AutoNavigator::~AutoNavigator()
-{
-
-	//! \todo This needs to be done when this module is actually "switched off".
-	stopDelivery(ID::GOE_VALUE_UPDATED);
-	stopDelivery(ID::GOE_AUTONAVIGATE);
-}
+{}
 
 void AutoNavigator::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 {

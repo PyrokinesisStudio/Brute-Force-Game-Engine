@@ -38,7 +38,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/Cpp.h>
 #include <Core/Math.h>
 
-#include <Model/Events/GameObjectEvent.h>
 #include <Model/Environment.h>
 #include <Model/Adapter.h>
 #include <Model/Module.h>

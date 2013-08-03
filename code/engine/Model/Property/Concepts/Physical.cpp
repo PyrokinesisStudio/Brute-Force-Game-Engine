@@ -30,8 +30,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/Math.h>
 #include <Model/Environment.h>
-#include <Physics/Event.h>
-#include <View/Event.h>
+#include <Physics/Physics.h>
+#include <View/Enums.hh>
 
 namespace BFG {
 
@@ -39,28 +39,17 @@ Physical::Physical(GameObject& owner, PluginId pid) :
 Property::Concept(owner, "Physical", pid),
 mFirstFullSync(true)
 {
-	mPhysicsActions.push_back(ID::PE_FULL_SYNC);
-	mPhysicsActions.push_back(ID::PE_POSITION);
-	mPhysicsActions.push_back(ID::PE_ORIENTATION);
-	mPhysicsActions.push_back(ID::PE_VELOCITY);
-	mPhysicsActions.push_back(ID::PE_ROTATION_VELOCITY);
-	mPhysicsActions.push_back(ID::PE_TOTAL_MASS);
-	mPhysicsActions.push_back(ID::PE_TOTAL_INERTIA);
-
-	BOOST_FOREACH(ID::PhysicsAction action, mPhysicsActions)
-	{
-		loop()->connect(action, this, &Physical::onPhysicsEvent, ownerHandle());
-	}
+	subLane()->connect(ID::PE_FULL_SYNC, this, &Physical::onFullSync, ownerHandle());
+	subLane()->connect(ID::PE_POSITION, this, &Physical::onPosition, ownerHandle());
+	subLane()->connect(ID::PE_ORIENTATION, this, &Physical::onOrientation, ownerHandle());
+	subLane()->connect(ID::PE_VELOCITY, this, &Physical::onVelocity, ownerHandle());
+	subLane()->connect(ID::PE_ROTATION_VELOCITY, this, &Physical::onRotationVelocity, ownerHandle());
+	subLane()->connect(ID::PE_TOTAL_MASS, this, &Physical::onTotalMass, ownerHandle());
+	subLane()->connect(ID::PE_TOTAL_INERTIA, this, &Physical::onTotalInertia, ownerHandle());
 }
 
 Physical::~Physical()
-{
-	BOOST_FOREACH(ID::PhysicsAction action, mPhysicsActions)
-	{
-		loop()->disconnect(action, this);
-	}
-
-}
+{}
 
 void Physical::internalSynchronize()
 {
@@ -70,47 +59,8 @@ void Physical::internalSynchronize()
 
 	if (mFirstFullSync)
 	{
-		emit<View::Event>(ID::VE_SET_VISIBLE, true, ownerHandle());
+		subLane()->emit(ID::VE_SET_VISIBLE, true, ownerHandle());
 		mFirstFullSync = false;
-	}
-}
-
-void Physical::onPhysicsEvent(Physics::Event* e)
-{
-	switch(e->id())
-	{
-	case ID::PE_FULL_SYNC:
-		onFullSync(boost::get<Physics::FullSyncData>(e->data()));
-		break;
-
-	case ID::PE_VELOCITY:
-		onVelocity(boost::get<Physics::VelocityComposite>(e->data()));
-		break;
-
-	case ID::PE_ROTATION_VELOCITY:
-		onRotationVelocity(boost::get<Physics::VelocityComposite>(e->data()));
-		break;
-
-	case ID::PE_POSITION:
-		onPosition(boost::get<v3>(e->data()));
-		break;
-
-	case ID::PE_ORIENTATION:
-		onOrientation(boost::get<qv4>(e->data()));
-		break;
-
-	case ID::PE_TOTAL_MASS:
-		onTotalMass(boost::get<f32>(e->data()));
-		break;
-
-	case ID::PE_TOTAL_INERTIA:
-		onInertia(boost::get<m3x3>(e->data()));
-		break;
-
-	default:
-		warnlog << "Physical: Can't handle event with ID: "
-		        << e->id();
-		break;
 	}
 }
 
@@ -162,7 +112,7 @@ void Physical::onTotalMass(const f32 totalMass)
 	setGoValue(ID::PV_Mass, pluginId(), totalMass);
 }
 
-void Physical::onInertia(const m3x3& inertia)
+void Physical::onTotalInertia(const m3x3& inertia)
 {
 	setGoValue(ID::PV_Inertia, pluginId(), inertia);
 }
@@ -186,8 +136,8 @@ void Physical::synchronizeView() const
 	}
 #endif
 
-	emit<View::Event>(ID::VE_UPDATE_POSITION, go.position, ownerHandle());
-	emit<View::Event>(ID::VE_UPDATE_ORIENTATION, go.orientation, ownerHandle());
+	subLane()->emit(ID::VE_UPDATE_POSITION, go.position, ownerHandle());
+	subLane()->emit(ID::VE_UPDATE_ORIENTATION, go.orientation, ownerHandle());
 }
 
 } // namespace BFG

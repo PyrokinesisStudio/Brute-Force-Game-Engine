@@ -75,40 +75,11 @@ void Concept::synchronize()
 	this->internalSynchronize();
 }
 
-void Concept::onEvent(Event::IdT action,
-                      Value payload,
-                      GameHandle module,
-                      GameHandle sender)
-{
-	this->internalOnEvent(action, payload, module, sender);
-}
-
 void Concept::internalUpdate(quantity<si::time, f32> /*timeSinceLastFrame*/)
-{
-}
+{}
 
 void Concept::internalSynchronize()
-{
-}
-
-void Concept::internalOnEvent(Event::IdT,
-                              Value /*payload*/,
-                              GameHandle /*module*/,
-                              GameHandle /*sender*/)
-{
-}
-
-void Concept::requestEvent(Event::IdT action)
-{
-	boost::shared_ptr<Concept> This(this, null_deleter());
-	mOwner.registerNeedForEvent(This, action);
-}
-
-void Concept::stopDelivery(Event::IdT action)
-{
-	boost::shared_ptr<Concept> This(this, null_deleter());
-	mOwner.unregisterNeedForEvent(This, action);
-}
+{}
 
 void Concept::require(ConceptId pc) const
 {

@@ -87,7 +87,7 @@ public:
 
 	typedef boost::shared_ptr<Managed> ChildT;
 
-	         GameObject(Event::Lane* lane,
+	         GameObject(Event::Lane& lane,
 	                    const GameHandle handle,
 	                    const std::string& publicName,
 	                    const Property::PluginMapT& propertyPlugins,
@@ -181,14 +181,6 @@ private:
 	//! 
 	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
 	virtual void internalSynchronize();
-
-	//! PropertyConcepts need events too. They register their needs indirectly
-	//! through their base class which then calls this function.
-	//! \see Property::Concept::requestEvent
-	void registerNeedForEvent(boost::shared_ptr<Property::Concept>, Event::IdT);
-
-	//! \see GameObject::registerNeedForEvent
-	void unregisterNeedForEvent(boost::shared_ptr<Property::Concept>, Event::IdT);
 
 	//! Helper function to distribute an event amongst all attached
 	//! PropertyConcepts of this GameObject.

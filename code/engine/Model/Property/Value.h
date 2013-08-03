@@ -64,7 +64,7 @@ public:
 	template <typename T>
 	operator const T&() const
 	{
-		return  boost::any_cast<T&>(mValue);
+		return  boost::any_cast<const T&>(mValue);
 	}
 	
 	template <typename T>

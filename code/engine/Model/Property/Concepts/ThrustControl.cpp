@@ -38,7 +38,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Module.h>
 #include <Model/GameObject.h>
 
-#include <Physics/Event.h>
+#include <Physics/Physics.h>
 
 BOOST_UNITS_STATIC_CONSTANT
 (
@@ -61,12 +61,12 @@ mTargetRotationSpeed(v3::ZERO)
 {
 	require("Physical");
 	
-	requestEvent(ID::GOE_VALUE_UPDATED);
-	requestEvent(ID::GOE_CONTROL_PITCH);
-	requestEvent(ID::GOE_CONTROL_YAW);
-	requestEvent(ID::GOE_CONTROL_ROLL);
-	requestEvent(ID::GOE_CONTROL_THRUST);
-	requestEvent(ID::GOE_CONTROL_MAGIC_STOP);
+	subLane()->connect(ID::GOE_VALUE_UPDATED, this, &ThrustControl::onValueUpdated, ownerHandle());
+	subLane()->connect(ID::GOE_CONTROL_PITCH, this, &ThrustControl::onControlPitch, ownerHandle());
+	subLane()->connect(ID::GOE_CONTROL_YAW, this, &ThrustControl::onControlYaw, ownerHandle());
+	subLane()->connect(ID::GOE_CONTROL_ROLL, this, &ThrustControl::onControlRoll, ownerHandle());
+	subLane()->connect(ID::GOE_CONTROL_THRUST, this, &ThrustControl::onControlThrust, ownerHandle());
+	subLane()->connectV(ID::GOE_CONTROL_MAGIC_STOP, this, &ThrustControl::onControlMagicStop, ownerHandle());
 	
 	initvar(ID::PV_MaxSpeed);
 	initvar(ID::PV_EngineForce);
@@ -115,89 +115,84 @@ void ThrustControl::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 void ThrustControl::internalSynchronize()
 {
 	const v3& currentSpeed = getGoValue<v3>(ID::PV_RelativeVelocity, pluginId());
-	emit<GameObjectEvent>(ID::GOE_VELOCITY, currentSpeed, 0, ownerHandle());
-
-	emit<Physics::Event>(ID::PE_APPLY_FORCE, mForce, ownerHandle());
-	emit<Physics::Event>(ID::PE_APPLY_TORQUE, mTorque, ownerHandle());
+	subLane()->emit(ID::GOE_VELOCITY, currentSpeed, NULL_HANDLE, ownerHandle());
+	
+	subLane()->emit(ID::PE_APPLY_FORCE, mForce, ownerHandle());
+	subLane()->emit(ID::PE_APPLY_TORQUE, mTorque, ownerHandle());
 }
 
-void ThrustControl::internalOnEvent(EventIdT action,
-                                    Property::Value payload,
-                                    GameHandle module,
-                                    GameHandle sender)
+void ThrustControl::onControlPitch(f32 factor)
 {
-	switch(action)
-	{
-	case ID::GOE_CONTROL_PITCH:
-	{
-		f32 targetSpeed(payload * mMaxRotationSpeed.x);
-		mTargetRotationSpeed.x = clamp(targetSpeed,
-		                               -mMaxRotationSpeed.x,
-		                               mMaxRotationSpeed.x);
-		break;
-	}
+	mTargetRotationSpeed.x = clamp
+	(
+		mMaxRotationSpeed.x * factor,
+		-mMaxRotationSpeed.x,
+		mMaxRotationSpeed.x
+	);
+}
 
-	case ID::GOE_CONTROL_YAW:
-	{
-		f32 targetSpeed(payload * mMaxRotationSpeed.y);
-		mTargetRotationSpeed.y = clamp(targetSpeed,
-		                               -mMaxRotationSpeed.y,
-		                               mMaxRotationSpeed.y);
-		break;
-	}
+void ThrustControl::onControlYaw(f32 factor)
+{
+	mTargetRotationSpeed.y = clamp
+	(
+		mMaxRotationSpeed.y * factor,
+		-mMaxRotationSpeed.y,
+		mMaxRotationSpeed.y
+	);
+}
 
-	case ID::GOE_CONTROL_ROLL:
-	{
-		f32 targetSpeed(payload * mMaxRotationSpeed.z);
-		mTargetRotationSpeed.z = clamp(targetSpeed,
-		                               -mMaxRotationSpeed.z,
-		                               mMaxRotationSpeed.z);
-		break;
-	}
+void ThrustControl::onControlRoll(f32 factor)
+{
+	mTargetRotationSpeed.z = clamp
+	(
+		mMaxRotationSpeed.z * factor,
+		-mMaxRotationSpeed.z,
+		mMaxRotationSpeed.z
+	);
+}
 
-	case ID::GOE_CONTROL_THRUST:
-	{
-		typedef quantity<si::velocity, f32> VelocityT;
-		typedef quantity<si::dimensionless, f32> DimensionlessT;
-		
-		f32 factor = payload;
-		VelocityT targetSpeed = factor * mMaxSpeed;
+void ThrustControl::onControlThrust(f32 factor)
+{
+	typedef quantity<si::velocity, f32> VelocityT;
+	typedef quantity<si::dimensionless, f32> DimensionlessT;
+	
+	VelocityT targetSpeed = factor * mMaxSpeed;
 
-		mTargetSpeed = v3(0, 0, clamp(targetSpeed.value(),
-		                              -mMaxSpeed.value(),
-		                              mMaxSpeed.value()));
-
-		emit<GameObjectEvent>
+	mTargetSpeed = v3
+	(
+		0,
+		0,
+		clamp
 		(
-			ID::GOE_ENGINEOUTPUT,
-			(f32) (mTargetSpeed.z / mMaxSpeed.value()),
-			0,
-			ownerHandle()
-		);
-		break;
-	}
+			targetSpeed.value(),
+			-mMaxSpeed.value(),
+			mMaxSpeed.value()
+		)
+	);
 
-	case ID::GOE_CONTROL_MAGIC_STOP:
-		magicStop();
-		break;
+	subLane()->emit
+	(
+		ID::GOE_ENGINEOUTPUT,
+		(f32) (mTargetSpeed.z / mMaxSpeed.value()),
+		NULL_HANDLE,
+		ownerHandle()
+	);
+}
 
-	case ID::GOE_VALUE_UPDATED:
-	{
-		Property::ValueId valueId = payload;
-		if (valueId.mPluginId == pluginId())
-			if (valueId.mVarId == ID::PV_Mass ||
-			    valueId.mVarId == ID::PV_Inertia)
-				calculateEngineAttributes();
-		break;
-	}
+void ThrustControl::onControlMagicStop()
+{
+	mTargetRotationSpeed = v3::ZERO;
+	mTargetSpeed = v3::ZERO;
+	
+	subLane()->emit(ID::PE_MAGIC_STOP, Event::Void(), ownerHandle());
+}
 
-	default:
-	{
-		warnlog << "ThrustControl: Can't handle event with ID: "
-		        << action;
-		break;
-	}
-	}
+void ThrustControl::onValueUpdated(Property::ValueId valueId)
+{
+	if (valueId.mPluginId == pluginId())
+		if (valueId.mVarId == ID::PV_Mass ||
+		    valueId.mVarId == ID::PV_Inertia)
+			calculateEngineAttributes();
 }
 
 v3 ThrustControl::calculateForce(const v3& targetSpeed,
@@ -266,10 +261,6 @@ v3 ThrustControl::calculateTorque(const v3& targetSpeed,
 
 void ThrustControl::magicStop()
 {
-	mTargetRotationSpeed = v3::ZERO;
-	mTargetSpeed = v3::ZERO;
-	
-	emit<Physics::Event>(ID::PE_MAGIC_STOP, 0, ownerHandle());
 }
 
 void ThrustControl::calculateEngineAttributes()

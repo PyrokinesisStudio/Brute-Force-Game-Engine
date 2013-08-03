@@ -40,11 +40,13 @@ public:
 
 private:
 	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
-	virtual void internalOnEvent(EventIdT action, Property::Value payload, GameHandle module, GameHandle sender);
 
-	void fireRocket();
-	void fireLaser();
-
+	void onFireRocket();
+	void onFireLaser();
+	
+	void onSetWeaponTarget(GameHandle target);
+	void onReinitialize();
+	
 	void updateGuiAmmo() const;
 	
 	void calculateVelocity(f32 startImpulse,

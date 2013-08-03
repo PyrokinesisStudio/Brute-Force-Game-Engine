@@ -41,21 +41,15 @@ public:
 	Networked(GameObject& owner, PluginId pid);
 	~Networked();
 
-	void onNetworkEvent(Network::DataPacketEvent* e);
-	void onPhysicsEvent(Physics::Event* e);
-
 private:
 	void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
-
-	void internalOnEvent(EventIdT action,
-	                     Property::Value payload,
-	                     GameHandle module,
-	                     GameHandle sender);
 
 	void onPosition(const v3& newPosition);
 	void onOrientation(const qv4& newOrientation);
 	void onVelocity(const Physics::VelocityComposite& newVelocity);
 	void onRotationVelocity(const Physics::VelocityComposite& newVelocity);
+	
+	void onReceived(const BFG::Network::DataPayload& payload);
 
 	void onSynchronizationMode(ID::SynchronizationMode mode);
 	void onGhostMode(bool enable);

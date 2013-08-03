@@ -42,7 +42,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Enums.hh>
 #include <Model/GameObject.h>
 #include <Model/Module.h>
-#include <Model/Events/GameObjectEvent_fwd.h>
 #include <Model/Property/ConceptId.h>
 #include <Model/Property/Value.h>
 #include <Model/Property/ValueId.h>
@@ -87,8 +86,6 @@ public:
 	void update(quantity<si::time, f32> timeSinceLastFrame);
 	void synchronize();
 
-	void onEvent(Event::IdT, Value payload, GameHandle module, GameHandle sender);
-
 	ConceptId concept() const { return mSelf; }
 	PluginId  pluginId() const { return mPluginId; }
 
@@ -105,29 +102,8 @@ protected:
 	//! TODO
 	virtual void internalSynchronize();
 	
-	/** \bug
-		Do not call setGoValue within this function.
-		The application will crash and the reason is, that Concept 's
-		need to be informed instantly of changed values. This is done right
-		away after setGoValue is done. A ID::GOE_VALUE_UPDATED event will be sent.
-		Triggering the same event while catching it -> stack overflow.
-	*/
-	virtual void internalOnEvent(Event::IdT,
-	                             Value payload,
-	                             GameHandle module,
-	                             GameHandle sender);
-
 	virtual void internalOnModuleAttached(GameHandle) {}
 	virtual void internalOnModuleDetached(GameHandle) {}
-
-	//! \brief Notifies the owner GameObject that the stated event must
-	//!        be forwarded to this Concept.
-	//! \see stopDelivery
-	void requestEvent(Event::IdT);
-
-	//! \brief Stops forwarding of a certain event.
-	//! \see requestEvent
-	void stopDelivery(Event::IdT);
 
 	//! \brief Performs a dependency check.
 	//! Mostly called within the constructor of Concept implementations.

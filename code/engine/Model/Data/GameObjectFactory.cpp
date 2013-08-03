@@ -28,6 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/foreach.hpp>
 
+#include <Base/Logger.h>
 #include <Core/GameHandle.h>
 
 #include <Model/Adapter.h>
@@ -38,6 +39,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Physics/Event_fwd.h>
 #include <View/Enums.hh>
+#include <View/CameraCreation.h>
+#include <View/ObjectCreation.h>
 
 namespace BFG {
 

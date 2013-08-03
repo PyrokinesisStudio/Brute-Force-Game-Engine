@@ -27,7 +27,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Property/Concepts/Triggers.h>
 
 #include <Model/Environment.h>
-#include <Model/Events/TriggerEvent.h>
 
 namespace BFG {
 
@@ -40,7 +39,7 @@ Triggers::~Triggers()
 {
 }
 
-void Triggers::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
+void Triggers::internalUpdate(quantity<si::time, f32> /*timeSinceLastFrame*/)
 {
 	assert(! "TODO: Send new event");
 #if 0

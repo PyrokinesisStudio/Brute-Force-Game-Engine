@@ -32,7 +32,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Module.h>
 #include <Model/GameObject.h>
 
-#include <Physics/Event.h>
+#include <Physics/Physics.h>
 
 namespace BFG {
 
@@ -76,18 +76,7 @@ mInterpol(0.0f, parameter.mMaxDistance.value())
 }
 
 Camera::~Camera()
-{
-	//! \todo This needs to be done when this module is actually "switched off".
-#if 0
-	stopDelivery(ID::GOE_CONTROL_PITCH);
-	stopDelivery(ID::GOE_CONTROL_YAW);
-	stopDelivery(ID::GOE_CONTROL_ROLL);
-	stopDelivery(ID::GOE_CONTROL_THRUST);
-	stopDelivery(ID::GOE_CONTROL_MAGIC_STOP);
-	stopDelivery(ID::GOE_TOGGLE_WIREFRAME);
-#endif
-	stopDelivery(ID::GOE_SET_CAMERA_TARGET);
-}
+{}
 
 void Camera::onSetCameraTarget(GameHandle target)
 {
@@ -176,7 +165,7 @@ void Camera::internalOnModuleAttached(GameHandle module)
 	mOffset = value<v3>(ID::PV_CameraOffset, module);
 }
 
-void Camera::updateOwnLocation(quantity<si::time, f32> timeSinceLastFrame)
+void Camera::updateOwnLocation(quantity<si::time, f32> /*timeSinceLastFrame*/)
 {
 #if 0
 	mRotationInput *= timeSinceLastFrame.value();
