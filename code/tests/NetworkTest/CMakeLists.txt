@@ -29,7 +29,6 @@ TARGET_LINK_LIBRARIES(bfgNetworkTest
 	${OGRE_LIBRARIES}
 	bfgBase
 	bfgCore
-	bfgEventCore
 	bfgNetwork
 )
 

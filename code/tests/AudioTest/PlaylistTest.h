@@ -27,7 +27,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef PLAYLIST_TEST_H_
 #define PLAYLIST_TEST_H_
 
-#include <EventSystem/EventFactory.h>
 #include <Audio/Loader.h>
 #include <Audio/Playlist.h>
 #include <tests/AudioTest/functions.h>
@@ -44,10 +43,6 @@ void playlistTest()
 {
 	using namespace BFG;
 
-	dbglog << "Get EventLoop";
-	//Audio::AudioInterface::getEntryPoint();
-	//EventLoop* myEventLoop = Audio::AudioMain::eventLoop();
-	
     std::vector<std::string> fileNameList = musicFileNames();
 
 	dbglog << "CreatePlaylist";

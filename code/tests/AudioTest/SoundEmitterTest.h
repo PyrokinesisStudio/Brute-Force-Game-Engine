@@ -27,11 +27,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef SOUND_EMITTER_TEST_H_
 #define SOUND_EMITTER_TEST_H_
 
-#include <EventSystem/EventFactory.h>
 #include <Audio/Loader.h>
 #include <Audio/SoundEmitter.h>
 #include <tests/AudioTest/functions.h>
-
 
 void printSoundEmitterControls()
 {

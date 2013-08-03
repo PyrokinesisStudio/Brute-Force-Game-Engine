@@ -36,7 +36,7 @@ namespace Network {
 class UdpWriteModule : public NetworkModule<Udp>
 {
 public:
-	UdpWriteModule(EventLoop* loop_,
+	UdpWriteModule(Event::Lane& lane,
 	               boost::asio::io_service& service,
 	               PeerIdT peerId,
 	               boost::shared_ptr<Clock::StopWatch> localTime,

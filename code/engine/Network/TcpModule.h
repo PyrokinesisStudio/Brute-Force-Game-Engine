@@ -38,11 +38,11 @@ class TcpModule : public NetworkModule<Tcp>
 {
 public:
 	//! \brief Constructor
-	//! \param[in] loop Eventloop the TcpModule is connected to 
+	//! \param[in] lane Event::lane the TcpModule is connected to 
 	//! \param[in] service Asio service for the network connection
 	//! \param[in] peerId ID of the module for identification over the network
 	//! \param[in] localTime The local time of this module
-	TcpModule(EventLoop* loop,
+	TcpModule(Event::Lane& lane,
 	          boost::asio::io_service& service,
 	          PeerIdT peerId,
 	          boost::shared_ptr<Clock::StopWatch> localTime);

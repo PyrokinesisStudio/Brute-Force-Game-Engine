@@ -42,23 +42,23 @@ class BFG_AUDIO_API OpenALListener : public Listener
 {
 public:
 
-	OpenALListener();
+	OpenALListener(Event::Lane& lane);
 	~OpenALListener();
 
 private:
 
-	void eventHandler(AudioEvent* AE);
-
-	void onEventMasterGain(const AudioPayloadT& payload);
+	void onEventMasterGain(const f32& gain);
 	
-	void onVelocityPlayer(const AudioPayloadT& payload);
-	void onOrientationPlayer(const AudioPayloadT& payload);
-	void onEventPositionPlayer(const AudioPayloadT& payload);
+	void onEventPositionPlayer(const v3& position);
+	void onOrientationPlayer(const v3& orientation);
+	void onVelocityPlayer(const v3& velocity);
 };
 
 // Concrete creation method for OpenAL listener instance.
-boost::shared_ptr<Listener> createListener() { return boost::shared_ptr<Listener>(new OpenALListener()); }
-
+boost::shared_ptr<Listener> createListener(Event::Lane& lane) 
+{ 
+	return boost::shared_ptr<Listener>(new OpenALListener(lane)); 
+}
 
 } // namespace Audio
 } // namespace BFG

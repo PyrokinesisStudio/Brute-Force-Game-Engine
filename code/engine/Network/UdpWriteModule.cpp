@@ -34,13 +34,13 @@ namespace Network {
 
 namespace asio = boost::asio;
 
-UdpWriteModule::UdpWriteModule(EventLoop* loop_,
+UdpWriteModule::UdpWriteModule(Event::Lane& lane,
                                asio::io_service& service,
                                PeerIdT peerId,
                                boost::shared_ptr<Clock::StopWatch> localTime,
                                boost::shared_ptr<Udp::SocketT> socket,
                                const boost::shared_ptr<Udp::EndpointT> remoteEndpoint) :
-NetworkModule<Udp>(loop_, service, peerId, localTime),
+NetworkModule<Udp>(lane, service, peerId, localTime),
 mSocket(socket),
 mRemoteEndpoint(remoteEndpoint)
 {

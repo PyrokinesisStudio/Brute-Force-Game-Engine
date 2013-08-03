@@ -34,7 +34,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/ClockUtils.h>
 #include <Core/Types.h>
-#include <EventSystem/Emitter.h>
+
+#include <Event/Event.h>
 
 #include <Network/CreateBuffer.h>
 #include <Network/Defs.h>
@@ -51,19 +52,19 @@ namespace Network {
 //! The data can be send using one of the SEND events.
 //! Received data is send via the NE_RECEIVED event.
 template <typename ProtocolT>
-class NetworkModule : public Emitter, public boost::enable_shared_from_this<NetworkModule<ProtocolT> >
+class NetworkModule : public boost::enable_shared_from_this<NetworkModule<ProtocolT> >
 {
 public:
 	//! \brief Constructor
-	//! \param[in] loop Eventloop the NetworkModule is connected to 
+	//! \param[in] lane Event::Lane the NetworkModule is connected to 
 	//! \param[in] service Asio service for the network connection
 	//! \param[in] peerId ID of the module for identification over the network
 	//! \param[in] localTime The local time of this module
-	NetworkModule(EventLoop* loop_,
+	NetworkModule(Event::Lane& lane,
 	              boost::asio::io_service& service,
 	              PeerIdT peerId,
 	              boost::shared_ptr<Clock::StopWatch> localTime) :
-	BFG::Emitter(loop_),
+	mLane(lane),
 	mPeerId(peerId),
 	mLocalTime(localTime),
 	mPool(ProtocolT::MAX_BYTE_RATE),
@@ -78,7 +79,6 @@ public:
 	{
 		dbglog << "Destroying NetworkModule";
 		mFlushTimer.reset();
-		loop()->disconnect(ProtocolT::EVENT_ID_FOR_SENDING, this);
 	}
 
 protected:
@@ -94,10 +94,10 @@ protected:
 		setFlushTimer(FLUSH_WAIT_TIME);
 
 		// TODO: Document why both connects are necessary
-		loop()->connect(ProtocolT::EVENT_ID_FOR_SENDING, this, &NetworkModule<ProtocolT>::dataPacketEventHandler);
+		mLane.connect(ProtocolT::EVENT_ID_FOR_SENDING, this, &NetworkModule<ProtocolT>::onSend);
 
 		if (mPeerId)
-			loop()->connect(ProtocolT::EVENT_ID_FOR_SENDING, this, &NetworkModule<ProtocolT>::dataPacketEventHandler, mPeerId);
+			mLane.connect(ProtocolT::EVENT_ID_FOR_SENDING, this, &NetworkModule<ProtocolT>::onSend, mPeerId);
 	}
 	
 	//! \brief Sending data to the connected network module
@@ -167,6 +167,7 @@ protected:
 	const PeerIdT mPeerId;
 
 	boost::shared_ptr<Clock::StopWatch> mLocalTime;
+	Event::Lane& mLane;
 
 private:
 	//! \brief Reset the time for the next automatic flush
@@ -196,22 +197,6 @@ private:
 		else
 		{
 			printErrorCode(ec, "NetworkModule::flushTimerHandler", mPeerId);
-		}
-	}
-
-	//! \brief Handler for DataPacketEvents
-	//! \param[in] e The DataPacketEvent to distribute
-	void dataPacketEventHandler(DataPacketEvent* e)
-	{
-		switch(e->id())
-		{
-		case ProtocolT::EVENT_ID_FOR_SENDING:
-			onSend(e->data());
-			break;
-		default:
-			warnlog << "NetworkModule: Can't handle event with ID: "
-			        << e->id();
-			break;
 		}
 	}
 

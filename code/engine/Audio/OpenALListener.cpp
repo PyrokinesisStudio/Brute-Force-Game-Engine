@@ -35,73 +35,39 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Audio {
 
-OpenALListener::OpenALListener()
+OpenALListener::OpenALListener(Event::Lane& lane) : Listener(lane)
 {
-	Main::eventLoop()->connect(ID::AE_MASTER_GAIN, this, &OpenALListener::eventHandler);
-	Main::eventLoop()->connect(ID::AE_POSITION_PLAYER, this, &OpenALListener::eventHandler);
-	Main::eventLoop()->connect(ID::AE_ORIENTATION_PLAYER, this, &OpenALListener::eventHandler);
-	Main::eventLoop()->connect(ID::AE_VELOCITY_PLAYER, this, &OpenALListener::eventHandler);
+	mLane.connect(ID::AE_MASTER_GAIN, this, &OpenALListener::onEventMasterGain);
+	mLane.connect(ID::AE_POSITION_PLAYER, this, &OpenALListener::onEventPositionPlayer);
+	mLane.connect(ID::AE_ORIENTATION_PLAYER, this, &OpenALListener::onOrientationPlayer);
+	mLane.connect(ID::AE_VELOCITY_PLAYER, this, &OpenALListener::onVelocityPlayer);
 }
 
 OpenALListener::~OpenALListener()
-{
-	Main::eventLoop()->disconnect(ID::AE_MASTER_GAIN, this);
-	Main::eventLoop()->disconnect(ID::AE_POSITION_PLAYER, this);
-	Main::eventLoop()->disconnect(ID::AE_ORIENTATION_PLAYER, this);
-	Main::eventLoop()->disconnect(ID::AE_VELOCITY_PLAYER, this);
+{}
 
-	Main::eventLoop()->setExitFlag(true);
-	Main::eventLoop()->doLoop();
+void OpenALListener::onEventMasterGain(const f32& gain)
+{
+	alListenerf(AL_GAIN, static_cast<ALfloat>(gain));
+	alErrorHandler("OpenALListener::onEventMasterGain", "Error occured calling alListenerf.");
 }
 
-void OpenALListener::eventHandler(AudioEvent* e)	
+void OpenALListener::onEventPositionPlayer(const v3& position)
 {
-	switch (e->id())
-	{
-	case ID::AE_MASTER_GAIN:
-		onEventMasterGain(e->data());
-		break;
-	case ID::AE_POSITION_PLAYER:
-		onEventPositionPlayer(e->data());
-		break;
-	case ID::AE_ORIENTATION_PLAYER:
-		onOrientationPlayer(e->data());
-		break;
-	case ID::AE_VELOCITY_PLAYER:
-		onVelocityPlayer(e->data());
-		break;
-	default:
-		throw std::logic_error("Unhandled event!");
-	}
+	alListener3f(AL_POSITION, position.x, position.y, position.z);
+	alErrorHandler("OpenALListener::onEventPositionPlayer", "Error occured calling alListener3f.");
 }
 
-void OpenALListener::onVelocityPlayer(const AudioPayloadT& payload)
+void OpenALListener::onOrientationPlayer(const v3& orientation)
 {
-	v3 velocity = boost::get<v3>(payload);
-	alListener3f(AL_VELOCITY, velocity.x, velocity.y, velocity.z);
-	alErrorHandler("OpenALListener::onVelocityPlayer", "Error occured calling alListener3f.");
-
-}
-
-void OpenALListener::onOrientationPlayer(const AudioPayloadT& payload)
-{
-	v3 orientation = boost::get<v3>(payload);
 	alListener3f(AL_ORIENTATION, orientation.x, orientation.y, orientation.z);
 	alErrorHandler("OpenALListener::onOrientationPlayer", "Error occured calling alListener3f.");
 }
 
-void OpenALListener::onEventMasterGain(const AudioPayloadT& payload)
+void OpenALListener::onVelocityPlayer(const v3& velocity)
 {
-	ALfloat gain = static_cast<ALfloat>(boost::get<float>(payload));
-	alListenerf(AL_GAIN, gain);
-	alErrorHandler("OpenALListener::onEventMasterGain", "Error occured calling alListenerf.");
-}
-
-void OpenALListener::onEventPositionPlayer(const AudioPayloadT& payload)
-{
-	v3 position = boost::get<v3>(payload);
-	alListener3f(AL_POSITION, position.x, position.y, position.z);
-	alErrorHandler("OpenALListener::onEventPositionPlayer", "Error occured calling alListener3f.");
+	alListener3f(AL_VELOCITY, velocity.x, velocity.y, velocity.z);
+	alErrorHandler("OpenALListener::onVelocityPlayer", "Error occured calling alListener3f.");
 }
 
 } // namespace Audio

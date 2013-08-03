@@ -24,38 +24,30 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+
 #include <Base/EntryPoint.h>
 #include <Base/Logger.h>
 #include <Base/Pause.h>
 #include <Base/ResolveDns.h>
-#include <Core/Path.h>
 #include <Base/ShowException.h>
+
+#include <Core/Path.h>
 #include <Core/Types.h>
 #include <Core/GameHandle.h>
-#include <EventSystem/Core/EventLoop.h>
-
 #include <Core/CharArray.h>
 #include <Core/v3.h>
-#include <EventSystem/Emitter.h>
-#include <EventSystem/Event_fwd.h>
-#include <Network/Network.h>
 
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
+#include <Event/Event.h>
+
+#include <Network/Network.h>
 
 #define TESTID 54321
 #define EVENT_WAIT_TIME 5 // milliseconds
 #define NUMBER_OF_EVENTS 10000
 
 using namespace BFG;
-
-typedef BFG::Event
-<
-	u32,
-	v3,
-	GameHandle,
-	GameHandle
-> VectorEvent;
 
 namespace boost {
 namespace serialization {
@@ -80,7 +72,7 @@ bool from_string(T& t,
 	return !(iss >> f >> t).fail();
 }
 
-void networkEventTest(EventLoop* loop)
+void networkEventTest(Event::Lane& lane)
 {
 	dbglog << "Waiting 5 seconds before starting sending NetworkEvents";
 	boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
@@ -96,9 +88,7 @@ void networkEventTest(EventLoop* loop)
 
 		Network::DataPayload payload(TESTID, generateHandle(), generateHandle(), ss.str().size(), ca512);
 
-		Emitter e(loop);
-
-		e.emit<Network::DataPacketEvent>(ID::NE_SEND, payload);
+		lane.emit(ID::NE_SEND, payload);
 		boost::this_thread::sleep(boost::posix_time::milliseconds(EVENT_WAIT_TIME));
 	}
 }
@@ -117,12 +107,8 @@ int main( int argc, const char* argv[] ) try
 		return 0;
 	}
 
-	EventLoop loop1
-	(
-		false,
-		new EventSystem::BoostThread<>("Loop1"),
-		new EventSystem::InterThreadCommunication()
-	);
+	Event::Synchronizer synchronizer;
+	Event::Lane lane(synchronizer, 100);
 
 	if (server)
 	{
@@ -140,20 +126,19 @@ int main( int argc, const char* argv[] ) try
 
 		dbglog << "Starting as Server";
 
-		BFG::Network::Main networkMain(&loop1, BFG_SERVER);
-		loop1.addEntryPoint(networkMain.entryPoint());
-		loop1.run();
 
+		int mode(BFG_SERVER); // casting problem
+		lane.addEntry<Network::Main>(mode);
+
+		synchronizer.startEntries();
+		
 		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 
-		Emitter e(&loop1);
-		e.emit<Network::ControlEvent>(ID::NE_LISTEN, port);
+		lane.emit(ID::NE_LISTEN, port);
 
 		Base::pause();
-
 		dbglog << "Good bye";
 	}
-
 	else
 	{
 		std::string ip(argv[1]);
@@ -164,26 +149,21 @@ int main( int argc, const char* argv[] ) try
 
 		dbglog << "Starting as Client";
 
-		BFG::Network::Main networkMain(&loop1, BFG_CLIENT);
-		loop1.addEntryPoint(networkMain.entryPoint());
-		loop1.run();
+		int mode(BFG_CLIENT);
+		lane.addEntry<Network::Main>(mode);
+		synchronizer.startEntries();
 
 		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 
 		Network::EndpointT payload = make_tuple(stringToArray<128>(ip), stringToArray<128>(port));
 
-		Emitter e(&loop1);
-		e.emit<Network::ControlEvent>(ID::NE_CONNECT, payload);
-
-		networkEventTest(&loop1);
+		lane.emit(ID::NE_CONNECT, payload);
+		networkEventTest(lane);
 
 		Base::pause();
-		
 		dbglog << "Good bye";
 	}
-
-	loop1.stop();
-
+		
 	// Give EventSystem some time to stop all loops
 	boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 
