@@ -41,9 +41,7 @@ namespace Network {
 
 Main::Main(u8 mode) :
 mMode(mode)
-{
-	assert(loop && "Main: EventLoop is invalid");
-}
+{}
 
 Main::~Main()
 {
