@@ -88,17 +88,11 @@ void periodicWaitForEqual(const T& lhs, const T& rhs, boost::posix_time::time_du
 template <typename ApplicationT, BFG::u8 mode, BFG::GameHandle appHandle>
 struct NetworkContext
 {
-	BFG::Event::Lane lane;
-	BFG::Event::Synchronizer synchronizer;
-
-	boost::scoped_ptr<ApplicationT> application;
-	EventStatus status;
-	
-	NetworkContext(const char*const Threadname, const std::string& testMsg):
-		lane(synchronizer, 100)
+	NetworkContext(const char*const Threadname, const std::string& testMsg) :
+	lane(synchronizer, 100)
 	{
 		lane.addEntry<BFG::Network::Main>(mode);
-				
+		
 		application.reset(new ApplicationT(lane, status, appHandle, testMsg));
 		synchronizer.startEntries();
 	}
@@ -107,6 +101,12 @@ struct NetworkContext
 	{
 		synchronizer.finish();
 	}
+	
+	BFG::Event::Lane lane;
+	BFG::Event::Synchronizer synchronizer;
+
+	boost::scoped_ptr<ApplicationT> application;
+	EventStatus status;
 };
 
 #endif
