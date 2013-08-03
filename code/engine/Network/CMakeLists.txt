@@ -31,7 +31,6 @@ TARGET_LINK_LIBRARIES(bfgNetwork
 	${Boost_LIBRARIES}
 	${BoostLog_LIBRARIES}
 	bfgBase
-	bfgEventCore
 	bfgCore
 )
 

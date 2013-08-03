@@ -32,7 +32,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Base/EntryPoint.h>
 #include <Core/ClockUtils.h>
-#include <EventSystem/Emitter.h>
+
+#include <Event/Event.h>
+
 #include <Network/Defs.h>
 #include <Network/Event_fwd.h>
 #include <Network/Handshake.h>
@@ -51,13 +53,17 @@ using namespace boost::system;
 
 //! This class represents a network client. It starts the connection to a server 
 //! using a NetworkModule
-class NETWORK_API Client : Emitter
+class NETWORK_API Client
 {
 public:
 	//! \brief Constructor
 	//! \param[in] loop EventLoop of the EventSystem
-	Client(EventLoop* loop);
+	Client(Event::Lane& lane);
 	~Client();
+
+protected:
+	Event::Lane& mLane;
+
 private:
 	//! \brief Stops all communication to and from the server
 	void stop();
@@ -83,10 +89,6 @@ private:
 	//! \param[in] ec Error code of boost::asio
 	//! \param[in] bytesTransferred size of the data received
 	void readHandshakeHandler(const error_code &ec, size_t bytesTransferred);
-
-	//! \brief Handler to distribute ControlEvents
-	//! \param[in] e Received ControlEvent
-	void controlEventHandler(ControlEvent* e);
 
 	//! \brief Starts to connect to the server
 	//! \param[in] endpoint Data struct containing the server identification

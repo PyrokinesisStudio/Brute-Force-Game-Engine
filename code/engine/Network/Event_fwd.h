@@ -30,8 +30,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/tuple/tuple.hpp>
 #include <boost/variant.hpp>
 
-#include <EventSystem/Event_fwd.h>
-
 #include <Core/CharArray.h>
 #include <Core/Types.h>
 
@@ -62,13 +60,13 @@ struct DataPayload;
 //! NE_RECEIVED as Client:
 //! -> Destination: Same as NetworkPayload::mAppDestination
 //! -> Sender: Always 0
-typedef Event
-<
-	ID::NetworkAction,
-	DataPayload,
-	GameHandle,         // Destination
-	GameHandle          // Sender
-> DataPacketEvent;
+//typedef Event
+//<
+//	ID::NetworkAction,
+//	DataPayload,
+//	GameHandle,         // Destination
+//	GameHandle          // Sender
+//> DataPacketEvent;
 
 typedef boost::tuple
 <
@@ -76,22 +74,22 @@ typedef boost::tuple
 	CharArray128T       // port
 > EndpointT;
 
-typedef boost::variant
-<
-	u16,                // NE_LISTEN
-	EndpointT,          // NE_CONNECT
-	PeerIdT             // NE_CONNECTED, NE_DISCONNECT, NE_DISCONNECTED
-> ControlPayloadT;
+//typedef boost::variant
+//<
+//	u16,                // NE_LISTEN
+//	EndpointT,          // NE_CONNECT
+//	PeerIdT             // NE_CONNECTED, NE_DISCONNECT, NE_DISCONNECTED
+//> ControlPayloadT;
+//
+//typedef Event
+//<
+//	ID::NetworkAction,
+//	ControlPayloadT,
+//	GameHandle,
+//	GameHandle
+//> ControlEvent;
 
-typedef Event
-<
-	ID::NetworkAction,
-	ControlPayloadT,
-	GameHandle,
-	GameHandle
-> ControlEvent;
-
-std::string NETWORK_API debug(const DataPacketEvent& e);
+//std::string NETWORK_API debug(const DataPacketEvent& e);
 
 } // namespace Network
 } // namespace BFG

@@ -42,28 +42,23 @@ namespace Network{
 using namespace boost::asio::ip;
 using namespace boost::system;
 
-Server::Server(EventLoop* loop_) :
-Emitter(loop_),
-mLocalTime(new Clock::StopWatch(Clock::milliSecond))
+Server::Server(Event::Lane& lane) :
+	mLane(lane),
+	mLocalTime(new Clock::StopWatch(Clock::milliSecond))
 {
 	dbglog << "Server::Server()";
 
 	mLocalTime->start();
 
-	loop()->connect(ID::NE_LISTEN, this, &Server::controlEventHandler);
-	loop()->connect(ID::NE_DISCONNECT, this, &Server::controlEventHandler);
-	loop()->connect(ID::NE_SHUTDOWN, this, &Server::controlEventHandler);
+	mLane.connect(ID::NE_LISTEN, this, &Server::onListen);
+	mLane.connect(ID::NE_DISCONNECT, this, &Server::onDisconnect);
+	mLane.connectV(ID::NE_SHUTDOWN, this, &Server::stop);
 }
 
 Server::~Server()
 {
 	dbglog << "Server::~Server()";
 	stop();
-	loop()->disconnect(ID::NE_LISTEN, this);
-	loop()->disconnect(ID::NE_DISCONNECT, this);
-	loop()->disconnect(ID::NE_SHUTDOWN, this);
-
-	loop()->disconnect(ID::NE_RECEIVED, this);
 }
 
 void Server::stop()
@@ -84,7 +79,7 @@ void Server::startAccepting()
 	
 	PeerIdT peerId = generateNetworkHandle();
 	dbglog << "Server: Creating TcpModule #" << peerId << " for future client";
-	boost::shared_ptr<TcpModule> tcpModule(new TcpModule(loop(), mService, peerId, mLocalTime));
+	boost::shared_ptr<TcpModule> tcpModule(new TcpModule(mLane, mService, peerId, mLocalTime));
 	mTcpModules.insert(std::make_pair(peerId, tcpModule));
 
 	dbglog << "Created Networkmodule(" << tcpModule << ")";
@@ -136,27 +131,7 @@ void Server::writeHandshakeHandler(const error_code &ec, std::size_t bytesTransf
 	mTcpModules[peerId]->startReading();
 	mTcpModules[peerId]->startSending();
 
-	emit<ControlEvent>(ID::NE_CONNECTED, peerId);
-}
-
-void Server::controlEventHandler(ControlEvent* e)
-{
-	switch(e->id())
-	{
-	case ID::NE_LISTEN:
-		onListen(boost::get<u16>(e->data()));
-		break;
-	case ID::NE_DISCONNECT:
-		onDisconnect(boost::get<PeerIdT>(e->data()));
-		break;
-	case ID::NE_SHUTDOWN:
-		stop();
-		break;
-	default:
-		warnlog << "Server: Can't handle event with ID: "
-		        << e->id();
-		break;
-	}
+	mLane.emit(ID::NE_CONNECTED, peerId);
 }
 
 void Server::onListen(const u16 port)
@@ -177,7 +152,7 @@ void Server::onListen(const u16 port)
 		
 		dbglog << "Server: Creating UdpModule as listener.";
 		mUdpReadModule.reset(new UdpReadModule(
-			loop(),
+			mLane,
 			mService,
 			mLocalTime,
 			udpServerSocket,
@@ -201,7 +176,7 @@ void Server::onDisconnect(const PeerIdT& peerId)
 	{
 		mTcpModules[peerId].reset();
 		mTcpModules.erase(it);
-		emit<ControlEvent>(ID::NE_DISCONNECTED, peerId);
+		mLane.emit(ID::NE_DISCONNECTED, peerId);
 	}
 }
 
@@ -230,7 +205,7 @@ PeerIdT Server::identifyUdpEndpoint(const boost::shared_ptr<Udp::EndpointT> remo
 		{
 			dbglog << "Server: Creating UdpModule #" << pair.first << " as remote connection.";
 			boost::shared_ptr<UdpWriteModule> udpModule(new UdpWriteModule(
-				loop(),
+				mLane,
 				mService,
 				pair.first,
 				mLocalTime,

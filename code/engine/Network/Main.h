@@ -34,9 +34,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include <Base/LibraryMainBase.h>
+#include <Event/Event.h>
 #include <Network/Defs.h>
-
-class EventLoop;
 
 namespace BFG {
 namespace Network {
@@ -44,14 +43,14 @@ namespace Network {
 class Server;
 class Client;
 
-class NETWORK_API Main : public Base::LibraryMainBase<EventLoop>
+class NETWORK_API Main : public Base::LibraryMainBase<Event::Lane>
 {
 public:
-	Main(EventLoop* loop, u8 mode);
+	Main(u8 mode);
 	~Main();
 
 private:
-	void main(EventLoop*);
+	void main(Event::Lane& lane);
 	
 	BFG::u8 mMode;
 	
