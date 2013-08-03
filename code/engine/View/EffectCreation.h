@@ -38,9 +38,9 @@ namespace View {
 
 typedef boost::tuple
 <
-	std::string // Name
-	v3,         // Position
-	f32         // Intensity
+	std::string, // Name
+	v3,          // Position
+	f32          // Intensity
 > EffectCreation;
 
 } // namespace View
