@@ -180,12 +180,6 @@ struct BasicLane : boost::noncopyable
 	{
 		mEntryPoints.push_back(new EntryT(startParameter));
 	}
-	
-	template <typename EntryT, typename ParameterT>
-	void addEntry(ParameterT& startParameter)
-	{
-		mEntryPoints.push_back(new EntryT(startParameter));
-	}
 
 private:
 	template <typename Class> struct member_arity {};
