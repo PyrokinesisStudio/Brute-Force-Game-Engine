@@ -28,7 +28,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef SI_AUDIO_STATE_H
 #define SI_AUDIO_STATE_H
 
-#include <Audio/AudioEvent.h>
 #include <Audio/Playlist.h>
 #include <Audio/SoundEmitter.h>
 
@@ -41,14 +40,13 @@ public:
 	~AudioState();
 
 private:
-
-	void audioStateEventHandler(Audio::AudioEvent* AE);
-	void onSoundEffect(const Audio::AudioPayloadT& payload);
+	void onSoundEffect(const std::string& effect);
+	void onSoundEmitterProcessSound(const std::string& effect);
 
 	boost::scoped_ptr<Audio::Playlist> mPlaylist;
 	Audio::SoundEmitter mSoundEmitter;
 	
-	typedef std::map<CharArray128T, std::string> SoundEffectMapT;
+	typedef std::map<std::string, std::string> SoundEffectMapT;
 	SoundEffectMapT mSoundEffectMap;
 };
 
