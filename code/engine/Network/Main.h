@@ -50,7 +50,7 @@ public:
 	~Main();
 
 private:
-	void main(Event::Lane& lane);
+	void main(Event::Lane* lane);
 	
 	BFG::u8 mMode;
 	

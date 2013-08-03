@@ -50,20 +50,20 @@ Main::~Main()
 	dbglog << "Network::Main::~Main()";
 }
 
-void Main::main(Event::Lane& lane)
+void Main::main(Event::Lane* lane)
 {
 	switch(mMode)
 	{
 	case BFG_SERVER:
 		{
 			dbglog << "BFG::Network::Main: Spawning new Server";
-			mServer.reset(new Server(lane));
+			mServer.reset(new Server(*lane));
 		}
 		break;
 	case BFG_CLIENT:
 		{
 			dbglog << "BFG::Network::Main: Spawning new Client";
-			mClient.reset(new Client(lane));
+			mClient.reset(new Client(*lane));
 		}
 		break;
 	default:

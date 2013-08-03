@@ -60,6 +60,7 @@ struct DataPayload;
 //! NE_RECEIVED as Client:
 //! -> Destination: Same as NetworkPayload::mAppDestination
 //! -> Sender: Always 0
+
 //typedef Event
 //<
 //	ID::NetworkAction,
