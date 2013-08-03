@@ -333,6 +333,8 @@ BOOST_AUTO_TEST_CASE (ClientToServerDestinationNotNullCheck)
 
 	// Must sleep since nothing will happen (best case).
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+	
+	BOOST_TEST_MESSAGE("No output expected.");
 
 	// DestinationId for NE_SEND on client side must always be 0.
 	// Nobody should receive anything when an id is passed.
@@ -415,7 +417,7 @@ BOOST_AUTO_TEST_CASE (Client1Disconnect)
 {
 	BFG::Base::Deco::h1("\nStarting Client1Disconnect");
 	resetEventStatus();
-	client1->lane.emit(BFG::ID::NE_DISCONNECT, static_cast<BFG::u16>(0));
+	client1->lane.emit(BFG::ID::NE_DISCONNECT, BFG::Network::PeerIdT(0));
 
 	EventStatus c1;
 	c1.gotDisconnected = true;
@@ -436,7 +438,7 @@ BOOST_AUTO_TEST_CASE (ServerShutdown)
 {
 	BFG::Base::Deco::h1("\nStarting ServerShutdown");
 	resetEventStatus();
-	server->lane.emit(BFG::ID::NE_SHUTDOWN, static_cast<BFG::u16>(0));
+	server->lane.emit(BFG::ID::NE_SHUTDOWN, BFG::Event::Void());
 
 	// Must sleep since nothing will happen (best case).
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));

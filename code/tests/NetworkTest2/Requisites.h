@@ -86,6 +86,9 @@ void periodicWaitForEqual(const T& lhs, const T& rhs, boost::posix_time::time_du
 		this_thread::sleep(interval);
 		slept += interval;
 	}
+	
+	if (lhs != rhs)
+		BOOST_TEST_MESSAGE("periodicWaitForEqual: Time expired.");
 }
 
 template <typename ApplicationT, BFG::u8 mode, BFG::GameHandle appHandle>
