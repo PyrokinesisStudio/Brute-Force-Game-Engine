@@ -44,9 +44,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace View {
 
-Owner::Owner(GameHandle stateHandle, Event::Lane* lane) :
+Owner::Owner(GameHandle stateHandle, Event::Lane& lane) :
 mLane(lane),
-mSubLane(lane->createSubLane())
+mSubLane(lane.createSubLane())
 {
 	//! \note
 	//! VE_DESTROY_OBJECT makes no use of stateHandle

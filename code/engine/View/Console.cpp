@@ -72,8 +72,8 @@ static std::wstring atow(const std::string& str)
 	return wstrm.str();
 }
 
-Console::Console(Event::Lane* lane, boost::shared_ptr<Ogre::Root> root) :
-mSubLane(lane->createSubLane()),
+Console::Console(Event::Lane& lane, boost::shared_ptr<Ogre::Root> root) :
+mSubLane(lane.createSubLane()),
 mHasNewContent(false),
 mIsVisible(false),
 mRoot(root),

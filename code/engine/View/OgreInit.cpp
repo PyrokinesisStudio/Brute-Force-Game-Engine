@@ -72,9 +72,9 @@ struct ShutdownDeleter
 	}
 };
 
-OgreInit::OgreInit(Event::Lane* lane, const std::string& windowTitle) :
+OgreInit::OgreInit(Event::Lane& lane, const std::string& windowTitle) :
 mLane(lane),
-mSubLane(lane->createSubLane()),
+mSubLane(lane.createSubLane()),
 mShutdown(false),
 mWindowTitle(windowTitle),
 mSceneMgr(NULL)
@@ -87,7 +87,7 @@ mSceneMgr(NULL)
 	initOgre();
 	initMyGui();
 
-	mLane->connectLoop(this, &OgreInit::onTick);
+	mLane.connectLoop(this, &OgreInit::onTick);
 }
 
 OgreInit::~OgreInit()
@@ -276,6 +276,7 @@ void OgreInit::onConsole(bool enable)
 
 	mConsole->toggleVisible(enable);
 }
+
 void OgreInit::onShutdown()
 {
 	mShutdown = true;

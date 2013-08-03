@@ -39,8 +39,8 @@ namespace View {
 using BFG::f32;
 
 ControllerMyGuiAdapter::ControllerMyGuiAdapter(BFG::GameHandle stateHandle,
-                                               Event::Lane* lane) :
-mSubLane(lane->createSubLane())
+                                               Event::Lane& lane) :
+mSubLane(lane.createSubLane())
 {
 	mSubLane->connect(ID::A_MOUSE_MOVE_X, this, &ControllerMyGuiAdapter::onMouseMoveX);
 	mSubLane->connect(ID::A_MOUSE_MOVE_Y, this, &ControllerMyGuiAdapter::onMouseMoveY);
