@@ -46,13 +46,13 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace View {
 
-Camera::Camera(Event::Lane* lane,
+Camera::Camera(Event::Lane& lane,
                GameHandle cameraHandle, 
                Ogre::SceneNode* camNode, 
                Ogre::RenderTarget* renderTarget, 
                s32 width, 
                s32 height) :
-mSubLane(lane->createSubLane()),
+mSubLane(lane.createSubLane()),
 mCameraNode(camNode),
 mRenderTarget(renderTarget),
 mHandle(cameraHandle),

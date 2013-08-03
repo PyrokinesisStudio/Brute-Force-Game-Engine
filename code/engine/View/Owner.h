@@ -55,7 +55,7 @@ struct SkyCreation;
 class VIEW_API Owner
 {
 public:
-	Owner(GameHandle stateHandle, Event::Lane* lane);
+	Owner(GameHandle stateHandle, Event::Lane& lane);
 	virtual ~Owner();
 
 protected:
@@ -69,7 +69,7 @@ protected:
 	typedef std::map<GameHandle, boost::shared_ptr<RenderObject> > ObjectMapT;
 	typedef std::map<BFG::GameHandle, boost::shared_ptr<Light> > LightMapT;
 
-	Event::Lane* mLane;
+	Event::Lane& mLane;
 	Event::SubLanePtr mSubLane;
 
 	ObjectMapT                              mObjects;

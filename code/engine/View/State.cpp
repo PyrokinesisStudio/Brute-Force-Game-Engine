@@ -30,7 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace View {
 
-State::State(GameHandle handle, Event::Lane* lane) :
+State::State(GameHandle handle, Event::Lane& lane) :
 Owner(handle, lane),
 mHandle(handle)
 {

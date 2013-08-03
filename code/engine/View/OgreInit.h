@@ -75,7 +75,7 @@ public:
 	//! eventHandler. It initializes Ogre and MyGUI.
 	//! \param[in] loop EventLoop
 	//! \param[in] windowTitle Window caption displayed in window mode.
-	OgreInit(Event::Lane* lane, const std::string& windowTitle);
+	OgreInit(Event::Lane& lane, const std::string& windowTitle);
 
 	//! \brief 
 	//! Destructor unregisters VE_SHUTDOWN, VE_CONSOLE, VE_DEBUG_FPS and VE_SCREENSHOT.
@@ -121,7 +121,7 @@ private:
 	//! \brief Calls Ogres RenderOneFrame
 	bool doRenderTick();
 
-	Event::Lane* mLane;
+	Event::Lane& mLane;
 	Event::SubLanePtr mSubLane;
 
 	bool              mShutdown;

@@ -39,7 +39,7 @@ namespace View {
 class VIEW_API ControllerMyGuiAdapter
 {
 public:
-	ControllerMyGuiAdapter(BFG::GameHandle stateHandle, Event::Lane*);
+	ControllerMyGuiAdapter(BFG::GameHandle stateHandle, Event::Lane&);
 
 private:
 	void onMouseMoveX(f32 value);

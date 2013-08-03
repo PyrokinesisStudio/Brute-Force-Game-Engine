@@ -49,7 +49,7 @@ class Console : public std::streambuf,
                 Ogre::FrameListener
 {
 public:
-	Console(Event::Lane* lane, boost::shared_ptr<Ogre::Root> root);
+	Console(Event::Lane& lane, boost::shared_ptr<Ogre::Root> root);
 	~Console();
 	
 	//! \brief Hides or Shows the Console

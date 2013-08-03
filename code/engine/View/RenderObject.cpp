@@ -37,13 +37,13 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace View {
 
-RenderObject::RenderObject(Event::Lane* lane,
+RenderObject::RenderObject(Event::Lane& lane,
                            GameHandle parent, 
                            GameHandle handle,
                            const std::string& meshName,
                            const v3& position,
                            const qv4& orientation) :
-mSubLane(lane->createSubLane()),
+mSubLane(lane.createSubLane()),
 mHandle(handle),
 mSceneNode(NULL),
 mEntity(NULL)

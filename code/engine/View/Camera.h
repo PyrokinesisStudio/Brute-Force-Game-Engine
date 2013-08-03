@@ -49,7 +49,7 @@ namespace View {
 class VIEW_API Camera
 {
 public:
-	Camera(Event::Lane* lane,
+	Camera(Event::Lane& lane,
 	       GameHandle cameraHandle, 
 	       Ogre::SceneNode* camNode = NULL,
 	       Ogre::RenderTarget* renderTarget = NULL,
