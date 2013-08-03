@@ -162,6 +162,8 @@ void Server::onListen(const u16 port)
 
 		// Asio Loop
 		mThread = boost::thread(boost::bind(&boost::asio::io_service::run, &mService));
+		
+		mLane.emit(ID::NE_SERVER_READY, Event::Void());
 	}
 	else
 	{

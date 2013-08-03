@@ -60,6 +60,7 @@ struct Server
 		mLane.connect(BFG::ID::NE_CONNECTED, this, &Server::netConnectHandler);
 		mLane.connect(BFG::ID::NE_DISCONNECTED, this, &Server::netDisconnectHandler);
 		mLane.connect(BFG::ID::NE_RECEIVED, this, &Server::netPacketHandler, mAppHandle);
+		mLane.connectV(BFG::ID::NE_SERVER_READY, this, &Server::netServerReadyHandler);
 	}
 	
 	~Server()
@@ -105,6 +106,11 @@ struct Server
 		
 		BOOST_CHECK_EQUAL (packetSize, mTestMsg.size());
 		BOOST_CHECK_EQUAL_COLLECTIONS (data.begin(), data.begin()+packetSize, mTestMsg.begin(), mTestMsg.end());
+	}
+	
+	void netServerReadyHandler()
+	{
+		mStatus.gotReady = true;
 	}
 	
 	BFG::Event::Lane& mLane;
@@ -253,10 +259,11 @@ BOOST_AUTO_TEST_CASE (ConnectionTest)
 	generateRandomPort(port, portString);
 	
 	server->lane.emit(BFG::ID::NE_LISTEN, static_cast<BFG::u16>(port));
-
-	EventStatus s;
-	s.gotConnected = true;
-	periodicWaitForEqual(s, server->status, boost::posix_time::milliseconds(5000));
+	
+	EventStatus serverExpected;
+	serverExpected.gotReady = true;
+	
+	periodicWaitForEqual(serverExpected, server->status, boost::posix_time::milliseconds(5000));
 
 	client1->lane.emit
 	(
@@ -264,19 +271,17 @@ BOOST_AUTO_TEST_CASE (ConnectionTest)
 		boost::make_tuple(stringToArray<128>("127.0.0.1"), stringToArray<128>(portString))
 	);
 
-	EventStatus c1;
-	c1.gotConnected = true;
-	periodicWaitForEqual(c1, client1->status, boost::posix_time::milliseconds(5000));
-
 	client2->lane.emit
 	(
 		BFG::ID::NE_CONNECT,
 		boost::make_tuple(stringToArray<128>("127.0.0.1"), stringToArray<128>(portString))
 	);
 	
-	EventStatus c2;
-	c2.gotConnected = true;
-	periodicWaitForEqual(c2, client2->status, boost::posix_time::milliseconds(5000));
+	EventStatus expected;
+	expected.gotConnected = true;
+	
+	periodicWaitForEqual(expected, client1->status, boost::posix_time::milliseconds(5000));
+	periodicWaitForEqual(expected, client2->status, boost::posix_time::milliseconds(5000));
 
 	BOOST_CHECK(client1->status.gotConnected);
 	BOOST_CHECK(client2->status.gotConnected);

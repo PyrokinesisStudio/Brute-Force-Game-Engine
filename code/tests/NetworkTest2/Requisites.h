@@ -48,6 +48,7 @@ struct EventStatus
 		gotReceived = false;
 		gotTcpData = false;
 		gotUdpData = false;
+		gotReady = false;
 	}
 	
 	bool operator == (const EventStatus& rhs) const
@@ -57,7 +58,8 @@ struct EventStatus
 			gotDisconnected == rhs.gotDisconnected &&
 			gotReceived == rhs.gotReceived &&
 			gotTcpData == rhs.gotTcpData &&
-			gotUdpData == rhs.gotUdpData;
+			gotUdpData == rhs.gotUdpData &&
+			gotReady == rhs.gotReady;
 	}
 	
 	bool operator != (const EventStatus& rhs) const
@@ -70,6 +72,7 @@ struct EventStatus
 	bool gotReceived;
 	bool gotTcpData;
 	bool gotUdpData;
+	bool gotReady;         // Server Only
 };
 
 template <typename T>
