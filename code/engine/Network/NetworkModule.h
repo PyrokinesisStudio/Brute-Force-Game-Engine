@@ -64,9 +64,9 @@ public:
 	              boost::asio::io_service& service,
 	              PeerIdT peerId,
 	              boost::shared_ptr<Clock::StopWatch> localTime) :
-	mLane(lane),
 	mPeerId(peerId),
 	mLocalTime(localTime),
+	mLane(lane),
 	mPool(ProtocolT::MAX_BYTE_RATE),
 	mSendPacket(createBuffer(mPool), mHeaderFactory)
 	{

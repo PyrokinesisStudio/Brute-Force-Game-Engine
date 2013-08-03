@@ -107,10 +107,10 @@ struct Server
 		BOOST_CHECK_EQUAL_COLLECTIONS (data.begin(), data.begin()+packetSize, mTestMsg.begin(), mTestMsg.end());
 	}
 	
+	BFG::Event::Lane& mLane;
 	EventStatus& mStatus;
 	const BFG::GameHandle mAppHandle;
 	const std::string& mTestMsg;
-	BFG::Event::Lane& mLane;
 };
 
 struct Client
@@ -177,10 +177,10 @@ struct Client
 		BOOST_CHECK_EQUAL_COLLECTIONS (data.begin(), data.begin()+packetSize, mTestMsg.begin(), mTestMsg.end());
 	}
 	
+	BFG::Event::Lane& mLane;
 	EventStatus& mStatus;
 	const BFG::GameHandle mAppHandle;
 	const std::string& mTestMsg;
-	BFG::Event::Lane& mLane;
 };
 
 typedef NetworkContext<Server, BFG_SERVER, serverAppHandle> ServerContext;
@@ -326,6 +326,7 @@ BOOST_AUTO_TEST_CASE (ClientToServerDestinationNotNullCheck)
 	client1->lane.emit(BFG::ID::NE_SEND, payloadTcp, bogusDestination);
 	client1->lane.emit(BFG::ID::NE_SEND_UDP, payloadUdp, bogusDestination);
 
+	// Must sleep since nothing will happen (best case).
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
 	// DestinationId for NE_SEND on client side must always be 0.
@@ -411,8 +412,6 @@ BOOST_AUTO_TEST_CASE (Client1Disconnect)
 	resetEventStatus();
 	client1->lane.emit(BFG::ID::NE_DISCONNECT, static_cast<BFG::u16>(0));
 
-	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
-
 	EventStatus c1;
 	c1.gotDisconnected = true;
 	periodicWaitForEqual(c1, client1->status, boost::posix_time::milliseconds(5000));
@@ -434,6 +433,7 @@ BOOST_AUTO_TEST_CASE (ServerShutdown)
 	resetEventStatus();
 	server->lane.emit(BFG::ID::NE_SHUTDOWN, static_cast<BFG::u16>(0));
 
+	// Must sleep since nothing will happen (best case).
 	boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 	
 	// Should not receive any events since DISCONNECT was sent previously
