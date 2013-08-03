@@ -36,8 +36,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/units/systems/si/time.hpp>
 #include <boost/units/quantity.hpp>
 
-#include <EventSystem/Core/EventDefs.h>
-
 #include <Core/Types.h>
 
 #include <Model/Defs.h>
@@ -71,7 +69,7 @@ namespace Property {
 	Allows communication between derived classes and a GameObject as well as
 	the configuration of event forwarding.
 */
-class MODEL_API Concept : protected Emitter
+class MODEL_API Concept
 {
 public:
 	//! \brief Container used to return data when calling getValueRange()
@@ -89,7 +87,7 @@ public:
 	void update(quantity<si::time, f32> timeSinceLastFrame);
 	void synchronize();
 
-	void onEvent(EventIdT, Value payload, GameHandle module, GameHandle sender);
+	void onEvent(Event::IdT, Value payload, GameHandle module, GameHandle sender);
 
 	ConceptId concept() const { return mSelf; }
 	PluginId  pluginId() const { return mPluginId; }
@@ -114,7 +112,7 @@ protected:
 		away after setGoValue is done. A ID::GOE_VALUE_UPDATED event will be sent.
 		Triggering the same event while catching it -> stack overflow.
 	*/
-	virtual void internalOnEvent(EventIdT,
+	virtual void internalOnEvent(Event::IdT,
 	                             Value payload,
 	                             GameHandle module,
 	                             GameHandle sender);
@@ -125,11 +123,11 @@ protected:
 	//! \brief Notifies the owner GameObject that the stated event must
 	//!        be forwarded to this Concept.
 	//! \see stopDelivery
-	void requestEvent(EventIdT);
+	void requestEvent(Event::IdT);
 
 	//! \brief Stops forwarding of a certain event.
 	//! \see requestEvent
-	void stopDelivery(EventIdT);
+	void stopDelivery(Event::IdT);
 
 	//! \brief Performs a dependency check.
 	//! Mostly called within the constructor of Concept implementations.
@@ -241,10 +239,13 @@ protected:
 	GameHandle ownerHandle() const;
 
 	GameObject& owner() const;
+	Event::SubLanePtr subLane() const;
 	
 	//! Forwarder to GameObject::environment()
 	const boost::shared_ptr<Environment> environment() const;
 	
+	Event::SubLanePtr mSubLane;
+
 	const ConceptId mSelf;
 	
 	const PluginId mPluginId;

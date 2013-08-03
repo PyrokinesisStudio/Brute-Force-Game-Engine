@@ -37,7 +37,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/Logger.h>
 #include <Base/Cpp.h>
 #include <Core/Math.h>
-#include <EventSystem/Core/EventLoop.h>
 
 #include <Model/Events/GameObjectEvent.h>
 #include <Model/Environment.h>
@@ -46,8 +45,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Property/Concept.h>
 #include <Model/Property/ConceptFactory.h>
 
-#include <Physics/Event.h>
-#include <View/Event.h>
+#include <Physics/Event_fwd.h>
+
+#include <View/Enums.hh>
 
 using namespace boost;
 using namespace boost::adaptors;
@@ -71,13 +71,13 @@ void throwIfEnginePropertiesNotFoundOrWrongId(const Property::PluginMapT& pm)
 }
 
 GameObject::GameObject(
-	EventLoop* loop,
+	Event::Lane& lane,
 	const GameHandle handle,
 	const std::string& publicName,
 	const Property::PluginMapT& propertyPlugins,
 	boost::shared_ptr<Environment> environment) :
 Managed(handle, publicName, ID::OT_GameObject),
-Emitter(loop),
+mSubLane(lane.createSubLane()),
 mEnvironment(environment),
 mPropertyPlugins(propertyPlugins),
 mDocked(false),
@@ -95,17 +95,16 @@ mActivated(false)
 	//       Also, it should be possible to do such initializations when
 	//       creating a GameObject (and not by an "event-setter" later).
 	setValue(ID::PV_Remote, ValueId::ENGINE_PLUGIN_ID, false);
+
+	mSubLane->connect(ID::GOE_REINITIALIZE, this, &GameObject::onReinitialize, handle);
+	mSubLane->connectV(ID::GOE_DETACH_MODULE, this, &GameObject::detachModule, handle);
 }
 
 GameObject::~GameObject()
 {
 	mEnvironment->removeGameObject(getHandle());
 
-	boost::for_each
-	(
-		mEventDemands | map_keys,
-		boost::bind(&EventLoop::disconnect, loop(), _1, this)
-	);
+	mSubLane.reset();
 
 	// Explicitly clear() since unregisterEvent() calls may still happen
 	mEventDemands.clear();
@@ -176,33 +175,10 @@ void GameObject::attachModule(GameObject::ChildT managed,
 		Property::ValueId locId(ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
 		mod->mValues[locId] = Location(fromRootToNewOne, finalOrientation);
 		
-		emit<View::Event>
-		(
-			ID::VE_UPDATE_POSITION,
-			fromRootToNewOne,
-			managed->getHandle()
-		);
-
-		emit<View::Event>
-		(
-			ID::VE_UPDATE_ORIENTATION,
-			finalOrientation,
-			managed->getHandle()
-		);
-
-		emit<Physics::Event>
-		(
-			ID::PE_UPDATE_MODULE_POSITION,
-			fromRootToNewOne,
-			managed->getHandle()
-		);
-		
-		emit<Physics::Event>
-		(
-			ID::PE_UPDATE_MODULE_ORIENTATION,
-			finalOrientation,
-			managed->getHandle()
-		);
+		mSubLane->emit(ID::VE_UPDATE_POSITION, fromRootToNewOne, managed->getHandle());
+		mSubLane->emit(ID::VE_UPDATE_ORIENTATION, finalOrientation,	managed->getHandle());
+		mSubLane->emit(ID::PE_UPDATE_MODULE_POSITION, fromRootToNewOne,	managed->getHandle());
+		mSubLane->emit(ID::PE_UPDATE_MODULE_ORIENTATION, finalOrientation, managed->getHandle());
 
 		// Add to hasModuleWithHandle()-Cache
 		mModuleHandles.push_back(managed->getHandle());
@@ -279,41 +255,13 @@ void GameObject::detachModule(GameHandle handle)
 	deleteVertex(vd);
 }
 
-void GameObject::EventHandler(GameObjectEvent* e)
+void GameObject::onReinitialize(const Location& location)
 {
-	// Ignore Events which are not for this GameObject or its Modules.
-	if (! hasModuleWithHandle(e->destination()))
-		return;
+	mSubLane->emit(ID::PE_UPDATE_POSITION, location.position, getHandle());
+	mSubLane->emit(ID::PE_UPDATE_ORIENTATION, location.orientation, getHandle());
 
-	distributeEvent
-	(
-		static_cast<EventIdT>(e->id()),
-		e->data(),
-		e->destination(),
-		e->sender()
-	);
-
-	switch(e->id())
-	{
-	case ID::GOE_REINITIALIZE:
-	{
-		Location sl = boost::get<Location>(e->data());
-		
-		emit<Physics::Event>(ID::PE_UPDATE_POSITION, sl.position, getHandle());
-		emit<Physics::Event>(ID::PE_UPDATE_ORIENTATION, sl.orientation, getHandle());
-
-		distributeEvent(ID::GOE_CONTROL_MAGIC_STOP, 0, NULL_HANDLE, NULL_HANDLE);
-		break;
-	}
-	case ID::GOE_DETACH_MODULE:
-	{
-		GameHandle child = boost::get<GameHandle>(e->data());
-		detachModule(child);
-		break;
-	}
-	default:
-		break;
-	}
+	mSubLane->emit(ID::GOE_CONTROL_MAGIC_STOP, Event::Void(), getHandle());
+// 	distributeEvent(ID::GOE_CONTROL_MAGIC_STOP, 0, NULL_HANDLE, NULL_HANDLE);
 }
 
 bool GameObject::satisfiesRequirement(Property::ConceptId concept) const
@@ -406,66 +354,14 @@ void GameObject::internalSynchronize()
 	}
 }
 
-void GameObject::registerNeedForEvent(boost::shared_ptr<Property::Concept> concept,
-                                      EventIdT action)
-{
-	if (mEventDemands.find(action) == mEventDemands.end())
-	{
-		loop()->connect
-		(
-			action,
-			this,
-			&GameObject::EventHandler,
-			getHandle()
-		);
-	}
-
-	mEventDemands.insert(std::make_pair(action, concept));
-}
-
-void GameObject::unregisterNeedForEvent(boost::shared_ptr<Property::Concept> concept,
-                                        EventIdT action)
-{
-	typedef EventDemandContainerT::iterator IterT;
-
-	IterT it = mEventDemands.begin();
-	for (; it != mEventDemands.end(); ++it)
-	{
-		if (it->first == action && it->second == concept)
-		{
-			mEventDemands.erase(it);
-			return;
-		}
-	}
-
-	warnlog << "TODO: Unregister all events which aren't required anymore.";
-}
-
-void GameObject::distributeEvent(EventIdT action,
-                                 const Property::Value& payload,
-                                 GameHandle receivingModule,
-                                 GameHandle sender)
-{
-	typedef EventDemandContainerT::iterator IterT;
-	typedef std::pair<IterT,IterT> RangeT;
-	
-	RangeT range = mEventDemands.equal_range(action);
-	
-	IterT it = range.first;
-	for (; it != range.second; ++it)
-	{
-		it->second->onEvent(action, payload, receivingModule, sender);
-	}
-}
-
-
 void GameObject::setValue(Property::ValueId::VarIdT varId,
                           Property::PluginId pluginId,
                           const Property::Value& value)
 {
 	ValueId valueId(varId, pluginId);
 	mValues[valueId] = value;
-	distributeEvent(ID::GOE_VALUE_UPDATED, valueId, NULL_HANDLE, NULL_HANDLE);
+	mSubLane->emit(ID::GOE_VALUE_UPDATED, valueId, getHandle());
+//	distributeEvent(ID::GOE_VALUE_UPDATED, valueId, NULL_HANDLE, NULL_HANDLE);
 }
 
 //! \note This MUST be called from within a Concept constructor!
@@ -645,12 +541,12 @@ void GameObject::connectOtherGameObject(boost::shared_ptr<GameObject> other,
 
 	// Connect Physical Components
 	Physics::ObjectAttachmentParams oap(rootHandle, child, position, orientation);
-	emit<Physics::Event>(ID::PE_ATTACH_OBJECT, oap);
+	mSubLane->emit(ID::PE_ATTACH_OBJECT, oap);
 
 	// Connect View Components
-	emit<View::Event>(ID::VE_ATTACH_OBJECT, child, rootHandle);
-	emit<View::Event>(ID::VE_UPDATE_POSITION, position, child);
-	emit<View::Event>(ID::VE_UPDATE_ORIENTATION, orientation, child);
+	mSubLane->emit(ID::VE_ATTACH_OBJECT, child, rootHandle);
+	mSubLane->emit(ID::VE_UPDATE_POSITION, position, child);
+	mSubLane->emit(ID::VE_UPDATE_ORIENTATION, orientation, child);
 }
 
 void GameObject::disconnectOtherGameObject(boost::shared_ptr<GameObject> other,
@@ -664,12 +560,12 @@ void GameObject::disconnectOtherGameObject(boost::shared_ptr<GameObject> other,
 
 	// Disconnect Physical Components
 	Physics::ObjectAttachmentParams oap(rootHandle, child, position, orientation);
-	emit<Physics::Event>(ID::PE_DETACH_OBJECT, oap);
+	mSubLane->emit(ID::PE_DETACH_OBJECT, oap);
 
  	// Disconnect View Components
-	emit<View::Event>(ID::VE_DETACH_OBJECT, NULL_HANDLE, child);
-	emit<View::Event>(ID::VE_UPDATE_POSITION, position, child);
-	emit<View::Event>(ID::VE_UPDATE_ORIENTATION, orientation, child);
+	mSubLane->emit(ID::VE_DETACH_OBJECT, Event::Void(), child);
+	mSubLane->emit(ID::VE_UPDATE_POSITION, position, child);
+	mSubLane->emit(ID::VE_UPDATE_ORIENTATION, orientation, child);
 }
 
 bool GameObject::hasModuleWithHandle(GameHandle handle) const
@@ -782,6 +678,11 @@ void GameObject::rebuildConceptUpdateOrder()
 		if (result == mConceptUpdateOrder.end())
 			mConceptUpdateOrder.push_back(conceptIt->second);
 	}
+}
+
+Event::SubLanePtr GameObject::subLane()
+{
+	return mSubLane;
 }
 
 void vectorToModuleFromRoot(const std::vector<Adapter>& adapters,

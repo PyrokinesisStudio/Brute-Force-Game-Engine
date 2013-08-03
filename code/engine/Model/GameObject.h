@@ -34,7 +34,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/Location.h>
 
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 
 #include <Model/Adapter.h>
 #include <Model/Managed.h>
@@ -42,8 +42,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Property/ConceptId.h>
 #include <Model/Property/Value.h>
 #include <Model/Property/Plugin.h>
-
-class EventLoop;
 
 namespace BFG {
 
@@ -69,8 +67,7 @@ using Property::PluginId;
 	\see updateView()
 */
 class MODEL_API GameObject : public Managed,
-                             boost::noncopyable,
-                             Emitter
+                             boost::noncopyable
 {
 public:
 	typedef boost::shared_ptr<Managed> VertexData;
@@ -90,7 +87,7 @@ public:
 
 	typedef boost::shared_ptr<Managed> ChildT;
 
-	         GameObject(EventLoop* loop,
+	         GameObject(Event::Lane* lane,
 	                    const GameHandle handle,
 	                    const std::string& publicName,
 	                    const Property::PluginMapT& propertyPlugins,
@@ -137,7 +134,7 @@ public:
 	//!		Destroys the Module with the defined handle and all its children.
 	void detachModule(GameHandle handle);
 
-	void EventHandler(GameObjectEvent* goe);
+	void onReinitialize(const Location& location);
 
 	bool satisfiesRequirement(Property::ConceptId concept) const;
 
@@ -179,6 +176,7 @@ public:
 private:
 	friend class Property::Concept;
 
+	Event::SubLanePtr subLane();
 	//! Updates the GameObject as well as all its Modules
 	//! 
 	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
@@ -187,14 +185,14 @@ private:
 	//! PropertyConcepts need events too. They register their needs indirectly
 	//! through their base class which then calls this function.
 	//! \see Property::Concept::requestEvent
-	void registerNeedForEvent(boost::shared_ptr<Property::Concept>, EventIdT);
+	void registerNeedForEvent(boost::shared_ptr<Property::Concept>, Event::IdT);
 
 	//! \see GameObject::registerNeedForEvent
-	void unregisterNeedForEvent(boost::shared_ptr<Property::Concept>, EventIdT);
+	void unregisterNeedForEvent(boost::shared_ptr<Property::Concept>, Event::IdT);
 
 	//! Helper function to distribute an event amongst all attached
 	//! PropertyConcepts of this GameObject.
-	void distributeEvent(EventIdT action,
+	void distributeEvent(Event::IdT action,
 	                     const Property::Value& payload,
 	                     GameHandle receivingModule,
 	                     GameHandle sender);
@@ -279,7 +277,7 @@ private:
 	//! Container type for storage of event requests from Property::Concept 's.
 	typedef boost::unordered_multimap
 	<
-		EventIdT,
+		Event::IdT,
 		boost::shared_ptr<Property::Concept>
 	> EventDemandContainerT;
 
@@ -301,6 +299,7 @@ private:
 		boost::weak_ptr<Property::Concept>
 	> UpdateOrderContainerT;
 	
+	Event::SubLanePtr mSubLane;
 	boost::shared_ptr<Environment> mEnvironment;
 
 	//! Concept dependencies set up via setRequirement()

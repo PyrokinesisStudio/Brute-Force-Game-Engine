@@ -30,21 +30,18 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/units/quantity.hpp>
 #include <boost/units/systems/si/time.hpp>
 
+#include <Event/Event.h>
+
 #include <Model/Defs.h>
 
 #include <Core/Types.h>
-#include <EventSystem/Emitter.h>
 
 namespace BFG {
 
-namespace Clock {
-	class StopWatch;
-}
-
-class MODEL_API State : public BFG::Emitter
+class MODEL_API State
 {
 public:
-	State(EventLoop*);
+	State(Event::Lane&);
 	virtual ~State();
 
 	//! \brief Periodically called function for application timing.
@@ -65,11 +62,7 @@ public:
 	void stopUpdates();
 	
 private:
-	void LoopEventHandler(LoopEvent* iLE);
-
-	boost::scoped_ptr<BFG::Clock::StopWatch> mClock;
-	
-	bool mExitNextTick;
+	void onLoop(Event::TickData tickData);
 };
 
 } // namespace BFG

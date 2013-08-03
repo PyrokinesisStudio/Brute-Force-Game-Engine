@@ -36,17 +36,17 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Module.h>
 #include <Model/Property/Concepts/Camera.h> // struct CameraParameter
 
-#include <Physics/Event.h>
-#include <View/Event.h>
+#include <Physics/Event_fwd.h>
+#include <View/Enums.hh>
 
 namespace BFG {
 
-GameObjectFactory::GameObjectFactory(EventLoop* loop,
+GameObjectFactory::GameObjectFactory(Event::Lane& lane,
                                      const LevelConfig& files,
                                      const Property::PluginMapT& propertyPlugins,
                                      boost::shared_ptr<Environment> environment,
                                      GameHandle stateHandle) :
-Emitter(loop),
+mLane(lane),
 mPropertyPlugins(propertyPlugins),
 mEnvironment(environment),
 mAdapterParameters(files.mAdapters),
@@ -76,7 +76,7 @@ GameObjectFactory::createGameObject(const ObjectParameter& parameter)
 
 	// Create the PhysicsObject
 	Physics::ObjectCreationParams ocp(goHandle, parameter.mLocation);
-	emit<Physics::Event>(ID::PE_CREATE_OBJECT, ocp);
+	mLane.emit(ID::PE_CREATE_OBJECT, ocp);
 
 	// First Module is always root
 	bool isRoot = true;
@@ -119,7 +119,7 @@ GameObjectFactory::createEmptyGameObject(const std::string& name, GameHandle goH
 	boost::shared_ptr<BFG::GameObject> go(
 		new GameObject
 		(
-			loop(),
+			mLane,
 			goHandle,
 			name,
 			mPropertyPlugins,
@@ -158,7 +158,7 @@ GameObjectFactory::createModule(const BFG::ObjectParameter& parameter, BFG::Modu
 			moduleParameter->mDensity
 		);
 
-		emit<Physics::Event>(ID::PE_ATTACH_MODULE, mcp);
+		mLane.emit(ID::PE_ATTACH_MODULE, mcp);
 
 		// Visual representation
 		View::ObjectCreation oc
@@ -170,17 +170,17 @@ GameObjectFactory::createModule(const BFG::ObjectParameter& parameter, BFG::Modu
 			qv4::IDENTITY
 		);
 
-		emit<View::Event>(ID::VE_CREATE_OBJECT, oc, mStateHandle);
+		mLane.emit(ID::VE_CREATE_OBJECT, oc, mStateHandle);
 		
 		if (isRoot)
 		{
-			emit<Physics::Event>(ID::PE_UPDATE_VELOCITY, parameter.mLinearVelocity, goHandle);
-			emit<Physics::Event>(ID::PE_UPDATE_ROTATION_VELOCITY, parameter.mAngularVelocity, goHandle);
+			mLane.emit(ID::PE_UPDATE_VELOCITY, parameter.mLinearVelocity, goHandle);
+			mLane.emit(ID::PE_UPDATE_ROTATION_VELOCITY, parameter.mAngularVelocity, goHandle);
 		}
 
 		if (!isRoot)
 		{
-			emit<View::Event>(ID::VE_ATTACH_OBJECT, moduleHandle, goHandle);
+			mLane.emit(ID::VE_ATTACH_OBJECT, moduleHandle, goHandle);
 		}
 	}
 
@@ -292,7 +292,7 @@ GameObjectFactory::createCamera(const CameraParameter& cameraParameter,
 	GameHandle camHandle = generateHandle();
 
 	Physics::ObjectCreationParams ocp(camHandle, Location());
-	emit<Physics::Event>(ID::PE_CREATE_OBJECT, ocp);
+	mLane.emit(ID::PE_CREATE_OBJECT, ocp);
 
 	Physics::ModuleCreationParams mcp
 	(
@@ -305,7 +305,7 @@ GameObjectFactory::createCamera(const CameraParameter& cameraParameter,
 		50.0f
 	);
 
-	emit<Physics::Event>(ID::PE_ATTACH_MODULE, mcp);
+	mLane.emit(ID::PE_ATTACH_MODULE, mcp);
 
 	boost::shared_ptr<GameObject> camera =
 		createEmptyGameObject("Camera", camHandle);
@@ -321,8 +321,8 @@ GameObjectFactory::createCamera(const CameraParameter& cameraParameter,
 	camera->attachModule(camModule);
 
 	View::CameraCreation cc(camHandle, NULL_HANDLE, cameraParameter.mFullscreen, 0, 0);
-	emit<View::Event>(ID::VE_CREATE_CAMERA, cc, mStateHandle);
-	emit<GameObjectEvent>(ID::GOE_SET_CAMERA_TARGET, parentHandle, camHandle);
+	mLane.emit(ID::VE_CREATE_CAMERA, cc, mStateHandle);
+	mLane.emit(ID::GOE_SET_CAMERA_TARGET, parentHandle, camHandle);
 
 	return camera;
 }

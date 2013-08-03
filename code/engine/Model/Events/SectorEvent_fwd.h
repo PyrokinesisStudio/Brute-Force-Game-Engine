@@ -23,7 +23,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
-
+#if 0
 #ifndef BFG_SECTOREVENT_FWD_H__
 #define BFG_SECTOREVENT_FWD_H__
 
@@ -37,22 +37,24 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace BFG {
 
-typedef boost::variant
-<
-	GameHandle,
-	ObjectParameter
->
-SePayloadT;
+	typedef boost::variant
+		<
+		GameHandle,
+		ObjectParameter
+		>
+		SePayloadT;
 
-typedef Event
-<
-	ID::ModelAction,
-	SePayloadT,
-	GameHandle,
-	GameHandle
->
-SectorEvent;
+	typedef Event
+		<
+		ID::ModelAction,
+		SePayloadT,
+		GameHandle,
+		GameHandle
+		>
+		SectorEvent;
 
 } // namespace BFG
+
+#endif
 
 #endif

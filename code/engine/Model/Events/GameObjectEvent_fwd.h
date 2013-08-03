@@ -35,35 +35,32 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Location.h>
 #include <Core/Types.h>
 
-#include <EventSystem/Core/EventDefs.h>
-#include <EventSystem/Event_fwd.h>
-
 #include <Model/Property/ValueId.h>
 
 namespace BFG {
 
-typedef boost::variant
-<
-	bool,
-	s32,
-	f32,
-	v3,
-	qv4,
-	m3x3,
-	Location,
-	GameHandle,
-	Property::ValueId,
-	CharArray128T
-> GoePayloadT;
-
-typedef Event
-<
-	EventIdT,
-	GoePayloadT,
-	GameHandle,
-	GameHandle
->
-GameObjectEvent;
+// typedef boost::variant
+// <
+// 	bool,
+// 	s32,
+// 	f32,
+// 	v3,
+// 	qv4,
+// 	m3x3,
+// 	Location,
+// 	GameHandle,
+// 	Property::ValueId,
+// 	CharArray128T
+// > GoePayloadT;
+// 
+// typedef Event
+// <
+// 	EventIdT,
+// 	GoePayloadT,
+// 	GameHandle,
+// 	GameHandle
+// >
+// GameObjectEvent;
 
 } // namespace BFG
 

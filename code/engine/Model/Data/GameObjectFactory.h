@@ -30,7 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <boost/weak_ptr.hpp>
 
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 
 #include <Model/Data/LevelConfig.h>
 #include <Model/Data/ObjectParameters.h>
@@ -55,13 +55,13 @@ class Environment;
 class GameObject;
 struct Module;
 
-class MODEL_API GameObjectFactory : Emitter
+class MODEL_API GameObjectFactory
 {
 public:
 	typedef std::map<std::string, std::map<std::string, GameHandle> > GoModuleMapT;
 	typedef std::map<std::string, boost::weak_ptr<GameObject> > GoMapT;
 
-	GameObjectFactory(EventLoop* loop,
+	GameObjectFactory(Event::Lane& lane,
 	                  const LevelConfig& files,
 	                  const Property::PluginMapT& propertyPlugins,
 	                  boost::shared_ptr<Environment> environment,
@@ -101,6 +101,8 @@ private:
 	void addConceptsTo(boost::shared_ptr<Module> module,
 	                   const ConceptConfigT conceptParameter) const;
 	
+	Event::Lane& mLane;
+
 	GoModuleMapT mGoModules;
 	GoMapT mGameObjects;
 

@@ -36,7 +36,7 @@ namespace BFG {
 namespace Property {
 
 Concept::Concept(GameObject& Owner, ConceptId pc, PluginId pid) :
-Emitter(Owner.loop()),
+mSubLane(Owner.subLane()),
 mSelf(pc),
 mPluginId(pid),
 mOwner(Owner)
@@ -75,7 +75,7 @@ void Concept::synchronize()
 	this->internalSynchronize();
 }
 
-void Concept::onEvent(EventIdT action,
+void Concept::onEvent(Event::IdT action,
                       Value payload,
                       GameHandle module,
                       GameHandle sender)
@@ -91,20 +91,20 @@ void Concept::internalSynchronize()
 {
 }
 
-void Concept::internalOnEvent(EventIdT,
+void Concept::internalOnEvent(Event::IdT,
                               Value /*payload*/,
                               GameHandle /*module*/,
                               GameHandle /*sender*/)
 {
 }
 
-void Concept::requestEvent(EventIdT action)
+void Concept::requestEvent(Event::IdT action)
 {
 	boost::shared_ptr<Concept> This(this, null_deleter());
 	mOwner.registerNeedForEvent(This, action);
 }
 
-void Concept::stopDelivery(EventIdT action)
+void Concept::stopDelivery(Event::IdT action)
 {
 	boost::shared_ptr<Concept> This(this, null_deleter());
 	mOwner.unregisterNeedForEvent(This, action);
@@ -140,6 +140,11 @@ GameHandle Concept::ownerHandle() const
 GameObject& Concept::owner() const
 {
 	return mOwner;
+}
+
+Event::SubLanePtr Concept::subLane() const
+{
+	return mSubLane;
 }
 
 const boost::shared_ptr<Environment> Concept::environment() const
