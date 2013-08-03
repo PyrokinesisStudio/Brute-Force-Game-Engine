@@ -53,10 +53,9 @@ private:
 
 	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
 	virtual void internalSynchronize();
-	virtual void internalOnEvent(EventIdT action,
-	                             Property::Value payload,
-	                             GameHandle module,
-	                             GameHandle sender);
+
+	void onAutonavigate(GameHandle target);
+	void onValueUpdated(const Property::ValueId& valueId);
 
 	void operate();
 	void rotate(const qv4& rotation);

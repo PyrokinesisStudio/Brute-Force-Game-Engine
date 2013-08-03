@@ -48,8 +48,8 @@ Property::Concept(owner, "AutoNavigator", pid)
 	require("ThrustControl");
 	require("Physical");
 
-	requestEvent(ID::GOE_VALUE_UPDATED);
-	requestEvent(ID::GOE_AUTONAVIGATE);
+	subLane()->connect(ID::GOE_AUTONAVIGATE, this, &AutoNavigator::onAutonavigate, ownerHandle());
+	subLane()->connect(ID::GOE_VALUE_UPDATED, this, &AutoNavigator::onValueUpdated, ownerHandle());
 
 	assert(ownerHandle() == rootModule() &&
 		"AutoNavigator: This code may contain some out-dated assumptions.");
@@ -57,6 +57,7 @@ Property::Concept(owner, "AutoNavigator", pid)
 
 AutoNavigator::~AutoNavigator()
 {
+
 	//! \todo This needs to be done when this module is actually "switched off".
 	stopDelivery(ID::GOE_VALUE_UPDATED);
 	stopDelivery(ID::GOE_AUTONAVIGATE);
@@ -77,33 +78,20 @@ void AutoNavigator::internalSynchronize()
 	if (mTargets.empty())
 		return;
 
-	emit<GameObjectEvent>(ID::GOE_CONTROL_PITCH, mRotationFactorPitch, ownerHandle());
-	emit<GameObjectEvent>(ID::GOE_CONTROL_YAW, mRotationFactorYaw, ownerHandle());
-	emit<GameObjectEvent>(ID::GOE_CONTROL_THRUST,mAccelerationFactor, ownerHandle());
+	subLane()->emit(ID::GOE_CONTROL_PITCH, mRotationFactorPitch, ownerHandle());
+	subLane()->emit(ID::GOE_CONTROL_YAW, mRotationFactorYaw, ownerHandle());
+	subLane()->emit(ID::GOE_CONTROL_THRUST, mAccelerationFactor, ownerHandle());
 }
 
-void AutoNavigator::internalOnEvent(EventIdT action,
-                                    Property::Value payload,
-                                    GameHandle module,
-                                    GameHandle sender)
+void AutoNavigator::onAutonavigate(GameHandle target)
 {
-	switch(action)
-	{
-	case ID::GOE_AUTONAVIGATE:
-		mTargets.push_back(static_cast<GameHandle>(payload));
-		break;
-		
-	case ID::GOE_VALUE_UPDATED:
-	{
-		Property::ValueId valueId = payload;
-		if (valueId.mVarId == ID::PV_MaxAngularAcceleration)
-			recalculateParameters();
-		break;
-	}
+	mTargets.push_back(target);
+}
 
-	default:
-		break;
-	}
+void AutoNavigator::onValueUpdated(const Property::ValueId& valueId)
+{
+	if (valueId.mVarId == ID::PV_MaxAngularAcceleration)
+		recalculateParameters();
 }
 
 void AutoNavigator::operate()
@@ -195,7 +183,7 @@ void AutoNavigator::accelerate(quantity<si::velocity, f32> targetSpeed)
 void AutoNavigator::recalculateParameters()
 {
 	// GameObject values
-	f32 maa = environment()->getGoValue<f32>
+	const f32& maa = environment()->getGoValue<f32>
 	(
 		ownerHandle(),
 		ID::PV_MaxAngularAcceleration,
@@ -204,7 +192,7 @@ void AutoNavigator::recalculateParameters()
 
 	mMaxAngularAcceleration = maa * radian_per_second_squared;
 
-	f32 ms = environment()->getGoValue<f32>
+	const f32& ms = environment()->getGoValue<f32>
 	(
 		ownerHandle(),
 		ID::PV_MaxSpeed,
