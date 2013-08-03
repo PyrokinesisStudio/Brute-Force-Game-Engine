@@ -176,6 +176,12 @@ struct BasicLane : boost::noncopyable
 	}
 
 	template <typename EntryT, typename ParameterT>
+	void addEntry(ParameterT startParameter)
+	{
+		mEntryPoints.push_back(new EntryT(startParameter));
+	}
+	
+	template <typename EntryT, typename ParameterT>
 	void addEntry(ParameterT& startParameter)
 	{
 		mEntryPoints.push_back(new EntryT(startParameter));
