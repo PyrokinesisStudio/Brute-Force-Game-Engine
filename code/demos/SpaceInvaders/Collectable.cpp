@@ -25,8 +25,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
 
+#include <Physics/Enums.hh>
 #include "Collectable.h"
-#include <Physics/Event.h>
 
 
 Collectable::Collectable(GameObject& Owner, BFG::PluginId pid) :
@@ -36,28 +36,18 @@ Collectable::Collectable(GameObject& Owner, BFG::PluginId pid) :
 	require("Physical");
 	require("Destroyable");
 
-	requestEvent(ID::PE_CONTACT);
+	subLane()->connectV(ID::PE_CONTACT, this, &Collectable::onCollect, ownerHandle());
 }
 
-void Collectable::internalOnEvent(EventIdT action,
-								  Property::Value payload,
-								  GameHandle module,
-								  GameHandle sender)
+void Collectable::onCollect(GameHandle sender)
 {
 	// Ignore additional PE_CONTACT events
 	if (mUsed)
 		return;
 
-	switch(action)
-	{
-		case ID::PE_CONTACT:
-		{
-			mUsed = true;
+	mUsed = true;
 
-			// Very Cannon specific stuff.
-			s32 ammo = 5;
-			emit<GameObjectEvent>(ID::GOE_POWERUP, ammo, sender);
-			break;
-		}
-	}
+	// Very Cannon specific stuff.
+	s32 ammo = 5;
+	subLane()->emit(ID::GOE_POWERUP, ammo, sender);
 }

@@ -43,7 +43,7 @@ class VIEW_API State : public Ogre::FrameListener,
                        protected Owner
 {
 public:
-	         State(GameHandle handle, Event::Lane& lane);
+	State(GameHandle handle, Event::Lane& lane);
 	virtual ~State();
 	
 	virtual void pause() = 0;
