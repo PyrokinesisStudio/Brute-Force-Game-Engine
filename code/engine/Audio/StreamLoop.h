@@ -81,7 +81,7 @@ private:
 	boost::thread mThread;
 	boost::mutex mRefreshMutex;
 	
-	//! The tread loop.
+	//! The thread loop.
 	void onStreaming();
 	
 	void init(const std::vector<std::string>& filelist);
