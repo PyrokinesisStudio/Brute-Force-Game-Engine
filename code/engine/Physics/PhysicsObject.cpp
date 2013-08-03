@@ -407,6 +407,18 @@ void PhysicsObject::performInterpolation(quantity<si::time, f32> timeSinceLastFr
 	}
 }
 
+void PhysicsObject::notifyAboutCollision(GameHandle ownModule,
+                                         GameHandle otherModule,
+                                         f32 penetrationDepth) const
+{
+	mSubLane->emit
+	(
+		ID::PE_CONTACT,
+		boost::make_tuple(ownModule, otherModule, penetrationDepth),
+		mRootModule
+	);
+}
+
 void PhysicsObject::debugOutput(std::string& output) const
 {
 	std::stringstream ss;

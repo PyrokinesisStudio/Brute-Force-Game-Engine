@@ -106,6 +106,13 @@ typedef boost::tuple
 	qv4                  // Offset Orientation
 > ObjectAttachmentParams;
 
+typedef boost::tuple
+<
+	GameHandle,          // Own Module
+	GameHandle,          // Other Module
+	f32                  // Penetration Depth
+> ModulePenetration;
+
 } // namespace Physics
 } // namespace BFG
 

@@ -363,19 +363,21 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 		geo1,
 		geo2,
 		mMaxContactsPerCollision,
-		&contact[0].geom,
-		sizeof(dContact)
+		&contact[0].geom,            // Array Ptr
+		sizeof(dContact)             // Skip length
 	);
 	
 	if (collisions == 0)
 		return;
 
-	dBodyID b1 = dGeomGetBody(geo1);
-	dBodyID b2 = dGeomGetBody(geo2);
+	dBodyID body1 = dGeomGetBody(geo1);
+	dBodyID body2 = dGeomGetBody(geo2);
 
 	GameHandle moduleHandle1 = *reinterpret_cast<GameHandle*>(dGeomGetData(geo1));
 	GameHandle moduleHandle2 = *reinterpret_cast<GameHandle*>(dGeomGetData(geo2));
 
+	assert(moduleHandle1 && moduleHandle2);
+	
 	boost::shared_ptr<PhysicsObject> po1 = searchMovObj(moduleHandle1);
 	boost::shared_ptr<PhysicsObject> po2 = searchMovObj(moduleHandle2);
 	
@@ -383,15 +385,16 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 	    po2->getCollisionMode(moduleHandle2) == ID::CM_Standard)
 	{
 		// Causes contact joints to be ignored. No effect for body TWO.
-		b2 = NULL;
+		body2 = NULL;
 	}
 	else if (po2->getCollisionMode(moduleHandle2) == ID::CM_Ghost &&
 	         po1->getCollisionMode(moduleHandle1) == ID::CM_Standard)
 	{
 		// Causes contact joints to be ignored. No effect for body ONE.
-		b1 = NULL;
+		body1 = NULL;
 	}
 
+	// This will apply forces to both bodies at the next world step.
 	for (int i=0; i<collisions; ++i) 
 	{
 		dJointID c = dJointCreateContact
@@ -401,7 +404,7 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 			contact+i
 		);
 
-		dJointAttach (c,b1,b2);
+		dJointAttach(c, body1, body2);
 	}
 
 	float totalPenetrationDepth = 0;
@@ -409,32 +412,13 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 	for (int i=0; i<collisions; ++i)
 		totalPenetrationDepth += contact[i].geom.depth;
 
-	assert(moduleHandle1 && moduleHandle2);
-
 	// If these pointers are valid, then a contact joint was attached and
-	// an effect will be issued, therefore we can safely send a PE_CONTACT.
-	if (b1)
-	{
-		//! Hack: Abusing Sender-ID as additional payload!
-		mLane.emit
-		(
-			ID::PE_CONTACT,
-			totalPenetrationDepth,
-			moduleHandle1,
-			moduleHandle2
-		);
-	}
-	if (b2)
-	{
-		//! Hack: Abusing Sender-ID as additional payload!
-		mLane.emit
-		(
-			ID::PE_CONTACT,
-			totalPenetrationDepth,
-			moduleHandle2,
-			moduleHandle1
-		);
-	}
+	// an effect will be issued, therefore we can safely send a notification.
+	if (body1)
+		po1->notifyAboutCollision(moduleHandle1, moduleHandle2, totalPenetrationDepth);
+	
+	if (body2)
+		po2->notifyAboutCollision(moduleHandle2, moduleHandle1, totalPenetrationDepth);
 }
 
 void PhysicsManager::registerEvents()

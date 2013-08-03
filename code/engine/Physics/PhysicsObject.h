@@ -100,6 +100,10 @@ public:
 
 	void performInterpolation(quantity<si::time, f32> timeSinceLastFrame);
 
+	void notifyAboutCollision(GameHandle ownModule,
+	                          GameHandle otherModule,
+	                          f32 penetrationDepth) const;
+	
 private:
 	void debugOutput(std::string& output) const;
 
