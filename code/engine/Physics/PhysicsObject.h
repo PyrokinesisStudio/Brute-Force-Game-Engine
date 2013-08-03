@@ -135,8 +135,6 @@ private:
 
 	void recalculateMass();
 
-	void updateForces(const v3& force, const v3& torque);
-
 	void magicStop();
 	void modulateMass(f32 factor) const;
 	

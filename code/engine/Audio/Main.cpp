@@ -27,9 +27,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Audio/Main.h>
 #include <cassert>
 
+#include <Audio/Init.h>
+#include <Audio/Listener.h>
+
 namespace BFG {
 namespace Audio {
-
 
 void Main::main(Event::Lane* lane)
 {

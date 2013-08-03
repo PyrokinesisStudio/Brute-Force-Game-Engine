@@ -32,15 +32,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Event/Event.h>
 #include <Audio/Defines.h>
-#include <Audio/Init.h>
-#include <Audio/Listener.h>
 
 namespace BFG {
 namespace Audio {
 
+class Init;
+class Listener;
+
 class BFG_AUDIO_API Main : public Base::LibraryMainBase<Event::Lane>
 {
-
 private:
 	void main(Event::Lane* lane);
 	
