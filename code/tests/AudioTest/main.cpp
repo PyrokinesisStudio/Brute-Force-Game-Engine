@@ -91,7 +91,7 @@ void menu()
             case 6:
             {
                 AudioTestLoader::registerTestFunction(&soundEmitterTest);
-                AudioTestLoader testLoader;
+				AudioTestLoader testLoader;
                 break;
             }
 			case 0:

@@ -20,7 +20,6 @@ SET_TARGET_PROPERTIES(bfgAudioTest PROPERTIES OUTPUT_NAME_DEBUG "bfgAudioTest_d"
 
 TARGET_LINK_LIBRARIES(bfgAudioTest
 	bfgAudio
-	bfgEventCore
 	bfgCore
 	${Boost_LIBRARIES}
 	${BoostLog_LIBRARIES}
