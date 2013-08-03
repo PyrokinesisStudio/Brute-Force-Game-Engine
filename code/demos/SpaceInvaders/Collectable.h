@@ -28,7 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define SI_COLLECTABLE_H
 
 #include <Core/GameHandle.h>
-#include <EventSystem/Event.h>
+#include <Event/Event.h>
 #include <Model/Property/Concept.h>
 
 using namespace BFG;
@@ -38,11 +38,8 @@ class Collectable : public Property::Concept
 public:
 	Collectable(GameObject& Owner, BFG::PluginId pid);
 	
-	void internalOnEvent(EventIdT action,
-	                     Property::Value payload,
-	                     GameHandle module,
-	                     GameHandle sender);
-
+	void onCollect(GameHandle sender);
+	
 	bool mUsed;
 };
 
