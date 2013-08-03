@@ -166,6 +166,7 @@ int main( int argc, const char* argv[] ) try
 		
 	// Give EventSystem some time to stop all loops
 	boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+	synchronizer.finish();
 
 }
 catch (std::exception& ex)
