@@ -102,8 +102,8 @@ struct NetworkContext
 		synchronizer.finish();
 	}
 	
-	BFG::Event::Lane lane;
 	BFG::Event::Synchronizer synchronizer;
+	BFG::Event::Lane lane;
 
 	boost::scoped_ptr<ApplicationT> application;
 	EventStatus status;
