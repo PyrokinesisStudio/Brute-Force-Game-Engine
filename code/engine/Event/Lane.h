@@ -169,12 +169,35 @@ struct BasicLane : boost::noncopyable
 		c.template connect<Void>(mBinder, id, object, fn, destination);
 	}
 
+	/** \brief Adds an entry point.
+		
+		This function adds a so-called "entry point" to this Lane. In
+		order to facilitate library initialization, the event system may
+		safely call multiple initializer functions. This is done by
+		calling Synchronizer::startEntries().
+		
+		\see struct EntryPoint
+		\see Synchronizer::startEntries()
+	*/
 	template <typename EntryT>
 	void addEntry()
 	{
 		mEntryPoints.push_back(new EntryT());
 	}
-
+	
+	/** \brief Adds an entry point, with a start parameter.
+	
+		\param[in] startParameter
+			A parameter which is passed to the main class which
+			serves as entry point.
+			
+		\tparam EntryT
+			A class type which is used as entry point. Must inherit
+			from class EntryPoint.
+			
+		\see Lane::addEntry()
+		\note Use boost::ref for references.
+	*/
 	template <typename EntryT, typename ParameterT>
 	void addEntry(ParameterT startParameter)
 	{
