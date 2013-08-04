@@ -82,10 +82,23 @@ struct Binding : public Callable
 		if (mPayloads.empty())
 			return;
 
+		boost::mutex::scoped_lock sl(mBufferMutex);
 		const BufferT& payload = mPayloads.front();
+		sl.unlock();
+		
+		//! NOTE
+		//! Is this safe? mPayloads.push() is expected to modify
+		//! "the container and up to all its contained elements" (see
+		//! "deque::push_back). Can `payload' get modified or not? The
+		//! following call might consume a significant amount of time,
+		//! therefore locking would mean more wait time to other threads.
+		//! If not, we might use a std::list as underlying container. The
+		//! currently used underlying container is std::deque.
+		//! boost::stable_vector might be interesting too.
+		//! Ultimately, a benchmark is necessary.
 		signal()(payload.template get<0>(), payload.template get<1>());
 
-		boost::mutex::scoped_lock sl(mBufferMutex);
+		sl.lock();
 		mPayloads.pop();
 	}
 
