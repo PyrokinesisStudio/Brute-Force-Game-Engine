@@ -28,6 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Event/Event.h>
 
+#include <boost/assign/std/vector.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -45,6 +46,7 @@ struct Case
 	{}
 
 	BFG::u32 mCalls;
+	std::vector<BFG::Event::IdT> mIds;
 	std::vector<std::string> mStrings;
 	std::vector<BFG::u32> mU32;
 	std::vector<BFG::Event::SenderT> mSenders;
@@ -79,18 +81,21 @@ struct ModuleConnect : public BFG::Event::EntryPoint<BFG::Event::Lane>
 
 	void simpleCopy(BFG::u32 u)
 	{
+		mEventCounter["all"].mIds.push_back(1);
 		mEventCounter["simpleCopy"].mCalls++;
 		mEventCounter["simpleCopy"].mU32.push_back(u);
 	}
 
 	void simpleCopyConst(BFG::u32 u) const
 	{
+		mEventCounter["all"].mIds.push_back(2);
 		mEventCounter["simpleCopyConst"].mCalls++;
 		mEventCounter["simpleCopyConst"].mU32.push_back(u);
 	}
 
 	void extendedCopy(BFG::u32 u, const BFG::GameHandle& sender)
 	{
+		mEventCounter["all"].mIds.push_back(3);
 		mEventCounter["extendedCopy"].mCalls++;
 		mEventCounter["extendedCopy"].mU32.push_back(u);
 		mEventCounter["extendedCopy"].mSenders.push_back(sender);
@@ -98,6 +103,7 @@ struct ModuleConnect : public BFG::Event::EntryPoint<BFG::Event::Lane>
 
 	void extendedCopyConst(BFG::u32 u, const BFG::GameHandle& sender) const 
 	{
+		mEventCounter["all"].mIds.push_back(4);
 		mEventCounter["extendedCopyConst"].mCalls++;
 		mEventCounter["extendedCopyConst"].mU32.push_back(u);
 		mEventCounter["extendedCopyConst"].mSenders.push_back(sender);
@@ -105,18 +111,21 @@ struct ModuleConnect : public BFG::Event::EntryPoint<BFG::Event::Lane>
 
 	void simpleReference(const std::string& s)
 	{
+		mEventCounter["all"].mIds.push_back(5);
 		mEventCounter["simpleReference"].mCalls++;
 		mEventCounter["simpleReference"].mStrings.push_back(s);
 	}
 
 	void simpleReferenceConst(const std::string& s) const 
 	{
+		mEventCounter["all"].mIds.push_back(6);
 		mEventCounter["simpleReferenceConst"].mCalls++;
 		mEventCounter["simpleReferenceConst"].mStrings.push_back(s);
 	}
 
 	void extendedReference(const std::string& s, const BFG::GameHandle& sender)
 	{
+		mEventCounter["all"].mIds.push_back(7);
 		mEventCounter["extendedReference"].mCalls++;
 		mEventCounter["extendedReference"].mStrings.push_back(s);
 		mEventCounter["extendedReference"].mSenders.push_back(sender);
@@ -124,6 +133,7 @@ struct ModuleConnect : public BFG::Event::EntryPoint<BFG::Event::Lane>
 
 	void extendedReferenceConst(const std::string& s, const BFG::GameHandle& sender) const 
 	{
+		mEventCounter["all"].mIds.push_back(8);
 		mEventCounter["extendedReferenceConst"].mCalls++;
 		mEventCounter["extendedReferenceConst"].mStrings.push_back(s);
 		mEventCounter["extendedReferenceConst"].mSenders.push_back(sender);
@@ -131,22 +141,26 @@ struct ModuleConnect : public BFG::Event::EntryPoint<BFG::Event::Lane>
 
 	void simpleVoid()
 	{
+		mEventCounter["all"].mIds.push_back(9);
 		mEventCounter["simpleVoid"].mCalls++;
 	}
 
 	void simpleVoidConst() const 
 	{
+		mEventCounter["all"].mIds.push_back(10);
 		mEventCounter["simpleVoidConst"].mCalls++;
 	}
 
 	void extendedVoid(const BFG::GameHandle& sender)
 	{
+		mEventCounter["all"].mIds.push_back(11);
 		mEventCounter["extendedVoid"].mCalls++;
 		mEventCounter["extendedVoid"].mSenders.push_back(sender);
 	}
 
 	void extendedVoidConst(const BFG::GameHandle& sender) const 
 	{
+		mEventCounter["all"].mIds.push_back(12);
 		mEventCounter["extendedVoidConst"].mCalls++;
 		mEventCounter["extendedVoidConst"].mSenders.push_back(sender);
 	}
@@ -211,96 +225,66 @@ BOOST_AUTO_TEST_CASE (EmitOrder)
 
 	sync.startEntries();
 
+	using namespace boost::assign;
+
 	std::vector<std::string> testData;
-	testData.push_back("Hello");
-	testData.push_back("adfasdf");
-	testData.push_back("acv");
-	testData.push_back("adfetrweasdf");
-	testData.push_back("ret");
-	testData.push_back("retrt");
-	testData.push_back("rtztrz");
-	testData.push_back("wrtwrt");
-	testData.push_back("4564gs");
-	testData.push_back("3466");
-	testData.push_back("456356");
-	testData.push_back("456");
-	testData.push_back("shh");
-	testData.push_back("ertze45");
-	testData.push_back("d");
-	testData.push_back("3456sfghs");
-	testData.push_back("fxbn6");
-	testData.push_back(",lgg");
-	testData.push_back("fzud");
-	testData.push_back("xghx");
+	testData += "Hello","adfasdf","acv","adfetrweasdf","ret","retrt","rtztrz","wrtwrt","4564gs","3466","456356","456","shh","ertze45","d","3456sfghs","fxbn6",",lgg","fzud","xghx";
 
 	std::vector<BFG::u32> testData2;
-	testData2.push_back(55);
-	testData2.push_back(43);
-	testData2.push_back(24);
-	testData2.push_back(6);
-	testData2.push_back(2345);
-	testData2.push_back(63456);
-	testData2.push_back(34);
-	testData2.push_back(5867);
-	testData2.push_back(555);
-	testData2.push_back(5678);
-	testData2.push_back(365);
-	testData2.push_back(896);
-	testData2.push_back(24);
-	testData2.push_back(574);
-	testData2.push_back(5432);
-	testData2.push_back(74);
-	testData2.push_back(4567);
-	testData2.push_back(256);
-	testData2.push_back(347);
-	testData2.push_back(373);
+	testData2 += 55,43,24,6,2345,63456,34,5867,555,5678,365,896,24,574,5432,74,4567,256,347,373;
 
-	lane.emit(1, testData2[0]);
-	lane.emit(5, testData[0]);
-	lane.emit(1, testData2[1]);
-	lane.emit(5, testData[1]);
-	lane.emit(1, testData2[2]);
-	lane.emit(1, testData2[3]);
-	lane.emit(5, testData[2]);
-	lane.emit(5, testData[3]);
-	lane.emit(1, testData2[4]);
-	lane.emit(5, testData[4]);
-	lane.emit(1, testData2[5]);
-	lane.emit(1, testData2[6]);
-	lane.emit(5, testData[5]);
-	lane.emit(1, testData2[7]);
-	lane.emit(5, testData[6]);
-	lane.emit(1, testData2[8]);
-	lane.emit(1, testData2[9]);
-	lane.emit(1, testData2[10]);
-	lane.emit(5, testData[7]);
-	lane.emit(1, testData2[11]);
-	lane.emit(5, testData[8]);
-	lane.emit(5, testData[9]);
-	lane.emit(1, testData2[12]);
-	lane.emit(5, testData[10]);
-	lane.emit(1, testData2[13]);
-	lane.emit(5, testData[11]);
-	lane.emit(5, testData[12]);
-	lane.emit(1, testData2[14]);
-	lane.emit(5, testData[13]);
-	lane.emit(1, testData2[15]);
-	lane.emit(5, testData[14]);
-	lane.emit(5, testData[15]);
-	lane.emit(1, testData2[16]);
-	lane.emit(5, testData[16]);
-	lane.emit(1, testData2[17]);
-	lane.emit(1, testData2[18]);
-	lane.emit(5, testData[17]);
-	lane.emit(1, testData2[19]);
-	lane.emit(5, testData[18]);
-	lane.emit(5, testData[19]);
+	std::vector<BFG::u32> eventIds;
+	eventIds += 1,5,1,5,1,1,5,5,1,5,1,1,5,1,5,1,1,1,5,1,5,5,1,5,1,5,5,1,5,1,5,5,1,5,1,1,5,1,5,5;
+	
+	lane.emit(eventIds[0], testData2[0]);
+	lane.emit(eventIds[1], testData[0]);
+	lane.emit(eventIds[2], testData2[1]);
+	lane.emit(eventIds[3], testData[1]);
+	lane.emit(eventIds[4], testData2[2]);
+	lane.emit(eventIds[5], testData2[3]);
+	lane.emit(eventIds[6], testData[2]);
+	lane.emit(eventIds[7], testData[3]);
+	lane.emit(eventIds[8], testData2[4]);
+	lane.emit(eventIds[9], testData[4]);
+	lane.emit(eventIds[10], testData2[5]);
+	lane.emit(eventIds[11], testData2[6]);
+	lane.emit(eventIds[12], testData[5]);
+	lane.emit(eventIds[13], testData2[7]);
+	lane.emit(eventIds[14], testData[6]);
+	lane.emit(eventIds[15], testData2[8]);
+	lane.emit(eventIds[16], testData2[9]);
+	lane.emit(eventIds[17], testData2[10]);
+	lane.emit(eventIds[18], testData[7]);
+	lane.emit(eventIds[19], testData2[11]);
+	lane.emit(eventIds[20], testData[8]);
+	lane.emit(eventIds[21], testData[9]);
+	lane.emit(eventIds[22], testData2[12]);
+	lane.emit(eventIds[23], testData[10]);
+	lane.emit(eventIds[24], testData2[13]);
+	lane.emit(eventIds[25], testData[11]);
+	lane.emit(eventIds[26], testData[12]);
+	lane.emit(eventIds[27], testData2[14]);
+	lane.emit(eventIds[28], testData[13]);
+	lane.emit(eventIds[29], testData2[15]);
+	lane.emit(eventIds[30], testData[14]);
+	lane.emit(eventIds[31], testData[15]);
+	lane.emit(eventIds[32], testData2[16]);
+	lane.emit(eventIds[33], testData[16]);
+	lane.emit(eventIds[34], testData2[17]);
+	lane.emit(eventIds[35], testData2[18]);
+	lane.emit(eventIds[36], testData[17]);
+	lane.emit(eventIds[37], testData2[19]);
+	lane.emit(eventIds[38], testData[18]);
+	lane.emit(eventIds[39], testData[19]);
 
 	sync.finish();
-
+	
+	// Emit order within same payload must be correct
 	CHECK_EQUAL_COLLECTIONS(ec["simpleCopy"].mU32, testData2);
 	CHECK_EQUAL_COLLECTIONS(ec["simpleReference"].mStrings, testData);
-
+	
+	// Emit order between different payloads must be correct
+	CHECK_EQUAL_COLLECTIONS(ec["all"].mIds, eventIds);
 }
 
 //! Testing basic SubLane functionality: Emits, Proper Destruction etc.
