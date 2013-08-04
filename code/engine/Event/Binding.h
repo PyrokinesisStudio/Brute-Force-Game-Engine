@@ -73,7 +73,7 @@ struct Binding : public Callable
 				mTypeInfo
 			);
 		
-		boost::mutex::scoped_lock(mBufferMutex);
+		boost::mutex::scoped_lock sl(mBufferMutex);
 		mPayloads.push(boost::make_tuple(payload, sender));
 	}
 	
@@ -85,7 +85,7 @@ struct Binding : public Callable
 		const BufferT& payload = mPayloads.front();
 		signal()(payload.template get<0>(), payload.template get<1>());
 
-		boost::mutex::scoped_lock(mBufferMutex);
+		boost::mutex::scoped_lock sl(mBufferMutex);
 		mPayloads.pop();
 	}
 

@@ -115,7 +115,7 @@ struct Binder
 	          const DestinationIdT destination,
 	          const SenderIdT sender) const
 	{
-		boost::mutex::scoped_lock(mFlipLocker);
+		boost::mutex::scoped_lock sl(mFlipLocker);
 		
 		typename ConnectionMapT::const_iterator it = mBindings.find(boost::make_tuple(id, destination));
 		if (it != mBindings.end())
