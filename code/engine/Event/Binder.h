@@ -33,6 +33,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 
+#include <Base/Logger.h>
+
 #include <Event/Binding.h>
 #include <Event/Callable.h>
 #include <Event/Connection.h>
@@ -129,16 +131,20 @@ struct Binder
 			}
 			catch (IncompatibleTypeException& ex)
 			{
-				std::cout << ex.what() 
-					<< " Trying to cast (" 
-					<< ex.mEmittedType->name() 
-					<< ") to (" 
-					<< ex.mExpectedType->name() 
-					<< "). "
-					<< "Id/Dest: "
-					<< id << "/" << destination
-					<< std::endl;
+				//! \todo demangle!
+				errlog << ex.what() 
+				       << " Trying to cast (" 
+				       << ex.mEmittedType->name() 
+				       << ") to (" 
+				       << ex.mExpectedType->name() 
+				       << "). "
+				       << "Id/Dest: "
+				       << id << "/" << destination
+				       << std::endl;
+#ifdef BFG_EVENT_RETHROW_INCOMPATIBLE_TYPES_EXCEPTION
+				// Used for unit tests
 				throw;
+#endif
 			}
 		}
 		//! \todo Else: event id not found in this EventBinder

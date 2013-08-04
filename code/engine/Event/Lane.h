@@ -113,14 +113,7 @@ struct BasicLane : boost::noncopyable
 	          const DestinationIdT destination = static_cast<DestinationIdT>(0), 
 	          const SenderIdT sender = static_cast<SenderIdT>(0))
 	{
-		try
-		{
-			mBinder.template emit<PayloadT>(id, payload, destination, sender);
-		}
-		catch (BFG::Event::IncompatibleTypeException&)
-		{
-			throw;
-		}
+		mBinder.template emit<PayloadT>(id, payload, destination, sender);
 		mSynchronizer.distributeToOthers(id, payload, this, destination, sender);
 		subEmit(id, payload, destination, sender);
 	}
