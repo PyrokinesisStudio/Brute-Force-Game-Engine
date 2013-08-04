@@ -40,10 +40,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/EntryPoint.h>
 #include <Base/Logger.h>
 #include <Base/Pause.h>
-#include <Controller/Controller.h>
-#include <Core/Path.h>
 #include <Base/ShowException.h>
+
+#include <Controller/Controller.h>
+
+#include <Core/Path.h>
 #include <Core/GameHandle.h>
+
+#include <Event/Event.h>
+
 #include <Model/Environment.h>
 #include <Model/GameObject.h>
 #include <Model/Data/GameObjectFactory.h>
@@ -52,8 +57,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Property/Plugin.h>
 #include <Model/Property/SpacePlugin.h>
 #include <Model/State.h>
+
 #include <Network/Network.h>
+
 #include <Physics/Physics_fwd.h>
+
 #include <View/View.h>
 
 using namespace boost::units;
@@ -83,10 +91,34 @@ bool alwaysTrue(boost::shared_ptr<BFG::GameObject>)
 	return true;
 }
 
+void initController(BFG::GameHandle stateHandle, BFG::Event::Lane& lane)
+{
+	BFG::Controller_::ActionMapT actions;
+	actions[A_EXIT] = "A_EXIT";
+	actions[SIMULATION_0] = "SIMULATION_0";
+	actions[SIMULATION_1] = "SIMULATION_1";
+	actions[SIMULATION_2] = "SIMULATION_2";
+	actions[SIMULATION_3] = "SIMULATION_3";
+	actions[A_CONSOLE] = "A_CONSOLE";
+	BFG::Controller_::fillWithDefaultActions(actions);
+	BFG::Controller_::sendActionsToController(lane, actions);
+
+	BFG::Path path;
+	const std::string configPath = path.Expand("SynchronizationTest.xml");
+	const std::string stateName = "SynchronizationTest";
+
+	BFG::View::WindowAttributes wa;
+	BFG::View::queryWindowAttributes(wa);
+	
+	BFG::Controller_::StateInsertion si(configPath, stateName, stateHandle, true, wa);
+	lane.emit(BFG::ID::CE_LOAD_STATE, si);
+}
+
 struct SynchronizationTestState: BFG::State
 {
-	SynchronizationTestState(GameHandle handle, EventLoop* loop) :
-	State(loop),
+	SynchronizationTestState(GameHandle handle, BFG::Event::Lane& lane) :
+	State(lane),
+	mSubLane(lane.createSubLane()),
 	mStateHandle(handle),
 	mPlayer(BFG::NULL_HANDLE),
 	mEnvironment(new BFG::Environment)
@@ -107,27 +139,26 @@ struct SynchronizationTestState: BFG::State
 		boost::shared_ptr<BFG::SpacePlugin> sp(new BFG::SpacePlugin(spId));
 		mPluginMap.insert(sp);
 
-		mGof.reset(new BFG::GameObjectFactory(this->loop(), lc, mPluginMap, mEnvironment, mStateHandle));
+		mGof.reset(new BFG::GameObjectFactory(lane, lc, mPluginMap, mEnvironment, mStateHandle));
 
-		mSector.reset(new BFG::Sector(this->loop(), 1, "Blah", mGof));
+		mSector.reset(new BFG::Sector(lane, 1, "Blah", mGof));
 	}
 
 	virtual ~SynchronizationTestState()
-	{
-	}
+	{}
 
 	virtual void onTick(const quantity<si::time, f32> TSLF)
 	{
 		mSector->update(TSLF);
 
-		emit<BFG::Physics::Event>(BFG::ID::PE_STEP, TSLF.value());
+		mSubLane->emit(BFG::ID::PE_STEP, TSLF);
 	}
 
 	virtual void createObject(const BFG::ObjectParameter& param)
 	{
 		boost::shared_ptr<BFG::GameObject> playerShip = mGof->createGameObject(param);
 		mSector->addObject(playerShip);
-		emit<BFG::GameObjectEvent>(BFG::ID::GOE_GHOST_MODE, true, param.mHandle);
+		mSubLane->emit(BFG::ID::GOE_GHOST_MODE, true, param.mHandle);
 		mPlayer = playerShip->getHandle();
 	}
 
@@ -137,6 +168,7 @@ struct SynchronizationTestState: BFG::State
 	}
 
 protected:
+	BFG::Event::SubLanePtr mSubLane;
 	GameHandle mStateHandle;
 	GameHandle mPlayer;
 	boost::shared_ptr<BFG::Environment> mEnvironment;
@@ -152,78 +184,63 @@ struct ServerState: public SynchronizationTestState
 {
 	typedef std::vector<BFG::Network::PeerIdT> ClientListT;
 
-	ServerState(GameHandle handle, EventLoop* loop) :
-	SynchronizationTestState(handle, loop),
+	ServerState(GameHandle handle, BFG::Event::Lane& lane) :
+	SynchronizationTestState(handle, lane),
 	mSceneCreated(false)
 	{
-		loop->connect(BFG::ID::NE_RECEIVED, this, &ServerState::networkPacketEventHandler, SERVER_STATE_HANDLE);
-		loop->connect(BFG::ID::NE_CONNECTED, this, &ServerState::networkControlEventHandler);
-		loop->connect(BFG::ID::NE_DISCONNECTED, this, &ServerState::networkControlEventHandler);
+		mSubLane->connect(BFG::ID::NE_RECEIVED, this, &ServerState::onReceived, SERVER_STATE_HANDLE);
+		mSubLane->connect(BFG::ID::NE_CONNECTED, this, &ServerState::onConneced);
+		mSubLane->connect(BFG::ID::NE_DISCONNECTED, this, &ServerState::onDisconnected);
 	}
 	
 	virtual ~ServerState()
+	{}
+
+	void onReceived(const BFG::Network::DataPayload& payload)
 	{
-		loop()->disconnect(BFG::ID::NE_RECEIVED, this);
-		loop()->disconnect(BFG::ID::NE_CONNECTED, this);
-		loop()->disconnect(BFG::ID::NE_DISCONNECTED, this);
-	}
-
-	void networkPacketEventHandler(BFG::Network::DataPacketEvent* e)
-	{
-		switch(e->id())
+		switch(payload.mAppEventId)
 		{
-		case BFG::ID::NE_RECEIVED:
+		case START_SIMULATION_0:
 		{
-			const BFG::Network::DataPayload& payload = e->data();
-
-			switch(payload.mAppEventId)
+			infolog << "Starting Simulation 0";
+			
+			std::vector<GameHandle> all = mEnvironment->find_all(&alwaysTrue);
+			std::vector<GameHandle>::const_iterator it = all.begin();
+			for (; it != all.end(); ++it)
 			{
-			case START_SIMULATION_0:
-			{
-				infolog << "Starting Simulation 0";
-				
-				std::vector<GameHandle> all = mEnvironment->find_all(&alwaysTrue);
-				std::vector<GameHandle>::const_iterator it = all.begin();
-				for (; it != all.end(); ++it)
-				{
-					emit<BFG::Physics::Event>(BFG::ID::PE_DEBUG, 0, *it);
-					emit<BFG::Physics::Event>(BFG::ID::PE_UPDATE_VELOCITY, v3::ZERO, *it);
-					emit<BFG::Physics::Event>(BFG::ID::PE_UPDATE_ROTATION_VELOCITY, v3::ZERO, *it);
-				}
-				break;
+				mSubLane->emit(BFG::ID::PE_DEBUG, BFG::Event::Void(), *it);
+				mSubLane->emit(BFG::ID::PE_UPDATE_VELOCITY, v3::ZERO, *it);
+				mSubLane->emit(BFG::ID::PE_UPDATE_ROTATION_VELOCITY, v3::ZERO, *it);
 			}
-			case START_SIMULATION_1:
-			{
-				infolog << "Starting Simulation 1";
-				v3 position = v3(2.0f, -1.0f, 50.0f);
-				emit<BFG::Physics::Event>(BFG::ID::PE_UPDATE_POSITION, position, mPlayer);
-
-				break;
-			}
-			case START_SIMULATION_2:
-			{
-				infolog << "Starting Simulation 2";
-				v3 force = v3(-1000000.0f, 0.0f, 0.0f);
-				emit<BFG::Physics::Event>(BFG::ID::PE_APPLY_FORCE, force, mPlayer);
-
-				break;
-			}
-			case START_SIMULATION_3:
-			{
-				infolog << "Starting Simulation 3";
-				v3 torque = v3(5000.0f, 0.0f, 0.0f); // spin around the x-axis
-				emit<BFG::Physics::Event>(BFG::ID::PE_APPLY_TORQUE, torque, mPlayer);
-
-				break;
-			}
-			}
-
+			break;
 		}
-		default:
-			DEFAULT_HANDLE_EVENT(e);
+		case START_SIMULATION_1:
+		{
+			infolog << "Starting Simulation 1";
+			v3 position = v3(2.0f, -1.0f, 50.0f);
+			mSubLane->emit(BFG::ID::PE_UPDATE_POSITION, position, mPlayer);
+
+			break;
+		}
+		case START_SIMULATION_2:
+		{
+			infolog << "Starting Simulation 2";
+			v3 force = v3(-1000000.0f, 0.0f, 0.0f);
+			mSubLane->emit(BFG::ID::PE_APPLY_FORCE, force, mPlayer);
+
+			break;
+		}
+		case START_SIMULATION_3:
+		{
+			infolog << "Starting Simulation 3";
+			v3 torque = v3(5000.0f, 0.0f, 0.0f); // spin around the x-axis
+			mSubLane->emit(BFG::ID::PE_APPLY_TORQUE, torque, mPlayer);
+
+			break;
+		}
 		}
 	}
-
+	
 	void createScene()
 	{
 		std::stringstream handles;
@@ -256,7 +273,7 @@ struct ServerState: public SynchronizationTestState
 					handles << op.mHandle << " ";
 
 				createObject(op);
-				emit<BFG::GameObjectEvent>(BFG::ID::GOE_SYNCHRONIZATION_MODE, (s32)BFG::ID::SYNC_MODE_NETWORK_WRITE, op.mHandle);
+				mSubLane->emit(BFG::ID::GOE_SYNCHRONIZATION_MODE, (s32)BFG::ID::SYNC_MODE_NETWORK_WRITE, op.mHandle);
 			}
 		}
 		mCreatedHandles = handles.str();
@@ -272,7 +289,7 @@ struct ServerState: public SynchronizationTestState
 			destroyObject(*it);
 		}
 		
-		mCreatedHandles = "";
+		mCreatedHandles.clear();
 		mSceneCreated = false;
 	}
 
@@ -303,7 +320,7 @@ struct ServerState: public SynchronizationTestState
 			ca512
 		);
 
-		emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload, peerId);
+		mSubLane->emit(BFG::ID::NE_SEND, payload, peerId);
 	}
 
 	void onDisconnected(BFG::Network::PeerIdT peerId)
@@ -324,28 +341,6 @@ struct ServerState: public SynchronizationTestState
 		}
 	}
 
-	void networkControlEventHandler(BFG::Network::ControlEvent* e)
-	{
-		switch(e->id())
-		{
-		case BFG::ID::NE_CONNECTED:
-		{
-			const BFG::Network::PeerIdT peerId = boost::get<BFG::Network::PeerIdT>(e->data());
-			onConneced(peerId);
-			break;
-		}
-		case BFG::ID::NE_DISCONNECTED:
-		{
-			const BFG::Network::PeerIdT peerId = boost::get<BFG::Network::PeerIdT>(e->data());
-			onDisconnected(peerId);
-			break;
-		}
-		default:
-			DEFAULT_HANDLE_EVENT(e);
-		}
-
-	}
-
 private:
 	ClientListT mClientList;
 
@@ -355,40 +350,36 @@ private:
 
 struct ClientState : public SynchronizationTestState
 {
-	ClientState(GameHandle handle, EventLoop* loop) :
-	SynchronizationTestState(handle, loop)
+	ClientState(GameHandle handle, BFG::Event::Lane& lane) :
+	SynchronizationTestState(handle, lane)
 	{
-		loop->connect(A_EXIT, this, &ClientState::controllerEventHandler);
-		loop->connect(SIMULATION_0, this, &ClientState::controllerEventHandler);
-		loop->connect(SIMULATION_1, this, &ClientState::controllerEventHandler);
-		loop->connect(SIMULATION_2, this, &ClientState::controllerEventHandler);
-		loop->connect(SIMULATION_3, this, &ClientState::controllerEventHandler);
-		loop->connect(A_CONSOLE, this, &ClientState::controllerEventHandler);
-		loop->connect(BFG::ID::NE_RECEIVED, this, &ClientState::networkEventHandler, CLIENT_STATE_HANDLE);
+		mSubLane->connectV(A_EXIT, this, &ClientState::onExit);
+		mSubLane->connectV(SIMULATION_0, this, &ClientState::onSimulation0);
+		mSubLane->connectV(SIMULATION_1, this, &ClientState::onSimulation1);
+		mSubLane->connectV(SIMULATION_2, this, &ClientState::onSimulation2);
+		mSubLane->connectV(SIMULATION_3, this, &ClientState::onSimulation3);
+		mSubLane->connect(A_CONSOLE, this, &ClientState::onConsole);
+		mSubLane->connect(BFG::ID::NE_RECEIVED, this, &ClientState::onReceived, CLIENT_STATE_HANDLE);
+		
+		initController(CLIENT_STATE_HANDLE, lane);
 	}
 
 	virtual ~ClientState()
 	{
 		infolog << "Tutorial: Destroying GameState.";
-		loop()->disconnect(A_EXIT, this);
-		loop()->disconnect(SIMULATION_0, this);
-		loop()->disconnect(SIMULATION_1, this);
-		loop()->disconnect(SIMULATION_2, this);
-		loop()->disconnect(SIMULATION_3, this);
-		loop()->disconnect(A_CONSOLE, this);
-		loop()->disconnect(BFG::ID::NE_RECEIVED, this);
 	}
 
 	void onExit()
 	{
-		loop()->stop();
+		// TODO: Stop!
+		//mSubLane->stop();
 	}
 	
 	void onSimulation0()
 	{
 		std::vector<GameHandle> all = mEnvironment->find_all(alwaysTrue);
-		for (size_t i=0; i<all.size(); ++i)
-			emit<BFG::Physics::Event>(BFG::ID::PE_DEBUG, 0, all[i]);
+		for (std::size_t i=0; i<all.size(); ++i)
+			mSubLane->emit(BFG::ID::PE_DEBUG, BFG::Event::Void(), all[i]);
 		
 		CharArray512T ca512 = CharArray512T();
 		BFG::Network::DataPayload payload
@@ -400,7 +391,7 @@ struct ClientState : public SynchronizationTestState
 			ca512
 		);
 
-		emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload);
+		mSubLane->emit(BFG::ID::NE_SEND, payload);
 	}
 
 	void onSimulation1()
@@ -415,7 +406,7 @@ struct ClientState : public SynchronizationTestState
 			ca512
 		);
 
-		emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload);
+		mSubLane->emit(BFG::ID::NE_SEND, payload);
 	}
 	
 	void onSimulation2()
@@ -430,7 +421,7 @@ struct ClientState : public SynchronizationTestState
 			ca512
 		);
 
-		emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload);
+		mSubLane->emit(BFG::ID::NE_SEND, payload);
 	}
 
 	void onSimulation3()
@@ -445,7 +436,12 @@ struct ClientState : public SynchronizationTestState
 			ca512
 		);
 
-		emit<BFG::Network::DataPacketEvent>(BFG::ID::NE_SEND, payload);
+		mSubLane->emit(BFG::ID::NE_SEND, payload);
+	}
+	
+	void onConsole(bool show)
+	{
+		mSubLane->emit(BFG::ID::VE_CONSOLE, show);
 	}
 	
 	void onCreateTestObject(const BFG::Network::DataPayload& payload)
@@ -476,60 +472,19 @@ struct ClientState : public SynchronizationTestState
 				op.mLocation.position = v3(x, y, 50.0f);
 
 				createObject(op);
-				emit<BFG::GameObjectEvent>(BFG::ID::GOE_SYNCHRONIZATION_MODE, (s32)BFG::ID::SYNC_MODE_NETWORK_READ, op.mHandle);
+				mSubLane->emit(BFG::ID::GOE_SYNCHRONIZATION_MODE, (s32)BFG::ID::SYNC_MODE_NETWORK_READ, op.mHandle);
 			}
 		}
 	}
 	
-	void controllerEventHandler(BFG::Controller_::VipEvent* e)
+	void onReceived(const BFG::Network::DataPayload& payload)
 	{
-		switch(e->id())
+		switch(payload.mAppEventId)
 		{
-		case A_EXIT:
-			onExit();
-			break;
-
-		case SIMULATION_0:
-			onSimulation0();
-			break;
-
-		case SIMULATION_1:
-			onSimulation1();
-			break;
-
-		case SIMULATION_2:
-			onSimulation2();
-			break;
-
-		case SIMULATION_3:
-			onSimulation3();
-			break;
-		case A_CONSOLE:
+		case CREATE_TEST_OBJECT:
 		{
-			emit<BFG::View::Event>(BFG::ID::VE_CONSOLE, boost::get<bool>(e->data()));
+			onCreateTestObject(payload);
 			break;
-		}
-		default:
-			DEFAULT_HANDLE_EVENT_ET(e);
-		}
-	}
-
-	void networkEventHandler(BFG::Network::DataPacketEvent* e)
-	{
-		switch(e->id())
-		{
-		case BFG::ID::NE_RECEIVED:
-		{
-			const BFG::Network::DataPayload& payload = e->data();
-
-			switch(payload.mAppEventId)
-			{
-			case CREATE_TEST_OBJECT:
-			{
-				onCreateTestObject(payload);
-				break;
-			}
-			}
 		}
 		}
 	}
@@ -538,17 +493,19 @@ struct ClientState : public SynchronizationTestState
 struct ViewState : public BFG::View::State
 {
 public:
-	ViewState(GameHandle handle, EventLoop* loop) :
-	State(handle, loop),
-	mControllerMyGuiAdapter(handle, loop)
+	ViewState(GameHandle handle, BFG::Event::Lane& lane) :
+	State(handle, lane),
+	mLane(lane),
+	mControllerMyGuiAdapter(handle, lane)
 	{
-		emit<BFG::View::Event>(BFG::ID::VE_SET_AMBIENT, BFG::cv4(1.0f, 1.0f, 1.0f), handle);
+		dbglog << "SynchronizationTest: Creating ViewState.";
+		lane.emit(BFG::ID::VE_SET_AMBIENT, BFG::cv4(1.0f, 1.0f, 1.0f), handle);
 	}
 
-	~ViewState()
+	virtual ~ViewState()
 	{
-		infolog << "SynchronizationTest: Destroying ViewState.";
-		emit<BFG::View::Event>(BFG::ID::VE_SHUTDOWN, 0);
+		dbglog << "SynchronizationTest: Destroying ViewState.";
+		mLane.emit(BFG::ID::VE_SHUTDOWN, BFG::Event::Void());
 	}
 
 	virtual void pause()
@@ -558,62 +515,37 @@ public:
 	{}
 	
 private:
+	BFG::Event::Lane& mLane;
 	BFG::View::ControllerMyGuiAdapter mControllerMyGuiAdapter;
 };
 
-void initController(BFG::GameHandle stateHandle, EventLoop* loop)
+struct ClientMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 {
-	// The Emitter is the standard tool to send events with.
-	BFG::Emitter emitter(loop);
-
-	BFG::Controller_::ActionMapT actions;
-	actions[A_EXIT] = "A_EXIT";
-	actions[SIMULATION_0] = "SIMULATION_0";
-	actions[SIMULATION_1] = "SIMULATION_1";
-	actions[SIMULATION_2] = "SIMULATION_2";
-	actions[SIMULATION_3] = "SIMULATION_3";
-	actions[A_CONSOLE] = "A_CONSOLE";
-	BFG::Controller_::fillWithDefaultActions(actions);
-	BFG::Controller_::sendActionsToController(emitter.loop(), actions);
-
-	BFG::Path path;
-	const std::string configPath = path.Expand("SynchronizationTest.xml");
-	const std::string stateName = "SynchronizationTest";
-
-	BFG::View::WindowAttributes wa;
-	BFG::View::queryWindowAttributes(wa);
+	ClientMain()
+	{}
 	
-	BFG::Controller_::StateInsertion si(configPath, stateName, stateHandle, true, wa);
-	emitter.emit<BFG::Controller_::ControlEvent>
-	(
-		BFG::ID::CE_LOAD_STATE,
-		si
-	);
-}
-
-boost::scoped_ptr<ServerState> gServerState;
-boost::scoped_ptr<ViewState> gViewState;
-boost::scoped_ptr<ClientState> gClientState;
-
-void* createServerState(void* p)
-{
-	EventLoop* loop = static_cast<EventLoop*>(p);
-
-	gServerState.reset(new ServerState(SERVER_STATE_HANDLE, loop));
-
-	return 0;
-}
-
-void* createClientStates(void* p)
-{
-	EventLoop* loop = static_cast<EventLoop*>(p);
+	virtual void main(BFG::Event::Lane* lane)
+	{
+		mClientState.reset(new ClientState(CLIENT_STATE_HANDLE, *lane));
+		mViewState.reset(new ViewState(CLIENT_STATE_HANDLE, *lane));
+	}
 	
-	gViewState.reset(new ViewState(CLIENT_STATE_HANDLE, loop));
-	gClientState.reset(new ClientState(CLIENT_STATE_HANDLE, loop));
+	boost::scoped_ptr<ClientState> mClientState;
+	boost::scoped_ptr<ViewState> mViewState;
+};
 
-	initController(CLIENT_STATE_HANDLE, loop);
-	return 0;
-}
+struct ServerMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
+{
+	ServerMain()
+	{}
+	
+	virtual void main(BFG::Event::Lane* lane)
+	{
+		mServerState.reset(new ServerState(SERVER_STATE_HANDLE, *lane));
+	}
+	
+	boost::scoped_ptr<ServerState> mServerState;
+};
 
 template <class T>
 bool from_string(T& t, 
@@ -638,14 +570,9 @@ int main( int argc, const char* argv[] ) try
 		return 0;
 	}	
 
-	EventLoop loop1
-	(
-		true,
-		new EventSystem::BoostThread<>("Loop1"),
-		new EventSystem::NoCommunication()
-	);
-
-	BFG::Base::Logger::SeverityLevel level = BFG::Base::Logger::SL_ERROR;
+	BFG::Base::Logger::SeverityLevel level = BFG::Base::Logger::SL_DEBUG;
+	//BFG::Base::Logger::SeverityLevel level = BFG::Base::Logger::SL_ERROR;
+	
 	if (server)
 	{
 		BFG::Path p;
@@ -660,22 +587,21 @@ int main( int argc, const char* argv[] ) try
 			return 0;
 		}
 
-		BFG::Network::Main networkMain(&loop1, BFG_SERVER);
-		BFG::Physics::Main physicsMain;
-
-		loop1.addEntryPoint(networkMain.entryPoint());
-		loop1.addEntryPoint(physicsMain.entryPoint());
-		loop1.addEntryPoint(new BFG::Base::CEntryPoint(&createServerState));
-		loop1.run();
-
-		BFG::Emitter e(&loop1);
-		e.emit<BFG::Network::ControlEvent>(BFG::ID::NE_LISTEN, port);
-
+		BFG::Event::Synchronizer synchronizer;
+		BFG::Event::Lane networkLane(synchronizer, 100);
+		BFG::Event::Lane physicsLane(synchronizer, 100);
+		BFG::Event::Lane serverLane(synchronizer, 100);
+		
+		networkLane.addEntry<BFG::Network::Main>(BFG_SERVER);
+		physicsLane.addEntry<BFG::Physics::Main>();
+		serverLane.addEntry<ServerMain>();
+		
+		synchronizer.startEntries();
+		
+		networkLane.emit(BFG::ID::NE_LISTEN, port);
+		
 		BFG::Base::pause();
-
-		loop1.stop();
-
-		gServerState.reset();
+		synchronizer.finish();
 	}
 	else
 	{
@@ -687,38 +613,29 @@ int main( int argc, const char* argv[] ) try
 
 		size_t controllerFrequency = 1000;
 
-		BFG::Network::Main networkMain(&loop1, BFG_CLIENT);
-		BFG::Physics::Main physicsMain;
-		BFG::Controller_::Main controllerMain(controllerFrequency);
-		BFG::View::Main viewMain("SynchronizationTest");
-
-		loop1.addEntryPoint(networkMain.entryPoint());
-		loop1.addEntryPoint(physicsMain.entryPoint());
-		loop1.addEntryPoint(viewMain.entryPoint());
-		loop1.addEntryPoint(controllerMain.entryPoint());
-		loop1.addEntryPoint(new BFG::Base::CEntryPoint(&createClientStates));
-		loop1.run();
-
-		BFG::Network::EndpointT payload = make_tuple(stringToArray<128>(ip), stringToArray<128>(port));
-
-		BFG::Emitter e(&loop1);
-		e.emit<BFG::Network::ControlEvent>(BFG::ID::NE_CONNECT, payload);
-
-		while(!loop1.shouldExit())
-		{
-			boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-		}
-
-		gViewState.reset();
-		gClientState.reset();
+		BFG::Event::Synchronizer synchronizer;
+		BFG::Event::Lane networkLane(synchronizer, 100);
+		BFG::Event::Lane physicsLane(synchronizer, 100);
+		BFG::Event::Lane controllerLane(synchronizer, controllerFrequency);
+		BFG::Event::Lane viewLane(synchronizer, 100);
+		BFG::Event::Lane clientLane(synchronizer, 100);
+		
+		networkLane.addEntry<BFG::Network::Main>(BFG_CLIENT);
+		physicsLane.addEntry<BFG::Physics::Main>();
+		controllerLane.addEntry<BFG::Controller_::Main>(controllerFrequency);
+		viewLane.addEntry<BFG::View::Main>("SynchronizationTest");
+		clientLane.addEntry<ClientMain>();
+		
+		synchronizer.startEntries();
+		
+		BFG::Network::EndpointT payload = boost::make_tuple(stringToArray<128>(ip), stringToArray<128>(port));
+		networkLane.emit(BFG::ID::NE_CONNECT, payload);
+		
+		BFG::Base::pause();
+		synchronizer.finish();
 	}
-
-	boost::this_thread::sleep(boost::posix_time::milliseconds(500));
-
+	
 	infolog << "Good Bye!";
-
-
-
 }
 catch (Ogre::Exception& e)
 {
