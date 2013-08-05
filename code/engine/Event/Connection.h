@@ -32,15 +32,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Event { 
 
-template <typename _IdT, typename _DestionationIdT>
+template <typename _IdT, typename _DestinationIdT>
 struct Connection
 {
 	typedef _IdT IdT;
-	typedef _DestionationIdT DestionationIdT;
+	typedef _DestinationIdT DestinationIdT;
 
 	IdT mEventId;
-	DestionationIdT mDestinationId;
-	boost::any mBinding;
+	DestinationIdT mDestinationId;
+	boost::any mBinding;	//! \todo: This can probably become Callable*
 };
 
 } // namespace Event

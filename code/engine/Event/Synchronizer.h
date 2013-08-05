@@ -34,6 +34,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/barrier.hpp>
+#include <Base/NameCurrentThread.h>
 
 namespace BFG {
 namespace Event { 
@@ -72,7 +73,17 @@ struct BasicSynchronizer
 	{
 		BOOST_FOREACH(LaneT* lane, mLanes)
 		{
-			lane->startEntries();
+			try
+			{
+			    lane->startEntries();
+			}
+			catch (const std::exception& ex)
+			{
+				errlog << "Synchronizer::startEntries catched standard"
+				          " exception in entry point for Lane "
+				       << lane->mThreadName
+				       << ", Msg:\"" << ex.what() << "\"";
+			}
 		}
 	}
 
@@ -111,6 +122,9 @@ private:
 	
 	void loop(LaneT* lane)
 	{
+		if (!lane->mThreadName.empty())
+			nameCurrentThread(lane->mThreadName);
+		
 		while (!mFinishing)
 		{
 			lane->tick();

@@ -588,9 +588,9 @@ int main( int argc, const char* argv[] ) try
 		}
 
 		BFG::Event::Synchronizer synchronizer;
-		BFG::Event::Lane networkLane(synchronizer, 100);
-		BFG::Event::Lane physicsLane(synchronizer, 100);
-		BFG::Event::Lane serverLane(synchronizer, 100);
+		BFG::Event::Lane networkLane(synchronizer, 100, "Network");
+		BFG::Event::Lane physicsLane(synchronizer, 100, "Physics");
+		BFG::Event::Lane serverLane(synchronizer, 100, "Server");
 		
 		networkLane.addEntry<BFG::Network::Main>(BFG_SERVER);
 		physicsLane.addEntry<BFG::Physics::Main>();
@@ -614,11 +614,11 @@ int main( int argc, const char* argv[] ) try
 		size_t controllerFrequency = 1000;
 
 		BFG::Event::Synchronizer synchronizer;
-		BFG::Event::Lane networkLane(synchronizer, 100);
-		BFG::Event::Lane physicsLane(synchronizer, 100);
-		BFG::Event::Lane controllerLane(synchronizer, controllerFrequency);
-		BFG::Event::Lane viewLane(synchronizer, 100);
-		BFG::Event::Lane clientLane(synchronizer, 100);
+		BFG::Event::Lane networkLane(synchronizer, 100, "Network");
+		BFG::Event::Lane physicsLane(synchronizer, 100, "Physics");
+		BFG::Event::Lane controllerLane(synchronizer, controllerFrequency, "Controller");
+		BFG::Event::Lane viewLane(synchronizer, 100, "View");
+		BFG::Event::Lane clientLane(synchronizer, 100, "Client");
 		
 		networkLane.addEntry<BFG::Network::Main>(BFG_CLIENT);
 		physicsLane.addEntry<BFG::Physics::Main>();

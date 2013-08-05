@@ -66,7 +66,8 @@ struct BasicLane : boost::noncopyable
 	template <typename _LaneT>
 	friend struct BasicSubLane;
 
-	BasicLane(SynchronizerT& synchronizer, s32 ticksPerSecond) :
+	BasicLane(SynchronizerT& synchronizer, s32 ticksPerSecond, const std::string& threadName = std::string()):
+	mThreadName(threadName),
 	mSynchronizer(synchronizer),
 	mPlannedTimeInMs(1000/ticksPerSecond),
 	mTickWatch(Clock::milliSecond),
@@ -197,6 +198,8 @@ struct BasicLane : boost::noncopyable
 		mEntryPoints.push_back(new EntryT(startParameter));
 	}
 
+	const std::string& mThreadName;
+	
 private:
 	template <typename Class> struct member_arity {};
 

@@ -29,6 +29,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/mutex.hpp>
 
+#include <Base/Logger.h>
+
 #include <Core/GameHandle.h>
 
 #include <Event/Binding.h>
@@ -224,6 +226,19 @@ struct TestModuleConst : public BFG::Event::EntryPoint<BFG::Event::Lane>
 	{
 		boost::mutex::scoped_lock(mMutex);
 		++gu32EventCounter;
+	}
+};
+
+struct ThrowingModule : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		lane->connectV(5, this, &ThrowingModule::testEventHandler);
+	}
+
+	void testEventHandler() const
+	{
+		throw std::runtime_error("ThrowingModule Test");
 	}
 };
 
@@ -495,6 +510,18 @@ BOOST_AUTO_TEST_CASE (OneLaneOneEventWrongPayload)
 
 	BOOST_REQUIRE_THROW(lane.emit(1, std::string("Hello")), BFG::Event::IncompatibleTypeException);
 
+	sync.finish();
+}
+
+BOOST_AUTO_TEST_CASE (OneLaneOneEventWithException)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+	
+	lane.addEntry<ThrowingModule>();
+	sync.startEntries();
+	
+	lane.emit(5, BFG::Event::Void());
 	sync.finish();
 }
 
