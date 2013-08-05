@@ -64,19 +64,19 @@ public:
 	template <typename T>
 	operator const T&() const
 	{
-		return  boost::any_cast<const T&>(mValue);
+		return boost::any_cast<const T&>(mValue);
 	}
 	
 	template <typename T>
 	bool operator == (const T& rhs) const
 	{
-		return  boost::any_cast<T&>(mValue) == rhs;
+		return boost::any_cast<const T&>(mValue) == rhs;
 	}
 	
 	template <typename T>
 	bool operator > (const T& rhs) const
 	{
-		return  boost::any_cast<T&>(mValue) > rhs;
+		return boost::any_cast<const T&>(mValue) > rhs;
 	}
 	
 	//! Might conflict with boost::units::operator * and become ambigous.
@@ -86,7 +86,7 @@ public:
 	template <typename T>
 	T operator * (const T& rhs) const
 	{
-		return  boost::any_cast<T&>(mValue) * rhs;
+		return  boost::any_cast<const T&>(mValue) * rhs;
 	}
 
 #if DEACTIVATED_DUE_TO_INFINITE_RECURSION_BETWEEN_THESE_TWO_FUNCTIONS
