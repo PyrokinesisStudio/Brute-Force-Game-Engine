@@ -70,7 +70,6 @@ TARGET_LINK_LIBRARIES(bfgModel
 	bfgBase
 	bfgController
 	bfgCore
-	bfgEventCore
 	bfgPhysics
 	bfgView
 )
