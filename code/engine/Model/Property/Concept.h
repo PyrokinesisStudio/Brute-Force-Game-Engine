@@ -31,7 +31,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/variant.hpp>
 
 #include <boost/units/systems/si/time.hpp>
 #include <boost/units/quantity.hpp>

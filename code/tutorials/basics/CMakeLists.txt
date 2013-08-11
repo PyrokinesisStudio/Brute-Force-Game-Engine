@@ -35,7 +35,6 @@ TARGET_LINK_LIBRARIES(bfgTutorialBasics
 	bfgBase
 	bfgController
 	bfgCore
-	bfgEventCore
 	bfgModel
 	bfgView
 	TinyXML

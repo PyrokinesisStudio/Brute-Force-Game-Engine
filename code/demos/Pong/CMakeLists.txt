@@ -46,7 +46,6 @@ TARGET_LINK_LIBRARIES(bfgPong
 	bfgBase
 	bfgController
 	bfgCore
-	bfgEventCore
 	bfgModel
 	bfgNetwork
 	bfgPhysics

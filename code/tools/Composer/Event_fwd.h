@@ -27,29 +27,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef TOOLEVENT_FWD_H
 #define TOOLEVENT_FWD_H
 
-#include <boost/variant.hpp>
-
-#include <EventSystem/Event_fwd.h>
-
 #include <Core/Types.h>
-
-namespace Tool {
-
-typedef boost::variant
-<
-	BFG::s32
->
-ToolPayloadT;
-
-typedef BFG::Event
-<
-	BFG::s32,
-	ToolPayloadT,
-	BFG::GameHandle,
-	BFG::GameHandle
->
-Event;
-
-} // namespace Tool
 
 #endif
