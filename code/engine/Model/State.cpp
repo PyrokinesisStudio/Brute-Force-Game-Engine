@@ -57,7 +57,7 @@ void State::stopUpdates()
 	//! todo: lane has no stopping mechanism yet.
 // 	loop()->setExitFlag();
 // 	loop()->unregisterLoopEventListener(this);
-	throw std::logic_error("TODO: State: lane has no stopping mechanism yet");
+	infolog << "STUB: State: lane has no stopping mechanism yet";
 }
 
 } // namespace BFG

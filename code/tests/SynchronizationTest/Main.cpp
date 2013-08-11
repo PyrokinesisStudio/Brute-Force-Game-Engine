@@ -273,7 +273,7 @@ struct ServerState: public SynchronizationTestState
 					handles << op.mHandle << " ";
 
 				createObject(op);
-				mSubLane->emit(BFG::ID::GOE_SYNCHRONIZATION_MODE, (s32)BFG::ID::SYNC_MODE_NETWORK_WRITE, op.mHandle);
+				mSubLane->emit(BFG::ID::GOE_SYNCHRONIZATION_MODE, BFG::ID::SYNC_MODE_NETWORK_WRITE, op.mHandle);
 			}
 		}
 		mCreatedHandles = handles.str();
@@ -472,7 +472,7 @@ struct ClientState : public SynchronizationTestState
 				op.mLocation.position = v3(x, y, 50.0f);
 
 				createObject(op);
-				mSubLane->emit(BFG::ID::GOE_SYNCHRONIZATION_MODE, (s32)BFG::ID::SYNC_MODE_NETWORK_READ, op.mHandle);
+				mSubLane->emit(BFG::ID::GOE_SYNCHRONIZATION_MODE, BFG::ID::SYNC_MODE_NETWORK_READ, op.mHandle);
 			}
 		}
 	}
@@ -596,7 +596,7 @@ int main( int argc, const char* argv[] ) try
 		physicsLane.addEntry<BFG::Physics::Main>();
 		serverLane.addEntry<ServerMain>();
 		
-		synchronizer.startEntries();
+		synchronizer.start();
 		
 		networkLane.emit(BFG::ID::NE_LISTEN, port);
 		
@@ -626,7 +626,7 @@ int main( int argc, const char* argv[] ) try
 		viewLane.addEntry<BFG::View::Main>("SynchronizationTest");
 		clientLane.addEntry<ClientMain>();
 		
-		synchronizer.startEntries();
+		synchronizer.start();
 		
 		BFG::Network::EndpointT payload = boost::make_tuple(stringToArray<128>(ip), stringToArray<128>(port));
 		networkLane.emit(BFG::ID::NE_CONNECT, payload);
