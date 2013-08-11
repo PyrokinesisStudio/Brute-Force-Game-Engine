@@ -29,7 +29,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/bind.hpp>
 
 #include <Core/Path.h>
-#include <Controller/VIPXmlInitializer.h>
+
+#include <Controller/Vip/XmlInitializer.h>
 
 namespace BFG {
 namespace Controller_ {
@@ -107,7 +108,7 @@ void State::init(const std::string& state,
 	Path p;
 	std::string fullConfigPath = p.Expand(configFilename);
 
-	VIP::XmlInitializer initializer(this, actions);
+	Vip::XmlInitializer initializer(this, actions);
 
 	std::vector<VipPtrT> allVips;
 	initializer.traverse(fullConfigPath, allVips);
@@ -145,7 +146,7 @@ void State::sendFeedback(long microseconds_passed)
 	(
 	    mFeedbacks.begin(),
 	    mFeedbacks.end(),
-	    boost::bind(&VIP::CommonBase::FeedTime, _1, microseconds_passed)
+	    boost::bind(&Vip::CommonBase::FeedTime, _1, microseconds_passed)
 	);
 }
 

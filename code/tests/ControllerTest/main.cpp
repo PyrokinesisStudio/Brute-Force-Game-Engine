@@ -177,7 +177,7 @@ struct Main : Base::LibraryMainBase<Event::Lane>
 		destroyInputGrabbingWindow();
 	}
 	
-	void onButtonPress(Controller_::VipPayloadT value)
+	void onButtonPress(s32 value)
 	{
 		std::cout << "Main::onButtonPress(" << value << ")" << std::endl;
 	}
@@ -464,7 +464,7 @@ void startMultiThreaded()
 	
 	controllerLane.addEntry<Controller_::Main>(frequency);
 	controllerLane.addEntry<Main>();
-	sync.startEntries();
+	sync.start();
 	
 	boost::this_thread::sleep(boost::posix_time::seconds(35));
 	

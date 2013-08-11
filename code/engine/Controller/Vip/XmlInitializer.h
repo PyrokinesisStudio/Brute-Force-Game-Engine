@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,8 +24,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _VIPXMLINITIALIZER_H_
-#define _VIPXMLINITIALIZER_H_
+#ifndef BFG_CONTROLLER_VIP_XMLINITIALIZER_H
+#define BFG_CONTROLLER_VIP_XMLINITIALIZER_H
 
 #include <vector>
 #include <boost/foreach.hpp>
@@ -33,15 +33,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <tinyxml.h>
 
 #include <Controller/Action.h>
-#include <Controller/VIPBase.h>
-#include <Controller/VIPEnvironment.h>
+#include <Controller/Vip/Base.h>
+#include <Controller/Vip/Environment.h>
 
 namespace BFG {
-namespace Controller_ {
+namespace Controller_ { 
 
 class State;
 
-namespace VIP {
+namespace Vip { 
 
 struct VipData
 {
@@ -152,8 +152,8 @@ private:
 	const ActionMapT& mActionMap;
 };
 
-} // namespace VIP
-} // namespace Controller_
+} // namespace Vip
+} // namespace Controller
 } // namespace BFG
 
 #endif

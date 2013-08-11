@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,18 +24,21 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Controller/VIPXmlInitializer.h>
+#include <Controller/Vip/XmlInitializer.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/typeof/typeof.hpp>
+
 #include <Base/Logger.h>
+
 #include <Controller/State.h>
-#include <Controller/VIPEnumToType.h>
+#include <Controller/Vip/EnumToType.h>
+
 #include <Core/Path.h>
 
 namespace BFG {
-namespace Controller_ {
-namespace VIP {
+namespace Controller_ { 
+namespace Vip { 
 
 namespace Tag
 {
@@ -548,6 +551,7 @@ void XmlInitializer::assignFilter(ClickEnv& env,
 		env.mFilter = ID::asButtonState(it->second);
 }
 
-} // namespace VIP
-} // namespace Controller_
+} // namespace Vip
+} // namespace Controller
 } // namespace BFG
+

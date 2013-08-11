@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,8 +24,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef VIP_ENUM_TO_TYPE_H
-#define VIP_ENUM_TO_TYPE_H
+#ifndef BFG_CONTROLLER_VIP_ENUMTOTYPE_H
+#define BFG_CONTROLLER_VIP_ENUMTOTYPE_H
 
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/find_if.hpp>
@@ -33,11 +33,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/mpl/long.hpp>
 #include <boost/mpl/deref.hpp>
 
-#include <Controller/VIPGenerator.h>
+#include <Controller/Vip/Generator.h>
 
 namespace BFG {
-namespace Controller_ {
-namespace VIP {
+namespace Controller_ { 
+namespace Vip { 
 
 namespace mpl = boost::mpl;
 
@@ -101,8 +101,8 @@ struct Get
 	}
 };
 
-} // namespace VIP
-} // namespace Controller_
+} // namespace Vip
+} // namespace Controller
 } // namespace BFG
 
 #endif

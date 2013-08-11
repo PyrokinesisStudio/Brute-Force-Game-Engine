@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,17 +24,37 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _VIPGENERATOR_H_
-#define _VIPGENERATOR_H_
+#ifndef BFG_CONTROLLER_VIP_GENERATOR_H
+#define BFG_CONTROLLER_VIP_GENERATOR_H
 
 #include <boost/mpl/vector.hpp>
 
-#include <Controller/VIPBase.h>
-#include <Controller/VIPComponents.h>
+#include <Controller/Vip/Base.h>
+
+#include <Controller/Vip/Component/Vip.h>
+
+// Feedback
+#include <Controller/Vip/Component/NoFeedback.h>
+#include <Controller/Vip/Component/OnInputFeedback.h>
+#include <Controller/Vip/Component/OnKeyFeedback.h>
+#include <Controller/Vip/Component/WhileKeyFeedback.h>
+
+#include <Controller/Vip/Component/AxisAsResult.h>
+#include <Controller/Vip/Component/AxisCache.h>
+#include <Controller/Vip/Component/ClickFilter.h>
+#include <Controller/Vip/Component/FeedbackTrigger.h>
+#include <Controller/Vip/Component/ModFilter.h>
+#include <Controller/Vip/Component/NoResult.h>
+#include <Controller/Vip/Component/Processor.h>
+#include <Controller/Vip/Component/Repeater.h>
+#include <Controller/Vip/Component/Sequencer.h>
+#include <Controller/Vip/Component/Toggler.h>
+#include <Controller/Vip/Component/VirtualAxis.h>
+#include <Controller/Vip/Component/VirtualAxisWithSwing.h>
 
 namespace BFG {
-namespace Controller_ {
-namespace VIP {
+namespace Controller_ { 
+namespace Vip { 
 
 /** \file
 
@@ -194,8 +214,8 @@ typedef boost::mpl::vector<
 	Toggle
 > ALL_TYPES;
 
-} // namespace VIP
-} // namespace Controller_
+} // namespace Vip
+} // namespace Controller
 } // namespace BFG
 
 #endif

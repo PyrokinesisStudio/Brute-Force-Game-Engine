@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,40 +24,27 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Controller/VIPBase.h>
-
-#include <Controller/State.h>
+#ifndef BFG_CONTROLLER_VIP_COMPONENT_VIP_H
+#define BFG_CONTROLLER_VIP_COMPONENT_VIP_H
 
 namespace BFG {
-namespace Controller_ {
-namespace VIP {
+namespace Controller_ { 
+namespace Vip { 
 
-CommonBase::CommonBase(
-	Event::IdT aAid,
-	State* aState,
-	std::set<ButtonCodeT> aRelevantButtons,
-	std::set<AxisNumeratorT> aRelevantAxis,
-	ID::DeviceType aDevice
-) :
-mRelevantButtons(aRelevantButtons),
-mRelevantAxis(aRelevantAxis),
-mDevice(aDevice),
-mAid(aAid),
-mState(aState),
-mUsingFeedback(false),
-mEventSubLane(aState->eventSubLane())
-{}
-
-void CommonBase::Emit()
+template <int VipID, typename Parent>
+class Vip : public Parent
 {
-#ifdef CONTROLLER_DEBUG
-	dbglog << "EMITTER WILL SEND: " << getAction()
-		   << " WITH RESULT: " << getResult();
-#endif
+public:
+	enum { ID = VipID };
+	
+	explicit Vip(typename Parent::EnvT& env) :
+		Parent(env)
+	{
+	}
+};
 
-	mEventSubLane->emit(getAction(), getResult());
-}
-
-} // namespace VIP
+} // namespace Vip
 } // namespace Controller_
 } // namespace BFG
+
+#endif
