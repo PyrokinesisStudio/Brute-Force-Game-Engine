@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE (EmitOrder)
 	EventCounter ec;
 	lane.addEntry<ModuleConnect>(boost::ref(ec));
 
-	sync.startEntries();
+	sync.start();
 
 	using namespace boost::assign;
 
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE (SubLaneTest)
 	// EntryPoints
 	EventCounter ec;
 	lane.addEntry<SubModuleConnect>(boost::ref(ec));
-	sync.startEntries();
+	sync.start();
 	
 	sublane->emit(5, std::string("SubLane to SubLane"));
 	sublane->emit(6, std::string("SubLane to SubLane (again)"));
@@ -694,7 +694,7 @@ BOOST_AUTO_TEST_CASE (Connect)
 	EventCounter ec;
 	lane.addEntry<ModuleConnect>(boost::ref(ec));
 
-	sync.startEntries();
+	sync.start();
 
 	BFG::u32 u = 5;
 	std::string s("Hallo");

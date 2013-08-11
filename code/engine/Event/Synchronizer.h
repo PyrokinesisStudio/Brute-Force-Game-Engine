@@ -29,11 +29,13 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
+#include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/barrier.hpp>
+#include <Base/NameCurrentThread.h>
 
 namespace BFG {
 namespace Event { 
@@ -64,20 +66,26 @@ struct BasicSynchronizer
 	void add(LaneT* lane)
 	{
 		mLanes.push_back(lane);
-		mThreads.push_back(boost::make_shared<boost::thread>(boost::bind(&BasicSynchronizer<LaneT>::loop, this, lane)));
-		boost::thread t;
 	}
 
-	void startEntries()
+	void start()
 	{
-		BOOST_FOREACH(LaneT* lane, mLanes)
-		{
-			lane->startEntries();
-		}
+		// Call all entry points
+		std::for_each(mLanes.begin(), mLanes.end(),
+			std::mem_fun(&LaneT::startEntries));
+		
+		// Start a new thread for each lane
+		std::for_each(mLanes.begin(), mLanes.end(),
+			boost::bind(&BasicSynchronizer<LaneT>::createThread, this, _1));
 	}
 
 	void finish()
 	{
+		// Nothing to finish if no threads exist within this Synchronizer.
+		if (mThreads.empty())
+			return;
+		
+		// Create barriers in order to wait for finishing threads.
 		for (size_t i=0; i<10; ++i)
 			mBarrier.push_back(boost::make_shared<boost::barrier>(mThreads.size()));
 
@@ -91,6 +99,21 @@ struct BasicSynchronizer
 	}
 	
 private:
+	void createThread(LaneT* lane)
+	{
+		mThreads.push_back
+		(
+			boost::make_shared<boost::thread>
+			(
+				boost::bind
+				(
+					&BasicSynchronizer<LaneT>::loop,
+					this,
+					lane
+				)
+			)
+		);
+	}
 
 	template <typename PayloadT>
 	void distributeToOthers(const IdT id, 
@@ -111,6 +134,9 @@ private:
 	
 	void loop(LaneT* lane)
 	{
+		if (!lane->mThreadName.empty())
+			nameCurrentThread(lane->mThreadName);
+		
 		while (!mFinishing)
 		{
 			lane->tick();

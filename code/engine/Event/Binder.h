@@ -119,7 +119,9 @@ struct Binder
 	{
 		boost::mutex::scoped_lock sl(mFlipLocker);
 		
-		typename ConnectionMapT::const_iterator it = mBindings.find(boost::make_tuple(id, destination));
+		typename ConnectionMapT::const_iterator it =
+			mBindings.find(boost::make_tuple(id, destination));
+			
 		if (it != mBindings.end())
 		{
 			Callable* c = boost::any_cast<Callable*>(it->mBinding);
@@ -131,20 +133,7 @@ struct Binder
 			}
 			catch (IncompatibleTypeException& ex)
 			{
-				//! \todo demangle!
-				errlog << ex.what() 
-				       << " Trying to cast (" 
-				       << ex.mEmittedType->name() 
-				       << ") to (" 
-				       << ex.mExpectedType->name() 
-				       << "). "
-				       << "Id/Dest: "
-				       << id << "/" << destination
-				       << std::endl;
-#ifdef BFG_EVENT_RETHROW_INCOMPATIBLE_TYPES_EXCEPTION
-				// Used for unit tests
-				throw;
-#endif
+				handleIncompatibleTypeExceptionOnEmit(id, destination, ex);
 			}
 		}
 		//! \todo Else: event id not found in this EventBinder
@@ -154,12 +143,17 @@ struct Binder
 	void tick() const
 	{
 		flipCallSequence();
-		std::for_each
-		(
-			mCallSequenceFront.begin(),
-			mCallSequenceFront.end(),
-			std::mem_fun(&Callable::call)
-		);
+		BOOST_FOREACH(Callable* c, mCallSequenceFront)
+		{
+			try
+			{
+				c->call();
+			}
+			catch (const std::runtime_error& ex)
+			{
+				handleStdRuntimeErrorOnTick(ex, c);
+			}
+		}
 		mCallSequenceFront.clear();
 	}
 	
@@ -167,6 +161,45 @@ struct Binder
 	{
 		boost::mutex::scoped_lock sl(mFlipLocker);
 		std::swap(mCallSequenceFront, mCallSequenceBack);
+	}
+	
+	void handleIncompatibleTypeExceptionOnEmit(IdT id,
+	                                           DestinationIdT destination,
+	                                           const IncompatibleTypeException& ex) const
+	{
+		//! \todo demangle!
+		errlog << "Event::Binder detected type mismatch on emit."
+		       << " Id:" << id
+		       << ", Destination:" << destination
+		       << ", Emitted Type:" << ex.mEmittedType->name()
+		       << ", Expected Type:" << ex.mExpectedType->name();
+#ifdef BFG_EVENT_RETHROW_INCOMPATIBLE_TYPES_EXCEPTION
+		// Used for unit tests
+		throw;
+#endif
+	}
+	
+	void handleStdRuntimeErrorOnTick(const std::runtime_error& ex,
+	                                 Callable* c) const
+	{
+		// Try to get more information about the error.
+		IdT id = 0;
+		DestinationIdT destination = 0;
+		BOOST_FOREACH(const ConnectionT& conn, mBindings)
+		{
+			if (boost::any_cast<Callable*>(conn.mBinding) == c)
+			{
+				id          = conn.mEventId;
+				destination = conn.mDestinationId;
+				break;
+			}
+		}
+		
+		errlog << "Event::Binder catched an exception from an invoked"
+		       << " function."
+		       << " Id:" << id
+		       << ", Destination:" << destination
+		       << ", Msg:\"" << ex.what() << "\"";
 	}
 
 	ConnectionMapT mBindings;

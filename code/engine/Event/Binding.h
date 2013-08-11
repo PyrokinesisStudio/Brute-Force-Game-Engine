@@ -96,14 +96,7 @@ struct Binding : public Callable
 		//! currently used underlying container is std::deque.
 		//! boost::stable_vector might be interesting too.
 		//! Ultimately, a benchmark is necessary.
-		try
-		{
-			signal()(payload.template get<0>(), payload.template get<1>());
-		}
-		catch (std::exception* e)
-		{
-			std::cout << e->what() << std::endl;			
-		}
+		signal()(payload.template get<0>(), payload.template get<1>());
 
 		sl.lock();
 		mPayloads.pop();

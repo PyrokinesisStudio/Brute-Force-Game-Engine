@@ -63,11 +63,28 @@ struct MainParameterByConstReference : BFG::Event::EntryPoint<BFG::Event::Lane>
 
 // ---------------------------------------------------------------------------
 
+struct MainThrowing : BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	MainThrowing()
+	{
+	}
+	
+	virtual void run(BFG::Event::Lane* lane)
+	{
+		throw std::runtime_error("MainThrowing::main");
+	}
+};
+
+// ---------------------------------------------------------------------------
+
 BOOST_AUTO_TEST_SUITE(TestSuite)
 
 //! Testing the correct emit order
 BOOST_AUTO_TEST_CASE (AddEntry)
 {
+	// Logger init may be done within the first test.
+	BFG::Base::Logger::Init(BFG::Base::Logger::SL_DEBUG, "EventTest.log");
+	
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane lane(sync, 100);
 	
@@ -88,6 +105,18 @@ BOOST_AUTO_TEST_CASE (AddEntry)
 	
 	lane.addEntry<MainParameterByConstReference>(boost::cref(NonCopyData()));
 	lane.addEntry<MainParameterByConstReference>(boost::cref(ndata));
+	
+	sync.finish();
+}
+
+BOOST_AUTO_TEST_CASE (AddEntryException)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+	
+	lane.addEntry<MainThrowing>();
+	
+	BOOST_CHECK_THROW(sync.start(), std::runtime_error);
 	
 	sync.finish();
 }

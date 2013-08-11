@@ -29,6 +29,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/mutex.hpp>
 
+#include <Base/Logger.h>
+
 #include <Core/GameHandle.h>
 
 #include <Event/Binding.h>
@@ -227,6 +229,19 @@ struct TestModuleConst : public BFG::Event::EntryPoint<BFG::Event::Lane>
 	}
 };
 
+struct ThrowingModule : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		lane->connectV(5, this, &ThrowingModule::testEventHandler);
+	}
+
+	void testEventHandler() const
+	{
+		throw std::runtime_error("ThrowingModule Test");
+	}
+};
+
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE(TestSuite)
@@ -249,7 +264,7 @@ BOOST_AUTO_TEST_CASE (Test)
 	view.addEntry<TestModulView1>();
 	game.addEntry<TestModulGame1>();
 
-	sync.startEntries();
+	sync.start();
 
 	sync.finish();
 }
@@ -262,7 +277,7 @@ BOOST_AUTO_TEST_CASE (CopyParameter)
 	lane.addEntry<TestModuleCopy>();
 	gu32EventCounter = 0;
 
-	sync.startEntries();
+	sync.start();
 
 	BFG::u32 value = 1;
 	lane.emit(3, value);
@@ -286,7 +301,7 @@ BOOST_AUTO_TEST_CASE (ConstFunction)
 	lane.addEntry<TestModuleConst>();
 	gu32EventCounter = 0;
 
-	sync.startEntries();
+	sync.start();
 
 	BFG::u32 value = 1;
 	lane.emit(4, value);
@@ -312,7 +327,7 @@ BOOST_AUTO_TEST_CASE (OneLaneWithOneEvent)
 
 	lane.connect(1, &t, &TestModule::testEventHandler);
 
-	sync.startEntries();
+	sync.start();
 
 	lane.emit(1, 1.0f);
 
@@ -337,7 +352,7 @@ BOOST_AUTO_TEST_CASE (OneLaneWithOneUnconnectedEvent)
 
 	lane.connect(1, &t, &TestModule::testEventHandler);
 
-	sync.startEntries();
+	sync.start();
 
 	lane.emit(2, 1.0f);
 
@@ -361,7 +376,7 @@ BOOST_AUTO_TEST_CASE (OneLaneWithEntryPointAndOneEvent)
 
 	lane.addEntry<TestModule>();
 
-	sync.startEntries();
+	sync.start();
 
 	lane.emit(1, 1.0f);
 
@@ -386,7 +401,7 @@ BOOST_AUTO_TEST_CASE (OneLaneTwoEntryPointOneEvent)
 	lane.addEntry<TestModule>();
 	lane.addEntry<TestModule>();
 
-	sync.startEntries();
+	sync.start();
 
 	lane.emit(1, 1.0f);
 
@@ -411,7 +426,7 @@ BOOST_AUTO_TEST_CASE (TwoLanesOneEntryPointOneEvent)
 
 	lane2.addEntry<TestModule>();
 
-	sync.startEntries();
+	sync.start();
 
 	lane1.emit(1, 1.0f);
 
@@ -437,7 +452,7 @@ BOOST_AUTO_TEST_CASE (TwoLanesTwoEntryPointsOneEvent)
 	lane1.addEntry<TestModule>();
 	lane2.addEntry<TestModule>();
 
-	sync.startEntries();
+	sync.start();
 
 	lane1.emit(1, 1.0f);
 
@@ -464,7 +479,7 @@ BOOST_AUTO_TEST_CASE (TwoLanesTwoEntryPointsTwoHandlerWithDifferentPayloadsForSa
 	lane1.addEntry<TestModule>();
 	lane2.addEntry<TestModule3>(); // shouldn't this cause an IncompatibleTypeException?
 
-	sync.startEntries();
+	sync.start();
 
 	// this causes one IncompatibleTypeException
 	BOOST_REQUIRE_THROW(lane1.emit(1, 1.0f), BFG::Event::IncompatibleTypeException);
@@ -491,12 +506,34 @@ BOOST_AUTO_TEST_CASE (OneLaneOneEventWrongPayload)
 
 	lane.connect(1, &t, &TestModule::testEventHandler);
 
-	sync.startEntries();
+	sync.start();
 
 	BOOST_REQUIRE_THROW(lane.emit(1, std::string("Hello")), BFG::Event::IncompatibleTypeException);
 
 	sync.finish();
 }
+
+BOOST_AUTO_TEST_CASE (OneLaneOneEventWithException)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+	
+	lane.addEntry<ThrowingModule>();
+	sync.start();
+	
+	lane.emit(5, BFG::Event::Void());
+	sync.finish();
+}
+
+#if 0 // TODO
+BOOST_AUTO_TEST_CASE (SynchronizerWithoutFinish)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+	
+	sync.start();
+}
+#endif
 
 BOOST_AUTO_TEST_CASE (EntryWithStartParameter)
 {
@@ -508,7 +545,7 @@ BOOST_AUTO_TEST_CASE (EntryWithStartParameter)
 	BFG::u32 frequency = 100;
 	lane.addEntry<TestModule4>(frequency);
 
-	sync.startEntries();
+	sync.start();
 
 	lane.emit(1, BFG::Event::Void());
 	sync.finish();
