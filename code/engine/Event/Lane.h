@@ -84,6 +84,7 @@ struct BasicLane : boost::noncopyable
 			entryPoint.stop();
 		}
 
+		boost::mutex::scoped_lock sl(mFlipLocker);
 		typename SubLaneContainerT::iterator it = mSubLanes.begin();
 		for (; it != mSubLanes.end();)
 		{
@@ -103,6 +104,8 @@ struct BasicLane : boost::noncopyable
 	boost::shared_ptr<SubLaneT> createSubLane()
 	{
 		boost::shared_ptr<SubLaneT> sublane(new SubLaneT(*this));
+
+		boost::mutex::scoped_lock sl(mFlipLocker);
 		mSubLanes.push_back(sublane);
 		return sublane;
 	}
@@ -198,7 +201,7 @@ struct BasicLane : boost::noncopyable
 		mEntryPoints.push_back(new EntryT(startParameter));
 	}
 
-	const std::string& mThreadName;
+	const std::string mThreadName;
 	
 private:
 	template <typename Class> struct member_arity {};
@@ -345,6 +348,8 @@ private:
 		const DestinationIdT destination,
 		const SenderIdT sender)
 	{
+		boost::mutex::scoped_lock sl(mFlipLocker);
+
 		typename SubLaneContainerT::iterator it = mSubLanes.begin();
 		for (; it != mSubLanes.end();)
 		{
@@ -359,6 +364,7 @@ private:
 				it = mSubLanes.erase(it);
 			}
 		}
+
 	}
 
 	void tick()
@@ -371,8 +377,14 @@ private:
 
 		mBinder.tick();
 	
-		typename SubLaneContainerT::iterator it = mSubLanes.begin();
-		for (; it != mSubLanes.end();)
+		//! copy of the original vector because called tick methods can emit and can create
+		//! new sublanes.
+		boost::mutex::scoped_lock sl(mFlipLocker);
+		std::copy(mSubLanes.begin(), mSubLanes.end(), std::back_inserter(mSubLanesBackup));
+		sl.unlock();
+
+		typename SubLaneContainerT::iterator it = mSubLanesBackup.begin();
+		for (; it != mSubLanesBackup.end();)
 		{
 			boost::shared_ptr<SubLaneT> sublane = it->lock();
 			if (sublane)
@@ -382,10 +394,11 @@ private:
 			}
 			else
 			{
-				it = mSubLanes.erase(it);
+				it = mSubLanesBackup.erase(it);
 			}
 		}
 		
+		mSubLanesBackup.clear();
 		waitRemainingTime(mTickWatch.stop());
 	}
 
@@ -406,7 +419,9 @@ private:
 	boost::ptr_vector<EntryPointT> mEntryPoints;
 	bool mEntriesStarted;
 
-	typedef std::vector<boost::weak_ptr<SubLaneT> > SubLaneContainerT;	
+	typedef std::vector<boost::weak_ptr<SubLaneT> > SubLaneContainerT;
+	boost::mutex mFlipLocker;
+	SubLaneContainerT mSubLanesBackup;
 	SubLaneContainerT mSubLanes;
 };
 

@@ -27,7 +27,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef __PHYSICS_MANAGER__
 #define __PHYSICS_MANAGER__
 
-#include <boost/variant.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/units/systems/si/time.hpp>
 #include <boost/units/quantity.hpp>
@@ -60,13 +59,6 @@ class PhysicsObject;
 	std::pair<f32, f32> radius, length of Cylinder
 	std::string: mesh name
 */
-typedef boost::variant <
-	f32,
-	v3,
-	qv4,
-	std::pair<f32, f32>,
-	std::string
-> CollisionTypeData;
 
 class PHYSICS_API PhysicsManager
 {
@@ -86,15 +78,6 @@ public:
 
 	void addObject(GameHandle handle,
 	               boost::shared_ptr<PhysicsObject> object);
-
-#if 0
-	void createPhysicalObject(GameHandle handle,
-		                      ID::CollisionGeometry geomType, 
-	                          CollisionTypeData dat, 
-	                          ID::CollisionType colType,
-	                          bool collidable,
-	                          bool simulated);
-#endif	
 
 private:
 	typedef std::map
