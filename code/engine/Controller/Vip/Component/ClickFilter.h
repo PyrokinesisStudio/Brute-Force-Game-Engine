@@ -40,7 +40,7 @@ struct ClickFilter : public Parent
 	{
 	}
 
-	VipPayloadT getResult() const
+	s32 getResult() const
 	{
 		return static_cast<s32>(mLastButton);
 	}
@@ -53,7 +53,7 @@ struct ClickFilter : public Parent
 		    mFilter == ID::BS_Both)
 		{
 			mLastButton = code;
-			this->Emit();
+			this->emit(getResult());
 		}
 	}
 	

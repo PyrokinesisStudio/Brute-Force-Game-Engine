@@ -48,12 +48,6 @@ typedef boost::tuple <
 	CharArray128T
 > ActionDefinition;
 
-typedef boost::variant <
-	bool,
-	s32,
-	f32
-> VipPayloadT;
-
 } // namespace Controller_
 } // namespace BFG
 

@@ -27,6 +27,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_CONTROLLER_VIP_COMPONENT_NORESULT_H
 #define BFG_CONTROLLER_VIP_COMPONENT_NORESULT_H
 
+#include <Event/Void.h>
+
 namespace BFG {
 namespace Controller_ { 
 namespace Vip { 
@@ -36,13 +38,12 @@ class NoResult : public Parent
 {
 public:
 	explicit NoResult(typename Parent::EnvT& env) :
-		Parent(env)
-	{
-	}
+	Parent(env)
+	{}
 
-	VipPayloadT getResult() const
+	Event::Void getResult() const
 	{
-		return -1;
+		return Event::Void();
 	}
 };
 

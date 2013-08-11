@@ -55,7 +55,7 @@ public:
 				mLastSequence.erase(mLastSequence.begin());
 					  
 			if (mSequence == mLastSequence)
-				this->Emit();
+				Parent::emit(Parent::getResult());
 		}
 
 		Parent::FeedButtonData(dt,bs,code);

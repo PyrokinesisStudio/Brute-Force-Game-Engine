@@ -80,6 +80,7 @@ struct AxisCache : public Parent
 	using Parent::DisableFeedback;
 
 	typedef AxisData<f32> AxisT;
+	typedef typename AxisT::ValueT AxisValueT;
 	typedef typename Parent::EnvT EnvT;
 
 	explicit AxisCache(typename Parent::EnvT& env) :
@@ -87,7 +88,8 @@ struct AxisCache : public Parent
 		mSensitivity(env.mSensitivity),
 		mFlip(env.mFlip),
 		mRange(env.mRange),
-		mSwing(env.mSwing)
+		mSwing(env.mSwing),
+		mAxisMode(env.mAxisMode)
 	{
 	}
 	
@@ -116,12 +118,21 @@ struct AxisCache : public Parent
 			DisableFeedback();
 		}
 
-		this->Emit();
+		Parent::emit(getResult());
 
 		if (!swinging)
 			mAxis.rel = 0;		
 	}
 
+	AxisValueT getResult() const
+	{
+		if (mAxisMode == ID::AM_Absolute)
+			return mAxis.abs;
+
+		else /* mAxisMode == ID::AM_Relative */
+			return mAxis.rel;
+	}
+	
 	virtual void FeedAxisData(ID::DeviceType dt,
 	                          ID::AxisType at,
 	                          const AxisData<s32>& ad)
@@ -142,7 +153,7 @@ struct AxisCache : public Parent
 
 		mAxis.rel *= mSensitivity;
 
-		this->Emit();
+		Parent::emit(getResult());
 
 		Parent::FeedAxisData(dt,at,ad);
 	}
@@ -153,6 +164,7 @@ protected:
 	bool  mFlip;
 	f32   mRange;
 	f32   mSwing;
+	ID::AxisMode mAxisMode;
 };
 
 } // namespace Vip

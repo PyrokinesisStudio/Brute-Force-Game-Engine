@@ -43,7 +43,7 @@ public:
 	
 	virtual void onFeedback(long /*microseconds_passed*/)
 	{
-		this->Emit();
+		Parent::emit(Parent::getResult());
 	}
 };
 

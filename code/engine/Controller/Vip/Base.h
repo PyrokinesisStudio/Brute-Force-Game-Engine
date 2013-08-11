@@ -82,8 +82,6 @@ public:
 		return mAid;
 	}
 	
-	virtual VipPayloadT getResult() const = 0;
-	
 	//! Optional. Only used if feedback is needed.
 	//! This gets always called by State. (r636)
 	virtual void FeedTime(long /*microseconds_passed*/)
@@ -105,8 +103,17 @@ public:
 		mUsingFeedback = false;		
 	}
 
-	void Emit();
+	template <typename T>
+	void emit(T result)
+	{
+#ifdef CONTROLLER_DEBUG
+		dbglog << "EMITTER WILL SEND: " << getAction()
+			   << " WITH RESULT: " << getResult();
+#endif
 
+		mEventSubLane->emit(getAction(), result);
+	}
+	
 public:
 	std::set<ButtonCodeT>    mRelevantButtons;
 	std::set<AxisNumeratorT> mRelevantAxis;

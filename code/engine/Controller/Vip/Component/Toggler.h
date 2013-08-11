@@ -52,7 +52,7 @@ public:
 			performSwitchLogic(bs);
 	}
 	
-	VipPayloadT getResult() const
+	bool getResult() const
 	{
 		return mActivated;
 	}
@@ -63,14 +63,14 @@ private:
 		if (bs == ID::BS_Pressed)
 		{
 			mActivated = ! mActivated;
-			this->Emit();
+			Parent::emit(getResult());
 		}
 	}
 	
 	void performHoldLogic()
 	{
 		mActivated = ! mActivated;
-		this->Emit();
+		Parent::emit(getResult());
 	}
 
 	bool mActivated;   // false = off; true = on

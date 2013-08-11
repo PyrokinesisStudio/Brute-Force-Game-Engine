@@ -48,16 +48,6 @@ mUsingFeedback(false),
 mEventSubLane(aState->eventSubLane())
 {}
 
-void CommonBase::Emit()
-{
-#ifdef CONTROLLER_DEBUG
-	dbglog << "EMITTER WILL SEND: " << getAction()
-		   << " WITH RESULT: " << getResult();
-#endif
-
-	mEventSubLane->emit(getAction(), getResult());
-}
-
 } // namespace Vip
 } // namespace Controller_
 } // namespace BFG

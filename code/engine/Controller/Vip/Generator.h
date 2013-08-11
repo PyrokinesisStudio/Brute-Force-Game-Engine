@@ -32,25 +32,27 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Controller/Vip/Base.h>
 
 #include <Controller/Vip/Component/Vip.h>
+#include <Controller/Vip/Component/Processor.h>
 
 // Feedback
+#include <Controller/Vip/Component/FeedbackTrigger.h>
 #include <Controller/Vip/Component/NoFeedback.h>
 #include <Controller/Vip/Component/OnInputFeedback.h>
 #include <Controller/Vip/Component/OnKeyFeedback.h>
 #include <Controller/Vip/Component/WhileKeyFeedback.h>
 
-#include <Controller/Vip/Component/AxisAsResult.h>
+// Emitter
 #include <Controller/Vip/Component/AxisCache.h>
 #include <Controller/Vip/Component/ClickFilter.h>
-#include <Controller/Vip/Component/FeedbackTrigger.h>
-#include <Controller/Vip/Component/ModFilter.h>
-#include <Controller/Vip/Component/NoResult.h>
-#include <Controller/Vip/Component/Processor.h>
 #include <Controller/Vip/Component/Repeater.h>
 #include <Controller/Vip/Component/Sequencer.h>
 #include <Controller/Vip/Component/Toggler.h>
 #include <Controller/Vip/Component/VirtualAxis.h>
 #include <Controller/Vip/Component/VirtualAxisWithSwing.h>
+
+// Utils
+#include <Controller/Vip/Component/ModFilter.h>
+#include <Controller/Vip/Component/NoResult.h>
 
 namespace BFG {
 namespace Controller_ { 
@@ -124,11 +126,9 @@ Vip <
 typedef
 Vip <
 	ID::VIP_STEER,
-	AxisAsResult <
-		AxisCache <
-			FeedbackTrigger <
-				Processor <OnInputFeedback, NoFeedback, SteerEnv>
-			>
+	AxisCache <
+		FeedbackTrigger <
+			Processor <OnInputFeedback, NoFeedback, SteerEnv>
 		>
 	>
 > Steer;
@@ -136,8 +136,8 @@ Vip <
 typedef
 Vip <
 	ID::VIP_HOLD,
-	NoResult <
-		Repeater <
+	Repeater <
+		NoResult <
 			FeedbackTrigger <
 				Processor <NoFeedback, WhileKeyFeedback, FeedbackEnv>
 			>
@@ -148,11 +148,9 @@ Vip <
 typedef
 Vip <
 	ID::VIP_THRUST_AXIS,
-	AxisAsResult <
-		VirtualAxis <
-			FeedbackTrigger <
-				Processor <NoFeedback, WhileKeyFeedback, VAxisEnv>
-			>
+	VirtualAxis <
+		FeedbackTrigger <
+			Processor <NoFeedback, WhileKeyFeedback, VAxisEnv>
 		>
 	>
 > ThrustAxis;
@@ -160,11 +158,9 @@ Vip <
 typedef
 Vip <
 	ID::VIP_LINEAR_AXIS,
-	AxisAsResult <
-		VirtualAxisWithSwing <
-			FeedbackTrigger <
-				Processor <NoFeedback, OnKeyFeedback, VAxisSwingEnv>
-			>
+	VirtualAxisWithSwing <
+		FeedbackTrigger <
+			Processor <NoFeedback, OnKeyFeedback, VAxisSwingEnv>
 		>
 	>
 > LinearAxis;
@@ -172,8 +168,8 @@ Vip <
 typedef
 Vip <
 	ID::VIP_CHEAT,
-	NoResult <
-		Sequencer <
+	Sequencer <
+		NoResult <
 			Processor <NoFeedback, NoFeedback, SequenceEnv>
 		>
 	>

@@ -42,10 +42,14 @@ public:
 
 	using VirtualAxis<Parent>::lower;
 	using VirtualAxis<Parent>::raise;
+	
+	typedef AxisData<f32> AxisT;
+	typedef typename AxisT::ValueT AxisValueT;
 
 	explicit VirtualAxisWithSwing(typename Parent::EnvT& env) :
 		VirtualAxis<Parent>(env),
-		mSwing(env.mSwing)
+		mSwing(env.mSwing),
+		mAxisMode(env.mAxisMode)
 	{
 	}
 	
@@ -62,10 +66,20 @@ public:
 				Parent::DisableFeedback();
 		}
 
-		this->Emit();
+		Parent::emit(getResult());
+	}
+	
+	AxisValueT getResult() const
+	{
+		if (mAxisMode == ID::AM_Absolute)
+			return mAxis.abs;
+
+		else /* mAxisMode == ID::AM_Relative */
+			return mAxis.rel;
 	}
 
 	f32 mSwing;
+	ID::AxisMode mAxisMode;
 };
 
 } // namespace Vip

@@ -35,14 +35,16 @@ template <typename Parent>
 class VirtualAxis : public Parent
 {
 public:
-	typedef AxisData<float> AxisT;
+	typedef AxisData<f32> AxisT;
+	typedef typename AxisT::ValueT AxisValueT;
 
 	explicit VirtualAxis(typename Parent::EnvT& env) :
 		Parent(env),
 		mLower(env.mLower),
 		mRaise(env.mRaise),
 		mStep(env.mStep),
-		mStopAtZero(env.mStopAtZero)
+		mStopAtZero(env.mStopAtZero),
+		mAxisMode(env.mAxisMode)
 	{
 	}
 	
@@ -62,9 +64,18 @@ public:
 		if (mButtonCache[mRaise])
 			raise();
 
-		this->Emit();
+		Parent::emit(getResult());
 	}
 
+	AxisValueT getResult() const
+	{
+		if (mAxisMode == ID::AM_Absolute)
+			return mAxis.abs;
+
+		else /* mAxisMode == ID::AM_Relative */
+			return mAxis.rel;
+	}
+	
 	void raise()
 	{
 		//! \todo Make this configurable
@@ -115,6 +126,7 @@ protected:
 
 public:
 	AxisT mAxis;
+	ID::AxisMode mAxisMode;
 };
 
 } // namespace Vip
