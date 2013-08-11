@@ -115,7 +115,9 @@ BOOST_AUTO_TEST_CASE (AddEntryException)
 	BFG::Event::Lane lane(sync, 100);
 	
 	lane.addEntry<MainThrowing>();
-	sync.startEntries();
+	
+	BOOST_CHECK_THROW(sync.start(), std::runtime_error);
+	
 	sync.finish();
 }
 
