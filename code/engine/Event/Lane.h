@@ -326,9 +326,9 @@ private:
 	void stopEntries()
 	{
 		mEntriesStarted = false;
-		BOOST_FOREACH(EntryPointT* entryPoint, mEntryPoints)
+		BOOST_FOREACH(EntryPointT& entryPoint, mEntryPoints)
 		{
-			entryPoint->stop();
+			entryPoint.stop();
 		}
 	}
 

@@ -29,14 +29,27 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <OgreRoot.h>
 
+#include <Base/Logger.h>
 #include <Core/Path.h>
 #include <Event/Event.h>
 #include <View/Main.h>
+#include <View/Enums.hh>
 
 // ---------------------------------------------------------------------------
+void shutdown(BFG::u32 countdown)
+{
+	std::cout << "Shutdown in " << countdown;
+	for (BFG::u32 i = countdown; i > 0; --i)
+	{
+		boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+		std::cout << ", " << i-1;
+	}
+
+	std::cout << std::endl;
+}
 
 BOOST_AUTO_TEST_SUITE(ViewTestSuite)
-
+#if 0
 BOOST_AUTO_TEST_CASE (OgreTest)
 {
 #ifdef _WIN32
@@ -56,25 +69,27 @@ BOOST_AUTO_TEST_CASE (OgreTest)
 	else
 		throw std::runtime_error("OgreInit: failed to restore config dialog!");
 
-	boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
-
+	shutdown(5);
+	
 	ogreRoot->shutdown();
-}
 
-#if 0
+	delete ogreRoot;
+}
+#endif
 BOOST_AUTO_TEST_CASE (testLibraryInit)
 {
+	BFG::Base::Logger::Init(BFG::Base::Logger::SL_DEBUG, "Logs/testLibraryInit.log");
+
 	BFG::Event::Synchronizer sync;
-	BFG::Event::Lane viewLane(sync, 100);
+	BFG::Event::Lane viewLane(sync, 100, "View");
 	
 	viewLane.addEntry<BFG::View::Main>("ViewTest Window");
 
 	sync.start();
-
-	boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
+	
+	shutdown(10);
 
 	sync.finish();
 }
 
-#endif
 BOOST_AUTO_TEST_SUITE_END()

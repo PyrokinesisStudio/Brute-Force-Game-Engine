@@ -70,10 +70,6 @@ struct BasicSynchronizer
 
 	void start()
 	{
-		// Call all entry points
-		std::for_each(mLanes.begin(), mLanes.end(),
-			std::mem_fun(&LaneT::startEntries));
-		
 		// Start a new thread for each lane
 		std::for_each(mLanes.begin(), mLanes.end(),
 			boost::bind(&BasicSynchronizer<LaneT>::createThread, this, _1));
@@ -93,7 +89,6 @@ struct BasicSynchronizer
 		
 		BOOST_FOREACH(boost::shared_ptr<boost::thread> t, mThreads)
 		{
-//			std::cout << "Joining thread " << t->get_id() << "\n";
 			t->join();
 		}
 	}
@@ -126,7 +121,6 @@ private:
 		{
 			if (other != lane)
 			{
-//				std::cout << ".";
 				other->emitFromOther(id, payload, destination, sender);
 			}
 		}
@@ -134,6 +128,8 @@ private:
 	
 	void loop(LaneT* lane)
 	{
+		lane->startEntries();
+
 		if (!lane->mThreadName.empty())
 			nameCurrentThread(lane->mThreadName);
 		
@@ -144,11 +140,11 @@ private:
 		
 		for (std::size_t i=0; i<mBarrier.size(); ++i)
 		{
-//			std::cout << "Joining Barrier #" << i << " - " << boost::this_thread::get_id() << std::endl;
 			mBarrier[i]->wait();
-//			std::cout << "TICK #" << i << " - " << boost::this_thread::get_id() << std::endl;
 			lane->tick();
 		}
+
+		lane->stopEntries();
 		// -- Thread exits here --
 	}
 
