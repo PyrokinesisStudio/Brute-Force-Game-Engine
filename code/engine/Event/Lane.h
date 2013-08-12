@@ -66,12 +66,13 @@ struct BasicLane : boost::noncopyable
 	template <typename _LaneT>
 	friend struct BasicSubLane;
 
-	BasicLane(SynchronizerT& synchronizer, s32 ticksPerSecond, const std::string& threadName = std::string()):
+	BasicLane(SynchronizerT& synchronizer, s32 ticksPerSecond, const std::string& threadName = std::string(), RunLevel runLevel = RL1):
 	mThreadName(threadName),
 	mSynchronizer(synchronizer),
 	mPlannedTimeInMs(1000/ticksPerSecond),
 	mTickWatch(Clock::milliSecond),
-	mEntriesStarted(false)
+	mEntriesStarted(false),
+	mRunLevel(runLevel)
 	{
 		mTickWatch.start();
 		mSynchronizer.add(this);
@@ -423,6 +424,8 @@ private:
 	boost::mutex mFlipLocker;
 	SubLaneContainerT mSubLanesBackup;
 	SubLaneContainerT mSubLanes;
+
+	RunLevel mRunLevel;
 };
 
 } // namespace Event

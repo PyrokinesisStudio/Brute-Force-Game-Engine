@@ -353,11 +353,11 @@ struct ClientState : public SynchronizationTestState
 	ClientState(GameHandle handle, BFG::Event::Lane& lane) :
 	SynchronizationTestState(handle, lane)
 	{
-		mSubLane->connectV(A_EXIT, this, &ClientState::onExit);
-		mSubLane->connectV(SIMULATION_0, this, &ClientState::onSimulation0);
-		mSubLane->connectV(SIMULATION_1, this, &ClientState::onSimulation1);
-		mSubLane->connectV(SIMULATION_2, this, &ClientState::onSimulation2);
-		mSubLane->connectV(SIMULATION_3, this, &ClientState::onSimulation3);
+		mSubLane->connect(A_EXIT, this, &ClientState::onExit);
+		mSubLane->connect(SIMULATION_0, this, &ClientState::onSimulation0);
+		mSubLane->connect(SIMULATION_1, this, &ClientState::onSimulation1);
+		mSubLane->connect(SIMULATION_2, this, &ClientState::onSimulation2);
+		mSubLane->connect(SIMULATION_3, this, &ClientState::onSimulation3);
 		mSubLane->connect(A_CONSOLE, this, &ClientState::onConsole);
 		mSubLane->connect(BFG::ID::NE_RECEIVED, this, &ClientState::onReceived, CLIENT_STATE_HANDLE);
 		
@@ -369,13 +369,13 @@ struct ClientState : public SynchronizationTestState
 		infolog << "Tutorial: Destroying GameState.";
 	}
 
-	void onExit()
+	void onExit(s32)
 	{
 		// TODO: Stop!
 		//mSubLane->stop();
 	}
 	
-	void onSimulation0()
+	void onSimulation0(s32)
 	{
 		std::vector<GameHandle> all = mEnvironment->find_all(alwaysTrue);
 		for (std::size_t i=0; i<all.size(); ++i)
@@ -394,7 +394,7 @@ struct ClientState : public SynchronizationTestState
 		mSubLane->emit(BFG::ID::NE_SEND, payload);
 	}
 
-	void onSimulation1()
+	void onSimulation1(s32)
 	{
 		CharArray512T ca512 = CharArray512T();
 		BFG::Network::DataPayload payload
@@ -409,7 +409,7 @@ struct ClientState : public SynchronizationTestState
 		mSubLane->emit(BFG::ID::NE_SEND, payload);
 	}
 	
-	void onSimulation2()
+	void onSimulation2(s32)
 	{
 		CharArray512T ca512 = CharArray512T();
 		BFG::Network::DataPayload payload
@@ -424,7 +424,7 @@ struct ClientState : public SynchronizationTestState
 		mSubLane->emit(BFG::ID::NE_SEND, payload);
 	}
 
-	void onSimulation3()
+	void onSimulation3(s32)
 	{
 		CharArray512T ca512 = CharArray512T();
 		BFG::Network::DataPayload payload
@@ -615,10 +615,10 @@ int main( int argc, const char* argv[] ) try
 
 		BFG::Event::Synchronizer synchronizer;
 		BFG::Event::Lane networkLane(synchronizer, 100, "Network");
-		BFG::Event::Lane physicsLane(synchronizer, 100, "Physics");
+		BFG::Event::Lane physicsLane(synchronizer, 100, "Physics", BFG::Event::RL2);
 		BFG::Event::Lane viewLane(synchronizer, 100, "View");
 		BFG::Event::Lane controllerLane(synchronizer, controllerFrequency, "Controller");
-		BFG::Event::Lane clientLane(synchronizer, 100, "Client");
+		BFG::Event::Lane clientLane(synchronizer, 100, "Client", BFG::Event::RL3);
 		
 		networkLane.addEntry<BFG::Network::Main>(BFG_CLIENT);
 		physicsLane.addEntry<BFG::Physics::Main>();

@@ -28,6 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_EVENT_BINDING_H
 
 #if defined (_WIN32)
+	#undef BOOST_PARAMETER_MAX_ARITY
 	#define BOOST_PARAMETER_MAX_ARITY 7
 #endif
 

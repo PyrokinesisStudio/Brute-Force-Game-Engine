@@ -40,6 +40,13 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Event { 
 
+enum RunLevel
+{
+	RL1,
+	RL2,
+	RL3
+};
+
 template <typename _IdT, typename _DestinationIdT, typename _SenderIdT>
 struct BasicLane;
 
@@ -50,7 +57,10 @@ struct BasicSynchronizer
 	typedef typename LaneT::IdT            IdT;
 	typedef typename LaneT::DestinationIdT DestinationIdT;
 	typedef typename LaneT::SenderIdT      SenderIdT;
-
+	typedef typename std::multimap<RunLevel, LaneT*> LaneMapT;
+	typedef typename LaneMapT::iterator LaneMapIt;
+	typedef std::pair<LaneMapIt, LaneMapIt> RangeT;
+	
 	template<typename _IdT, typename _DestinationIdT, typename _SenderIdT>
 	friend struct BasicLane;
 
@@ -65,14 +75,58 @@ struct BasicSynchronizer
 	
 	void add(LaneT* lane)
 	{
-		mLanes.push_back(lane);
+		mLanes.insert(std::make_pair(lane->mRunLevel, lane));
 	}
 
 	void start()
 	{
+		u32 levelCount = mLanes.count(RL1);
+		
+		mStartBarrier.reset(new boost::barrier(levelCount + 1));
+
+		RangeT ret = mLanes.equal_range(RL1);
+
 		// Start a new thread for each lane
-		std::for_each(mLanes.begin(), mLanes.end(),
-			boost::bind(&BasicSynchronizer<LaneT>::createThread, this, _1));
+		for (LaneMapIt laneIt = ret.first; laneIt != ret.second; ++laneIt)
+		{
+			createThread(laneIt->second);
+		}
+
+		mStartBarrier->wait();
+
+		std::cout << "RunLevel1 initialized";
+
+		levelCount = mLanes.count(RL2);
+
+		mStartBarrier.reset(new boost::barrier(levelCount + 1));
+
+		ret = mLanes.equal_range(RL2);
+
+		// Start a new thread for each lane
+		for (LaneMapIt laneIt = ret.first; laneIt != ret.second; ++laneIt)
+		{
+			createThread(laneIt->second);
+		}
+
+		mStartBarrier->wait();
+
+		std::cout << "RunLevel2 initialized";
+
+		levelCount = mLanes.count(RL3);
+
+		mStartBarrier.reset(new boost::barrier(levelCount + 1));
+
+		ret = mLanes.equal_range(RL3);
+
+		// Start a new thread for each lane
+		for (LaneMapIt laneIt = ret.first; laneIt != ret.second; ++laneIt)
+		{
+			createThread(laneIt->second);
+		}
+
+		mStartBarrier->wait();
+
+		std::cout << "RunLevel3 initialized";
 	}
 
 	void finish()
@@ -117,11 +171,11 @@ private:
 	                        const DestinationIdT destination,
 	                        const SenderIdT sender)
 	{
-		BOOST_FOREACH(LaneT* other, mLanes)
+		BOOST_FOREACH(LaneMapT::value_type other, mLanes)
 		{
-			if (other != lane)
+			if (other.second != lane)
 			{
-				other->emitFromOther(id, payload, destination, sender);
+				other.second->emitFromOther(id, payload, destination, sender);
 			}
 		}
 	}
@@ -129,6 +183,8 @@ private:
 	void loop(LaneT* lane)
 	{
 		lane->startEntries();
+
+		mStartBarrier->wait();
 
 		if (!lane->mThreadName.empty())
 			nameCurrentThread(lane->mThreadName);
@@ -148,9 +204,10 @@ private:
 		// -- Thread exits here --
 	}
 
-	std::vector<LaneT*> mLanes;
+	LaneMapT mLanes;
 	std::vector<boost::shared_ptr<boost::thread> > mThreads;
 	std::vector<boost::shared_ptr<boost::barrier> > mBarrier;
+	boost::shared_ptr<boost::barrier> mStartBarrier;
 
 	bool mFinishing;
 };
