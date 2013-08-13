@@ -324,13 +324,16 @@ private:
 		mEntriesStarted = true;
 	}
 
-	void stopEntries()
+	void stopAndClearEntries()
 	{
 		mEntriesStarted = false;
 		BOOST_FOREACH(EntryPointT& entryPoint, mEntryPoints)
 		{
 			entryPoint.stop();
 		}
+
+		while (!mEntryPoints.empty())
+			mEntryPoints.pop_back();
 	}
 
 	template <typename PayloadT>

@@ -200,7 +200,7 @@ private:
 			lane->tick();
 		}
 
-		lane->stopEntries();
+		lane->stopAndClearEntries();
 		// -- Thread exits here --
 	}
 
