@@ -527,10 +527,21 @@ struct ClientMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 	virtual void main(BFG::Event::Lane* lane)
 	{
 		mClientState.reset(new ClientState(CLIENT_STATE_HANDLE, *lane));
-		mViewState.reset(new ViewState(CLIENT_STATE_HANDLE, *lane));
 	}
 	
 	boost::scoped_ptr<ClientState> mClientState;
+};
+
+struct ClientViewMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
+{
+	ClientViewMain()
+	{}
+
+	virtual void main(BFG::Event::Lane* lane)
+	{
+		mViewState.reset(new ViewState(CLIENT_STATE_HANDLE, *lane));
+	}
+
 	boost::scoped_ptr<ViewState> mViewState;
 };
 
@@ -623,6 +634,7 @@ int main( int argc, const char* argv[] ) try
 		networkLane.addEntry<BFG::Network::Main>(BFG_CLIENT);
 		physicsLane.addEntry<BFG::Physics::Main>();
 		viewLane.addEntry<BFG::View::Main>("SynchronizationTest");
+		viewLane.addEntry<ClientViewMain>();
 		controllerLane.addEntry<BFG::Controller_::Main>(controllerFrequency);
 		clientLane.addEntry<ClientMain>();
 		
