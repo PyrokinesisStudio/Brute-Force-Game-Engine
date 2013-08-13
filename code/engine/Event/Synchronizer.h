@@ -187,7 +187,9 @@ private:
 		// Trigger entry point de-init.
 		lane->stopAndClearEntries();
 		
-		// -- Thread exits here --
+		// *********************
+		// * Thread exits here *
+		// *********************
 	}
 
 	LaneMapT                                       mLanes;
