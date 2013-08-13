@@ -42,7 +42,7 @@ namespace Event {
 
 enum RunLevel
 {
-	RL1,
+	RL1 = 1,
 	RL2,
 	RL3
 };
@@ -60,6 +60,7 @@ struct BasicSynchronizer
 	typedef typename std::multimap<RunLevel, LaneT*> LaneMapT;
 	typedef typename LaneMapT::iterator LaneMapIt;
 	typedef std::pair<LaneMapIt, LaneMapIt> RangeT;
+	typedef boost::shared_ptr<boost::barrier> BarrierPtrT;
 	
 	template<typename _IdT, typename _DestinationIdT, typename _SenderIdT>
 	friend struct BasicLane;
@@ -80,53 +81,30 @@ struct BasicSynchronizer
 
 	void start()
 	{
-		u32 levelCount = mLanes.count(RL1);
+		startRunlevel(RL1);
+		startRunlevel(RL2);
+		startRunlevel(RL3);
+	}
+	
+	void startRunlevel(RunLevel runlevel)
+	{
+		dbglog << "Synchronizer starting runlevel " << runlevel;
 		
-		mStartBarrier.reset(new boost::barrier(levelCount + 1));
-
-		RangeT ret = mLanes.equal_range(RL1);
-
+		// Create a new barrier to wait for all threads to finish
+		// running their entry point(s).
+		u32 runlevels = mLanes.count(runlevel);
+		BarrierPtrT barrier(new boost::barrier(runlevels + 1));
+		
 		// Start a new thread for each lane
+		RangeT ret = mLanes.equal_range(runlevel);
 		for (LaneMapIt laneIt = ret.first; laneIt != ret.second; ++laneIt)
 		{
-			createThread(laneIt->second);
+			createThread(laneIt->second, barrier);
 		}
 
-		mStartBarrier->wait();
-
-		std::cout << "RunLevel1 initialized";
-
-		levelCount = mLanes.count(RL2);
-
-		mStartBarrier.reset(new boost::barrier(levelCount + 1));
-
-		ret = mLanes.equal_range(RL2);
-
-		// Start a new thread for each lane
-		for (LaneMapIt laneIt = ret.first; laneIt != ret.second; ++laneIt)
-		{
-			createThread(laneIt->second);
-		}
-
-		mStartBarrier->wait();
-
-		std::cout << "RunLevel2 initialized";
-
-		levelCount = mLanes.count(RL3);
-
-		mStartBarrier.reset(new boost::barrier(levelCount + 1));
-
-		ret = mLanes.equal_range(RL3);
-
-		// Start a new thread for each lane
-		for (LaneMapIt laneIt = ret.first; laneIt != ret.second; ++laneIt)
-		{
-			createThread(laneIt->second);
-		}
-
-		mStartBarrier->wait();
-
-		std::cout << "RunLevel3 initialized";
+		// Wait for all threads to finish (blocking)
+		barrier->wait();
+		dbglog << "Synchronizer initialized runLevel " << runlevel;
 	}
 
 	void finish()
@@ -148,7 +126,7 @@ struct BasicSynchronizer
 	}
 	
 private:
-	void createThread(LaneT* lane)
+	void createThread(LaneT* lane, BarrierPtrT runlevelBarrier)
 	{
 		mThreads.push_back
 		(
@@ -158,7 +136,8 @@ private:
 				(
 					&BasicSynchronizer<LaneT>::loop,
 					this,
-					lane
+					lane,
+					runlevelBarrier
 				)
 			)
 		);
@@ -180,12 +159,15 @@ private:
 		}
 	}
 	
-	void loop(LaneT* lane)
+	void loop(LaneT* lane, BarrierPtrT runlevelBarrier)
 	{
+		// Run all entry points of this lane.
 		lane->startEntries();
 
-		mStartBarrier->wait();
+		// Then wait for the rest of this runlevel to finish.
+		runlevelBarrier->wait();
 
+		// Apply a name to this thread.
 		if (!lane->mThreadName.empty())
 			nameCurrentThread(lane->mThreadName);
 		
@@ -194,20 +176,23 @@ private:
 			lane->tick();
 		}
 		
+		// Perform a few last ticks in order to make sure that also the
+		// latest events get delivered.
 		for (std::size_t i=0; i<mBarrier.size(); ++i)
 		{
 			mBarrier[i]->wait();
 			lane->tick();
 		}
 
+		// Trigger entry point de-init.
 		lane->stopAndClearEntries();
+		
 		// -- Thread exits here --
 	}
 
-	LaneMapT mLanes;
+	LaneMapT                                       mLanes;
 	std::vector<boost::shared_ptr<boost::thread> > mThreads;
-	std::vector<boost::shared_ptr<boost::barrier> > mBarrier;
-	boost::shared_ptr<boost::barrier> mStartBarrier;
+	std::vector<BarrierPtrT>                       mBarrier;
 
 	bool mFinishing;
 };
