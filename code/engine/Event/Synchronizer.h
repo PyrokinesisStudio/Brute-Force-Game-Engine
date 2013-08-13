@@ -171,7 +171,7 @@ private:
 	                        const DestinationIdT destination,
 	                        const SenderIdT sender)
 	{
-		BOOST_FOREACH(LaneMapT::value_type other, mLanes)
+		BOOST_FOREACH(typename LaneMapT::value_type other, mLanes)
 		{
 			if (other.second != lane)
 			{
