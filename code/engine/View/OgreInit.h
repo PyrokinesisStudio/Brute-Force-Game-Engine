@@ -114,6 +114,10 @@ private:
 	//! \param[in] enable Show console
 	void onConsole(bool enable);
 	
+	//! \brief Used by other modules to request mesh loading
+	//! \param[in] meshName Filename of the requested mesh
+	void onRequestMesh(const std::string& meshName, GameHandle sender);
+	
 	//! \brief Handles the Loop-Event and checks if there was an error in Ogre or if the view is shut down.
 	//! \param[in] iLE LoopEvent
 	void onTick(Event::TickData);

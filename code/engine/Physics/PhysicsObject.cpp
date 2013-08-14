@@ -26,6 +26,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Physics/PhysicsObject.h>
 
+#include <cassert>
+
 #include <boost/foreach.hpp>
 
 #include <Base/Interpolate.h>
@@ -34,7 +36,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/ExternalTypes.h>
 #include <Core/Math.h>
 
-#include <View/LoadMesh.h>
+#include <View/Enums.hh>
 
 #include <Physics/OdeTriMesh.h>
 
@@ -103,24 +105,93 @@ std::string odeMatrixOut(const dReal* m)
 	return ss.str();
 }
 
-void PhysicsObject::addModule(GameHandle moduleHandle,
-                              const std::string& meshName,
-                              ID::CollisionMode collisionMode,
-                              const v3& position,
-                              const qv4& orientation,
-                              f32 density)
+void PhysicsObject::addModule(const ModuleCreationParams& mcp)
 {
+	const std::string& meshName = mcp.get<2>();
+	GameHandle moduleHandle = mcp.get<1>();
+	
+	if (mRootModule == NULL_HANDLE)
+	{
+		assert(mGeometry.empty());
+		mRootModule = moduleHandle;
+		mSubLane->connect(ID::VE_DELIVER_MESH, this, &PhysicsObject::onMeshDelivery, mRootModule);
+	}
+	
 	MeshCacheT::const_iterator it = mMeshCache.find(meshName);
 	if (it == mMeshCache.end())
 	{
-		boost::shared_ptr<OdeTriMesh> ptr(new OdeTriMesh(View::loadMesh(meshName)));
-		mMeshCache[meshName] = ptr;
+		asyncRequestMesh(meshName);
+		mAsyncAddModuleRequests.push_back(mcp);
 	}
+	else
+	{
+		boost::shared_ptr<OdeTriMesh> mesh = it->second;
+		createModule
+		(
+			moduleHandle,
+			mesh,
+			mcp.get<3>(),
+			mcp.get<4>(),
+			mcp.get<5>(),
+			mcp.get<6>()
+		);
+	}
+}
 
+void PhysicsObject::asyncRequestMesh(const std::string& meshName) const
+{
+	dbglog << "Sending mesh request \"" << meshName << "\" for #" << mRootModule;
+	mSubLane->emit(ID::VE_REQUEST_MESH, meshName, NULL_HANDLE, mRootModule);
+}
+
+void PhysicsObject::onMeshDelivery(const NamedMesh& namedMesh)
+{
+	// Unpack tuple
+	const std::string& meshName = namedMesh.get<0>();
+	const Mesh& mesh = namedMesh.get<1>();
+	
+	dbglog << "Mesh " << meshName << " was delivered to #" << mRootModule;
+	
+	// Save delivered mesh in cache
+	boost::shared_ptr<OdeTriMesh> ptr(new OdeTriMesh(mesh));
+	mMeshCache[meshName] = ptr;
+	
+	// If this assertion triggers we requested something which wasn't
+	// written into our addModule-Cache or something was delivered which
+	// wasn't requested.
+	assert(!mAsyncAddModuleRequests.empty());
+	
+	const ModuleCreationParams& mcp = mAsyncAddModuleRequests.front();
+	
+	// We assume that all requests are processed in sequential order.
+	assert(mcp.get<2>() == meshName);
+	
+	createModule
+	(
+		mcp.get<1>(),
+		ptr,
+		mcp.get<3>(),
+		mcp.get<4>(),
+		mcp.get<5>(),
+		mcp.get<6>()
+	);
+	
+	mAsyncAddModuleRequests.pop_front();
+}
+
+void PhysicsObject::createModule(GameHandle moduleHandle,
+                                 boost::shared_ptr<OdeTriMesh> mesh,
+                                 ID::CollisionMode collisionMode,
+                                 const v3& position,
+                                 const qv4& orientation,
+                                 f32 density)
+{
+	dbglog << "Creating physics module #" << moduleHandle << " for #" << mRootModule;
+	
 	dGeomID odeGeometry = dCreateTriMesh
 	(
 		mSpaceId,
-		mMeshCache[meshName]->getTriMesh(),
+		mesh->getTriMesh(),
 		NULL, 
 		NULL,
 		NULL
@@ -144,9 +215,9 @@ void PhysicsObject::addModule(GameHandle moduleHandle,
 
 	dBodyGetMass(mOdeBody, &mOriginalMass);
 
-//  dbglog << "BodyMass: " << mOriginalMass.mass;
-//  dbglog << "BodyCenter: " << odeVectorOut(mOriginalMass.c);
-//  dbglog << "BodyInertia: " << odeMatrixOut(mOriginalMass.I);
+//	dbglog << "BodyMass: " << mOriginalMass.mass;
+//	dbglog << "BodyCenter: " << odeVectorOut(mOriginalMass.c);
+//	dbglog << "BodyInertia: " << odeMatrixOut(mOriginalMass.I);
 
 	dMassAdd(&mOriginalMass, &geomMass);
 
@@ -157,9 +228,9 @@ void PhysicsObject::addModule(GameHandle moduleHandle,
 
 	dBodyGetMass(mOdeBody, &mOriginalMass);
 
-//  dbglog << "NewBodyMass: " << mOriginalMass.mass;
-//  dbglog << "NewCenter: " << odeVectorOut(mOriginalMass.c);
-//  dbglog << "NewInertia: " << odeMatrixOut(mOriginalMass.I);
+//	dbglog << "NewBodyMass: " << mOriginalMass.mass;
+//	dbglog << "NewCenter: " << odeVectorOut(mOriginalMass.c);
+//	dbglog << "NewInertia: " << odeMatrixOut(mOriginalMass.I);
 
 	bool isRootModule = mGeometry.empty();
 	
@@ -172,8 +243,6 @@ void PhysicsObject::addModule(GameHandle moduleHandle,
 
 	if (isRootModule)
 	{
-		mRootModule = moduleHandle;
-		
 		// It isn't possible to register events (with a destination GameHandle)
 		// before a root Module has been attached.
 		registerEvents();
@@ -185,7 +254,7 @@ void PhysicsObject::addModule(GameHandle moduleHandle,
 		setOffsetOrientation(moduleHandle, orientation);
 	}
 	
-	notifyControlAboutChangeInMass();
+	sendFullSync();
 }
 
 void PhysicsObject::addModule(boost::shared_ptr<PhysicsObject> po,

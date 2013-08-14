@@ -44,10 +44,9 @@ TARGET_LINK_LIBRARIES(bfgPhysics
 	${ODE_LIBRARY}
 	bfgBase
 	bfgCore
-	bfgView              # View::loadMesh()
 )
 
-ADD_DEPENDENCIES(bfgPhysics PhysicsEnums)
+ADD_DEPENDENCIES(bfgPhysics PhysicsEnums ViewEnums)
 
 INSTALL(TARGETS bfgPhysics
 	RUNTIME DESTINATION ${BFG_BIN_DIR}

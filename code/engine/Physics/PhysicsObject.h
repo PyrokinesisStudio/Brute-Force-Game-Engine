@@ -36,10 +36,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <map>
 
+#include <Core/ExternalTypes_fwd.h>
+#include <Core/Mesh.h>
+#include <Core/qv4.h>
 #include <Core/Types.h>
 #include <Core/v3.h>
-#include <Core/qv4.h>
-#include <Core/ExternalTypes_fwd.h>
 
 #include <Event/Event.h>
 
@@ -70,13 +71,8 @@ public:
 	              
 	~PhysicsObject();
 
-	void addModule(GameHandle moduleHandle,
-	               const std::string& meshName,
-	               ID::CollisionMode collisionMode,
-	               const v3& position,
-	               const qv4& orientation,
-	               f32 density);
-
+	void addModule(const ModuleCreationParams& mcp);
+	
 	void addModule(boost::shared_ptr<PhysicsObject>,
 	               const v3& position,
 	               const qv4& orientation);
@@ -105,6 +101,16 @@ public:
 	                          f32 penetrationDepth) const;
 	
 private:
+	void asyncRequestMesh(const std::string& meshName) const;
+	void onMeshDelivery(const NamedMesh& namedMesh);
+	
+	void createModule(GameHandle moduleHandle,
+	                  boost::shared_ptr<OdeTriMesh> mesh,
+	                  ID::CollisionMode collisionMode,
+	                  const v3& position,
+	                  const qv4& orientation,
+	                  f32 density);
+
 	void debugOutput(std::string& output) const;
 
 	void setPosition(const v3& pos);
@@ -185,12 +191,13 @@ private:
 	qv4               mInterpolationStartOrientation;
 	qv4               mInterpolationEndOrientation;
 
-
 	mutable FullSyncData mDeltaStorage;
 
 	ID::CollisionMode mCollisionMode;
 	
 	static MeshCacheT mMeshCache;
+	
+	std::deque<ModuleCreationParams> mAsyncAddModuleRequests;
 	
 	friend std::ostream& operator << (std::ostream& lhs, const PhysicsObject& rhs);
 };

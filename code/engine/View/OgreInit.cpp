@@ -56,9 +56,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <View/Camera.h>
 #include <View/Console.h>
-#include <View/Fps.h>
 #include <View/Defs.h>
 #include <View/Enums.hh>
+#include <View/Fps.h>
+#include <View/LoadMesh.h>
 
 namespace BFG {
 namespace View {
@@ -83,6 +84,7 @@ mSceneMgr(NULL)
 	mSubLane->connect(ID::VE_DEBUG_FPS, this, &OgreInit::onDebugFps);
 	mSubLane->connectV(ID::VE_SCREENSHOT, this, &OgreInit::onScreenShot);
 	mSubLane->connect(ID::VE_CONSOLE, this, &OgreInit::onConsole);
+	mSubLane->connect(ID::VE_REQUEST_MESH, this, &OgreInit::onRequestMesh);
 	
 	initOgre();
 	initMyGui();
@@ -297,6 +299,14 @@ void OgreInit::onScreenShot()
 	} while (boost::filesystem::exists(ss.str()));
 
 	mRoot->getAutoCreatedWindow()->writeContentsToFile(ss.str());
+}
+
+void OgreInit::onRequestMesh(const std::string& meshName, GameHandle sender)
+{
+	const Mesh mesh = loadMesh(meshName);
+	NamedMesh namedMesh(meshName, mesh);
+	dbglog << "Processing mesh request \"" << meshName << "\" for #" << sender;
+	mLane.emit(ID::VE_DELIVER_MESH, namedMesh, sender);
 }
 
 #ifdef _WIN32

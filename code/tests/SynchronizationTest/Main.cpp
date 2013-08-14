@@ -84,7 +84,7 @@ const s32 START_SIMULATION_3 = 15004;
 const GameHandle SERVER_STATE_HANDLE = 42;
 const GameHandle CLIENT_STATE_HANDLE = 43;
 
-const s32 ROWS = 5;
+const s32 ROWS = 20;
 
 bool alwaysTrue(boost::shared_ptr<BFG::GameObject>)
 {
@@ -293,7 +293,7 @@ struct ServerState: public SynchronizationTestState
 		mSceneCreated = false;
 	}
 
-	void onConneced(BFG::Network::PeerIdT peerId)
+	void onConnected(BFG::Network::PeerIdT peerId)
 	{
 		dbglog << "Client (" << peerId << ") wants to connect";
 		ClientListT::iterator it = std::find(mClientList.begin(), mClientList.end(), peerId);
@@ -600,11 +600,13 @@ int main( int argc, const char* argv[] ) try
 
 		BFG::Event::Synchronizer synchronizer;
 		BFG::Event::Lane networkLane(synchronizer, 100, "Network");
-		BFG::Event::Lane physicsLane(synchronizer, 100, "Physics");
-		BFG::Event::Lane serverLane(synchronizer, 100, "Server");
+		BFG::Event::Lane viewLane(synchronizer, 100, "View");
+		BFG::Event::Lane physicsLane(synchronizer, 100, "Physics", BFG::Event::RL2);
+		BFG::Event::Lane serverLane(synchronizer, 100, "Server", BFG::Event::RL3);
 		
 		networkLane.addEntry<BFG::Network::Main>(BFG_SERVER);
 		physicsLane.addEntry<BFG::Physics::Main>();
+		viewLane.addEntry<BFG::View::MiniMain>();
 		serverLane.addEntry<ServerMain>();
 		
 		synchronizer.start();

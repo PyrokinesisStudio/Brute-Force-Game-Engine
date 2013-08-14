@@ -34,6 +34,8 @@
             <value>VE_DETACH_OBJECT</value>
             <value>VE_CREATE_PLANE</value>
             <value>VE_SET_MATERIAL</value>
+            <value>VE_REQUEST_MESH</value>
+            <value>VE_DELIVER_MESH</value>
 
             <!-- HUD events -->
             <value>VE_HUD_CREATE_FLIGHTMAP</value>

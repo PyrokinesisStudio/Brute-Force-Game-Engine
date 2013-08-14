@@ -470,17 +470,7 @@ void PhysicsManager::onAttachModule(const ModuleCreationParams& mcp)
 	}
 	
 	boost::shared_ptr<PhysicsObject> po = it->second;
-
-	po->addModule
-	(
-		mcp.get<1>(),
-		mcp.get<2>(),
-		mcp.get<3>(),
-		mcp.get<4>(),
-		mcp.get<5>(),
-		mcp.get<6>()
-	);
-	po->sendFullSync();
+	po->addModule(mcp);
 }
 
 void PhysicsManager::onRemoveModule(const ModuleRemovalParams& mcp)
