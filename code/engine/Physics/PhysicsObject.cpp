@@ -154,7 +154,13 @@ void PhysicsObject::onMeshDelivery(const NamedMesh& namedMesh)
 	
 	// Save delivered mesh in cache
 	boost::shared_ptr<OdeTriMesh> ptr(new OdeTriMesh(mesh));
-	mMeshCache[meshName] = ptr;
+	
+	MeshCacheT::iterator it = mMeshCache.find(meshName);
+
+	if (it == mMeshCache.end())
+	{
+		mMeshCache[meshName] = ptr;
+	}
 	
 	// If this assertion triggers we requested something which wasn't
 	// written into our addModule-Cache or something was delivered which
