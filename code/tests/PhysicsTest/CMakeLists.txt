@@ -30,6 +30,7 @@ TARGET_LINK_LIBRARIES(bfgPhysicsTest
 	${BoostLog_LIBRARIES}
 	bfgCore
 	bfgPhysics
+	bfgView
 )
 
 INSTALL(TARGETS bfgPhysicsTest
