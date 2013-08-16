@@ -38,6 +38,14 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/NameCurrentThread.h>
 
 namespace BFG {
+
+namespace ID {
+enum EventAction
+{
+	EA_FINISH = 1001
+};
+}
+
 namespace Event { 
 
 enum RunLevel
@@ -66,7 +74,8 @@ struct BasicSynchronizer
 	friend struct BasicLane;
 
 	BasicSynchronizer() :
-	mFinishing(false)
+	mFinishing(false),
+	mFinishEvent(false)
 	{}
 	
 	~BasicSynchronizer()
@@ -81,34 +90,23 @@ struct BasicSynchronizer
 
 	void start()
 	{
+		connectFinishEvent();
+
 		startRunlevel(RL1);
 		startRunlevel(RL2);
 		startRunlevel(RL3);
 	}
-	
-	void startRunlevel(RunLevel runlevel)
+
+	void finish(bool finishOnEvent = false)
 	{
-		dbglog << "Synchronizer starting runlevel " << runlevel;
-		
-		// Create a new barrier to wait for all threads to finish
-		// running their entry point(s).
-		u32 runlevels = mLanes.count(runlevel);
-		BarrierPtrT barrier(new boost::barrier(runlevels + 1));
-		
-		// Start a new thread for each lane
-		RangeT ret = mLanes.equal_range(runlevel);
-		for (LaneMapIt laneIt = ret.first; laneIt != ret.second; ++laneIt)
+		if (finishOnEvent)
 		{
-			createThread(laneIt->second, barrier);
+			while (!mFinishEvent)
+			{
+				boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+			}
 		}
 
-		// Wait for all threads to finish (blocking)
-		barrier->wait();
-		dbglog << "Synchronizer initialized runLevel " << runlevel;
-	}
-
-	void finish()
-	{
 		// Nothing to finish if no threads exist within this Synchronizer.
 		if (mThreads.empty())
 			return;
@@ -126,6 +124,38 @@ struct BasicSynchronizer
 	}
 	
 private:
+
+	void connectFinishEvent()
+	{
+		LaneMapIt it = mLanes.begin();
+
+		if (it != mLanes.end())
+		{
+			it->second->connectV(ID::EA_FINISH, this, &BasicSynchronizer::onFinishEvent);
+		}
+	}
+
+	void startRunlevel(RunLevel runlevel)
+	{
+		dbglog << "Synchronizer starting runlevel " << runlevel;
+
+		// Create a new barrier to wait for all threads to finish
+		// running their entry point(s).
+		u32 runlevels = mLanes.count(runlevel);
+		BarrierPtrT barrier(new boost::barrier(runlevels + 1));
+
+		// Start a new thread for each lane
+		RangeT ret = mLanes.equal_range(runlevel);
+		for (LaneMapIt laneIt = ret.first; laneIt != ret.second; ++laneIt)
+		{
+			createThread(laneIt->second, barrier);
+		}
+
+		// Wait for all threads to finish (blocking)
+		barrier->wait();
+		dbglog << "Synchronizer initialized runLevel " << runlevel;
+	}
+
 	void createThread(LaneT* lane, BarrierPtrT runlevelBarrier)
 	{
 		mThreads.push_back
@@ -192,11 +222,17 @@ private:
 		// *********************
 	}
 
+	void onFinishEvent()
+	{
+		mFinishEvent = true;
+	}
+
 	LaneMapT                                       mLanes;
 	std::vector<boost::shared_ptr<boost::thread> > mThreads;
 	std::vector<BarrierPtrT>                       mBarrier;
 
 	bool mFinishing;
+	bool mFinishEvent;
 };
 
 } // namespace Event
