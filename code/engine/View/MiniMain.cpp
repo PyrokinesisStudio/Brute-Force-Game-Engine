@@ -39,12 +39,17 @@ namespace View {
 
 MiniMain::MiniMain() :
 mLane(NULL),
-mOgreRoot(NULL)
+mOgreRoot(NULL),
+mHardwareBufferManager(NULL)
 {}
 
 MiniMain::~MiniMain()
 {
 	mOgreRoot->shutdown();
+
+	if (mHardwareBufferManager)
+		delete mHardwareBufferManager;
+
 	delete mOgreRoot;
 }
 
@@ -61,9 +66,14 @@ void MiniMain::initOgreForMeshLoading()
 {
 	Path p;
 	const std::string meshPath = p.Get(ID::P_GRAPHICS_MESHES);
+	if (Ogre::Root::getSingletonPtr())
+	{
+		errlog << "Root still existing";
+	}
 
 	mOgreRoot = new Ogre::Root("", "", p.Get(ID::P_LOGS) + "OgreMeshLoad.log");
-	new Ogre::DefaultHardwareBufferManager();
+	mHardwareBufferManager = new Ogre::DefaultHardwareBufferManager;
+
 	Ogre::ResourceGroupManager::getSingleton().addResourceLocation(meshPath, "FileSystem");
 	Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();	
 }

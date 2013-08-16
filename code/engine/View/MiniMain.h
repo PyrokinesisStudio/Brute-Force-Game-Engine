@@ -33,6 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace Ogre {
 	class Root;
+	class DefaultHardwareBufferManager;
 }
 
 namespace BFG {
@@ -53,6 +54,7 @@ private:
 	
 	Event::Lane* mLane;
 	Ogre::Root* mOgreRoot;
+	Ogre::DefaultHardwareBufferManager* mHardwareBufferManager;
 };
 
 
