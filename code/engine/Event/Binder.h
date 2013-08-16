@@ -95,10 +95,13 @@ struct Binder
 	{
 		Callable* c = NULL;
 		typename ConnectionMapT::iterator it = mBindings.find(boost::make_tuple(id, destination));
+
 		if (it == mBindings.end())
 		{
 			c = new Binding<PayloadT, SenderIdT>(); 
 			ConnectionT ea = {id, destination, c};
+
+			boost::mutex::scoped_lock sl(mBindingsLocker);
 			mBindings.insert(ea);
 		}
 		else
@@ -117,26 +120,30 @@ struct Binder
 	          const DestinationIdT destination,
 	          const SenderIdT sender) const
 	{
-		boost::mutex::scoped_lock sl(mFlipLocker);
-		
+		boost::mutex::scoped_lock sl(mBindingsLocker);
+
 		typename ConnectionMapT::const_iterator it =
 			mBindings.find(boost::make_tuple(id, destination));
 			
-		if (it != mBindings.end())
+		if (it == mBindings.end())
+			//! \todo event id not found in this EventBinder
+			return;
+
+		Callable* c = boost::any_cast<Callable*>(it->mBinding);
+		sl.unlock();
+
+		Binding<PayloadT, SenderIdT>* b = static_cast<Binding<PayloadT, SenderIdT>*>(c);
+		try
 		{
-			Callable* c = boost::any_cast<Callable*>(it->mBinding);
-			Binding<PayloadT, SenderIdT>* b = static_cast<Binding<PayloadT, SenderIdT>*>(c);
-			try
-			{
-				b->emit(payload, sender);
-				mCallSequenceBack.push_back(c);
-			}
-			catch (IncompatibleTypeException& ex)
-			{
-				handleIncompatibleTypeExceptionOnEmit(id, destination, ex);
-			}
+			b->emit(payload, sender);
+
+			boost::mutex::scoped_lock sl2(mCallSequenceLocker);
+			mCallSequenceBack.push_back(c);
 		}
-		//! \todo Else: event id not found in this EventBinder
+		catch (IncompatibleTypeException& ex)
+		{
+			handleIncompatibleTypeExceptionOnEmit(id, destination, ex);
+		}
 	}
 
 	// Verarbeitet alle events, die mit emit() gequeued wurden.
@@ -151,6 +158,7 @@ struct Binder
 			}
 			catch (const std::runtime_error& ex)
 			{
+				boost::mutex::scoped_lock sl(mBindingsLocker);
 				handleStdRuntimeErrorOnTick(ex, c);
 			}
 		}
@@ -159,7 +167,7 @@ struct Binder
 	
 	void flipCallSequence() const
 	{
-		boost::mutex::scoped_lock sl(mFlipLocker);
+		boost::mutex::scoped_lock sl(mCallSequenceLocker);
 		std::swap(mCallSequenceFront, mCallSequenceBack);
 	}
 	
@@ -208,7 +216,8 @@ struct Binder
 	mutable std::vector<Callable*> mCallSequenceFront;
 	mutable std::vector<Callable*> mCallSequenceBack;
 
-	mutable boost::mutex mFlipLocker;
+	mutable boost::mutex mCallSequenceLocker;
+	mutable boost::mutex mBindingsLocker;
 };
 
 } // namespace Event
