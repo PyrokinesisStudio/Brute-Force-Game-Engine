@@ -44,6 +44,7 @@ TARGET_LINK_LIBRARIES(bfgPhysics
 	${ODE_LIBRARY}
 	bfgBase
 	bfgCore
+	bfgView # because auf Ogre::Matrix3
 )
 
 ADD_DEPENDENCIES(bfgPhysics PhysicsEnums ViewEnums)

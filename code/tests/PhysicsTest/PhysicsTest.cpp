@@ -27,11 +27,16 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BOOST_TEST_MODULE PhysicsTest
 #include <boost/test/unit_test.hpp>
 
-#include <Event/Event.h>
-#include <Physics/Main.h>
-#include <Physics/Event_fwd.h>
-#include <Core/Math.h>
 #include <Base/Pause.h>
+
+#include <Core/Math.h>
+
+#include <Event/Event.h>
+
+#include <Physics/Event_fwd.h>
+#include <Physics/Main.h>
+
+#include <View/MiniMain.h>
 
 // ---------------------------------------------------------------------------
 
@@ -60,7 +65,7 @@ BOOST_AUTO_TEST_CASE (testLibraryInit)
 	
 	physicsLane.addEntry<BFG::Physics::Main>();
 
-	sync.startEntries();
+	sync.start();
 	sync.finish();
 }
 
@@ -77,7 +82,7 @@ BOOST_AUTO_TEST_CASE (testCreateOneObject)
 	physicsLane.connect(BFG::ID::PE_FULL_SYNC, &pc, &PhysicsClient::onFullSync, rootModule);
 	physicsLane.addEntry<BFG::Physics::Main>();
 	
-	sync.startEntries();
+	sync.start();
 
 	BFG::GameHandle handle = BFG::generateHandle();
 	BFG::Location location(v3::NEGATIVE_UNIT_Z);
@@ -94,6 +99,7 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModule)
 {
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane physicsLane(sync, 100);
+	BFG::Event::Lane miniView(sync, 100);
 
 	BFG::GameHandle handle = BFG::generateHandle();
 	PhysicsClient pc;
@@ -101,7 +107,9 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModule)
 	physicsLane.connect(BFG::ID::PE_FULL_SYNC, &pc, &PhysicsClient::onFullSync, handle);
 	physicsLane.addEntry<BFG::Physics::Main>();
 	
-	sync.startEntries();
+	miniView.addEntry<BFG::View::MiniMain>();
+
+	sync.start();
 
 	// Create Physics Object
 	BFG::Location location;
@@ -113,13 +121,15 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModule)
 	(
 		handle,
 		handle,
-		"Blah.mesh",
+		"Cube.mesh",
 		BFG::ID::CM_Standard,
 		v3::UNIT_X,
 		BFG::qv4::IDENTITY,
 		5.0f
 	);
 	physicsLane.emit(BFG::ID::PE_ATTACH_MODULE, mcp);
+
+	boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 
 	sync.finish();
 	BOOST_CHECK_EQUAL(pc.mCount, 1);
@@ -130,6 +140,7 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModuleAndSetValues)
 {
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane physicsLane(sync, 100);
+	BFG::Event::Lane miniView(sync, 100);
 
 	PhysicsClient pc;
 	
@@ -138,7 +149,9 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModuleAndSetValues)
 	physicsLane.connect(BFG::ID::PE_FULL_SYNC, &pc, &PhysicsClient::onFullSync, rootModule);
 	physicsLane.addEntry<BFG::Physics::Main>();
 	
-	sync.startEntries();
+	miniView.addEntry<BFG::View::MiniMain>();
+
+	sync.start();
 
 	// Create Physics Object
 	BFG::GameHandle handle = rootModule;
@@ -150,7 +163,7 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModuleAndSetValues)
 	(
 		handle,
 		handle,
-		"Blah.mesh",
+		"Cube.mesh",
 		BFG::ID::CM_Standard,
 		v3::UNIT_X,
 		BFG::qv4::IDENTITY,
@@ -158,6 +171,8 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModuleAndSetValues)
 	);
 	physicsLane.emit(BFG::ID::PE_ATTACH_MODULE, mcp);
 	
+	boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+		
 	// Set some values
 	physicsLane.emit(BFG::ID::PE_UPDATE_POSITION, v3::NEGATIVE_UNIT_X, handle);
 	physicsLane.emit(BFG::ID::PE_UPDATE_ORIENTATION, BFG::qv4(0,1,0,0), handle);
@@ -169,7 +184,7 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModuleAndSetValues)
 	(
 		handle,
 		BFG::generateHandle(),
-		"Blub.mesh",
+		"Cube.mesh",
 		BFG::ID::CM_Standard,
 		v3::UNIT_Y,
 		BFG::qv4::IDENTITY,
@@ -177,8 +192,10 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModuleAndSetValues)
 	);
 	physicsLane.emit(BFG::ID::PE_ATTACH_MODULE, mcp2);
 	
+	boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+
 	sync.finish();
-	BOOST_CHECK_EQUAL(pc.mCount, 1);
+	BOOST_CHECK_EQUAL(pc.mCount, 2);
 
 	std::cout << pc.mCount << std::endl;
 	std::cout << pc.mFsd.get<0>() << std::endl;

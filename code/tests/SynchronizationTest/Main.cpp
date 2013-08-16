@@ -84,7 +84,7 @@ const s32 START_SIMULATION_3 = 15004;
 const GameHandle SERVER_STATE_HANDLE = 42;
 const GameHandle CLIENT_STATE_HANDLE = 43;
 
-const s32 ROWS = 20;
+const s32 ROWS = 3;
 
 bool alwaysTrue(boost::shared_ptr<BFG::GameObject>)
 {
@@ -189,7 +189,7 @@ struct ServerState: public SynchronizationTestState
 	mSceneCreated(false)
 	{
 		mSubLane->connect(BFG::ID::NE_RECEIVED, this, &ServerState::onReceived, SERVER_STATE_HANDLE);
-		mSubLane->connect(BFG::ID::NE_CONNECTED, this, &ServerState::onConneced);
+		mSubLane->connect(BFG::ID::NE_CONNECTED, this, &ServerState::onConnected);
 		mSubLane->connect(BFG::ID::NE_DISCONNECTED, this, &ServerState::onDisconnected);
 	}
 	
@@ -371,8 +371,7 @@ struct ClientState : public SynchronizationTestState
 
 	void onExit(s32)
 	{
-		// TODO: Stop!
-		//mSubLane->stop();
+		mSubLane->emit(BFG::ID::EA_FINISH, BFG::Event::Void());
 	}
 	
 	void onSimulation0(s32)
@@ -645,8 +644,7 @@ int main( int argc, const char* argv[] ) try
 		BFG::Network::EndpointT payload = boost::make_tuple(stringToArray<128>(ip), stringToArray<128>(port));
 		networkLane.emit(BFG::ID::NE_CONNECT, payload);
 		
-		BFG::Base::pause();
-		synchronizer.finish();
+		synchronizer.finish(true);
 	}
 	
 	infolog << "Good Bye!";
