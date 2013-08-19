@@ -26,6 +26,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include "AudioState.h"
 #include <Core/Path.h>
+#include <Event/Event.h>
 
 #include <Audio/Audio.h>
 
@@ -57,7 +58,6 @@ void AudioState::onSoundEmitterProcessSound(const std::string& effect)
 
 void AudioState::onSoundEffect(const std::string& effect)
 {
-
 	SoundEffectMapT::iterator it = mSoundEffectMap.find(effect);
 	mSoundEmitter.processSound(it->second);
 }

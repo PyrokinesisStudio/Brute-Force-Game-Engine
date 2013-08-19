@@ -31,7 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/ClockUtils.h>
 
-#include <Controller/ControllerEvents_fwd.h>
+#include <Controller/Enums.hh>
 
 #include <Model/Environment.h>
 #include <Model/Sector.h>
@@ -45,11 +45,14 @@ using namespace BFG;
 
 struct MainState : State
 {
-	MainState(GameHandle handle, EventLoop* loop);
+	MainState(GameHandle handle, Event::Lane& lane);
 
-	void ControllerEventHandler(Controller_::VipEvent* iCE);
-
-	virtual void onTick(const quantity<si::time, f32> TSLF);
+	void onTick(const TickTimeT timeSinceLastTick);
+	
+	void onAxisY(f32 factor);
+	void onFps(bool on);
+	void onShipFire();
+	void onQuit();
 
 	GameHandle mPlayer;
 
@@ -60,6 +63,8 @@ struct MainState : State
 	HumanGeneral   mHumanGeneral;
 
 	BFG::Property::PluginMapT mPluginMap;
+
+	Event::Lane& mLane;
 };
 
 #endif

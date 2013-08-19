@@ -26,11 +26,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <OgreException.h>
 
-#include <EventSystem/Core/EventLoop.h>
+#include <Event/Event.h>
 
 #include <Core/GameHandle.h>
 #include <Core/Path.h>
 #include <Base/ShowException.h>
+#include <Base/Logger.h>
 
 #include <Audio/Audio.h>
 #include <Controller/Controller.h>
@@ -41,54 +42,38 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include "AudioState.h"
 #include "Globals.h"
 
-GameHandle stateHandle = BFG::generateHandle();
+GameHandle gStateHandle = BFG::generateHandle();
 
-boost::scoped_ptr<ViewMainState> gViewState;
-boost::scoped_ptr<MainState> gGameState;
-boost::scoped_ptr<AudioState> gAudioState;
+static const int EVENT_FREQU = 100;
 
-void* createStates(void* p)
+struct Main : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 {
-	EventLoop* loop = static_cast<EventLoop*>(p);
+	Main()
+	{}
 
-	gViewState.reset(new ViewMainState(stateHandle, loop));
-	gGameState.reset(new MainState(stateHandle, loop));
-	gAudioState.reset(new AudioState);
-
-	// Init Controller
-	GameHandle handle = generateHandle();
-
+	virtual void main(BFG::Event::Lane* lane)
 	{
-		BFG::Controller_::ActionMapT actions;
-		actions[A_SHIP_AXIS_Y] = "A_SHIP_AXIS_Y";
-		actions[A_SHIP_FIRE]   = "A_SHIP_FIRE";
-		actions[A_QUIT]        = "A_QUIT";
-		actions[A_FPS]         = "A_FPS";
-		BFG::Controller_::sendActionsToController(loop, actions);
-
-		Path path;
-		const std::string config_path = path.Expand("SpaceInvaders.xml");
-		const std::string state_name = "SpaceInvaders";
-
-		BFG::View::WindowAttributes wa;
-		BFG::View::queryWindowAttributes(wa);
-
-		Controller_::StateInsertion si(config_path, state_name, handle, true, wa);
-
-		EventFactory::Create<Controller_::ControlEvent>
-		(
-			loop,
-			ID::CE_LOAD_STATE,
-			si
-		);
-
-		loop->connect(A_SHIP_AXIS_Y, gGameState.get(), &MainState::ControllerEventHandler);
-		loop->connect(A_SHIP_FIRE, gGameState.get(), &MainState::ControllerEventHandler);
-		loop->connect(A_QUIT, gGameState.get(), &MainState::ControllerEventHandler);
-		loop->connect(A_FPS, gGameState.get(), &MainState::ControllerEventHandler);
+		mGameState.reset(new MainState(gStateHandle, *lane));
+		mAudioState.reset(new AudioState(lane->createSubLane()));
 	}
-	return 0;
-}
+
+	boost::scoped_ptr<MainState> mGameState;
+	boost::scoped_ptr<AudioState> mAudioState;
+};
+
+struct ViewMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
+{
+	ViewMain ()
+	{}
+
+	virtual void main(BFG::Event::Lane* lane)
+	{
+		mViewState.reset(new ViewMainState(gStateHandle, *lane));
+	}
+
+	boost::scoped_ptr<ViewMainState> mViewState;
+};
+
 
 int main( int argc, const char* argv[] ) try
 {
@@ -100,27 +85,28 @@ int main( int argc, const char* argv[] ) try
 	Base::Logger::Init(Base::Logger::SL_INFORMATION, "Logs/Si.log");
 #endif
 
-	EventLoop iLoop(true);
-
-	size_t controllerFrequency = 1000;
+	BFG::Event::Synchronizer synchronizer;
+	
+	BFG::Event::Lane physicsLane(synchronizer, 100, "Physics", BFG::Event::RL2);
+	physicsLane.addEntry<BFG::Physics::Main>();
+	
+	BFG::u32 controllerFrequency = 1000;
+	BFG::Event::Lane controllerLane(synchronizer, controllerFrequency, "Controller");
+	controllerLane.addEntry<BFG::Controller_::Main>(controllerFrequency);
+	
+	BFG::Event::Lane viewLane(synchronizer, 100, "View");
 	const std::string caption = "Engine Test 02: Space Invaders";
-
-	BFG::Audio::Main audioMain;
-	BFG::Controller_::Main controllerMain(controllerFrequency);
-	BFG::Physics::Main physicsMain;
-	BFG::View::Main viewMain(caption);
+	viewLane.addEntry<BFG::View::Main>(caption);
+	viewLane.addEntry<ViewMain>();
 	
-	iLoop.addEntryPoint(viewMain.entryPoint());
-	iLoop.addEntryPoint(controllerMain.entryPoint());
-	iLoop.addEntryPoint(physicsMain.entryPoint());
-	iLoop.addEntryPoint(audioMain.entryPoint());
-	iLoop.addEntryPoint(new Base::CEntryPoint(createStates));
-
-	iLoop.run();
+	BFG::Event::Lane gameLane(synchronizer, 100, "Game", BFG::Event::RL3);
+	gameLane.addEntry<Main>();
 	
-	gViewState.reset();
-	gGameState.reset();
-	gAudioState.reset();
+	BFG::Event::Lane audioLane(synchronizer, 100, "Audio");
+	audioLane.addEntry<BFG::Audio::Main>();
+	
+	synchronizer.start();
+	synchronizer.finish(true);
 }
 catch (Ogre::Exception& e)
 {

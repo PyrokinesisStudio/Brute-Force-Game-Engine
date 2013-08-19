@@ -28,6 +28,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef SI_AUDIO_STATE_H
 #define SI_AUDIO_STATE_H
 
+#include <Base/LibraryMainBase.h>
+
+#include <Event/Event.h>
+
 #include <Audio/Playlist.h>
 #include <Audio/SoundEmitter.h>
 
@@ -36,7 +40,7 @@ using namespace BFG;
 class AudioState
 {
 public:
-	AudioState();
+	AudioState(Event::SubLanePtr subLane);
 	~AudioState();
 
 private:

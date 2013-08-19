@@ -35,6 +35,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <View/Effect.h>
 #include <View/State.h>
+#include <View/EffectCreation.h>
 
 
 using namespace BFG;

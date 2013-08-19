@@ -27,14 +27,13 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include "InvaderGeneral.h"
 
-#include <Model/Events/SectorEvent.h>
 #include <Model/Data/GameObjectFactory.h>
 
 #include "Globals.h"
 
-InvaderGeneral::InvaderGeneral(EventLoop* loop,
+InvaderGeneral::InvaderGeneral(Event::SubLanePtr lane,
 							   boost::shared_ptr<BFG::Environment> environment) :
-	Emitter(loop),
+	mLane(lane),
 	mEnvironment(environment),
 	mLastShot(0),
 	mWaveCount(0)
@@ -69,7 +68,7 @@ void InvaderGeneral::spawnWave()
 			op.mLocation.orientation = INVADER_ORIENTATION;
 			op.mLinearVelocity = v3::ZERO;
 
-			emit<SectorEvent>(ID::S_CREATE_GO, op);
+			mLane->emit(ID::S_CREATE_GO, op);
 		}
 	}
 }
@@ -114,7 +113,7 @@ void InvaderGeneral::update(quantity<si::time, f32> timeSinceLastFrame)
 			)
 		);
 
-		emit<GameObjectEvent>(ID::GOE_FIRE_ROCKET, 0, bestCandidate.first);
+		mLane->emit(ID::GOE_FIRE_ROCKET, Event::Void(), bestCandidate.first);
 
 		lastPlayerInvaderDistance = bestCandidate.second + 0.1f;
 	}

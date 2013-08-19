@@ -33,15 +33,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Math.h>
 #include <Core/Types.h>
 
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 
 #include <Model/Environment.h>
 
 using namespace BFG;
 
-struct InvaderGeneral : Emitter
+struct InvaderGeneral
 {
-	InvaderGeneral(EventLoop* loop,
+	InvaderGeneral(Event::SubLanePtr lane,
 				   boost::shared_ptr<BFG::Environment> environment);
 
 	void spawnWave();
@@ -50,6 +50,7 @@ struct InvaderGeneral : Emitter
 	boost::shared_ptr<BFG::Environment> mEnvironment;
 	quantity<si::time, f32>             mLastShot;
 	size_t                              mWaveCount;
+	Event::SubLanePtr					mLane;
 };
 
 #endif

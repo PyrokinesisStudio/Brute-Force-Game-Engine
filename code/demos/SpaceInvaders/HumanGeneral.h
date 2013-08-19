@@ -33,22 +33,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Math.h>
 #include <Core/Types.h>
 
-#include <EventSystem/Core/EventLoop.h>
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 
 #include <Model/Environment.h>
 
 using namespace BFG;
 
-void fireParticles(Ogre::ParticleSystem* particleSystem,
-				   Ogre::SceneNode* sceneNode,
-				   f32 startTime,
-				   f32 endTime,
-				   f32 elapsedTime);
-
-struct HumanGeneral : Emitter
+struct HumanGeneral
 {
-	HumanGeneral(EventLoop* loop,
+	HumanGeneral(Event::SubLanePtr sublane,
 				 boost::shared_ptr<BFG::Environment> environment);
 	
 	void update(quantity<si::time, f32> timeSinceLastFrame);
@@ -57,6 +50,8 @@ struct HumanGeneral : Emitter
 	
 	boost::shared_ptr<BFG::Environment> mEnvironment;	
 	quantity<si::time, f32>             mLastPowerupSpawned;
+	Event::SubLanePtr                   mSubLane;
+
 };
 
 #endif

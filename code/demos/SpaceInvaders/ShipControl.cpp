@@ -25,14 +25,18 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "ShipControl.h"
-#include <Physics/Event.h>
+
+#include <Physics/Enums.hh>
+
 #include "Globals.h"
+
 
 ShipControl::ShipControl(GameObject& Owner, BFG::PluginId pid) :
 	Property::Concept(Owner, "ShipControl", pid)
 {
 	require("Physical");
-	requestEvent(ID::GOE_CONTROL_YAW);
+	
+	subLane()->connect(ID::GOE_CONTROL_YAW, this, &ShipControl::onGoeControlYaw, ownerHandle());
 }
 
 void ShipControl::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
@@ -44,7 +48,7 @@ void ShipControl::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 	// Simulate a wall
 	if (std::abs(go.position.x) > DISTANCE_TO_WALL)
 	{
-		emit<Physics::Event>(ID::PE_UPDATE_VELOCITY, v3::ZERO, ownerHandle());
+		subLane()->emit(ID::PE_UPDATE_VELOCITY, v3::ZERO, ownerHandle());
 		go.position.x = sign(go.position.x) * (DISTANCE_TO_WALL - 0.1f);
 		setPos = true;
 	}
@@ -57,33 +61,22 @@ void ShipControl::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 	}
 
 	if (setPos)
-		emit<Physics::Event>(ID::PE_UPDATE_POSITION, go.position, ownerHandle());
+		subLane()->emit(ID::PE_UPDATE_POSITION, go.position, ownerHandle());
 }
 
-
-void ShipControl::internalOnEvent(EventIdT action,
-								  Property::Value payload,
-								  GameHandle module,
-								  GameHandle sender)
+void ShipControl::onGoeControlYaw(f32 factor)
 {
-	switch(action)
-	{
-		case ID::GOE_CONTROL_YAW:
-		{
-			// Make the ship tilt a bit when moving
-			qv4 tilt;
-			qv4 turn;
-			fromAngleAxis(turn, -90.0f * DEG2RAD, v3::UNIT_X);
-			fromAngleAxis(tilt, payload * -45.0f * DEG2RAD, v3::UNIT_Z);
+	// Make the ship tilt a bit when moving
+	qv4 tilt;
+	qv4 turn;
+	fromAngleAxis(turn, -90.0f * DEG2RAD, v3::UNIT_X);
+	fromAngleAxis(tilt, factor * -45.0f * DEG2RAD, v3::UNIT_Z);
 
-			qv4 newOrientation = turn * tilt;
+	qv4 newOrientation = turn * tilt;
 
-			// Move it left or right
-			v3 newVelocity = v3(payload * SHIP_SPEED_MULTIPLIER,0,0);
+	// Move it left or right
+	v3 newVelocity = v3(factor * SHIP_SPEED_MULTIPLIER,0,0);
 
-			emit<Physics::Event>(ID::PE_UPDATE_ORIENTATION, newOrientation, ownerHandle());
-			emit<Physics::Event>(ID::PE_UPDATE_VELOCITY, newVelocity, ownerHandle());
-			break;
-		}
-	}
+	subLane()->emit(ID::PE_UPDATE_ORIENTATION, newOrientation, ownerHandle());
+	subLane()->emit(ID::PE_UPDATE_VELOCITY, newVelocity, ownerHandle());
 }

@@ -26,7 +26,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "InvaderControl.h"
-#include <Physics/Event.h>
+#include <Physics/Enums.hh>
 #include "Globals.h"
 
 InvaderControl::InvaderControl(GameObject& Owner, BFG::PluginId pid) :
@@ -51,8 +51,8 @@ void InvaderControl::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 
 	go.orientation = INVADER_ORIENTATION;
 
-	emit<Physics::Event>(ID::PE_UPDATE_POSITION, go.position, ownerHandle());
-	emit<Physics::Event>(ID::PE_UPDATE_ORIENTATION, go.orientation, ownerHandle());
+	subLane()->emit(ID::PE_UPDATE_POSITION, go.position, ownerHandle());
+	subLane()->emit(ID::PE_UPDATE_ORIENTATION, go.orientation, ownerHandle());
 }
 
 void InvaderControl::checkPosition(v3& position, v3& direction) const
