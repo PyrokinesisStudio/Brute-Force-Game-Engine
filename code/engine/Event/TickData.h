@@ -27,6 +27,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_EVENT_TICKDATA_H
 #define BFG_EVENT_TICKDATA_H
 
+#include <boost/units/quantity.hpp>
+#include <boost/units/systems/si.hpp>
 #include <Core/Types.h>
 
 namespace BFG {
@@ -39,6 +41,15 @@ struct TickData
 	{}
 
 	s32 mTimeSinceLastTick;
+
+	boost::units::quantity<boost::units::si::time, f32> 
+	timeSinceLastTick() const
+	{
+		f32 timeInSeconds = 
+		static_cast<f32>(mTimeSinceLastTick) / BFG::Clock::milliSecond;
+		
+		return timeInSeconds * boost::units::si::seconds;
+	}
 };
 
 } // namespace Event
