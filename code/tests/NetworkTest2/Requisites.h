@@ -100,7 +100,7 @@ struct NetworkContext
 		lane.addEntry<BFG::Network::Main>(mode);
 		
 		application.reset(new ApplicationT(lane, status, appHandle, testMsg));
-		synchronizer.startEntries();
+		synchronizer.start();
 	}
 
 	~NetworkContext()

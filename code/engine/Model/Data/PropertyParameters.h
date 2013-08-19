@@ -126,8 +126,6 @@ protected:
 			return result;
 		}
 	
-		// is string
-		result = stringToArray<128>(input);
 		return result;
 	}
 };
