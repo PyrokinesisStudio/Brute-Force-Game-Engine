@@ -47,9 +47,7 @@ State::~State()
 
 void State::onLoop(Event::TickData tickData)
 {
-	f32 timeInSeconds = static_cast<f32>(tickData.mTimeSinceLastTick) / BFG::Clock::milliSecond;
-	quantity<si::time, f32> TSLF = timeInSeconds * si::seconds;
-	onTick(TSLF);
+	onTick(tickData.timeSinceLastTick());
 }
 
 void State::stopUpdates()
