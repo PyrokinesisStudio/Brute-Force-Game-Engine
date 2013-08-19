@@ -118,8 +118,8 @@ MainState::MainState(GameHandle handle, Event::Lane& lane) :
 
 	mLane.connect(A_SHIP_AXIS_Y, this, &MainState::onAxisY);
 	mLane.connect(A_FPS, this, &MainState::onFps);
-	mLane.connectV(A_SHIP_FIRE, this, &MainState::onShipFire);
-	mLane.connectV(A_QUIT, this, &MainState::onQuit);
+	mLane.connect(A_SHIP_FIRE, this, &MainState::onShipFire);
+	mLane.connect(A_QUIT, this, &MainState::onQuit);
 }
 
 void MainState::onAxisY(f32 factor)
@@ -132,12 +132,12 @@ void MainState::onFps(bool on)
 	mLane.emit(BFG::ID::VE_DEBUG_FPS, on);
 }
 
-void MainState::onShipFire()
+void MainState::onShipFire(BFG::s32)
 {
 	mLane.emit(ID::GOE_FIRE_ROCKET, Event::Void(), mPlayer);
 }
 
-void MainState::onQuit()
+void MainState::onQuit(BFG::s32)
 {
 	mLane.emit(ID::EA_FINISH, Event::Void());
 }
