@@ -36,10 +36,10 @@ Collectable::Collectable(GameObject& Owner, BFG::PluginId pid) :
 	require("Physical");
 	require("Destroyable");
 
-	subLane()->connectV(ID::PE_CONTACT, this, &Collectable::onCollect, ownerHandle());
+	subLane()->connect(ID::PE_CONTACT, this, &Collectable::onCollect, ownerHandle());
 }
 
-void Collectable::onCollect(GameHandle sender)
+void Collectable::onCollect(const Physics::ModulePenetration& mp, GameHandle sender)
 {
 	// Ignore additional PE_CONTACT events
 	if (mUsed)

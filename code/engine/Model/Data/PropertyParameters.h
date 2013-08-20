@@ -126,6 +126,8 @@ protected:
 			return result;
 		}
 	
+		// is string
+		result = input;
 		return result;
 	}
 };

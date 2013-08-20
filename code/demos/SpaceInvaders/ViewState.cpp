@@ -46,7 +46,7 @@ ViewMainState::ViewMainState(GameHandle handle,  Event::Lane& lane) :
 
 ViewMainState::~ViewMainState()
 {
-	mLane.emit(BFG::ID::VE_SHUTDOWN, 0);
+	mLane.emit(BFG::ID::VE_SHUTDOWN, Event::Void());
 }
 
 bool ViewMainState::frameStarted(const Ogre::FrameEvent& evt)
