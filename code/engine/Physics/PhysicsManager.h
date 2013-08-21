@@ -74,7 +74,7 @@ public:
 
 	void clear();
 
-	void move(quantity<si::time, f32> timeSinceLastFrame);
+	void move(Event::TickData tickData);
 
 	void addObject(GameHandle handle,
 	               boost::shared_ptr<PhysicsObject> object);

@@ -145,8 +145,6 @@ struct PongServerState : BFG::Emitter
 		mBall->update(TSLF);
 		mLowerBar->update(TSLF);
 		mUpperBar->update(TSLF);
-
-		emit<BFG::Physics::Event>(BFG::ID::PE_STEP, TSLF.value());
 	}
 
 	boost::shared_ptr<BFG::GameObject> mBall;
