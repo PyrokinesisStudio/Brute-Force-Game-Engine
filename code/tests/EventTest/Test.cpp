@@ -26,6 +26,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #define BOOST_TEST_MODULE EventTest
 
+#include <boost/assign/std/vector.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -35,6 +36,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Event/Binding.h>
 #include <Event/Event.h>
+
+//! Handy shortcut for BOOST_CHECK_EQUAL_COLLECTIONS
+#ifndef CHECK_EQUAL_COLLECTIONS
+#define CHECK_EQUAL_COLLECTIONS(a,b) \
+	BOOST_CHECK_EQUAL_COLLECTIONS((a).begin(), (a).end(), (b).begin(), (b).end())
+#endif
 
 const int testEventId = 5;
 const BFG::GameHandle testDestinationId = 15;
@@ -46,6 +53,7 @@ static BFG::u32 gf32EventCounter = 0;
 static BFG::u32 gu32EventCounter = 0;
 static BFG::u32 gVoidEventCounter = 0;
 
+static std::vector<std::vector<BFG::u32> > gVectorEventCounter;
 
 struct TestModulAudio1 : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
@@ -249,15 +257,9 @@ struct TestContainerModule : public BFG::Event::EntryPoint<BFG::Event::Lane>
 		lane->connect(10001, this, &TestContainerModule::testEventHandler);
 	}
 
-	void testEventHandler(const std::vector<int>& cont)
+	void testEventHandler(const std::vector<BFG::u32>& cont)
 	{
-		std::cout << "Received Vector:";
-		std::vector<int>::const_iterator it = cont.begin();
-		for (; it != cont.end(); ++it)
-		{
-			std::cout << " " << *it;
-		}
-		std::cout << std::endl;
+		gVectorEventCounter.push_back(cont);
 	}
 };
 
@@ -582,29 +584,27 @@ BOOST_AUTO_TEST_CASE (EmitStdContainer)
 	lane.addEntry<TestContainerModule>();
 
 	sync.start();
+	
+	using namespace boost::assign;
 
-	std::vector<int> vec;
-	vec.push_back(343);
-	vec.push_back(783);
-	vec.push_back(99383);
+	std::vector<BFG::u32> testData1;
+	testData1 += 92,83745,0,9823,740958,74,8237,40598,2730,5987,91287,54098,750,2934750,92,384,5702,9384,23,9480,23948,023,948,2348;
 
-	std::vector<int> vec2;
-	vec.push_back(23452);
-	vec.push_back(24568745);
-	vec.push_back(7895);
-	vec.push_back(7477);
-	vec.push_back(22);
-	vec.push_back(714395);
+	std::vector<BFG::u32> testData2;
+	testData2 += 55,43,24,6,2345,63456,34,5867,555,5678,365,896,24,574,5432,74,4567,256,347,373;
 
-	std::vector<int> vec3;
-	vec.push_back(22111);
-	vec.push_back(783233);
+	std::vector<BFG::u32> testData3;
+	testData3 += 82,4,0,9587,23,459,827,34,5,90823,74,5092,83,745092,834,7502,98,70764,1,89374,472,938,4750,298,34,7509,2834;
 
-	lane.emit(10001, vec);
-	lane.emit(10001, vec2);
-	lane.emit(10001, vec3);
+	lane.emit(10001, testData1);
+	lane.emit(10001, testData2);
+	lane.emit(10001, testData3);
 
 	sync.finish();
+
+	CHECK_EQUAL_COLLECTIONS(gVectorEventCounter[0], testData1);
+	CHECK_EQUAL_COLLECTIONS(gVectorEventCounter[1], testData2);
+	CHECK_EQUAL_COLLECTIONS(gVectorEventCounter[2], testData3);
 }
 
 
