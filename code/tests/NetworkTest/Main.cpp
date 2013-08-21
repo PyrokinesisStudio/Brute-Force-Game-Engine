@@ -130,7 +130,7 @@ int main( int argc, const char* argv[] ) try
 		int mode(BFG_SERVER); // casting problem
 		lane.addEntry<Network::Main>(mode);
 
-		synchronizer.startEntries();
+		synchronizer.start();
 		
 		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 
@@ -151,7 +151,7 @@ int main( int argc, const char* argv[] ) try
 
 		int mode(BFG_CLIENT);
 		lane.addEntry<Network::Main>(mode);
-		synchronizer.startEntries();
+		synchronizer.start();
 
 		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 
