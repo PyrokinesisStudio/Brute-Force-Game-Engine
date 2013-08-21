@@ -74,8 +74,8 @@ struct BasicSynchronizer
 	friend struct BasicLane;
 
 	BasicSynchronizer() :
-	mFinishing(false),
-	mFinishEvent(false)
+	mFinishEvent(false),
+	mFinish(4)
 	{}
 	
 	~BasicSynchronizer()
@@ -111,19 +111,35 @@ struct BasicSynchronizer
 		if (mThreads.empty())
 			return;
 		
-		// Create barriers in order to wait for finishing threads.
-		for (size_t i=0; i<10; ++i)
-			mBarrier.push_back(boost::make_shared<boost::barrier>(mThreads.size()));
+		finishRunlevel(RL3);
+		finishRunlevel(RL2);
+		finishRunlevel(RL1);
 
-		mFinishing = true;
-		
 		BOOST_FOREACH(boost::shared_ptr<boost::thread> t, mThreads)
 		{
 			t->join();
 		}
+		mThreads.clear();
 	}
 	
 private:
+	void finishRunlevel(RunLevel runlevel)
+	{
+		u32 barrierCount = mLanes.count(runlevel) + 1;
+
+		// Create barriers in order to wait for finishing threads.
+		for (size_t i=0; i<10; ++i)
+			mBarrier.push_back(boost::make_shared<boost::barrier>(barrierCount));
+
+		mFinish[runlevel] = true;
+
+		for (size_t i=0; i<10; ++i)
+			mBarrier[i]->wait();
+
+		dbglog << "Synchronizer finished runLevel " << runlevel;
+
+		mBarrier.clear();
+	}
 
 	void connectFinishEvent()
 	{
@@ -148,15 +164,17 @@ private:
 		RangeT ret = mLanes.equal_range(runlevel);
 		for (LaneMapIt laneIt = ret.first; laneIt != ret.second; ++laneIt)
 		{
-			createThread(laneIt->second, barrier);
+			createThread(laneIt->second, barrier, runlevel);
 		}
+
+		mFinish[runlevel] = false;
 
 		// Wait for all threads to finish (blocking)
 		barrier->wait();
 		dbglog << "Synchronizer initialized runLevel " << runlevel;
 	}
 
-	void createThread(LaneT* lane, BarrierPtrT runlevelBarrier)
+	void createThread(LaneT* lane, BarrierPtrT runlevelBarrier, RunLevel runlevel)
 	{
 		mThreads.push_back
 		(
@@ -167,7 +185,8 @@ private:
 					&BasicSynchronizer<LaneT>::loop,
 					this,
 					lane,
-					runlevelBarrier
+					runlevelBarrier,
+					runlevel
 				)
 			)
 		);
@@ -189,7 +208,7 @@ private:
 		}
 	}
 	
-	void loop(LaneT* lane, BarrierPtrT runlevelBarrier)
+	void loop(LaneT* lane, BarrierPtrT runlevelBarrier, RunLevel runlevel)
 	{
 		// Run all entry points of this lane.
 		lane->startEntries();
@@ -201,7 +220,7 @@ private:
 		if (!lane->mThreadName.empty())
 			nameCurrentThread(lane->mThreadName);
 		
-		while (!mFinishing)
+		while (!mFinish[runlevel])
 		{
 			lane->tick();
 		}
@@ -231,7 +250,7 @@ private:
 	std::vector<boost::shared_ptr<boost::thread> > mThreads;
 	std::vector<BarrierPtrT>                       mBarrier;
 
-	bool mFinishing;
+	std::vector<bool> mFinish;
 	bool mFinishEvent;
 };
 

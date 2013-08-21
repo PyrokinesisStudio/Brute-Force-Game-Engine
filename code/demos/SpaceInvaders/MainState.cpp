@@ -118,7 +118,7 @@ MainState::MainState(GameHandle handle, Event::Lane& lane) :
 
 	mLane.connect(A_SHIP_AXIS_Y, this, &MainState::onAxisY);
 	mLane.connect(A_FPS, this, &MainState::onFps);
-	mLane.connect(A_SHIP_FIRE, this, &MainState::onShipFire);
+	mLane.connectV(A_SHIP_FIRE, this, &MainState::onShipFire);
 	mLane.connect(A_QUIT, this, &MainState::onQuit);
 }
 
@@ -132,7 +132,7 @@ void MainState::onFps(bool on)
 	mLane.emit(BFG::ID::VE_DEBUG_FPS, on);
 }
 
-void MainState::onShipFire(BFG::s32)
+void MainState::onShipFire()
 {
 	mLane.emit(ID::GOE_FIRE_ROCKET, Event::Void(), mPlayer);
 }

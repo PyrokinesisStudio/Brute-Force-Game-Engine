@@ -51,7 +51,7 @@ struct MainState : State
 	
 	void onAxisY(f32 factor);
 	void onFps(bool on);
-	void onShipFire(BFG::s32);
+	void onShipFire();
 	void onQuit(BFG::s32);
 
 	GameHandle mPlayer;

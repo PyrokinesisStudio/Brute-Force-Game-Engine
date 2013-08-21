@@ -64,7 +64,7 @@ private:
 
 		mLane.addEntry<Audio::Main>();
 		mLane.connectLoop(this, &AudioTestLoader::loopEventHandler);
-		mSynchronizer.startEntries();
+		mSynchronizer.start();
 		
 		mTestFunction();
 	}

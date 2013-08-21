@@ -30,6 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/GameHandle.h>
 #include <Event/Event.h>
 #include <Model/Property/Concept.h>
+#include <Physics/Physics.h>
 
 using namespace BFG;
 
@@ -38,7 +39,7 @@ class Collectable : public Property::Concept
 public:
 	Collectable(GameObject& Owner, BFG::PluginId pid);
 	
-	void onCollect(GameHandle sender);
+	void onCollect(const Physics::ModulePenetration& mp, GameHandle sender);
 	
 	bool mUsed;
 };

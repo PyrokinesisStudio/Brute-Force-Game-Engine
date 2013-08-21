@@ -136,14 +136,14 @@ private:
 	boost::shared_ptr<Ogre::Root> mRoot;
 	Ogre::SceneManager* mSceneMgr;
 
+	// Leave this MyGui-pointer order because gui must be deleted first.
+	boost::shared_ptr<MyGUI::OgrePlatform> mPlatform;
+	boost::shared_ptr<MyGUI::Gui> mGui;
+
 	// for initialization only !!
 	boost::scoped_ptr<Camera> mMainCamera;
 	boost::scoped_ptr<Fps> mFps;
 	boost::scoped_ptr<Console> mConsole;
-	
-	// Leave this MyGui-pointer order because gui must be deleted first.
-	boost::shared_ptr<MyGUI::OgrePlatform> mPlatform;
-	boost::shared_ptr<MyGUI::Gui> mGui;
 };
 
 } // namespace View

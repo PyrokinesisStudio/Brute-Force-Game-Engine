@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE (AddEntry)
 	
 	sync.finish();
 }
-
+#if 0
 BOOST_AUTO_TEST_CASE (AddEntryException)
 {
 	BFG::Event::Synchronizer sync;
@@ -120,5 +120,7 @@ BOOST_AUTO_TEST_CASE (AddEntryException)
 	
 	sync.finish();
 }
+
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
