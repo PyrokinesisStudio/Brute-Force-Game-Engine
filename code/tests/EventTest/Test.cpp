@@ -242,6 +242,25 @@ struct ThrowingModule : public BFG::Event::EntryPoint<BFG::Event::Lane>
 	}
 };
 
+struct TestContainerModule : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		lane->connect(10001, this, &TestContainerModule::testEventHandler);
+	}
+
+	void testEventHandler(const std::vector<int>& cont)
+	{
+		std::cout << "Received Vector:";
+		std::vector<int>::const_iterator it = cont.begin();
+		for (; it != cont.end(); ++it)
+		{
+			std::cout << " " << *it;
+		}
+		std::cout << std::endl;
+	}
+};
+
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE(TestSuite)
@@ -553,6 +572,40 @@ BOOST_AUTO_TEST_CASE (EntryWithStartParameter)
 	BOOST_REQUIRE_EQUAL(gVoidEventCounter, frequency);
 }
 
+BOOST_AUTO_TEST_CASE (EmitStdContainer)
+{
+
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+
+	BFG::u32 frequency = 100;
+	lane.addEntry<TestContainerModule>();
+
+	sync.start();
+
+	std::vector<int> vec;
+	vec.push_back(343);
+	vec.push_back(783);
+	vec.push_back(99383);
+
+	std::vector<int> vec2;
+	vec.push_back(23452);
+	vec.push_back(24568745);
+	vec.push_back(7895);
+	vec.push_back(7477);
+	vec.push_back(22);
+	vec.push_back(714395);
+
+	std::vector<int> vec3;
+	vec.push_back(22111);
+	vec.push_back(783233);
+
+	lane.emit(10001, vec);
+	lane.emit(10001, vec2);
+	lane.emit(10001, vec3);
+
+	sync.finish();
+}
 
 
 #if 0
