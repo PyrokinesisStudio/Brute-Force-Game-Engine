@@ -36,8 +36,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 
 Physical::Physical(GameObject& owner, PluginId pid) :
-Property::Concept(owner, "Physical", pid),
-mFirstFullSync(true)
+Property::Concept(owner, "Physical", pid)
 {
 	subLane()->connect(ID::PE_FULL_SYNC, this, &Physical::onFullSync, ownerHandle());
 	subLane()->connect(ID::PE_POSITION, this, &Physical::onPosition, ownerHandle());
@@ -56,12 +55,6 @@ void Physical::internalSynchronize()
 	assert(ownerHandle() != NULL_HANDLE);
 	
 	synchronizeView();
-
-	if (mFirstFullSync)
-	{
-		subLane()->emit(ID::VE_SET_VISIBLE, true, ownerHandle());
-		mFirstFullSync = false;
-	}
 }
 
 void Physical::onFullSync(const Physics::FullSyncData& fsd)
