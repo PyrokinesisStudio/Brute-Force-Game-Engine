@@ -66,11 +66,13 @@ void SelfDestruction::internalSynchronize()
 {
 	while (!mToDestroy.empty())
 	{
-		subLane()->emit(ID::PE_CONTACT, boost::make_tuple(ownerHandle(), ownerHandle(), 999999.0f), ownerHandle());
-		mToDestroy.pop();
-	}	// TODO: separate calculation and emitting
-	
+		GameHandle handle = mToDestroy.front();
+		f32& damage = value<f32>(ID::PV_Damage, handle);
+		
+		damage = 999999.9f;
 
+		mToDestroy.pop();
+	}
 }
 
 } // namespace BFG
