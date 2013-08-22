@@ -10,19 +10,55 @@
 
             <value set = "6000">A_FIRST_PHYSICSACTION</value>
 
-            <!-- ### PhysicsManager ### -->
+					<!-- \condition
+		           \consequence
+		           \payload -->
+
+
+  					<!-- ### PhysicsManager ### -->
+
+					<!-- \condition None.
+		           \consequence Deletes all physics objects.
+		           \payload Event::Void -->
             <value>PE_CLEAR</value>
 
-            <value>PE_CREATE_OBJECT</value>
-            <value>PE_DELETE_OBJECT</value>
+					<!-- \condition None
+		           \consequence Creates an empty physicsObject. Sends PE_FULL_SYNC.
+		           \payload Physics::ObjectCreationParams -->
+		  			<value>PE_CREATE_OBJECT</value>
 
-            <value>PE_ATTACH_MODULE</value>
-            <value>PE_REMOVE_MODULE</value>
+					<!-- \condition PhysicsObject must exist.
+		           \consequence Deletes a particluar physics object.
+		           \payload GameHandle -->
+					  <value>PE_DELETE_OBJECT</value>
 
-            <value>PE_ATTACH_OBJECT</value>
-            <value>PE_DETACH_OBJECT</value>
+					<!-- \condition 1. PhysicsObject must exist.
+					                2. View must be initalized (For mesh creation)
+		           \consequence 1. Requests a mesh over VE_REQUEST_MESH from View if the mesh is not in the cache.
+							              2. A PhysicsModule will be created and attatched to a PhysicsObject.
+														3. Sends PE_FULL_SYNC.
+		           \payload ModuleCreationParams -->
+  					<value>PE_ATTACH_MODULE</value>
 
-            <value>PE_CONTACT</value>
+					<!-- Not implemented -->
+					  <value>PE_REMOVE_MODULE</value>
+
+  					<!-- \condition Parent and child object must exist.
+	  	           \consequence 1. Attaches a physics object to another one.
+								              2. Sends PE_TOTAL_MASS to parent.
+		             \payload ObjectAttachmentParams -->
+					  <value>PE_ATTACH_OBJECT</value>
+
+   				<!-- \condition Parent and child object must exist.
+  	           \consequence 1. Detaches a physics object to another one.
+							              2. Sends PE_TOTAL_MASS to both objects.
+	             \payload ObjectAttachmentParams -->
+					<value>PE_DETACH_OBJECT</value>
+
+					<!-- \condition
+		           \consequence
+		           \payload -->
+					<value>PE_CONTACT</value>
 
             <!-- ### PhysicsObject ### -->
 
