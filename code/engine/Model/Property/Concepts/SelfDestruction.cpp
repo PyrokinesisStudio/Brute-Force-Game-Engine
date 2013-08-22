@@ -66,7 +66,7 @@ void SelfDestruction::internalSynchronize()
 {
 	while (!mToDestroy.empty())
 	{
-		subLane()->emit(ID::PE_CONTACT, 999999.0f, ownerHandle());
+		subLane()->emit(ID::PE_CONTACT, boost::make_tuple(ownerHandle(), ownerHandle(), 999999.0f), ownerHandle());
 		mToDestroy.pop();
 	}	// TODO: separate calculation and emitting
 	
