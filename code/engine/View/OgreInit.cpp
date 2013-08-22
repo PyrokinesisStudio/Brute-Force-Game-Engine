@@ -64,15 +64,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace View {
 
-template <typename T>
-struct ShutdownDeleter
-{
-	void operator()(T* ptr)
-	{
-		ptr->shutdown();
-	}
-};
-
 OgreInit::OgreInit(Event::Lane& lane, const std::string& windowTitle) :
 mLane(lane),
 mSubLane(lane.createSubLane()),
@@ -95,15 +86,35 @@ mSceneMgr(NULL)
 OgreInit::~OgreInit()
 {
 	mSubLane.reset();
+
+	mConsole.reset();
+	mFps.reset();
+	mMainCamera.reset();
+
+	if (mGui)
+	{
+		mGui->shutdown();
+		mGui.reset();
+	}
+
+	if (mPlatform)
+	{
+		mPlatform->shutdown();
+		mPlatform.reset();
+	}
+
+	if (mRoot)
+	{
+		mRoot->shutdown();
+		mRoot.reset();
+	}
 }
 
 void OgreInit::onTick(Event::TickData)
 {
 	if (! doRenderTick() || mShutdown)
 	{
-		// \todo shutdown lane??
-		// Error happend, while Rendering
-//		iLE->data().getLoop()->setExitFlag();
+		mSubLane->emit(ID::EA_FINISH, Event::Void());
 	}
 }
 
@@ -141,8 +152,7 @@ void OgreInit::initializeRoot()
 	
 	mRoot.reset
 	(
-		new Root(pluginCfg, "ogre.cfg", p.Get(ID::P_LOGS) + "ogre.log"),
-		ShutdownDeleter<Ogre::Root>()
+		new Root(pluginCfg, "ogre.cfg", p.Get(ID::P_LOGS) + "ogre.log")
 	);
 
 	if(mRoot->restoreConfig() || mRoot->showConfigDialog())
@@ -248,7 +258,7 @@ void OgreInit::initMyGui()
 	
 	const std::string log = p.Get(ID::P_LOGS) + "MyGUI.log";
 	
-	mPlatform.reset(new MyGUI::OgrePlatform, ShutdownDeleter<MyGUI::OgrePlatform>());
+	mPlatform.reset(new MyGUI::OgrePlatform);
 	mPlatform->initialise
 	(
 		mRoot->getAutoCreatedWindow(),
@@ -257,7 +267,7 @@ void OgreInit::initMyGui()
 		log
 	);
 	mPlatform->getRenderManagerPtr()->setActiveViewport(0); 
-	mGui.reset(new MyGUI::Gui, ShutdownDeleter<MyGUI::Gui>());
+	mGui.reset(new MyGUI::Gui);
 	mGui->initialise("guiBase.xml");
 	
 	infolog << "MyGui: Initialize MyGui done.";

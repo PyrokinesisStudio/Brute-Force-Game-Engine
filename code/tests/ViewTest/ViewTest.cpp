@@ -30,15 +30,16 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreRoot.h>
 
 #include <Base/Logger.h>
+#include <Core/Mesh.h>
 #include <Core/Path.h>
 #include <Event/Event.h>
 #include <View/Main.h>
 #include <View/Enums.hh>
 
 // ---------------------------------------------------------------------------
-void shutdown(BFG::u32 countdown)
+void shutdownCountdown(BFG::u32 countdown)
 {
-	std::cout << "Shutdown in " << countdown;
+	std::cout << std::endl << "Shutdown in " << countdown;
 	for (BFG::u32 i = countdown; i > 0; --i)
 	{
 		boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
@@ -48,7 +49,43 @@ void shutdown(BFG::u32 countdown)
 	std::cout << std::endl;
 }
 
+struct ModuleDeliveryTest : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		std::cout << "TestModulView1-Run" << std::endl;
+
+		lane->connect(BFG::ID::VE_DELIVER_MESH, this, &ModuleDeliveryTest::onDelivery);
+	}
+
+	void onDelivery(const BFG::NamedMesh& namedMesh)
+	{
+		const std::string& meshName = namedMesh.get<0>();
+		const BFG::Mesh& mesh = namedMesh.get<1>();
+
+		std::cout << "Mesh received: " << meshName << std::endl;
+		std::cout << "verteces/indices: " << mesh.mVertexCount << "/" << mesh.mIndexCount << std::endl;
+
+		std::cout << "Vertices:" << std::endl;
+		
+		for (BFG::u32 i = 0; i < mesh.mVertexCount; ++i)
+		{
+			std::cout << mesh.mVertices[i] << std::endl;
+		}
+
+		std::cout << "Indices:" << std::endl;
+		for (BFG::u32 i = 0; i < mesh.mIndexCount; ++i)
+		{
+			std::cout << " " << mesh.mIndices[i];
+		}
+
+		std::cout << std::endl;
+	}
+};
+
+
 BOOST_AUTO_TEST_SUITE(ViewTestSuite)
+
 #if 0
 BOOST_AUTO_TEST_CASE (OgreTest)
 {
@@ -69,7 +106,7 @@ BOOST_AUTO_TEST_CASE (OgreTest)
 	else
 		throw std::runtime_error("OgreInit: failed to restore config dialog!");
 
-	shutdown(5);
+	shutdownCountdown(5);
 	
 	ogreRoot->shutdown();
 
@@ -87,7 +124,27 @@ BOOST_AUTO_TEST_CASE (testLibraryInit)
 
 	sync.start();
 	
-	shutdown(10);
+	shutdownCountdown(3);
+
+	sync.finish();
+}
+
+BOOST_AUTO_TEST_CASE (meshTest)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane viewLane(sync, 100, "View");
+
+	BFG::Event::Lane moduleLane(sync, 100, "Module", BFG::Event::RL2);
+
+	viewLane.addEntry<BFG::View::Main>("ViewTest Window");
+	moduleLane.addEntry<ModuleDeliveryTest>();
+
+	sync.start();
+
+	viewLane.emit(BFG::ID::VE_REQUEST_MESH, std::string("Cube.mesh"));
+	viewLane.emit(BFG::ID::VE_REQUEST_MESH, std::string("Rocket.mesh"));
+
+	shutdownCountdown(3);
 
 	sync.finish();
 }
