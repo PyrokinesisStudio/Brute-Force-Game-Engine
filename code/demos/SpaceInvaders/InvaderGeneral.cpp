@@ -40,6 +40,16 @@ InvaderGeneral::InvaderGeneral(Event::SubLanePtr lane,
 {
 	spawnWave();
 	++mWaveCount;
+	lane->connect(ID::S_DESTROY_GO, this, &InvaderGeneral::onDestroy);
+}
+
+void InvaderGeneral::onDestroy(GameHandle)
+{
+	if (mEnvironment->find(isInvader) == NULL_HANDLE)
+	{
+		spawnWave();
+		++mWaveCount;
+	}
 }
 
 void InvaderGeneral::spawnWave()
@@ -52,8 +62,6 @@ void InvaderGeneral::spawnWave()
 		{
 			std::stringstream ss;
 			ss << "Invader No. X:" << i << " Y:" << j;
-
-			boost::shared_ptr<GameObject> invader;
 
 			op = ObjectParameter();
 			op.mHandle = generateHandle();
@@ -80,44 +88,37 @@ void InvaderGeneral::update(quantity<si::time, f32> timeSinceLastFrame)
 	if (mLastShot < INVADER_FIRE_INTERVAL)
 		return;
 
-	if (mEnvironment->find(isInvader) == NULL_HANDLE)
-	{
-		spawnWave();
-		++mWaveCount;
-		return;
-	}
-
 	GameHandle player = mEnvironment->find(isPlayer);
 
 	// Player dead?
 	if (player == NULL_HANDLE)
 		return;
 
-	const Location& playerLoc = mEnvironment->getGoValue<Location>(player, ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
-
-	f32 lastPlayerInvaderDistance = 0;
-	for (size_t i=0; i < mWaveCount; ++i)
-	{
-		// Handle of Invader and its Distance to the Player
-		std::pair<GameHandle, f32> bestCandidate(NULL_HANDLE, 999999.9f);
-
-		mEnvironment->find
-		(
-			boost::bind
-			(
-				nearestToPlayer,
-				_1,
-				boost::ref(bestCandidate),
-				boost::ref(lastPlayerInvaderDistance),
-				boost::ref(playerLoc.position)
-			)
-		);
-
-		mLane->emit(ID::GOE_FIRE_ROCKET, Event::Void(), bestCandidate.first);
-
-		lastPlayerInvaderDistance = bestCandidate.second + 0.1f;
-	}
-
-	mLastShot = 0;
+//	const Location& playerLoc = mEnvironment->getGoValue<Location>(player, ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
+// 
+// 	f32 lastPlayerInvaderDistance = 0;
+// 	for (size_t i=0; i < mWaveCount; ++i)
+// 	{
+// 		// Handle of Invader and its Distance to the Player
+// 		std::pair<GameHandle, f32> bestCandidate(NULL_HANDLE, 999999.9f);
+// 
+// 		mEnvironment->find
+// 		(
+// 			boost::bind
+// 			(
+// 				nearestToPlayer,
+// 				_1,
+// 				boost::ref(bestCandidate),
+// 				boost::ref(lastPlayerInvaderDistance),
+// 				boost::ref(playerLoc.position)
+// 			)
+// 		);
+// 
+// 		mLane->emit(ID::GOE_FIRE_ROCKET, Event::Void(), bestCandidate.first);
+// 
+// 		lastPlayerInvaderDistance = bestCandidate.second + 0.1f;
+// 	}
+// 
+// 	mLastShot = 0;
 }
 

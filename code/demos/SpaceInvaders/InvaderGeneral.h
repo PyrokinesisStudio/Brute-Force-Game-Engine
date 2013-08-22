@@ -44,6 +44,7 @@ struct InvaderGeneral
 	InvaderGeneral(Event::SubLanePtr lane,
 				   boost::shared_ptr<BFG::Environment> environment);
 
+	void onDestroy(GameHandle handle);
 	void spawnWave();
 	void update(quantity<si::time, f32> timeSinceLastFrame);
 
