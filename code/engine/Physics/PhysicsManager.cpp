@@ -39,6 +39,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Physics/OdeTriMesh.h>
 #include <Physics/PhysicsObject.h>
 
+#include <View/Enums.hh>
+
 namespace BFG {
 namespace Physics {
 
@@ -148,7 +150,7 @@ void PhysicsManager::move(Event::TickData tickData)
 {
 	quantity<si::time, f32> timeSinceLastTick = tickData.timeSinceLastTick();
 	
-	int steps = int(ceil(timeSinceLastTick / mSimulationStepSize));
+	int steps = int(std::ceil(timeSinceLastTick / mSimulationStepSize));
 
 	/** \note
 		On low FPS, time may accumulate which leads to serious timing problems.
@@ -425,6 +427,22 @@ void PhysicsManager::registerEvents()
 	mLane.connect(ID::PE_CREATE_OBJECT, this, &PhysicsManager::onCreateObject);
 	mLane.connect(ID::PE_DELETE_OBJECT, this, &PhysicsManager::onDeleteObject);
 	mLane.connect(ID::PE_REMOVE_MODULE, this, &PhysicsManager::onRemoveModule);
+	mLane.connect(ID::VE_DELIVER_MESH, this, &PhysicsManager::onMeshDelivery);
+}
+
+void PhysicsManager::onMeshDelivery(const NamedMesh& namedMesh)
+{
+	if (mPhysicsObjects.empty())
+		return;
+
+	PhysicsObjectMap::iterator it = mPhysicsObjects.begin();
+
+	it->second->onMeshDelivery(namedMesh);
+
+	for (; it != mPhysicsObjects.end(); ++it)
+	{
+		it->second->createPendingModules();
+	}
 }
 
 void PhysicsManager::onCreateObject(const ObjectCreationParams& ocp)
@@ -455,13 +473,11 @@ void PhysicsManager::onDeleteObject(GameHandle handle)
 
 void PhysicsManager::onAttachModule(const ModuleCreationParams& mcp)
 {
-	GameHandle poHandle = mcp.get<0>();
-
-	PhysicsObjectMap::const_iterator it = mPhysicsObjects.find(poHandle);
+	PhysicsObjectMap::const_iterator it = mPhysicsObjects.find(mcp.mGoHandle);
 	if (it == mPhysicsObjects.end())
 	{
 		std::stringstream ss;
-		ss << "PhysicsObject " << poHandle << " not registered in Manager!";
+		ss << "PhysicsObject " << mcp.mGoHandle << " not registered in Manager!";
 		throw std::logic_error(ss.str());
 	}
 	

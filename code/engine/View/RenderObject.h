@@ -51,7 +51,8 @@ public:
 	             GameHandle handle,
 	             const std::string& meshName,
 	             const v3& position = v3::ZERO,
-	             const qv4& orientation = qv4::IDENTITY);
+	             const qv4& orientation = qv4::IDENTITY,
+				 bool visible = true);
 
 	~RenderObject();
 

@@ -33,12 +33,14 @@ ObjectCreation::ObjectCreation(GameHandle parent,
                                GameHandle handle,
                                const std::string& meshName,
                                const v3& position,
-                               const qv4& orientation) :
+                               const qv4& orientation,
+							   bool visible) :
 mParent(parent),
 mHandle(handle),
 mMeshName(meshName),
 mPosition(position),
-mOrientation(orientation)
+mOrientation(orientation),
+mVisible(visible)
 {}
 
 } // namespace View

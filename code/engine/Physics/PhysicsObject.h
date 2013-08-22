@@ -35,6 +35,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <ode/ode.h>
 
 #include <map>
+#include <set>
 
 #include <Core/ExternalTypes_fwd.h>
 #include <Core/Mesh.h>
@@ -46,6 +47,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Physics/Defs.h>
 #include <Physics/Event_fwd.h>
+#include <Physics/Interpolator.h>
 
 using namespace boost::units;
 
@@ -100,16 +102,12 @@ public:
 	                          GameHandle otherModule,
 	                          f32 penetrationDepth) const;
 	
-private:
-	void asyncRequestMesh(const std::string& meshName) const;
 	void onMeshDelivery(const NamedMesh& namedMesh);
+	void createPendingModules();
+private:
+	void asyncRequestMesh(const std::string& meshName);
 	
-	void createModule(GameHandle moduleHandle,
-	                  boost::shared_ptr<OdeTriMesh> mesh,
-	                  ID::CollisionMode collisionMode,
-	                  const v3& position,
-	                  const qv4& orientation,
-	                  f32 density);
+	void createModule(const ModuleCreationParams& mcp);
 
 	void debugOutput(std::string& output) const;
 
@@ -181,15 +179,7 @@ private:
 	v3                mForce;
 	v3                mTorque;
 	
-	bool              mInterpolatePosition;
-	f32               mPositionInterpolationParameter;
-	v3                mInterpolationStartPosition;
-	v3                mInterpolationEndPosition;
-
-	bool              mInterpolateOrientation;
-	f32               mOrientationInterpolationParameter;
-	qv4               mInterpolationStartOrientation;
-	qv4               mInterpolationEndOrientation;
+	Interpolator mInterpolator;
 
 	mutable FullSyncData mDeltaStorage;
 
@@ -198,6 +188,7 @@ private:
 	static MeshCacheT mMeshCache;
 	
 	std::deque<ModuleCreationParams> mAsyncAddModuleRequests;
+	static std::set<std::string> mPendingRequests;
 	
 	friend std::ostream& operator << (std::ostream& lhs, const PhysicsObject& rhs);
 };

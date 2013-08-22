@@ -137,53 +137,57 @@ GameObjectFactory::createEmptyGameObject(const std::string& name, GameHandle goH
 boost::shared_ptr<Module>
 GameObjectFactory::createModule(const BFG::ObjectParameter& parameter, BFG::ModuleParametersT moduleParameter, bool isRoot, GameHandle goHandle)
 {
-	GameHandle moduleHandle;
+	Physics::ModuleCreationParams mcp;
 
 	// The root module and its owner GameObject must share the same GameHandle.
 	if (isRoot)
-		moduleHandle = goHandle;
+	{
+		mcp = Physics::ModuleCreationParams
+		(
+			goHandle,
+			goHandle,
+			moduleParameter->mMesh,
+			moduleParameter->mDensity,
+			moduleParameter->mCollision,
+			parameter.mLocation.position,
+			parameter.mLocation.orientation,
+			parameter.mLinearVelocity,
+			parameter.mAngularVelocity
+		);
+	}
 	else
-		moduleHandle = generateHandle();
+	{
+		mcp = Physics::ModuleCreationParams
+		(
+			goHandle,
+			generateHandle(),
+			moduleParameter->mMesh,
+			moduleParameter->mDensity,
+			moduleParameter->mCollision
+		);
+	}
 
 	bool isVirtual = moduleParameter->mMesh.empty();
 
 	if (!isVirtual)
 	{
-		// Physical representation			
-		Physics::ModuleCreationParams mcp
-		(
-			goHandle,
-			moduleHandle,
-			moduleParameter->mMesh,
-			moduleParameter->mCollision,
-			v3::ZERO,
-			qv4::IDENTITY,
-			moduleParameter->mDensity
-		);
-
 		mLane.emit(ID::PE_ATTACH_MODULE, mcp);
 
 		// Visual representation
 		View::ObjectCreation oc
 		(
 			NULL_HANDLE,
-			moduleHandle,
+			mcp.mModuleHandle,
 			moduleParameter->mMesh,
-			v3::ZERO,
-			qv4::IDENTITY
+			parameter.mLocation.position,
+			parameter.mLocation.orientation
 		);
 
 		mLane.emit(ID::VE_CREATE_OBJECT, oc, mStateHandle);
 		
-		if (isRoot)
-		{
-			mLane.emit(ID::PE_UPDATE_VELOCITY, parameter.mLinearVelocity, goHandle);
-			mLane.emit(ID::PE_UPDATE_ROTATION_VELOCITY, parameter.mAngularVelocity, goHandle);
-		}
-
 		if (!isRoot)
 		{
-			mLane.emit(ID::VE_ATTACH_OBJECT, moduleHandle, goHandle);
+			mLane.emit(ID::VE_ATTACH_OBJECT, mcp.mModuleHandle, goHandle);
 		}
 	}
 
@@ -193,7 +197,7 @@ GameObjectFactory::createModule(const BFG::ObjectParameter& parameter, BFG::Modu
 		throw std::runtime_error
 			("GameObjectFactory::createGameObject(): Missing concept specification for object type \"" + parameter.mType + "\".");
 
-	boost::shared_ptr<Module> module(new Module(moduleHandle));
+	boost::shared_ptr<Module> module(new Module(mcp.mModuleHandle));
 	addConceptsTo(module, conceptParameter);
 
 	return module;
@@ -297,15 +301,13 @@ GameObjectFactory::createCamera(const CameraParameter& cameraParameter,
 	Physics::ObjectCreationParams ocp(camHandle, Location());
 	mLane.emit(ID::PE_CREATE_OBJECT, ocp);
 
-	Physics::ModuleCreationParams mcp
+	Physics::ModuleCreationParams mcp;
 	(
 		camHandle,
 		camHandle,
 		"Cube.mesh",
-		ID::CM_Disabled,
-		v3::ZERO,
-		qv4::IDENTITY,
-		50.0f
+		50.0f,
+		ID::CM_Disabled
 	);
 
 	mLane.emit(ID::PE_ATTACH_MODULE, mcp);

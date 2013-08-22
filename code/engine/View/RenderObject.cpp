@@ -42,12 +42,14 @@ RenderObject::RenderObject(Event::Lane& lane,
                            GameHandle handle,
                            const std::string& meshName,
                            const v3& position,
-                           const qv4& orientation) :
+                           const qv4& orientation,
+						   bool visible) :
 mSubLane(lane.createSubLane()),
 mHandle(handle),
 mSceneNode(NULL),
 mEntity(NULL)
 {
+
 	using namespace Ogre;
 	
 	Root* root = Root::getSingletonPtr();
@@ -60,8 +62,6 @@ mEntity(NULL)
 	else		
 		parentNode = sceneMgr->getSceneNode(stringify(parent));	
 
-	mEntity = sceneMgr->createEntity(stringify(handle), meshName);
-	
 	mSceneNode = parentNode->createChildSceneNode
 	(
 		stringify(handle),
@@ -69,14 +69,17 @@ mEntity(NULL)
 		toOgre(orientation)
 	);
 
-	mSceneNode->attachObject(mEntity);
-	mSceneNode->setVisible(false);
-	
+	mSubLane->connect(ID::VE_SET_VISIBLE, this, &RenderObject::onSetVisible, mHandle);
 	mSubLane->connect(ID::VE_UPDATE_POSITION, this,	&RenderObject::updatePosition, mHandle);
 	mSubLane->connect(ID::VE_UPDATE_ORIENTATION, this, &RenderObject::updateOrientation, mHandle);
 	mSubLane->connect(ID::VE_ATTACH_OBJECT, this, &RenderObject::onAttachObject, mHandle);
 	mSubLane->connectV(ID::VE_DETACH_OBJECT, this, &RenderObject::onDetachObject, mHandle);
-	mSubLane->connect(ID::VE_SET_VISIBLE, this, &RenderObject::onSetVisible, mHandle);
+
+	mEntity = sceneMgr->createEntity(stringify(handle), meshName);
+
+	mSceneNode->attachObject(mEntity);
+
+	mSceneNode->setVisible(visible);
 }
 
 RenderObject::~RenderObject()
@@ -92,17 +95,20 @@ RenderObject::~RenderObject()
 
 void RenderObject::updatePosition(const v3& position)
 {
+	mSceneNode->setVisible(true);
 	mSceneNode->setPosition(toOgre(position));
 }
 
 void RenderObject::updateOrientation(const qv4& orientation)
 {
+	mSceneNode->setVisible(true);
 	mSceneNode->setOrientation(toOgre(orientation));
 }
 
 void RenderObject::onSetVisible(bool visibility)
 {
 	mSceneNode->setVisible(visibility);
+	dbglog << "Received VE_SET_VISIBLE for #" << mHandle;
 }
 
 void RenderObject::attachOgreObject(Ogre::MovableObject* aObject)

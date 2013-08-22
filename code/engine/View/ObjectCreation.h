@@ -44,13 +44,15 @@ struct VIEW_API ObjectCreation
 	               GameHandle handle,
 	               const std::string& meshName,
 	               const v3& position,
-	               const qv4& orientation);
+	               const qv4& orientation,
+				   bool visible = true);
 
 	GameHandle mParent;
 	GameHandle mHandle;
 	std::string mMeshName;
 	v3 mPosition;
 	qv4 mOrientation;
+	bool mVisible;
 };
 
 } // namespace View

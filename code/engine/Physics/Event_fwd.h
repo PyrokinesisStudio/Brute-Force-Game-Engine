@@ -80,16 +80,47 @@ typedef boost::tuple
 	Location
 > ObjectCreationParams;
 
-typedef boost::tuple
-<
-	GameHandle,          // Handle of PhysicsObject
-	GameHandle,          // Module Handle
-	std::string,         // Mesh Name (e.g. "Cube.mesh")
-	ID::CollisionMode,
-	v3,                  // Module Position
-	qv4,                 // Module Orientation
-	f32                  // Density
-> ModuleCreationParams;
+struct ModuleCreationParams
+{
+	ModuleCreationParams() :
+	mGoHandle(NULL_HANDLE),
+	mModuleHandle(NULL_HANDLE),
+	mDensity(1.0f),
+	mCollisionMode(ID::CM_Disabled)
+	{}
+
+	ModuleCreationParams(
+		GameHandle gameObjectHandle,
+		GameHandle moduleHandle,
+		const std::string& meshName,
+		f32 density,
+		ID::CollisionMode collisionMode = ID::CM_Standard,
+		v3 position = v3::ZERO,
+		qv4 orientation = qv4::IDENTITY,
+		v3 velocity = v3::ZERO,
+		v3 rotationVelocity = v3::ZERO) :
+	mGoHandle(gameObjectHandle),
+	mModuleHandle(moduleHandle),
+	mMeshName(meshName),
+	mCollisionMode(collisionMode),
+	mDensity(density),
+	mPosition(position),
+	mOrientation(orientation),
+	mVelocity(velocity),
+	mRotationVelocity(rotationVelocity)
+	{}
+
+
+	GameHandle mGoHandle;             // Handle of PhysicsObject
+	GameHandle mModuleHandle;         // Module Handle
+	std::string mMeshName;            // Mesh Name (e.g. "Cube.mesh")
+	f32 mDensity;                     // Density
+	ID::CollisionMode mCollisionMode;
+	v3 mPosition;                     // Module Position
+	qv4 mOrientation;                 // Module Orientation
+	v3 mVelocity;                     // Start Velocity
+	v3 mRotationVelocity;             // Start Rotation Velocity
+};
 
 typedef boost::tuple
 <

@@ -316,7 +316,7 @@ void OgreInit::onRequestMesh(const std::string& meshName, GameHandle sender)
 	const Mesh mesh = loadMesh(meshName);
 	NamedMesh namedMesh(meshName, mesh);
 	dbglog << "Processing mesh request \"" << meshName << "\" for #" << sender;
-	mLane.emit(ID::VE_DELIVER_MESH, namedMesh, sender);
+	mLane.emit(ID::VE_DELIVER_MESH, namedMesh);
 }
 
 #ifdef _WIN32

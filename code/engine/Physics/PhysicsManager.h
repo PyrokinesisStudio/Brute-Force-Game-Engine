@@ -38,6 +38,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Event/Event.h>
 
+#include <Core/Mesh.h>
 #include <Core/Types.h>
 #include <Core/v3.h>
 #include <Core/qv4.h>
@@ -93,6 +94,7 @@ private:
 
 	void registerEvents();
 
+	void onMeshDelivery(const NamedMesh& namedMesh);
 	void onCreateObject(const ObjectCreationParams& ocp);
 	void onDeleteObject(GameHandle);
 	void onAttachModule(const ModuleCreationParams&);
@@ -109,12 +111,10 @@ private:
 	
 	PhysicsObjectMap mPhysicsObjects;
 
-	std::vector<ID::PhysicsAction> mPhysicsEvents;
-
 	friend void globalOdeNearCollisionCallback(void* additionalData,
 	                                           dGeomID geo1,
 	                                           dGeomID geo2);
-	
+
 	Event::Lane& mLane;
 };
 

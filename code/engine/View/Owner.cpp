@@ -73,7 +73,8 @@ void Owner::createObject(const ObjectCreation& OC)
 		OC.mHandle,
 		OC.mMeshName.data(),
 		OC.mPosition,
-		OC.mOrientation
+		OC.mOrientation,
+		OC.mVisible
 	));
 	mObjects[OC.mHandle] = ro;
 }
