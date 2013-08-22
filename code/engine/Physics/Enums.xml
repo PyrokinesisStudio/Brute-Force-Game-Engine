@@ -12,7 +12,6 @@
 
             <!-- ### PhysicsManager ### -->
             <value>PE_CLEAR</value>
-            <value>PE_STEP</value>
 
             <value>PE_CREATE_OBJECT</value>
             <value>PE_DELETE_OBJECT</value>

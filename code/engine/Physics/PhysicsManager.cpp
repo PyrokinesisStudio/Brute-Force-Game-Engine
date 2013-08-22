@@ -144,18 +144,17 @@ void PhysicsManager::clear()
 	mPhysicsObjects.clear();
 }
 
-void PhysicsManager::move(quantity<si::time, f32> timeSinceLastFrame)
+void PhysicsManager::move(Event::TickData tickData)
 {
-	// Time left from the previous frame (always less than mSimulationStepSize)
-	static quantity<si::time, f32> timeLeft = timeSinceLastFrame;
-
-	int nrofsteps = int(ceil(timeSinceLastFrame / mSimulationStepSize));
+	quantity<si::time, f32> timeSinceLastTick = tickData.timeSinceLastTick();
+	
+	int steps = int(ceil(timeSinceLastTick / mSimulationStepSize));
 
 	/** \note
 		On low FPS, time may accumulate which leads to serious timing problems.
 
 		Example:
-		- ODE may take a long time, then the next timeSinceLastFrame is higher
+		- ODE may take a long time, then the next timeSinceLastTick is higher
 		- Due to the higher timeSinceLastFrame, Ode takes even longer, etc...
 		
 		Solutions:
@@ -168,19 +167,18 @@ void PhysicsManager::move(quantity<si::time, f32> timeSinceLastFrame)
 	// Equal to 5 FPS
 	const int maxSteps = 200;
 	
-	if (nrofsteps > maxSteps)
+	if (steps > maxSteps)
 	{
-		nrofsteps = maxSteps;
-		timeLeft = 0;
+		steps = maxSteps;
 	}
 
 	PhysicsObjectMap::iterator it = mPhysicsObjects.begin();
 	for (; it != mPhysicsObjects.end(); ++it)
 	{
-		it->second->performInterpolation(timeSinceLastFrame);
+		it->second->performInterpolation(timeSinceLastTick);
 	}
 	
-	for (int i=0; i<nrofsteps; i++)
+	for (int i=0; i<steps; i++)
 	{
 		PhysicsObjectMap::iterator it = mPhysicsObjects.begin();
 		for (; it != mPhysicsObjects.end(); ++it)
@@ -207,8 +205,6 @@ void PhysicsManager::move(quantity<si::time, f32> timeSinceLastFrame)
 
 		if (i % 3 == 0)
 			dJointGroupEmpty (mCollisionJointsID);
-		
-		timeLeft -= mSimulationStepSize;
 	}
 
 	it = mPhysicsObjects.begin();
@@ -423,12 +419,12 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 
 void PhysicsManager::registerEvents()
 {
+	mLane.connectLoop(this, &PhysicsManager::move);
 	mLane.connect(ID::PE_ATTACH_MODULE, this, &PhysicsManager::onAttachModule);
 	mLane.connectV(ID::PE_CLEAR, this, &PhysicsManager::clear);
 	mLane.connect(ID::PE_CREATE_OBJECT, this, &PhysicsManager::onCreateObject);
 	mLane.connect(ID::PE_DELETE_OBJECT, this, &PhysicsManager::onDeleteObject);
 	mLane.connect(ID::PE_REMOVE_MODULE, this, &PhysicsManager::onRemoveModule);
-	mLane.connect(ID::PE_STEP, this, &PhysicsManager::move);
 }
 
 void PhysicsManager::onCreateObject(const ObjectCreationParams& ocp)

@@ -122,8 +122,6 @@ struct SynchronizationTestState: BFG::State
 	virtual void onTick(const quantity<si::time, f32> TSLF)
 	{
 		mSector->update(TSLF);
-
-		emit<BFG::Physics::Event>(BFG::ID::PE_STEP, TSLF.value());
 	}
 
 	virtual void createObject(const BFG::ObjectParameter& param)

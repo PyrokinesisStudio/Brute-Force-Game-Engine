@@ -150,8 +150,6 @@ struct SynchronizationTestState: BFG::State
 	virtual void onTick(const quantity<si::time, f32> TSLF)
 	{
 		mSector->update(TSLF);
-
-		mSubLane->emit(BFG::ID::PE_STEP, TSLF);
 	}
 
 	virtual void createObject(const BFG::ObjectParameter& param)

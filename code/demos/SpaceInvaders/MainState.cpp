@@ -147,6 +147,4 @@ void MainState::onTick(const TickTimeT timeSinceLastTick)
 	mSector->update(timeSinceLastTick);
 	mInvaderGeneral.update(timeSinceLastTick);
 	mHumanGeneral.update(timeSinceLastTick);
-
-	mLane.emit(ID::PE_STEP, timeSinceLastTick);
 }
