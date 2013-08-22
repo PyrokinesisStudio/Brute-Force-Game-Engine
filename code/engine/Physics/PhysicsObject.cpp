@@ -212,9 +212,9 @@ void PhysicsObject::createModule(const ModuleCreationParams& mcp)
 
 }
 
-void PhysicsObject::addModule(boost::shared_ptr<PhysicsObject> po,
-                              const v3& position,
-                              const qv4& orientation)
+void PhysicsObject::attachObject(boost::shared_ptr<PhysicsObject> po,
+                                 const v3& position,
+                                 const qv4& orientation)
 {
 	po->mBodyOffset = position;
 
@@ -264,7 +264,7 @@ void PhysicsObject::addModule(boost::shared_ptr<PhysicsObject> po,
 	notifyControlAboutChangeInMass();
 }
 
-void PhysicsObject::removeModule(boost::shared_ptr<PhysicsObject> po,
+void PhysicsObject::detachObject(boost::shared_ptr<PhysicsObject> po,
                                  const v3& position,
                                  const qv4& orientation)
 {
@@ -372,6 +372,8 @@ void PhysicsObject::performInterpolation(quantity<si::time, f32> timeSinceLastFr
 		setOrientation(mInterpolator.mInterpolatedOrientation);
 }
 
+//! Cannot be performed by PhysicsManager because it is possible that two modules collide
+//! where non of them is root.
 void PhysicsObject::notifyAboutCollision(GameHandle ownModule,
                                          GameHandle otherModule,
                                          f32 penetrationDepth) const

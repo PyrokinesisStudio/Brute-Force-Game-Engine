@@ -53,14 +53,6 @@ namespace Physics {
 
 class PhysicsObject;
 
-/**
-	float: radius of sphere
-	v3: side lengths
-	v4: plane data: ax + by + cz = d
-	std::pair<f32, f32> radius, length of Cylinder
-	std::string: mesh name
-*/
-
 class PHYSICS_API PhysicsManager
 {
 public:
@@ -87,7 +79,7 @@ private:
 		boost::shared_ptr<PhysicsObject>
 	> PhysicsObjectMap;
 
-	boost::shared_ptr<PhysicsObject> searchMovObj(GameHandle handle) const;
+	boost::shared_ptr<PhysicsObject> findObject(GameHandle objectHandle) const;
 
 	void onNearCollision(dGeomID geo1, dGeomID geo2);
 	void collideGeoms(dGeomID geo1, dGeomID geo2) const;
@@ -99,6 +91,8 @@ private:
 	void onDeleteObject(GameHandle);
 	void onAttachModule(const ModuleCreationParams&);
 	void onRemoveModule(const ModuleRemovalParams&);
+	void onAttachObject(const ObjectAttachmentParams& oap);
+	void onDetachObject(const ObjectAttachmentParams& oap);
 
 	const u32                     mMaxContactsPerCollision;
 	const quantity<si::time, f32> mSimulationStepSize;

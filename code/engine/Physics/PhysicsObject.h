@@ -75,11 +75,11 @@ public:
 
 	void addModule(const ModuleCreationParams& mcp);
 	
-	void addModule(boost::shared_ptr<PhysicsObject>,
-	               const v3& position,
-	               const qv4& orientation);
+	void attachObject(boost::shared_ptr<PhysicsObject>,
+	                  const v3& position,
+	                  const qv4& orientation);
 
-	void removeModule(boost::shared_ptr<PhysicsObject> po,
+	void detachObject(boost::shared_ptr<PhysicsObject> po,
 	                  const v3& position,
 	                  const qv4& orientation);
 
