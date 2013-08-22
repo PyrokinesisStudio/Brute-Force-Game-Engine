@@ -59,8 +59,8 @@ struct MainState : State
 	boost::shared_ptr<Sector> mSector;
 	boost::shared_ptr<Environment> mEnvironment;
 
-	InvaderGeneral mInvaderGeneral;
-	HumanGeneral   mHumanGeneral;
+	boost::scoped_ptr<InvaderGeneral> mInvaderGeneral;
+	boost::scoped_ptr<HumanGeneral> mHumanGeneral;
 
 	BFG::Property::PluginMapT mPluginMap;
 

@@ -45,9 +45,7 @@ MainState::MainState(GameHandle handle, Event::Lane& lane) :
 	State(lane),
 	mLane(lane),
 	mPlayer(NULL_HANDLE),
-	mEnvironment(new Environment),
-	mInvaderGeneral(lane.createSubLane(), mEnvironment),
-	mHumanGeneral(lane.createSubLane(), mEnvironment)
+	mEnvironment(new Environment)
 {
 	Path p;
 
@@ -114,7 +112,11 @@ MainState::MainState(GameHandle handle, Event::Lane& lane) :
 	op.mLocation = v3(0.0f, -NEGATIVE_SHIP_Y_POSITION, OBJECT_Z_POSITION); // - 5.0f); // + SPECIAL_PACKER_MESH_OFFSET);
 	fromAngleAxis(op.mLocation.orientation, -90.0f * (float) DEG2RAD, v3::UNIT_X);
 	
-	gof->createGameObject(op);
+	boost::shared_ptr<GameObject> player = gof->createGameObject(op);
+	mSector->addObject(player);
+
+	mInvaderGeneral.reset(new InvaderGeneral(lane.createSubLane(), mEnvironment));
+	mHumanGeneral.reset(new HumanGeneral(lane.createSubLane(), mEnvironment));
 
 	mLane.connect(A_SHIP_AXIS_Y, this, &MainState::onAxisY);
 	mLane.connect(A_FPS, this, &MainState::onFps);
@@ -145,6 +147,6 @@ void MainState::onQuit(BFG::s32)
 void MainState::onTick(const TickTimeT timeSinceLastTick)
 {
 	mSector->update(timeSinceLastTick);
-	mInvaderGeneral.update(timeSinceLastTick);
-	mHumanGeneral.update(timeSinceLastTick);
+	mInvaderGeneral->update(timeSinceLastTick);
+	mHumanGeneral->update(timeSinceLastTick);
 }
