@@ -126,6 +126,9 @@ void RenderObject::onAttachObject(GameHandle child)
 	Ogre::Root& root = Ogre::Root::getSingleton();
 	Ogre::SceneManager* sceneMgr = root.getSceneManager(BFG_SCENEMANAGER);
 
+	if(!sceneMgr->hasSceneNode(stringify(child)))
+		throw std::runtime_error("RenderObject::onAttachObject: Child " + stringify(child) + " does not exist!");
+
 	Ogre::SceneNode* childNode = sceneMgr->getSceneNode(stringify(child));
 
 	Ogre::SceneNode* parentNode = childNode->getParentSceneNode();
