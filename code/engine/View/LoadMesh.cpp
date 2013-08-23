@@ -56,6 +56,7 @@ Mesh loadMesh(const std::string& meshName)
 	Ogre::MeshManager* mm = Ogre::MeshManager::getSingletonPtr();
 	assert(mm && "Ogre must be initialized");
 
+	//! \todo check for mesh existance.
 	Ogre::MeshPtr mesh = mm->load(meshName, "General");
 
 	// Calculate how many result.mVertices and result.mIndices we're going to need
