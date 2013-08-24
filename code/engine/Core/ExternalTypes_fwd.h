@@ -35,6 +35,7 @@ namespace Ogre {
 
 namespace BFG {
 
+//! \todo This typedef names do not fullfill our conventions.
 typedef Ogre::ColourValue cv4;
 typedef Ogre::Matrix4 m4x4;
 typedef Ogre::Matrix3 m3x3;

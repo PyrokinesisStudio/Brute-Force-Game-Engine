@@ -642,7 +642,7 @@ void PhysicsObject::magicStop()
 
 void PhysicsObject::modulateMass(f32 factor) const
 {
-	//! \note This could be optimized, since Ode internally recalculates our
+	//! \todo This could be optimized, since Ode internally recalculates our
 	//!       factor (in dMassAdjust).
 	dMass newMass = mOriginalMass;        // don't modify the original value
 	f32 weight = newMass.mass * factor;   // calculate new weight for adjust()
@@ -694,12 +694,14 @@ void PhysicsObject::registerEvents()
 	mSubLane->connect(ID::PE_UPDATE_ORIENTATION, this, &PhysicsObject::setOrientation, mRootModule);
 	mSubLane->connect(ID::PE_UPDATE_VELOCITY, this, &PhysicsObject::setVelocity, mRootModule);
 	mSubLane->connect(ID::PE_UPDATE_ROTATION_VELOCITY, this, &PhysicsObject::setRotationVelocity, mRootModule);
+	mSubLane->connect(ID::PE_UPDATE_COLLISION_MODE, this, &PhysicsObject::setCollisionMode, mRootModule);
 	mSubLane->connect(ID::PE_INTERPOLATE_POSITION, this, &PhysicsObject::interpolatePosition, mRootModule);
 	mSubLane->connect(ID::PE_INTERPOLATE_ORIENTATION, this, &PhysicsObject::interpolateOrientation, mRootModule);
 	mSubLane->connectV(ID::PE_DEBUG, this, &PhysicsObject::onDebug, mRootModule);
 	mSubLane->connect(ID::PE_APPLY_FORCE, this, &PhysicsObject::onForce, mRootModule);
 	mSubLane->connect(ID::PE_APPLY_TORQUE, this, &PhysicsObject::onTorque, mRootModule);
 	mSubLane->connect(ID::PE_MODULATE_MASS, this, &PhysicsObject::modulateMass, mRootModule);
+	mSubLane->connectV(ID::PE_MAGIC_STOP, this, &PhysicsObject::magicStop, mRootModule);
 }
 
 void PhysicsObject::setVelocity(const v3& velocity)

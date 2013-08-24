@@ -10,11 +10,6 @@
 
             <value set = "6000">A_FIRST_PHYSICSACTION</value>
 
-					<!-- \condition
-		           \consequence
-		           \payload -->
-
-
   					<!-- ### PhysicsManager ### -->
 
 					<!-- \condition None.
@@ -55,53 +50,134 @@
 	             \payload ObjectAttachmentParams -->
 					<value>PE_DETACH_OBJECT</value>
 
-					<!-- \condition
-		           \consequence
-		           \payload -->
+					<!-- \condition A Collision of two physics objects must be occurred.
+		           \consequence PE_CONTACT will be sent with address to root module.
+		           \payload boost::tuple<GameHandle, GameHandle, f32>(ownModule, otherModule, penetrationDepth) -->
 					<value>PE_CONTACT</value>
 
             <!-- ### PhysicsObject ### -->
 
-            <value>PE_FULL_SYNC</value>
+
+					<!-- TODO: The name FULL_SYNC is misleading. It is more an initialize event. 
+					     SYNC is suggesting that someting will be steady synchronized. Atm we connect the
+							 activation of the gameobject with this event. -->
+					<!-- \condition 1. Creation of an physics object or physics module.
+		           \consequence Sends a lot of physics data (see payload) with adress to root module.
+		           \payload Physics::FullSyncData -->
+					<value>PE_FULL_SYNC</value>
 
             <!-- Delta Updates-->
-            <value>PE_VELOCITY</value>
-            <value>PE_ROTATION_VELOCITY</value>
 
-            <value>PE_POSITION</value>
-            <value>PE_ORIENTATION</value>
+					<!-- \condition None.
+		           \consequence Update event will be sent with address to ownerHandle.
+		           \payload Physics::VelocityComposite -->
+					<value>PE_VELOCITY</value>
 
-            <value>PE_MODULE_POSITION</value>
-            <value>PE_MODULE_ORIENTATION</value>
+					<!-- \condition None.
+		           \consequence Update event will be sent with address to ownerHandle.
+		           \payload Physics::VelocityComposite -->
+					<value>PE_ROTATION_VELOCITY</value>
 
-            <value>PE_TOTAL_MASS</value>
-            <value>PE_TOTAL_INERTIA</value>
+					<!-- \condition None.
+		           \consequence Update event will be sent with address to ownerHandle.
+		           \payload v3 -->
+					<value>PE_POSITION</value>
 
-            <!-- Control Updates-->
-            <value>PE_MODULATE_MASS</value>
+					<!-- Not used -->
+					<value>PE_ORIENTATION</value>
 
+					<!-- Not used -->
+					<value>PE_MODULE_POSITION</value>
+					
+					<!-- Not used --> 
+					<value>PE_MODULE_ORIENTATION</value>
+
+					<!-- \condition None.
+		           \consequence Update event will be sent with address to ownerHandle.
+		           \payload f32 -->  
+					<value>PE_TOTAL_MASS</value>
+
+          <!-- Not used in engine. -->
+					<!-- \condition None.
+		           \consequence Update event will be sent with address to ownerHandle.
+		           \payload m3x3 -->
+          <value>PE_TOTAL_INERTIA</value>
+
+          <!-- Control Updates-->
+					<!-- \condition None.
+		           \consequence Changes mass of a physics object.
+		           \payload v3 -->
+          <value>PE_MODULATE_MASS</value>
+
+					<!-- \condition None.
+		           \consequence Changes force of a physics object.
+		           \payload v3 -->
             <value>PE_APPLY_FORCE</value>
+
+					<!-- \condition None.
+		           \consequence Changes torque of a physics object.
+		           \payload v3 -->
             <value>PE_APPLY_TORQUE</value>
 
-            <value>PE_MAGIC_STOP</value>
-            <value>PE_DEBUG</value>
+					<!-- \condition None.
+		           \consequence Sets all velocities to zero.
+		           \payload Event::Void() -->
+					<value>PE_MAGIC_STOP</value>
 
-            <value>PE_UPDATE_POSITION</value>
-            <value>PE_UPDATE_ORIENTATION</value>
+					<!-- \condition None.
+		           \consequence Perform some debug outputs of PhysicsObject.
+		           \payload Event::Void() -->           
+					<value>PE_DEBUG</value>
 
-            <value>PE_UPDATE_MODULE_POSITION</value>
+					<!-- \todo Naming of setter events is misleading. They should not be named 'UPDATE'_FOO_BAR. -->
+					
+					<!-- \condition None.
+		           \consequence Setter for postion.
+		           \payload v3 -->
+					<value>PE_UPDATE_POSITION</value>
+
+					<!-- \condition None.
+		           \consequence Setter for orientation.
+		           \payload qv4 -->
+					<value>PE_UPDATE_ORIENTATION</value>
+
+					<!-- Used in Gameobject but not implemented! -->
+					<value>PE_UPDATE_MODULE_POSITION</value>
+					
+					<!-- Used in Gameobject but not implemented! -->
             <value>PE_UPDATE_MODULE_ORIENTATION</value>
 
             <!-- Note: One single v3 only (absolute) -->
-            <value>PE_UPDATE_VELOCITY</value>
-            <value>PE_UPDATE_ROTATION_VELOCITY</value>
 
-            <value>PE_UPDATE_COLLISION_MODE</value>
-            <value>PE_UPDATE_SIMULATION_FLAG</value>
+					<!-- \condition None.
+		           \consequence Setter for velocity.
+		           \payload v3 -->
+					<value>PE_UPDATE_VELOCITY</value>
+
+					<!-- \condition None.
+		           \consequence Setter for rotation velocity.
+		           \payload v3 -->
+					<value>PE_UPDATE_ROTATION_VELOCITY</value>
+
+					<!-- \condition None.
+		           \consequence Setter for collition mode.
+		           \payload v3 -->
+					<value>PE_UPDATE_COLLISION_MODE</value>
+      
+					<!-- Used in destroyable. But not implemented! -->
+					<value>PE_UPDATE_SIMULATION_FLAG</value>
 	    
-	          <!-- Note: Has timestamps -->
-	          <value>PE_INTERPOLATE_POSITION</value>
-            <value>PE_INTERPOLATE_ORIENTATION</value>
+	       <!-- Note: Has timestamps -->
+					
+					<!-- \condition None.
+		           \consequence Used by network for interpolation.
+		           \payload InterpolationDataV3 -->
+					<value>PE_INTERPOLATE_POSITION</value>
+
+					<!-- \condition None.
+		           \consequence Used by network for interpolation.
+		           \payload InterpolationDataQv4 -->
+					<value>PE_INTERPOLATE_ORIENTATION</value>
         </enum>
 
         <enum name = "CollisionMode" export = "PHYSICS_API">

@@ -10,6 +10,11 @@
 
             <value set = "4000">A_FIRST_MODELACTION</value>
 
+					<!-- \condition
+		           \consequence
+		           \payload -->
+					
+					
             <!-- GameObject Events -->
             <value>GOE_CONTROL_PITCH</value>
             <value>GOE_CONTROL_YAW</value>
