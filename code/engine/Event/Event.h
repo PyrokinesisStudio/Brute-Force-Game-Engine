@@ -38,7 +38,14 @@ namespace BFG {
 namespace Event {
 
 typedef BasicEnvelope<u32, GameHandle, GameHandle> Envelope;
+
+#ifdef BFG_EXCEPTIONAL_CPP11
 USING_ENVELOPE(Envelope);
+#else
+typedef Envelope::IdT            IdT;
+typedef Envelope::DestinationIdT DestinationIdT;
+typedef Envelope::SenderIdT      SenderIdT;
+#endif
 
 typedef BasicLane<Envelope> Lane;
 typedef BasicSynchronizer<Lane> Synchronizer;
