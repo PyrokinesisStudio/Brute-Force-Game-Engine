@@ -43,14 +43,12 @@ namespace BFG {
 namespace Event { 
 
 //! The Binder holds the map of EventIds with its corresponding Bindings
-template <typename _IdT, typename _DestinationIdT, typename _SenderIdT>
+template <typename _EnvelopeT>
 struct Binder
 {
-	typedef _IdT IdT;
-	typedef _DestinationIdT DestinationIdT;
-	typedef _SenderIdT SenderIdT;
+	USING_ENVELOPE(_EnvelopeT);
 	
-	typedef Connection<IdT, DestinationIdT> ConnectionT;
+	typedef Connection<EnvelopeT> ConnectionT;
 	
 	typedef boost::multi_index_container
 	<

@@ -24,22 +24,28 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_EVENT_CONNECTION_H
-#define BFG_EVENT_CONNECTION_H
-
-#include <boost/any.hpp>
+#ifndef BFG_EVENT_ENVELOPE_H
+#define BFG_EVENT_ENVELOPE_H
 
 namespace BFG {
-namespace Event {
+namespace Event { 
 
-template <typename _EnvelopeT>
-struct Connection
+//! Makes all typenames within an Envelope type available in a scope.
+//! \attention Do *not* use EnvelopeT as parameter. You may use _EnvelopeT or
+//!            a type of a dependent scope like Mytype::EnvelopeT.
+#define USING_ENVELOPE(type) \
+	typedef          type                      EnvelopeT;       \
+	typedef typename EnvelopeT::IdT            IdT;             \
+	typedef typename EnvelopeT::DestinationIdT DestinationIdT;  \
+	typedef typename EnvelopeT::SenderIdT      SenderIdT;
+
+//! Struct containing event addressing type traits.
+template <typename _IdT, typename _DestinationIdT, typename _SenderIdT>
+struct BasicEnvelope
 {
-	USING_ENVELOPE(_EnvelopeT);
-
-	IdT            mEventId;
-	DestinationIdT mDestinationId;
-	boost::any     mBinding;       //! \todo: This can probably become Callable*
+	typedef _IdT            IdT;
+	typedef _DestinationIdT DestinationIdT;
+	typedef _SenderIdT      SenderIdT;
 };
 
 } // namespace Event

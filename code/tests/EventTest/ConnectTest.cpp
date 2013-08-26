@@ -33,6 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/thread/mutex.hpp>
 
 #include <Event/Binding.h>
+#include <Event/Envelope.h>
 
 //! Handy shortcut for BOOST_CHECK_EQUAL_COLLECTIONS
 #define CHECK_EQUAL_COLLECTIONS(a,b) \
@@ -49,7 +50,7 @@ struct Case
 	std::vector<BFG::Event::IdT> mIds;
 	std::vector<std::string> mStrings;
 	std::vector<BFG::u32> mU32;
-	std::vector<BFG::Event::SenderT> mSenders;
+	std::vector<BFG::Event::SenderIdT> mSenders;
 };
 
 typedef std::map<std::string, Case> EventCounter;
@@ -410,7 +411,8 @@ BOOST_AUTO_TEST_CASE (ConnectionTestU32)
 	EventCounter ec;
 	ModuleConnect mc(ec);
 
-	typedef BFG::Event::Binding<BFG::u32, BFG::GameHandle> BindingT;
+	USING_ENVELOPE(BFG::Event::Envelope);
+	typedef BFG::Event::Binding<BFG::u32, SenderIdT> BindingT;
 
 	BFG::u32 id = 32;
 	BFG::GameHandle dest = BFG::generateHandle();
@@ -418,7 +420,7 @@ BOOST_AUTO_TEST_CASE (ConnectionTestU32)
 	// Create a new Binding and try to put it into a Connection object,
 	// then try to get it back.
 	BFG::Event::Callable* cu1 = new BindingT();
-	BFG::Event::Connection<BFG::u32, BFG::GameHandle> con1 = {id, dest, cu1};
+	BFG::Event::Connection<BFG::Event::Envelope> con1 = {id, dest, cu1};
 	BindingT* bu1 = static_cast<BindingT*>(cu1);
 	
 	BOOST_CHECK_EQUAL(con1.mEventId, id);
@@ -488,7 +490,8 @@ BOOST_AUTO_TEST_CASE (ConnectionTestString)
 	// Create a new Binding and try to put it into a Connection object,
 	// then try to get it back.
 	BFG::Event::Callable* cs1 = new BindingT();
-	BFG::Event::Connection<BFG::u32, BFG::GameHandle> con1 = {id, dest, cs1};
+	USING_ENVELOPE(BFG::Event::Envelope);
+	BFG::Event::Connection<BFG::Event::Envelope> con1 = {id, dest, cs1};
 	BindingT* bs1 = static_cast<BindingT*>(cs1);
 
 	BOOST_CHECK_EQUAL(con1.mEventId, id);
@@ -558,7 +561,8 @@ BOOST_AUTO_TEST_CASE (ConnectionTestVoid)
 	// Create a new Binding and try to put it into a Connection object,
 	// then try to get it back.
 	BFG::Event::Callable* cv1 = new BindingT();
-	BFG::Event::Connection<BFG::u32, BFG::GameHandle> con1 = {id, dest, cv1};
+	USING_ENVELOPE(BFG::Event::Envelope);
+	BFG::Event::Connection<BFG::Event::Envelope> con1 = {id, dest, cv1};
 	BindingT* bv1 = static_cast<BindingT*>(cv1);
 
 	// Use the Binding for connects
@@ -610,7 +614,7 @@ BOOST_AUTO_TEST_CASE (BinderTest)
 	BFG::GameHandle senderHandle = 8;
 	BFG::GameHandle dest = BFG::generateHandle();
 
-	BFG::Event::Binder<BFG::u32, BFG::GameHandle, BFG::GameHandle> b;
+	BFG::Event::Binder<BFG::Event::Envelope> b;
 
 	b.connect<BFG::u32>(idU, boost::bind(&ModuleConnect::simpleCopy, &mc, _1), dest);
 	b.connect<BFG::u32>(idU, boost::bind(&ModuleConnect::simpleCopyConst, &mc, _1), dest);

@@ -40,8 +40,6 @@ struct TickData
 	mTimeSinceLastTick(timeSinceLastTick)
 	{}
 
-	s32 mTimeSinceLastTick;
-
 	boost::units::quantity<boost::units::si::time, f32> 
 	timeSinceLastTick() const
 	{
@@ -50,6 +48,9 @@ struct TickData
 		
 		return timeInSeconds * boost::units::si::seconds;
 	}
+	
+	s32 mTimeSinceLastTick;
+
 };
 
 } // namespace Event

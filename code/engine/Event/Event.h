@@ -28,6 +28,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_EVENT_EVENT_H
 
 #include <Core/GameHandle.h>
+
+#include <Event/Envelope.h>
 #include <Event/Lane.h>
 #include <Event/Synchronizer.h>
 #include <Event/SubLane.h>
@@ -35,11 +37,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Event {
 
-typedef u32 IdT;
-typedef GameHandle DestinationT;
-typedef GameHandle SenderT;
+typedef BasicEnvelope<u32, GameHandle, GameHandle> Envelope;
+USING_ENVELOPE(Envelope);
 
-typedef BasicLane<IdT, DestinationT, SenderT> Lane;
+typedef BasicLane<Envelope> Lane;
 typedef BasicSynchronizer<Lane> Synchronizer;
 typedef BasicSubLane<Lane> SubLane;
 

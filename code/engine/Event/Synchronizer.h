@@ -55,22 +55,21 @@ enum RunLevel
 	RL3
 };
 
-template <typename _IdT, typename _DestinationIdT, typename _SenderIdT>
+template <typename _EnvelopeT>
 struct BasicLane;
 
 template <typename _LaneT>
 struct BasicSynchronizer
 {
-	typedef _LaneT                         LaneT;
-	typedef typename LaneT::IdT            IdT;
-	typedef typename LaneT::DestinationIdT DestinationIdT;
-	typedef typename LaneT::SenderIdT      SenderIdT;
-	typedef typename std::multimap<RunLevel, LaneT*> LaneMapT;
-	typedef typename LaneMapT::iterator LaneMapIt;
-	typedef std::pair<LaneMapIt, LaneMapIt> RangeT;
-	typedef boost::shared_ptr<boost::barrier> BarrierPtrT;
+	typedef _LaneT                                   LaneT;
+	USING_ENVELOPE(typename LaneT::EnvelopeT);
 	
-	template<typename _IdT, typename _DestinationIdT, typename _SenderIdT>
+	typedef typename std::multimap<RunLevel, LaneT*> LaneMapT;
+	typedef typename LaneMapT::iterator              LaneMapIt;
+	typedef std::pair<LaneMapIt, LaneMapIt>          RangeT;
+	typedef boost::shared_ptr<boost::barrier>        BarrierPtrT;
+	
+	template<typename _EnvelopeT>
 	friend struct BasicLane;
 
 	BasicSynchronizer() :
