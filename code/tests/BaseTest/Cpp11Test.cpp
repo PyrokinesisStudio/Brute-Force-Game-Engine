@@ -1,5 +1,3 @@
-#if defined(__GXX_EXPERIMENTAL_CXX0X__) || _MSC_VER > 1500
-
 #include <iostream>
 #include <vector>
 #include <boost/test/unit_test.hpp>
@@ -67,4 +65,3 @@ BOOST_AUTO_TEST_CASE (testStaticAssert)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-#endif
