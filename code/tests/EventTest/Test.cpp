@@ -580,7 +580,6 @@ BOOST_AUTO_TEST_CASE (EmitStdContainer)
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane lane(sync, 100);
 
-	BFG::u32 frequency = 100;
 	lane.addEntry<TestContainerModule>();
 
 	sync.start();

@@ -42,10 +42,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 
 MainState::MainState(GameHandle handle, Event::Lane& lane) :
-	State(lane),
-	mLane(lane),
-	mPlayer(NULL_HANDLE),
-	mEnvironment(new Environment)
+State(lane),
+mPlayer(NULL_HANDLE),
+mEnvironment(new Environment),
+mLane(lane)
 {
 	Path p;
 

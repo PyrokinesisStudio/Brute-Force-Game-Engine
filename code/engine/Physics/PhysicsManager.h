@@ -94,6 +94,8 @@ private:
 	void onAttachObject(const ObjectAttachmentParams& oap);
 	void onDetachObject(const ObjectAttachmentParams& oap);
 
+	Event::Lane& mLane;
+
 	const u32                     mMaxContactsPerCollision;
 	const quantity<si::time, f32> mSimulationStepSize;
 
@@ -108,8 +110,6 @@ private:
 	friend void globalOdeNearCollisionCallback(void* additionalData,
 	                                           dGeomID geo1,
 	                                           dGeomID geo2);
-
-	Event::Lane& mLane;
 };
 
 } // namespace Physics

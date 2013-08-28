@@ -32,11 +32,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include "Globals.h"
 
 InvaderGeneral::InvaderGeneral(Event::SubLanePtr lane,
-							   boost::shared_ptr<BFG::Environment> environment) :
-	mLane(lane),
-	mEnvironment(environment),
-	mLastShot(0),
-	mWaveCount(0)
+                               boost::shared_ptr<BFG::Environment> environment) :
+mEnvironment(environment),
+mLastShot(0),
+mWaveCount(0),
+mLane(lane)
 {
 	spawnWave();
 	++mWaveCount;

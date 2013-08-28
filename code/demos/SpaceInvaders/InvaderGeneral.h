@@ -51,7 +51,7 @@ struct InvaderGeneral
 	boost::shared_ptr<BFG::Environment> mEnvironment;
 	quantity<si::time, f32>             mLastShot;
 	size_t                              mWaveCount;
-	Event::SubLanePtr					mLane;
+	Event::SubLanePtr                   mLane;
 };
 
 #endif

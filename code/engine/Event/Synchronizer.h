@@ -73,8 +73,8 @@ struct BasicSynchronizer
 	friend struct BasicLane;
 
 	BasicSynchronizer() :
-	mFinishEvent(false),
-	mFinish(4)
+	mFinish(4),
+	mFinishEvent(false)
 	{}
 	
 	~BasicSynchronizer()
