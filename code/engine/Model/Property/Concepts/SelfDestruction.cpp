@@ -34,7 +34,7 @@ namespace BFG {
 SelfDestruction::SelfDestruction(GameObject& owner, PluginId pid) :
 Property::Concept(owner, "SelfDestruction", pid)
 {
-	initvar(ID::PV_SelfDestructCountdown);
+	requiredPvInitialized(ID::PV_SelfDestructCountdown);
 
 	require("Destroyable");	
 }

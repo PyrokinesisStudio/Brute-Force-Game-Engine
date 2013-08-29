@@ -43,7 +43,7 @@ namespace BFG {
 AutoNavigator::AutoNavigator(GameObject& owner, PluginId pid) :
 Property::Concept(owner, "AutoNavigator", pid)
 {
-	initvar(ID::PV_TriggerRadius);
+	requiredPvInitialized(ID::PV_TriggerRadius);
 
 	require("ThrustControl");
 	require("Physical");

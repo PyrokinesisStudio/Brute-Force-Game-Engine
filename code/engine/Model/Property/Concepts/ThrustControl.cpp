@@ -68,11 +68,11 @@ mTargetRotationSpeed(v3::ZERO)
 	subLane()->connect(ID::GOE_CONTROL_THRUST, this, &ThrustControl::onControlThrust, ownerHandle());
 	subLane()->connectV(ID::GOE_CONTROL_MAGIC_STOP, this, &ThrustControl::onControlMagicStop, ownerHandle());
 	
-	initvar(ID::PV_MaxSpeed);
-	initvar(ID::PV_EngineForce);
-	initvar(ID::PV_ManeuverForce);
-	initvar(ID::PV_MaxRotationSpeed);
-	initvar(ID::PV_MaxSpeed);
+	requiredPvInitialized(ID::PV_MaxSpeed);
+	requiredPvInitialized(ID::PV_EngineForce);
+	requiredPvInitialized(ID::PV_ManeuverForce);
+	requiredPvInitialized(ID::PV_MaxRotationSpeed);
+	requiredPvInitialized(ID::PV_MaxSpeed);
 }
 
 ThrustControl::~ThrustControl()

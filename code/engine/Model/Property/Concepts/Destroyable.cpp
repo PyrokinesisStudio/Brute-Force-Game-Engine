@@ -50,12 +50,12 @@ Destroyable::Destroyable(GameObject& owner, PluginId pid) :
 Property::Concept(owner, "Destroyable", pid),
 mDamageMultiplier(100.0f)
 {
-	initvar(ID::PV_Destroyed);
-	initvar(ID::PV_Respawns);
-	initvar(ID::PV_Armor);
-	initvar(ID::PV_Damage);
-	initvar(ID::PV_RespawnCountdown);
-	initvar(ID::PV_Effect);
+	requiredPvInitialized(ID::PV_Destroyed);
+	requiredPvInitialized(ID::PV_Respawns);
+	requiredPvInitialized(ID::PV_Armor);
+	requiredPvInitialized(ID::PV_Damage);
+	requiredPvInitialized(ID::PV_RespawnCountdown);
+	requiredPvInitialized(ID::PV_Effect);
 
 	subLane()->connect(ID::PE_CONTACT, this, &Destroyable::onContact, ownerHandle());
 	subLane()->connectV(ID::GOE_REINITIALIZE, this, &Destroyable::onReinitialize, ownerHandle());

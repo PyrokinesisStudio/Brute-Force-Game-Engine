@@ -108,12 +108,12 @@ protected:
 	//! Mostly called within the constructor of Concept implementations.
 	void require(ConceptId) const;
 
-	//! \brief Checks if all necessary Value 's are existing
+	//! \brief Short and clear: "I need this PropertyValue initialized here!"
 	//! Initialization is done by Value 's now. Therefore, some of them
 	//! are mandatory. Missing PVs may lead to UB or exceptions. So every time
 	//! a new Module gets attached to this PC, we'll check here if it has all
 	//! PVs which are required for initialization.
-	void initvar(ValueId::VarIdT);
+	void requiredPvInitialized(ValueId::VarIdT);
 
 	/** \brief Simplified accessor for Property::Value 's.
 

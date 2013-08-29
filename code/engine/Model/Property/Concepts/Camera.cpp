@@ -68,7 +68,7 @@ mInterpol(0.0f, parameter.mMaxDistance.value())
 #endif
 	subLane()->connect(ID::GOE_SET_CAMERA_TARGET, this, &Camera::onSetCameraTarget, ownerHandle());
 
-	initvar(ID::PV_CameraMode);
+	requiredPvInitialized(ID::PV_CameraMode);
 	require("Physical");
 
 	assert(ownerHandle() == rootModule() &&

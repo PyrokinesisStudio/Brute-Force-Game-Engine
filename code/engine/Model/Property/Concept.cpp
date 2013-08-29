@@ -91,7 +91,7 @@ void Concept::require(ConceptId pc) const
 	mOwner.setRequirement(mSelf, pc);
 }
 
-void Concept::initvar(ValueId::VarIdT id)
+void Concept::requiredPvInitialized(ValueId::VarIdT id)
 {
 	mRequiredInitvars.push_back(id);	
 }
