@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -35,12 +35,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreException.h>
 
 // BFG libraries
-#include <Base/EntryPoint.h>
 #include <Base/Logger.h>
+#include <Base/ShowException.h>
 #include <Controller/Controller.h>
 #include <Core/Path.h>
-#include <Base/ShowException.h>
 #include <Core/GameHandle.h>
+#include <Event/Event.h>
 #include <Model/State.h>
 #include <View/View.h>
 
@@ -48,60 +48,69 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 // essentially compile time checks for formulas.
 using namespace boost::units;
 
-using BFG::s32;
-using BFG::f32;
-
 // Client applications should use event IDs higher than 10000 to avoid
 // collisions with events used within the engine.
-const s32 A_EXIT = 10000;
+const BFG::s32 A_EXIT = 10000;
 
 // Here comes our first state. Most of the time we use it as Owner of objects
 // or as forwarder of input (Controller) events. I.e. a state could be the
 // "Main Menu", a "Movie Sequence" or the 3D part of the application.
 struct GameState : BFG::State
 {
-	GameState(GameHandle handle, EventLoop* loop) :
-	State(loop)
+	GameState(GameHandle handle, BFG::Event::Lane& lane) :
+	State(lane),
+	mSubLane(lane.createSubLane())
 	{
 		// This part is quite important. You must connect your event callbacks.
 		// If not, the event system doesn't know you're waiting for them.
-		loop->connect(A_EXIT, this, &GameState::ControllerEventHandler);
+		mSubLane->connect(A_EXIT, this, &GameState::onExit);
+		
+		//! \todo Simplify Controller Init
+		
+		// At the beginning, the Controller is "empty" and must be filled with
+		// states and actions. A Controller state corresponds to a Model state
+		// or a View state and in fact, they must have the same handle
+		// (GameHandle).
+		// This part here is necessary for Action deserialization.
+		BFG::Controller_::ActionMapT actions;
+		actions[A_EXIT] = "A_EXIT";
+		BFG::Controller_::fillWithDefaultActions(actions);
+		BFG::Controller_::sendActionsToController(lane, actions);
+
+		// Actions must be configured by XML
+		BFG::Path path;
+		const std::string configPath = path.Expand("TutorialBasics.xml");
+		const std::string stateName = "TutorialBasics";
+
+		// The Controller must know about the size of the window for the mouse
+		BFG::View::WindowAttributes wa;
+		BFG::View::queryWindowAttributes(wa);
+		
+		// Finally, send everything to the Controller
+		BFG::Controller_::StateInsertion si(configPath, stateName, handle, true, wa);
+		mSubLane->emit(BFG::ID::CE_LOAD_STATE, si);
 	}
 	
 	virtual ~GameState()
 	{
 		infolog << "Tutorial: Destroying GameState.";
-		loop()->disconnect(A_EXIT, this);
 	}
 
 	// You may update objects and other things here.
-	virtual void onTick(const quantity<si::time, f32> TSLF)
+	virtual void onTick(const quantity<si::time, BFG::f32> TSLF)
 	{
 		// Well there's nothing to update yet. :)
 		infolog << "Time since last frame: " << TSLF.value() << "ms";
 	}
 	
-	void onExit()
+	void onExit(BFG::s32)
 	{
-		// Calling this will hold the update process of this State.
-		// No further events might be received after this.
-		loop()->stop();
+		// Sending this will trigger deinitialization of the engine and
+		// finally stop all threads.
+		mSubLane->emit(BFG::ID::EA_FINISH, BFG::Event::Void());
 	}
-
-	// Callback for Input. The Controller sends input directly to this
-	// state, since we told him so (in `initController').
-	void ControllerEventHandler(BFG::Controller_::VipEvent* e)
-	{
-		switch(e->id())
-		{
-			// This is the event ID we specified at the top
-			case A_EXIT:
-			{
-				onExit();
-				break;
-			}
-		}
-	}
+	
+	BFG::Event::SubLanePtr mSubLane;
 };
 
 // We won't display anything, so this class remains more or less empty. In this
@@ -110,17 +119,14 @@ struct GameState : BFG::State
 struct ViewState : public BFG::View::State
 {
 public:
-	ViewState(GameHandle handle, EventLoop* loop) :
-	State(handle, loop),
-	mControllerMyGuiAdapter(handle, loop)
+	ViewState(GameHandle handle, BFG::Event::Lane& lane) :
+	State(handle, lane),
+	mControllerMyGuiAdapter(handle, lane)
 	{}
 
 	~ViewState()
 	{
 		infolog << "Tutorial: Destroying ViewState.";
-
-		// The View module must be shut down manually.
-		emit<BFG::View::Event>(BFG::ID::VE_SHUTDOWN, 0);
 	}
 
 	virtual void pause()
@@ -133,89 +139,54 @@ private:
 	BFG::View::ControllerMyGuiAdapter mControllerMyGuiAdapter;
 };
 
-// Initializing input handling here.
-void initController(BFG::GameHandle stateHandle, EventLoop* loop)
+// This is the module initialization point for the actual game.
+struct Main : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 {
-	// The Emitter is the standard tool to send events with.
-	BFG::Emitter emitter(loop);
+	Main()
+	{}
 
-	// At the beginning, the Controller is "empty" and must be filled with
-	// states and actions. A Controller state corresponds to a Model state
-	// or a View state and in fact, they must have the same handle
-	// (GameHandle).
-	// This part here is necessary for Action deserialization.
-	BFG::Controller_::ActionMapT actions;
-	actions[A_EXIT] = "A_EXIT";
-	BFG::Controller_::fillWithDefaultActions(actions);
-	BFG::Controller_::sendActionsToController(emitter.loop(), actions);
+	virtual void main(BFG::Event::Lane* lane)
+	{
+		GameHandle handle = BFG::generateHandle();
+		
+		// The different states might be seen as different viewing
+		// points of one state of an application or game. Thus they
+		// always share the same handle since they work closely
+		// together.
+		mGameState.reset(new GameState(handle, *lane));
+		mViewState.reset(new ViewState(handle, *lane));
+	}
 
-	// Actions must be configured by XML
-	BFG::Path path;
-	const std::string configPath = path.Expand("TutorialBasics.xml");
-	const std::string stateName = "TutorialBasics";
+	boost::scoped_ptr<GameState> mGameState;
+	boost::scoped_ptr<ViewState> mViewState;
+};
 
-	// The Controller must know about the size of the window for the mouse
-	BFG::View::WindowAttributes wa;
-	BFG::View::queryWindowAttributes(wa);
-	
-	// Finally, send everything to the Controller
-	BFG::Controller_::StateInsertion si(configPath, stateName, stateHandle, true, wa);
-	emitter.emit<BFG::Controller_::ControlEvent>
-	(
-		BFG::ID::CE_LOAD_STATE,
-		si
-	);
-}
-
-GameHandle stateHandle = BFG::generateHandle();
-
-boost::scoped_ptr<ViewState> gViewState;
-boost::scoped_ptr<GameState> gGameState;
-
-void* createStates(void* p)
-{
-	EventLoop* loop = static_cast<EventLoop*>(p);
-	
-	// The different states might be seen as different viewing points of
-	// one state of an application or game. Thus they always share the same
-	// handle since they work closely together.
-	gViewState.reset(new ViewState(stateHandle, loop));
-	gGameState.reset(new GameState(stateHandle, loop));
-
-	initController(stateHandle, loop);
-	return 0;
-}
-
-int main( int argc, const char* argv[] ) try
+int main() try
 {
 	// Our logger. Not used here, works like cout, but without the need for
 	// endl and with multiple severities: dbglog, infolog, warnlog, errlog.
 	BFG::Base::Logger::Init(BFG::Base::Logger::SL_DEBUG, "Logs/TutorialBasics.log");
 	infolog << "This is our logger!";
 
-	EventLoop loop(true);
-
 	const std::string caption = "Tutorial 01: Basics";
 	size_t controllerFrequency = 1000;
 	
+	// A Lane is a part of the program which handles events in a fully
+	// autonomous way. Therefore, every lane gets its own thread. They all
+	// register with a synchronizer which is responsible for the information
+	// exchange between.
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane controllerLane(sync, controllerFrequency, "Controller");
+	BFG::Event::Lane viewLane(sync, 100, "View");
+	BFG::Event::Lane gameLane(sync, 100, "Game", BFG::Event::RL3);
+	
 	// Setting up callbacks for module initialization
-	boost::scoped_ptr<BFG::Base::IEntryPoint> epGame(new BFG::Base::CEntryPoint(&createStates));
-	BFG::Controller_::Main controllerMain(controllerFrequency);
-	BFG::View::Main viewMain(caption);
-
-	// The order is important.
-	loop.addEntryPoint(viewMain.entryPoint());
-	loop.addEntryPoint(controllerMain.entryPoint());
-	loop.addEntryPoint(epGame.get());
-
-	// Now the following line will call all entry points and run the
-	// application. The only way to get past this line is to call
-	// loop.stop() somewhere. We do this in our GameState.
-	loop.run();
-
-	// The loop does not run anymore. Destroy the states now.
-	gViewState.reset();
-	gGameState.reset();
+	viewLane.addEntry<BFG::View::Main>(caption);
+	controllerLane.addEntry<BFG::Controller_::Main>(controllerFrequency);
+	gameLane.addEntry<Main>();
+	
+	sync.start();
+	sync.finish(true);
 }
 catch (Ogre::Exception& e)
 {
