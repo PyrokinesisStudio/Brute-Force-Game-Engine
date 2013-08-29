@@ -35,9 +35,9 @@ bool nearestToPlayer(boost::shared_ptr<BFG::GameObject> go,
 	if (! go->satisfiesRequirement("InvaderControl"))
 		return false;
 
-	const Location& invader = go->getValue<Location>(ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
+	const v3& invaderPosition = go->getValue<v3>(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
 	
-	f32 invaderPlayerDistance = BFG::distance(invader.position, playerPosition);
+	f32 invaderPlayerDistance = BFG::distance(invaderPosition, playerPosition);
 	
 	if (invaderPlayerDistance < bestCandidate.second &&
 	    invaderPlayerDistance > minDistanceToPlayer)

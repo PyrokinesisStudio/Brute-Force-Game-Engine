@@ -45,8 +45,8 @@ Cannon::Cannon(GameObject& Owner, BFG::PluginId pid) :
 	Path path;
 	mLaserSound = path.Get(ID::P_SOUND_EFFECTS)+"Laser_003.wav";
 
-	initvar(ID_PROJECTILE_SPEED);
-	initvar(ID_PROJECTILE_SPAWN_DISTANCE);
+	requiredPvInitialized(ID_PROJECTILE_SPEED);
+	requiredPvInitialized(ID_PROJECTILE_SPAWN_DISTANCE);
 
 	mSubLane->connectV(ID::GOE_FIRE_ROCKET, this, &Cannon::onFireRocket, ownerHandle());
 	mSubLane->connect(ID::GOE_POWERUP, this, &Cannon::onPowerUp, ownerHandle());
@@ -77,14 +77,16 @@ void Cannon::fireRocket(bool autoRocket)
 	if (autoRocket && targets.empty())
 		return;
 
-	const Location& go = getGoValue<Location>(ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
+	const v3& ownPosition = getGoValue<v3>(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
+	const qv4& ownOrientation = getGoValue<qv4>(ID::PV_Orientation, ValueId::ENGINE_PLUGIN_ID);
+
 
 	const f32& projectileSpeed = value<f32>(ID_PROJECTILE_SPEED, rootModule());
 	const f32& projectileSpawnDistance = value<f32>(ID_PROJECTILE_SPAWN_DISTANCE, rootModule());
 
 	Location spawnLocation;
-	spawnLocation.position = go.position + go.orientation.zAxis() * projectileSpawnDistance;
-	spawnLocation.orientation = go.orientation;
+	spawnLocation.position = ownPosition + ownOrientation.zAxis() * projectileSpawnDistance;
+	spawnLocation.orientation = ownOrientation;
 
 	// Make Name
 	static size_t count = 0;
@@ -104,7 +106,7 @@ void Cannon::fireRocket(bool autoRocket)
 		op.mType = "Projectile";
 	
 	op.mLocation = spawnLocation;
-	op.mLinearVelocity = v3(projectileSpeed) * go.orientation.zAxis();
+	op.mLinearVelocity = v3(projectileSpeed) * ownOrientation.zAxis();
 
 	mSubLane->emit(ID::S_CREATE_GO, op);
 	mSubLane->emit(ID::AE_SOUND_EMITTER_PROCESS_SOUND, mLaserSound);

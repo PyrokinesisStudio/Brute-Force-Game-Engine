@@ -100,10 +100,10 @@ void AutoNavigator::operate()
 		return;
 	}
 	
-	const Location& own = getGoValue<Location>(ID::PV_Location, pluginId());
-	Location target = environment()->getGoValue<Location>(targetHandle, ID::PV_Location, pluginId());
-	
-	if (nearEnough(own.position, target.position, mRadius.value()))
+	const v3& ownPosition = getGoValue<v3>(ID::PV_Position, pluginId());
+	v3 targetPosition = environment()->getGoValue<v3>(targetHandle, ID::PV_Position, pluginId());
+
+	if (nearEnough(ownPosition, targetPosition, mRadius.value()))
 	{
 		mTargets.erase(mTargets.begin());
 		return;
@@ -113,11 +113,13 @@ void AutoNavigator::operate()
 	const v3& ownVelocity = getGoValue<v3>(ID::PV_Velocity, pluginId());
 	
 	// use two further frame positions because it takes 2 frames for the value to reach the physics
-	v3 targetPositionEx(target.position + targetVelocity * 2.0f * mTime.value());
-	v3 ownPositionEx(own.position + ownVelocity * 2.0f * mTime.value());
+	v3 targetPositionEx(targetPosition + targetVelocity * 2.0f * mTime.value());
+	v3 ownPositionEx(ownPosition + ownVelocity * 2.0f * mTime.value());
 	
+	const qv4& ownOrientation = getGoValue<qv4>(ID::PV_Orientation, pluginId());
+
 	// \todo use rotation velocity to approximate the orientation in the next frame
-	v3 VectorToTarget(unitInverse(own.orientation) * (targetPositionEx - ownPositionEx));
+	v3 VectorToTarget(unitInverse(ownOrientation) * (targetPositionEx - ownPositionEx));
 
 	rotate( rotationTo(v3::UNIT_Z, VectorToTarget) );
 

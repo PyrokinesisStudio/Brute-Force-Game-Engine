@@ -141,15 +141,15 @@ void Destroyable::destroy(GameHandle module, bool respawns)
 	value<bool>(ID::PV_Destroyed, module) = true;
 	mTimeSinceDestruction[module] = 0.0f;
 
-	const Location& go = getGoValue<Location>(ID::PV_Location, pluginId());
-
 	std::string effect = value<std::string>(ID::PV_Effect, module);
 	std::string soundEffect = value<std::string>(ID::PV_SoundEffect, module);
 	
 	//! \todo calculate intensity
 	f32 intensity = 1.0f + (f32)isHeavy(module);
 	
-	View::EffectCreation ec(effect, go.position, intensity);
+	const v3& ownPosition = getGoValue<v3>(ID::PV_Position, pluginId());
+
+	View::EffectCreation ec(effect, ownPosition, intensity);
 	warnlog << "Destroyable: VE_EFFECT event may arrive at undesired locations due to unknown view state handle";
 	// TODO: separate calculation and subLane()->emitting
 	subLane()->emit(ID::VE_EFFECT, ec);
@@ -174,15 +174,22 @@ void Destroyable::respawn(GameHandle module)
 	// Spawn "behind" (negative Z axis) the collision point
 	const f32 distance_in_meters = 50.0f;
 
-	const Location& go = getGoValue<Location>(ID::PV_Location, pluginId());
+	const v3& ownPosition = getGoValue<v3>(ID::PV_Position, pluginId());
+	const qv4& ownOrientation = getGoValue<qv4>(ID::PV_Orientation, pluginId());
 
-	Location nextSpawn = value<Location>(ID::PV_Location, module);
-	nextSpawn.position += go.position;
-	nextSpawn.position -= go.orientation.zAxis() * distance_in_meters;
-	nextSpawn.orientation = go.orientation;
+	v3 modulePosition = value<v3>(ID::PV_Position, module);
+	qv4 moduleOrientation = value<qv4>(ID::PV_Orientation, module);
+	
+	//! \todo Describe what is this all about.	
+	modulePosition += ownPosition;
+	modulePosition -= ownOrientation.zAxis() * distance_in_meters;
+	moduleOrientation = ownOrientation;
 
-	subLane()->emit(ID::GOE_REINITIALIZE, nextSpawn, ownerHandle());
+	mSubLane->emit(ID::GOE_CONTROL_MAGIC_STOP, Event::Void(), ownerHandle());
 
+	setGoValue(ID::PV_Position, pluginId(), modulePosition);
+	setGoValue(ID::PV_Orientation, pluginId(), moduleOrientation);
+	
 	subLane()->emit(ID::PE_UPDATE_COLLISION_MODE, (s32) ID::CM_Standard, module);
 	subLane()->emit(ID::PE_UPDATE_SIMULATION_FLAG, true, module);
 

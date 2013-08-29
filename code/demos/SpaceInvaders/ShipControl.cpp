@@ -41,27 +41,27 @@ ShipControl::ShipControl(GameObject& Owner, BFG::PluginId pid) :
 
 void ShipControl::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 {
-	Location go = getGoValue<Location>(ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
+	v3 ownPosition = getGoValue<v3>(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
 
 	bool setPos = false;
 
 	// Simulate a wall
-	if (std::abs(go.position.x) > DISTANCE_TO_WALL)
+	if (std::abs(ownPosition.x) > DISTANCE_TO_WALL)
 	{
 		subLane()->emit(ID::PE_UPDATE_VELOCITY, v3::ZERO, ownerHandle());
-		go.position.x = sign(go.position.x) * (DISTANCE_TO_WALL - 0.1f);
+		ownPosition.x = sign(ownPosition.x) * (DISTANCE_TO_WALL - 0.1f);
 		setPos = true;
 	}
 
 	// Make sure it doesn't move too much on the z axis
-	if (std::abs(go.position.z) - OBJECT_Z_POSITION > EPSILON_F)
+	if (std::abs(ownPosition.z) - OBJECT_Z_POSITION > EPSILON_F)
 	{
-		go.position.z = OBJECT_Z_POSITION;
+		ownPosition.z = OBJECT_Z_POSITION;
 		setPos = true;
 	}
 
 	if (setPos)
-		subLane()->emit(ID::PE_UPDATE_POSITION, go.position, ownerHandle());
+		subLane()->emit(ID::PE_UPDATE_POSITION, ownPosition, ownerHandle());
 }
 
 void ShipControl::onGoeControlYaw(f32 factor)

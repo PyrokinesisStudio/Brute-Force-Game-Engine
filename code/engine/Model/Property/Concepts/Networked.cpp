@@ -138,12 +138,16 @@ void Networked::internalUpdate(quantity<si::time, f32> /*timeSinceLastFrame*/)
 	}
 	else // client
 	{
-		Location go = getGoValue<Location>(ID::PV_Location, pluginId());
+		const v3& ownPosition = getGoValue<v3>(ID::PV_Position, pluginId());
+		const qv4& ownOrientation = getGoValue<qv4>(ID::PV_Orientation, pluginId());
+		
+		
+		//Location go = getGoValue<Location>(ID::PV_Location, pluginId());
 
 		if (!mInitialized)
 		{
-			mLastPhysicsPosition.get<2>() = go.position;
-			mLastPhysicsOrientation.get<2>() = go.orientation;
+			mLastPhysicsPosition.get<2>() = ownPosition;
+			mLastPhysicsOrientation.get<2>() = ownOrientation;
 			mInitialized = true;
 		}
 
@@ -152,9 +156,9 @@ void Networked::internalUpdate(quantity<si::time, f32> /*timeSinceLastFrame*/)
 			v3 velocity = getGoValue<v3>(ID::PV_Velocity, pluginId());
 			f32 speed = length(velocity);
 
-			if (!nearEnough(go.position + mExtrapolatedPositionDelta, mLastPhysicsPosition.get<2>(), speed * MAX_EXTRAPOLATED_POSITION_DELTA))
+			if (!nearEnough(ownPosition + mExtrapolatedPositionDelta, mLastPhysicsPosition.get<2>(), speed * MAX_EXTRAPOLATED_POSITION_DELTA))
 			{
-				dbglog << "Updating since distance was " << length(go.position + mExtrapolatedPositionDelta - mLastPhysicsPosition.get<2>());
+				dbglog << "Updating since distance was " << length(ownPosition + mExtrapolatedPositionDelta - mLastPhysicsPosition.get<2>());
 				dbglog << "Speed was " << speed;
 				subLane()->emit(ID::PE_INTERPOLATE_POSITION, mLastPhysicsPosition, ownerHandle());
 			}
@@ -162,15 +166,14 @@ void Networked::internalUpdate(quantity<si::time, f32> /*timeSinceLastFrame*/)
 		}
 		if (mUpdateOrientation)
 		{
-			if(angleBetween(mLastPhysicsOrientation.get<2>(), go.orientation * mExtrapolatedOrientationDelta) > MAX_ORIENTATION_DELTA)
+			if(angleBetween(mLastPhysicsOrientation.get<2>(), ownOrientation * mExtrapolatedOrientationDelta) > MAX_ORIENTATION_DELTA)
 			{
-				dbglog << "AngleBetween: " << angleBetween(mLastPhysicsOrientation.get<2>(), go.orientation * mExtrapolatedOrientationDelta);
+				dbglog << "AngleBetween: " << angleBetween(mLastPhysicsOrientation.get<2>(), ownOrientation * mExtrapolatedOrientationDelta);
 				subLane()->emit(ID::PE_INTERPOLATE_ORIENTATION, mLastPhysicsOrientation, ownerHandle());
 			}
 			mUpdateOrientation = false;
 		}
 	}
-
 }
 
 void Networked::onPosition(const v3& newPosition)

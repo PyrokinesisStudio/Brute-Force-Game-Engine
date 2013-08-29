@@ -199,6 +199,8 @@ void PhysicsObject::createModule(const ModuleCreationParams& mcp)
 		// It isn't possible to register events (with a destination GameHandle)
 		// before a root Module has been attached.
 		registerEvents();
+		setPosition(mcp.mPosition);
+		setOrientation(mcp.mOrientation);
 		setVelocity(mcp.mVelocity);
 		setRotationVelocity(mcp.mRotationVelocity);
 	}
@@ -209,7 +211,6 @@ void PhysicsObject::createModule(const ModuleCreationParams& mcp)
 	}
 
 	sendFullSync();
-
 }
 
 void PhysicsObject::attachObject(boost::shared_ptr<PhysicsObject> po,

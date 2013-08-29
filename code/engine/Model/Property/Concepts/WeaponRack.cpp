@@ -147,9 +147,9 @@ void WeaponRack::calculateVelocity(f32 startImpulse,
                                    v3& newVelocity,
                                    bool addShipVelocity) const
 {
-	const Location& go = getGoValue<Location>(ID::PV_Location, pluginId());
-
-	newVelocity = go.orientation * v3(0, 0, startImpulse);
+	const qv4& ownOrientation = getGoValue<qv4>(ID::PV_Orientation, pluginId());
+	
+	newVelocity = ownOrientation * v3(0, 0, startImpulse);
 
 	if (addShipVelocity)
 	{
@@ -161,10 +161,12 @@ void WeaponRack::calculateVelocity(f32 startImpulse,
 void WeaponRack::calculateSpawnLocation(Location& spawnLocation,
                                         f32 spawnDistance) const
 {
-	const Location& go = getGoValue<Location>(ID::PV_Location, pluginId());
+	const v3& ownPosition = getGoValue<v3>(ID::PV_Position, pluginId());
+	const qv4& ownOrientation = getGoValue<qv4>(ID::PV_Orientation, pluginId());
+
 	
-	spawnLocation.position = go.position + go.orientation.zAxis() * spawnDistance;
-	spawnLocation.orientation = go.orientation;
+	spawnLocation.position = ownPosition + ownOrientation.zAxis() * spawnDistance;
+	spawnLocation.orientation = ownOrientation;
 }
 
 } // namespace BFG

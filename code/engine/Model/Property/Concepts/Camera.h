@@ -157,7 +157,9 @@ private:
 
 	Location mLastObjLocation;
 	Location mOwnLocation;
-	Location mNewLocation;
+	
+	v3 mNewPosition;
+	qv4 mNewOrientation;
 
 	v3 mMaxRotationVelocity;
 	v3 mRotationInput;

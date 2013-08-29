@@ -130,11 +130,12 @@
             <value>PV_Effect</value>
             <value>PV_SoundEffect</value>
 
-	    <!-- PC_Networked -->
-	    <value>PV_Remote</value>
+	          <!-- PC_Networked -->
+	          <value>PV_Remote</value>
 	    
             <!-- PC_Physical -->
-            <value>PV_Location</value>
+					  <value>PV_Position</value>
+					  <value>PV_Orientation</value>
 
             <value>PV_Velocity</value>
             <value>PV_RelativeVelocity</value>

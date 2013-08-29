@@ -59,8 +59,8 @@ void Physical::internalSynchronize()
 
 void Physical::onFullSync(const Physics::FullSyncData& fsd)
 {
-	Location location(fsd.get<0>(), fsd.get<1>());
-	setGoValue(ID::PV_Location, pluginId(), location);
+	setGoValue(ID::PV_Position, pluginId(), fsd.get<0>());
+	setGoValue(ID::PV_Orientation, pluginId(), fsd.get<1>());
 
 	setGoValue(ID::PV_Velocity, pluginId(), fsd.get<2>());
 	setGoValue(ID::PV_RelativeVelocity, pluginId(), fsd.get<3>());
@@ -76,16 +76,12 @@ void Physical::onFullSync(const Physics::FullSyncData& fsd)
 
 void Physical::onPosition(const v3& newPosition)
 {
-	Location go = getGoValue<Location>(ID::PV_Location, pluginId());
-	go.position = newPosition;
-	setGoValue(ID::PV_Location, pluginId(), go);
+	setGoValue(ID::PV_Position, pluginId(), newPosition);
 }
 
 void Physical::onOrientation(const qv4& newOrientation)
 {
-	Location go = getGoValue<Location>(ID::PV_Location, pluginId());
-	go.orientation = newOrientation;
-	setGoValue(ID::PV_Location, pluginId(), go);
+	setGoValue(ID::PV_Orientation, pluginId(), newOrientation);
 }
 
 void Physical::onVelocity(const Physics::VelocityComposite& vel)
@@ -115,22 +111,24 @@ void Physical::synchronizeView() const
 	if (owner().docked())
 		return;
 
-	const Location& go = getGoValue<Location>(ID::PV_Location, pluginId());
-	
+	const v3& ownPosition = getGoValue<v3>(ID::PV_Position, pluginId());
+	const qv4& ownOrientation = getGoValue<qv4>(ID::PV_Orientation, pluginId());
+
+	subLane()->emit(ID::VE_UPDATE_POSITION, ownPosition, ownerHandle());
+	subLane()->emit(ID::VE_UPDATE_ORIENTATION, ownOrientation, ownerHandle());
+
 #if defined(_DEBUG) || defined (NDEBUG)
-	if (length(go.position) > 1.0e15)
+	if (length(ownPosition) > 1.0e15)
 	{
 		std::stringstream ss;
 		ss << "GameObject:" << ownerHandle()
 		   << " just entered hyperspace! Position: "
-		   << go.position;
+		   << ownPosition;
 
 		throw std::logic_error(ss.str());
 	}
 #endif
 
-	subLane()->emit(ID::VE_UPDATE_POSITION, go.position, ownerHandle());
-	subLane()->emit(ID::VE_UPDATE_ORIENTATION, go.orientation, ownerHandle());
 }
 
 } // namespace BFG

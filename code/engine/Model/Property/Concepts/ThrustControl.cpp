@@ -109,7 +109,6 @@ void ThrustControl::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 		mTotalManeuverForce,
 		timeSinceLastFrame
 	);
-	
 }
 
 void ThrustControl::internalSynchronize()
@@ -301,7 +300,7 @@ void ThrustControl::calculateEngineAttributes()
 		ceil(mMaxRotationSpeed, maxRotationSpeed);
 	}
 	
-	mRelativeEnginePosition = value<Location>(ID::PV_Location, rootModule()).position;
+	mRelativeEnginePosition = value<v3>(ID::PV_Position, rootModule());
 
 	if (mTotalWeight > (0.0f * si::kilogram))
 	{

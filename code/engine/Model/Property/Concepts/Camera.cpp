@@ -144,13 +144,14 @@ void Camera::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 
 	(this->*specificUpdate)(timeSinceLastFrame);
 
-	setGoValue(ID::PV_Location, pluginId(), mNewLocation);
+	setGoValue(ID::PV_Position, pluginId(), mNewPosition);
+	setGoValue(ID::PV_Orientation, pluginId(), mNewOrientation);
 }
 
 void Camera::internalSynchronize()
 {
-	subLane()->emit(ID::PE_UPDATE_ORIENTATION, mNewLocation.orientation, ownerHandle());
-	subLane()->emit(ID::PE_UPDATE_POSITION, mNewLocation.position, ownerHandle());
+	subLane()->emit(ID::PE_UPDATE_POSITION, mNewPosition, ownerHandle());
+	subLane()->emit(ID::PE_UPDATE_ORIENTATION, mNewOrientation, ownerHandle());
 }
 
 void Camera::internalOnModuleAttached(GameHandle module)
@@ -254,12 +255,14 @@ void Camera::updateFixed(quantity<si::time, f32> timeSinceLastFrame)
 
 	if (mTarget != NULL_HANDLE)
 	{
-		const Location& target = environment()->getGoValue<Location>(mTarget, ID::PV_Location, pluginId());
-
+		const v3& targetPosition = environment()->getGoValue<v3>(mTarget, ID::PV_Position, pluginId());
+		const qv4& targetOrientation = environment()->getGoValue<qv4>(mTarget, ID::PV_Orientation, pluginId());
+		
 		updateOwnLocation(timeSinceLastFrame);
 
-		mNewLocation.orientation = target.orientation * mOwnLocation.orientation;
-		mNewLocation.position = target.position + (mNewLocation.orientation * mOffset);
+		mNewOrientation = targetOrientation * mOwnLocation.orientation;
+		mNewPosition = targetPosition + (mNewOrientation * mOffset);
+
 #if 0
 		v3 newPos = target.position + (newOri * (mOffset * mOffsetFactor));
 #endif
@@ -268,8 +271,8 @@ void Camera::updateFixed(quantity<si::time, f32> timeSinceLastFrame)
 	{
 		updateOwnLocation(timeSinceLastFrame);
 
-		mNewLocation.orientation = mOwnLocation.orientation;
-		mNewLocation.position = (mNewLocation.orientation * mOffset);
+		mNewOrientation = mOwnLocation.orientation;
+		mNewPosition = (mNewOrientation * mOffset);
 #if 0
 		v3 newPos = (newOri * (mOffset * mOffsetFactor));
 #endif

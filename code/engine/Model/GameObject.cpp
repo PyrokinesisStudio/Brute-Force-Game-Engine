@@ -95,7 +95,6 @@ mActivated(false)
 	//       creating a GameObject (and not by an "event-setter" later).
 	setValue(ID::PV_Remote, ValueId::ENGINE_PLUGIN_ID, false);
 
-	mSubLane->connect(ID::GOE_REINITIALIZE, this, &GameObject::onReinitialize, handle);
 	mSubLane->connectV(ID::GOE_DETACH_MODULE, this, &GameObject::detachModule, handle);
 }
 
@@ -168,11 +167,13 @@ void GameObject::attachModule(GameObject::ChildT managed,
 
 	if (managed->getObjectType() == ID::OT_Module)
 	{
-		boost::shared_ptr<Module> mod =
-			boost::shared_static_cast<Module>(managed);
-		
-		Property::ValueId locId(ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
-		mod->mValues[locId] = Location(fromRootToNewOne, finalOrientation);
+		boost::shared_ptr<Module> mod = boost::shared_static_cast<Module>(managed);
+
+		Property::ValueId positionId(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
+		Property::ValueId orientationId(ID::PV_Orientation, ValueId::ENGINE_PLUGIN_ID);
+
+		mod->mValues[positionId] = fromRootToNewOne;
+		mod->mValues[orientationId] = finalOrientation;
 		
 		//mSubLane->emit(ID::VE_UPDATE_POSITION, fromRootToNewOne, managed->getHandle());
 		//mSubLane->emit(ID::VE_UPDATE_ORIENTATION, finalOrientation,	managed->getHandle());
@@ -186,8 +187,7 @@ void GameObject::attachModule(GameObject::ChildT managed,
 	}
 	else if (managed->getObjectType() == ID::OT_GameObject)
 	{
-		boost::shared_ptr<GameObject> go =
-			boost::shared_static_cast<GameObject>(managed);
+		boost::shared_ptr<GameObject> go = boost::shared_static_cast<GameObject>(managed);
 		
 		connectOtherGameObject(go, fromRootToNewOne, finalOrientation);
 	}
@@ -239,11 +239,12 @@ void GameObject::detachModule(GameHandle handle)
 		qv4 finalOrientation;
 		vectorToModuleFromRoot(vd, fromRootToGo, finalOrientation);
 
-		const Location& root = getValue<Location>(ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
-		
+		const v3& ownPosition = getValue<v3>(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
+		const qv4& ownOrientation = getValue<qv4>(ID::PV_Orientation, ValueId::ENGINE_PLUGIN_ID);
+
 		// Apply World Transform
-		qv4 newOri(root.orientation * finalOrientation);
-		v3 newPos(root.position + root.orientation * fromRootToGo);
+		v3 newPos(ownPosition + ownOrientation * fromRootToGo);
+		qv4 newOri(ownOrientation * finalOrientation);
 		
 		boost::shared_ptr<GameObject> go =
 			boost::shared_static_cast<GameObject>(mModules[vd]);
@@ -252,15 +253,6 @@ void GameObject::detachModule(GameHandle handle)
 	}
 
 	deleteVertex(vd);
-}
-
-void GameObject::onReinitialize(const Location& location)
-{
-	mSubLane->emit(ID::PE_UPDATE_POSITION, location.position, getHandle());
-	mSubLane->emit(ID::PE_UPDATE_ORIENTATION, location.orientation, getHandle());
-
-	mSubLane->emit(ID::GOE_CONTROL_MAGIC_STOP, Event::Void(), getHandle());
-// 	distributeEvent(ID::GOE_CONTROL_MAGIC_STOP, 0, NULL_HANDLE, NULL_HANDLE);
 }
 
 bool GameObject::satisfiesRequirement(Property::ConceptId concept) const

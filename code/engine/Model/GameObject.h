@@ -134,8 +134,6 @@ public:
 	//!		Destroys the Module with the defined handle and all its children.
 	void detachModule(GameHandle handle);
 
-	void onReinitialize(const Location& location);
-
 	bool satisfiesRequirement(Property::ConceptId concept) const;
 
 	void debugOutput(std::string& output) const;
