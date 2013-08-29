@@ -95,6 +95,7 @@ mLane(lane)
 	BFG::View::WindowAttributes wa;
 	BFG::View::queryWindowAttributes(wa);
 
+	//! \todo Verify usage of generateHandle() here.
 	Controller_::StateInsertion si(config_path, state_name, generateHandle(), true, wa);
 
 	mLane.emit(ID::CE_LOAD_STATE, si);

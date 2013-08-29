@@ -43,6 +43,7 @@ void fillWithDefaultActions(ActionMapT& actions)
 	}
 }
 
+//! \todo Send ActionMap directly as a whole.
 void sendActionsToController(Event::Lane& eventLane, const ActionMapT& actions)
 {
 	ActionMapT::const_iterator it = actions.begin();
