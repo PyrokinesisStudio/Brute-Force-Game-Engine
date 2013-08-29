@@ -122,10 +122,9 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModule)
 		handle,
 		handle,
 		"Cube.mesh",
+		5.0f,
 		BFG::ID::CM_Standard,
-		v3::UNIT_X,
-		BFG::qv4::IDENTITY,
-		5.0f
+		v3::UNIT_X
 	);
 	physicsLane.emit(BFG::ID::PE_ATTACH_MODULE, mcp);
 
@@ -164,10 +163,9 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModuleAndSetValues)
 		handle,
 		handle,
 		"Cube.mesh",
+		5.0f,
 		BFG::ID::CM_Standard,
-		v3::UNIT_X,
-		BFG::qv4::IDENTITY,
-		5.0f
+		v3::UNIT_X
 	);
 	physicsLane.emit(BFG::ID::PE_ATTACH_MODULE, mcp);
 	
@@ -185,10 +183,9 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModuleAndSetValues)
 		handle,
 		BFG::generateHandle(),
 		"Cube.mesh",
+		10.0f,
 		BFG::ID::CM_Standard,
-		v3::UNIT_Y,
-		BFG::qv4::IDENTITY,
-		10.0f
+		v3::UNIT_Y
 	);
 	physicsLane.emit(BFG::ID::PE_ATTACH_MODULE, mcp2);
 	
