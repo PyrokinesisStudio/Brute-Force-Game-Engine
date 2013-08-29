@@ -175,8 +175,6 @@ void GameObject::attachModule(GameObject::ChildT managed,
 		mod->mValues[positionId] = fromRootToNewOne;
 		mod->mValues[orientationId] = finalOrientation;
 		
-		//mSubLane->emit(ID::VE_UPDATE_POSITION, fromRootToNewOne, managed->getHandle());
-		//mSubLane->emit(ID::VE_UPDATE_ORIENTATION, finalOrientation,	managed->getHandle());
 		mSubLane->emit(ID::PE_UPDATE_MODULE_POSITION, fromRootToNewOne,	managed->getHandle());
 		mSubLane->emit(ID::PE_UPDATE_MODULE_ORIENTATION, finalOrientation, managed->getHandle());
 
