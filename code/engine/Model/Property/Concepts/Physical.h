@@ -53,8 +53,6 @@ private:
 	void onTotalInertia(const m3x3& inertia);
 	
 	void synchronizeView() const;
-
-	std::vector<ID::PhysicsAction> mPhysicsActions;
 };
 
 } // namespace BFG

@@ -363,7 +363,7 @@ void GameObject::setValue(Property::ValueId::VarIdT varId,
 //	distributeEvent(ID::GOE_VALUE_UPDATED, valueId, NULL_HANDLE, NULL_HANDLE);
 }
 
-//! \note This MUST be called from within a Concept constructor!
+//! \todo This MUST be called from within a Concept constructor!
 //!       Since this will be evaluated by calling rebuildConceptUpdateOrder()
 //!       right after the creation of all Concepts.
 void GameObject::setRequirement(Property::ConceptId self,
