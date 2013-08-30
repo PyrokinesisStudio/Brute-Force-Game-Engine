@@ -120,7 +120,6 @@ private:
 	typedef std::map<GameHandle, GoWeakPtr> GameObjectMapT;
 	
 	GameObjectMapT mGameObjects;
-	std::vector<GoWeakPtr> mWaitForInitialization;
 };
 
 } // namespace BFG
