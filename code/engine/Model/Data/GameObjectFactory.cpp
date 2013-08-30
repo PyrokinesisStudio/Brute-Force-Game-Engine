@@ -301,7 +301,7 @@ GameObjectFactory::createCamera(const CameraParameter& cameraParameter,
 	Physics::ObjectCreationParams ocp(camHandle, Location());
 	mLane.emit(ID::PE_CREATE_OBJECT, ocp);
 
-	Physics::ModuleCreationParams mcp;
+	Physics::ModuleCreationParams mcp
 	(
 		camHandle,
 		camHandle,
