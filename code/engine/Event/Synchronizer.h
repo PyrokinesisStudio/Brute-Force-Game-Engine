@@ -119,6 +119,7 @@ struct BasicSynchronizer
 			t->join();
 		}
 		mThreads.clear();
+		mBarriers.clear();
 	}
 	
 private:
@@ -128,16 +129,14 @@ private:
 
 		// Create barriers in order to wait for finishing threads.
 		for (size_t i=0; i<10; ++i)
-			mBarrier.push_back(boost::make_shared<boost::barrier>(barrierCount));
+			mBarriers[runlevel].push_back(boost::make_shared<boost::barrier>(barrierCount));
 
 		mFinish[runlevel] = true;
 
 		for (size_t i=0; i<10; ++i)
-			mBarrier[i]->wait();
+			mBarriers[runlevel][i]->wait();
 
 		dbglog << "Synchronizer finished runLevel " << runlevel;
-
-		mBarrier.clear();
 	}
 
 	void connectFinishEvent()
@@ -226,9 +225,9 @@ private:
 		
 		// Perform a few last ticks in order to make sure that also the
 		// latest events get delivered.
-		for (std::size_t i=0; i<mBarrier.size(); ++i)
+		for (std::size_t i=0; i<mBarriers[runlevel].size(); ++i)
 		{
-			mBarrier[i]->wait();
+			mBarriers[runlevel][i]->wait();
 			lane->tick();
 		}
 
@@ -247,7 +246,7 @@ private:
 
 	LaneMapT                                       mLanes;
 	std::vector<boost::shared_ptr<boost::thread> > mThreads;
-	std::vector<BarrierPtrT>                       mBarrier;
+	std::map<RunLevel, std::vector<BarrierPtrT> >  mBarriers;
 
 	std::vector<bool> mFinish;
 	bool mFinishEvent;
