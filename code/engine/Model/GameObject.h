@@ -170,6 +170,7 @@ public:
 	bool docked() const { return mDocked; }
 
 	void activate() { mActivated = true; }
+	bool isActivated() { return mActivated; }
 
 private:
 	friend class Property::Concept;

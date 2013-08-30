@@ -317,29 +317,31 @@ const std::vector<Adapter>& GameObject::rootAdapters() const
 
 void GameObject::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 {
+	if (!mActivated)
+		return;
+	
+
 	//! \see  GameObject::rebuildConceptUpdateOrder()
 	UpdateOrderContainerT::const_iterator it = mConceptUpdateOrder.begin();
 	for(; it != mConceptUpdateOrder.end(); ++it)
 	{
-		if (mActivated)
-		{
-			boost::shared_ptr<Property::Concept> pc = it->lock();
-			pc->update(timeSinceLastFrame);
-		}
+		boost::shared_ptr<Property::Concept> pc = it->lock();
+		pc->update(timeSinceLastFrame);
+
 	}
 }
 
 void GameObject::internalSynchronize()
 {
+	if (!mActivated)
+		return;
+
 	//! \see  GameObject::rebuildConceptUpdateOrder()
 	UpdateOrderContainerT::const_iterator it = mConceptUpdateOrder.begin();
 	for(; it != mConceptUpdateOrder.end(); ++it)
 	{
-		if (mActivated)
-		{
-			boost::shared_ptr<Property::Concept> pc = it->lock();
-			pc->synchronize();
-		}
+		boost::shared_ptr<Property::Concept> pc = it->lock();
+		pc->synchronize();
 	}
 }
 
@@ -349,11 +351,11 @@ void GameObject::setValue(Property::ValueId::VarIdT varId,
 {
 	ValueId valueId(varId, pluginId);
 	mValues[valueId] = value;
+
 	mSubLane->emit(ID::GOE_VALUE_UPDATED, valueId, getHandle());
-//	distributeEvent(ID::GOE_VALUE_UPDATED, valueId, NULL_HANDLE, NULL_HANDLE);
 }
 
-//! \todo This MUST be called from within a Concept constructor!
+//! \note This MUST be called from within a Concept constructor!
 //!       Since this will be evaluated by calling rebuildConceptUpdateOrder()
 //!       right after the creation of all Concepts.
 void GameObject::setRequirement(Property::ConceptId self,

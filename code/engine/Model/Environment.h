@@ -56,7 +56,7 @@ public:
 		for (; it != mGameObjects.end(); ++it)
 		{
 			boost::shared_ptr<GameObject> go = it->second.lock();
-			if (go == NULL)
+			if (go == NULL || !go->isActivated())
 				continue;
 
 			bool found = pred(go);
@@ -74,11 +74,12 @@ public:
 	std::vector<GameHandle> find_all(Pred pred) const
 	{
 		std::vector<GameHandle> matchingHandles;
+		
 		GameObjectMapT::const_iterator it = mGameObjects.begin();
 		for (; it != mGameObjects.end(); ++it)
 		{
 			boost::shared_ptr<GameObject> go = it->second.lock();
-			if (go == NULL)
+			if (go == NULL || !go->isActivated())
 				continue;
 
 			bool found = pred(go);
@@ -112,9 +113,14 @@ public:
 	GameHandle prevHandle(GameHandle current) const;
 
 private:
-	typedef std::map<GameHandle, boost::weak_ptr<GameObject> > GameObjectMapT;
+
+	void mergeMaps();
+
+	typedef boost::weak_ptr<GameObject> GoWeakPtr;
+	typedef std::map<GameHandle, GoWeakPtr> GameObjectMapT;
 	
 	GameObjectMapT mGameObjects;
+	std::vector<GoWeakPtr> mWaitForInitialization;
 };
 
 } // namespace BFG
