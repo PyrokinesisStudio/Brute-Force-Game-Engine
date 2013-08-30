@@ -114,8 +114,6 @@ public:
 
 private:
 
-	void mergeMaps();
-
 	typedef boost::weak_ptr<GameObject> GoWeakPtr;
 	typedef std::map<GameHandle, GoWeakPtr> GameObjectMapT;
 	
