@@ -144,7 +144,8 @@ struct Binder
 		}
 	}
 
-	// Verarbeitet alle events, die mit emit() gequeued wurden.
+	//! \brief Processes all queued events.
+	//! \throw boost::lock_error If the mutex can't be locked.
 	void tick() const
 	{
 		flipCallSequence();
@@ -157,12 +158,23 @@ struct Binder
 			catch (const std::runtime_error& ex)
 			{
 				boost::mutex::scoped_lock sl(mBindingsLocker);
-				handleStdRuntimeErrorOnTick(ex, c);
+				handleStdExceptionOnTick(ex, c);
+			}
+			catch (const std::logic_error& ex)
+			{
+				boost::mutex::scoped_lock sl(mBindingsLocker);
+				handleStdExceptionOnTick(ex, c);
+			}
+			catch (...)
+			{
+				boost::mutex::scoped_lock sl(mBindingsLocker);
+				handleUnknownExceptionOnTick(c);
 			}
 		}
 		mCallSequenceFront.clear();
 	}
 	
+	//! \throw boost::lock_error If the mutex can't be locked.
 	void flipCallSequence() const
 	{
 		boost::mutex::scoped_lock sl(mCallSequenceLocker);
@@ -185,27 +197,45 @@ struct Binder
 #endif
 	}
 	
-	void handleStdRuntimeErrorOnTick(const std::runtime_error& ex,
-	                                 Callable* c) const
+	void handleStdExceptionOnTick(const std::exception& ex,
+	                              Callable* c) const
 	{
-		// Try to get more information about the error.
-		IdT id = 0;
-		DestinationIdT destination = 0;
-		BOOST_FOREACH(const ConnectionT& conn, mBindings)
-		{
-			if (boost::any_cast<Callable*>(conn.mBinding) == c)
-			{
-				id          = conn.mEventId;
-				destination = conn.mDestinationId;
-				break;
-			}
-		}
+		IdT id;
+		DestinationIdT destination;
+		idAndDestFromCallable(c, id, destination);
 		
 		errlog << "Event::Binder catched an exception from an invoked"
 		       << " function."
 		       << " Id:" << id
 		       << ", Destination:" << destination
 		       << ", Msg:\"" << ex.what() << "\"";
+	}
+	
+	void handleUnknownExceptionOnTick(Callable* c) const
+	{
+		IdT id;
+		DestinationIdT destination;
+		idAndDestFromCallable(c, id, destination);
+		
+		errlog << "Event::Binder catched an unknown exception from an"
+		       << " invoked function."
+		       << " Id:" << id
+		       << ", Destination:" << destination;
+	}
+	
+	void idAndDestFromCallable(Callable* c, IdT& id, DestinationIdT& destination) const
+	{
+		BOOST_FOREACH(const ConnectionT& conn, mBindings)
+		{
+			if (boost::any_cast<Callable*>(conn.mBinding) == c)
+			{
+				id          = conn.mEventId;
+				destination = conn.mDestinationId;
+				return;
+			}
+		}
+		id = 0;
+		destination = 0;
 	}
 
 	ConnectionMapT mBindings;
