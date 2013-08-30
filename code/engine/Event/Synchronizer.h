@@ -206,13 +206,13 @@ private:
 		}
 	}
 	
-	void loop(LaneT* lane, BarrierPtrT runlevelBarrier, RunLevel runlevel)
+	void loop(LaneT* lane, BarrierPtrT entryPointBarrier, RunLevel runlevel)
 	{
 		// Run all entry points of this lane.
 		lane->startEntries();
 
 		// Then wait for the rest of this runlevel to finish.
-		runlevelBarrier->wait();
+		entryPointBarrier->wait();
 
 		// Apply a name to this thread.
 		if (!lane->mThreadName.empty())

@@ -69,7 +69,7 @@ struct MainThrowing : BFG::Event::EntryPoint<BFG::Event::Lane>
 	{
 	}
 	
-	virtual void run(BFG::Event::Lane* lane)
+	virtual void run(BFG::Event::Lane*)
 	{
 		throw std::runtime_error("MainThrowing::main");
 	}
