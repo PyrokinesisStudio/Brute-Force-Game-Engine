@@ -56,9 +56,12 @@ void InvaderGeneral::spawnWave()
 {
 	ObjectParameter op;
 
-	for (size_t i=0; i < (size_t) INVADERS_PER_ROW; ++i)
+	BFG::u32 invaderRow = static_cast<BFG::u32>(INVADERS_PER_ROW);
+	BFG::u32 invaderCol = static_cast<BFG::u32>(INVADERS_PER_COL);
+
+	for (size_t i=0; i < invaderRow; ++i)
 	{
-		for (size_t j=0; j < (size_t) INVADERS_PER_COL; ++j)
+		for (size_t j=0; j < invaderCol; ++j)
 		{
 			std::stringstream ss;
 			ss << "Invader No. X:" << i << " Y:" << j;
@@ -94,31 +97,31 @@ void InvaderGeneral::update(quantity<si::time, f32> timeSinceLastFrame)
 	if (player == NULL_HANDLE)
 		return;
 
-//	const Location& playerLoc = mEnvironment->getGoValue<Location>(player, ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
-// 
-// 	f32 lastPlayerInvaderDistance = 0;
-// 	for (size_t i=0; i < mWaveCount; ++i)
-// 	{
-// 		// Handle of Invader and its Distance to the Player
-// 		std::pair<GameHandle, f32> bestCandidate(NULL_HANDLE, 999999.9f);
-// 
-// 		mEnvironment->find
-// 		(
-// 			boost::bind
-// 			(
-// 				nearestToPlayer,
-// 				_1,
-// 				boost::ref(bestCandidate),
-// 				boost::ref(lastPlayerInvaderDistance),
-// 				boost::ref(playerLoc.position)
-// 			)
-// 		);
-// 
-// 		mLane->emit(ID::GOE_FIRE_ROCKET, Event::Void(), bestCandidate.first);
-// 
-// 		lastPlayerInvaderDistance = bestCandidate.second + 0.1f;
-// 	}
-// 
-// 	mLastShot = 0;
+	const v3& playerPosition = mEnvironment->getGoValue<v3>(player, ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
+ 
+ 	f32 lastPlayerInvaderDistance = 0;
+ 	for (size_t i=0; i < mWaveCount; ++i)
+ 	{
+ 		// Handle of Invader and its Distance to the Player
+ 		std::pair<GameHandle, f32> bestCandidate(NULL_HANDLE, 999999.9f);
+ 
+ 		mEnvironment->find
+ 		(
+ 			boost::bind
+ 			(
+ 				nearestToPlayer,
+ 				_1,
+ 				boost::ref(bestCandidate),
+ 				boost::ref(lastPlayerInvaderDistance),
+ 				boost::ref(playerPosition)
+ 			)
+ 		);
+ 
+ 		mLane->emit(ID::GOE_FIRE_ROCKET, Event::Void(), bestCandidate.first);
+ 
+ 		lastPlayerInvaderDistance = bestCandidate.second + 0.1f;
+ 	}
+ 
+ 	mLastShot = 0;
 }
 

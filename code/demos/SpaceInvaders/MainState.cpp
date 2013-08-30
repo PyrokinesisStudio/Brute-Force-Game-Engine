@@ -78,7 +78,7 @@ mLane(lane)
 	boost::shared_ptr<GameObjectFactory> gof;
 	gof.reset(new GameObjectFactory(mLane, lc, mPluginMap, mEnvironment, handle));
 
-	mSector.reset(new Sector(mLane, 1, "Blah", gof));
+	mSector.reset(new Sector(mLane, 1, "SpaceInvaderSector", gof));
 
 	// Init Controller
 
