@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE (FullSyncTest)
 	BOOST_CHECK_EQUAL(go->getValue<m3x3>(BFG::ID::PV_Inertia, enginePluginId), fsd.get<7>());
 }
 
-BOOST_AUTO_TEST_CASE (ViewUpdateTest)
+BOOST_AUTO_TEST_CASE (ViewUpdateTestAfterFullSync)
 {
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane lane(sync, 100);
@@ -142,6 +142,57 @@ BOOST_AUTO_TEST_CASE (ViewUpdateTest)
 	sync.start();
 	sync.finish();
 	
+	BOOST_CHECK_EQUAL(cPos.count(), 1);
+	BOOST_CHECK_EQUAL(cOri.count(), 1);
+}
+
+BOOST_AUTO_TEST_CASE (ViewUpdateTestAfterDelta)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+	
+	boost::shared_ptr<BFG::GameObject> go = createTestGameObject(lane);
+	BFG::Physical physical(*go, enginePluginId);
+	
+	BFG::Event::Catcher<v3> cPos(lane, BFG::ID::VE_UPDATE_POSITION , handle1);
+	BFG::Event::Catcher<qv4> cOri(lane, BFG::ID::VE_UPDATE_ORIENTATION, handle1);
+	
+	// Can't synchronize since no delta updates have been received yet.
+	BOOST_CHECK_THROW(physical.synchronize(), std::runtime_error);
+	
+	//! \todo PE_RELATIVE_VELOCITY and PE_RELATIVE_ROTATION_VELOCITY aren't
+	//!       defined nor implemented in BFG::Physics.
+	//!       What are they good for? Why are they defined in the Model as
+	//!       PV_RelativeVelocity and PV_RelativeRotationVelocity?
+	const BFG::Physics::FullSyncData fsd = createTestFullSyncData();
+	lane.emit(BFG::ID::PE_POSITION, fsd.get<0>(), handle1);
+	lane.emit(BFG::ID::PE_ORIENTATION, fsd.get<1>(), handle1);
+	lane.emit(BFG::ID::PE_VELOCITY, fsd.get<2>(), handle1);
+	//lane.emit(BFG::ID::PE_RELATIVE_VELOCITY, fsd.get<3>(), handle1);
+	lane.emit(BFG::ID::PE_ROTATION_VELOCITY, fsd.get<4>(), handle1);
+	//lane.emit(BFG::ID::PE_RELATIVE_ROTATION_VELOCITY, fsd.get<5>(), handle1);
+	lane.emit(BFG::ID::PE_TOTAL_MASS, fsd.get<6>(), handle1);
+	lane.emit(BFG::ID::PE_TOTAL_INERTIA, fsd.get<7>(), handle1);
+	
+	sync.start();
+	sync.finish();
+	
+	// GoValues must have been set.
+	BOOST_CHECK(BFG::nearEnough(go->getValue<v3>(BFG::ID::PV_Position, enginePluginId), fsd.get<0>(), BFG::EPSILON_F));
+	BOOST_CHECK(BFG::equals(go->getValue<qv4>(BFG::ID::PV_Orientation, enginePluginId), fsd.get<1>()));
+	BOOST_CHECK(BFG::nearEnough(go->getValue<v3>(BFG::ID::PV_Velocity, enginePluginId), fsd.get<2>(), BFG::EPSILON_F));
+	BOOST_CHECK(BFG::nearEnough(go->getValue<v3>(BFG::ID::PV_RelativeVelocity, enginePluginId), fsd.get<3>(), BFG::EPSILON_F));
+	BOOST_CHECK(BFG::nearEnough(go->getValue<v3>(BFG::ID::PV_RotationVelocity, enginePluginId), fsd.get<4>(), BFG::EPSILON_F));
+	BOOST_CHECK(BFG::nearEnough(go->getValue<v3>(BFG::ID::PV_RelativeRotationVelocity, enginePluginId), fsd.get<5>(), BFG::EPSILON_F));
+	BOOST_CHECK_EQUAL(go->getValue<f32>(BFG::ID::PV_Mass, enginePluginId), fsd.get<6>());
+	BOOST_CHECK_EQUAL(go->getValue<m3x3>(BFG::ID::PV_Inertia, enginePluginId), fsd.get<7>());
+	
+	physical.synchronize();
+	
+	sync.start();
+	sync.finish();
+	
+	// View Events must have been sent.
 	BOOST_CHECK_EQUAL(cPos.count(), 1);
 	BOOST_CHECK_EQUAL(cOri.count(), 1);
 }
