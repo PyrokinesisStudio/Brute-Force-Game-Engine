@@ -32,6 +32,8 @@ TARGET_LINK_LIBRARIES(bfgModelTest
 	bfgModel
 )
 
+ADD_DEPENDENCIES(bfgModelTest ViewEnums)
+
 INSTALL(TARGETS bfgModelTest
 	RUNTIME DESTINATION ${BFG_BIN_DIR}
 	COMPONENT devel
