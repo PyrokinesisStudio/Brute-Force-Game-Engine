@@ -286,4 +286,6 @@ BFG_CORE_API void saveQuaternion(const qv4& in, XmlTreeT parentNode);
 
 } // namespace BFG
 
+using BFG::qv4;
+
 #endif
