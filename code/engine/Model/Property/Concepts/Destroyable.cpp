@@ -150,7 +150,7 @@ void Destroyable::destroy(GameHandle module, bool respawns)
 	const v3& ownPosition = getGoValue<v3>(ID::PV_Position, pluginId());
 
 	View::EffectCreation ec(effect, ownPosition, intensity);
-	warnlog << "Destroyable: VE_EFFECT event may arrive at undesired locations due to unknown view state handle";
+	dbglog << "Destroyable: VE_EFFECT event may arrive at undesired locations due to unknown view state handle";
 	// TODO: separate calculation and subLane()->emitting
 	subLane()->emit(ID::VE_EFFECT, ec);
 	subLane()->emit(ID::AE_SOUND_EFFECT, soundEffect);
