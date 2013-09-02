@@ -122,8 +122,7 @@ struct Connectable
 			ConnectorV<BinderT, IdT, DestinationIdT>
 		>::type Connector;
 
-		Connector c;
-		c.template connect<Void>(mBinder, id, object, fn, destination);
+		Connector::template connect<Void>(mBinder, id, object, fn, destination);
 	}
 	
 	BinderT mBinder;
