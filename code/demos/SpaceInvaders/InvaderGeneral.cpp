@@ -43,13 +43,15 @@ mLane(lane)
 	lane->connect(ID::S_DESTROY_GO, this, &InvaderGeneral::onDestroy);
 }
 
-void InvaderGeneral::onDestroy(GameHandle)
+void InvaderGeneral::onDestroy(GameHandle handle)
 {
-	if (mEnvironment->find(isInvader) == NULL_HANDLE)
-	{
-		spawnWave();
-		++mWaveCount;
-	}
+	mInvader.erase(handle);
+	
+	if (mInvader.size() > 0)
+		return;
+
+	spawnWave();
+	++mWaveCount;
 }
 
 void InvaderGeneral::spawnWave()
@@ -80,6 +82,8 @@ void InvaderGeneral::spawnWave()
 			op.mLinearVelocity = v3::ZERO;
 
 			mLane->emit(ID::S_CREATE_GO, op);
+
+			mInvader.insert(op.mHandle);
 		}
 	}
 }
