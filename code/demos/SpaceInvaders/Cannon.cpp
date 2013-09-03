@@ -67,7 +67,7 @@ void Cannon::onFireRocket()
 
 void Cannon::onPowerUp(s32 ammo)
 {
-	mAutoRocketAmmo += ammo;
+ 	mAutoRocketAmmo += ammo;
 }
 
 void Cannon::fireRocket(bool autoRocket)
@@ -113,7 +113,9 @@ void Cannon::fireRocket(bool autoRocket)
 
 	if (autoRocket)
 	{
-		GameHandle randomInvader = targets[rand() % targets.size()];
+		u32 target = rand() % targets.size();
+		
+		GameHandle randomInvader = targets[target];
 		mSubLane->emit(ID::GOE_AUTONAVIGATE, randomInvader, op.mHandle);
 	}
 }
