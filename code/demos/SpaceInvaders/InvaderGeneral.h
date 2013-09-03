@@ -54,7 +54,7 @@ struct InvaderGeneral
 	quantity<si::time, f32>             mLastShot;
 	size_t                              mWaveCount;
 	Event::SubLanePtr                   mLane;
-	std::set<GameHandle>				mInvader;
+	std::set<GameHandle>                mInvader;
 };
 
 #endif
