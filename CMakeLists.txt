@@ -33,6 +33,16 @@ IF(BFG_TEST_COVERAGE)
 	INCLUDE(CodeCoverage)
 ENDIF()
 
+# -------------------------------- #
+# Enable C++11 for Linux compilers #
+# -------------------------------- #
+
+IF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
+   "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	LOG_ACTION("Explicitly activating C++11 for ${CMAKE_CXX_COMPILER_ID}")
+	ADD_DEFINITIONS("-std=c++0x")
+ENDIF()
+
 # --------------------#
 # Project Declaration #
 # --------------------#

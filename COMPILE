@@ -66,9 +66,6 @@ Notes:
 	* You might need the gcc compile flags `-m64' and `-fPIC' when
 	  compiling for AMD64.
 
-	* Depending on your compiler version you may need to append -std=c++0x
-	  or -std=c++11 respectively.
-  
 	* CC, CXX, CFLAGS, CXXFLAGS from the environment are used for
 	  compilation.
 
