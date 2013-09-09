@@ -40,7 +40,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/ShowException.h>
 #include <Core/Types.h>
 #include <Core/GameHandle.h>
-#include <EventSystem/Emitter.h>
 #include <View/View.h>
 
 #include <Actions.h>
@@ -52,61 +51,38 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 using namespace BFG;
 using namespace boost::units;
 
-struct LevelerModelState : Emitter
+struct LevelerModelState
 {
-	LevelerModelState(GameHandle handle, EventLoop* loop) :
-	Emitter(loop),
-	mClock(new Clock::StopWatch(Clock::milliSecond)),
-	mExitNextTick(false)
+	LevelerModelState(GameHandle handle, Event::Lane& lane) :
+	mLane(lane)
 	{
-		mClock->start();
+		mLane.connectV(A_QUIT, this, &LevelerModelState::shutDown);
+		mLane.connectV(A_SCREENSHOT, this, &LevelerModelState::screenshot);
+		mLane.connectLoop(this, &onLoop);
 	}
 
-	void ControllerEventHandler(Controller_::VipEvent* e)
+	void shutDown()
 	{
-		switch(e->id())
-		{
-			case A_QUIT:
-			{
-				mExitNextTick = true;
-				emit<BFG::View::Event>(BFG::ID::VE_SHUTDOWN, 0);
-				break;
-			}
-			case A_SCREENSHOT:
-			{
-				emit<BFG::View::Event>(BFG::ID::VE_SCREENSHOT, 0);
-				break;
-			}
-		}
+		mLane.emit(BFG::ID::VE_SHUTDOWN, Event::Void());
 	}
 
-	void LoopEventHandler(LoopEvent* iLE)
+	void screenshot()
 	{
-		if (mExitNextTick)
-		{
-			// Error happened, while doing stuff
-			iLE->data().getLoop()->setExitFlag();
-		}
+		mLane.emit(BFG::ID::VE_SCREENSHOT, Event::Void());
+	}
 
-		long timeSinceLastFrame = mClock->stop();
-		if (timeSinceLastFrame)
-			mClock->start();
-
-		f32 timeInSeconds = static_cast<f32>(timeSinceLastFrame) / Clock::milliSecond;
-		tick(timeInSeconds);
+	void onLoop(Event::TickData tickData)
+	{
+		tick(tickData.mTimeSinceLastTick);
 	}
 		
 	void tick(const f32 timeSinceLastFrame)
 	{
 		if (timeSinceLastFrame < EPSILON_F)
 			return;
-
-		quantity<si::time, f32> TSLF = timeSinceLastFrame * si::seconds;
 	}
 
-	boost::scoped_ptr<Clock::StopWatch> mClock;
-	
-	bool mExitNextTick;
+	Event::Lane& mLane;
 };
 
 struct LevelerViewState : public View::State
@@ -114,9 +90,9 @@ struct LevelerViewState : public View::State
 public:
 	typedef std::vector<Tool::BaseFeature*> FeatureListT;
 
-	LevelerViewState(GameHandle handle, EventLoop* loop) :
-	State(handle, loop),
-	mControllerAdapter(handle, loop)
+	LevelerViewState(GameHandle handle, Event::Lane& lane) :
+	State(handle, lane),
+	mControllerAdapter(handle, lane)
 	{
 		createGui();
 
@@ -124,11 +100,13 @@ public:
 		mData->mState = handle;
 		mData->mCamera = generateHandle();
 
-		Tool::BaseFeature* feature = new Tool::CameraControl(loop, mData);
+		Tool::BaseFeature* feature = new Tool::CameraControl(lane, mData);
 		mLoadedFeatures.push_back(feature);
 		feature->activate();
 
 		mLoadedFeatures.push_back(new Tool::MeshControl(mData));
+
+		mLane.connectV(A_UPDATE_FEATURES, this, &LevelerViewState::onUpdateFeatures);
 
 		onUpdateFeatures();
 	}
@@ -173,28 +151,6 @@ public:
 		// leave 1 pixel space to the sides
 		box->setSize(size.width - 2, boxSize.height);  
 		back->setSize(size);
-	}
-
-	void controllerEventHandler(Controller_::VipEvent* ve)
-	{
-		FeatureListT::iterator it = mActiveFeatures.begin();
-		for (; it != mActiveFeatures.end(); ++it)
-		{
-			(*it)->eventHandler(ve);
-		}
-	}
-
-	void toolEventHandler(Tool::Event* e)
-	{
-		switch(e->id())
-		{
-		case A_UPDATE_FEATURES:
-			onUpdateFeatures();
-			break;
-		default:
-			throw std::logic_error("Unknown ToolEvent!");
-			break;
-		}
 	}
 
 	void onUpdateFeatures()

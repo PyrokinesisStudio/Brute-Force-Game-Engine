@@ -30,7 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/GameHandle.h>
 #include <View/CameraCreation.h>
-#include <View/Event.h>
+#include <View/Enums.hh>
 
 namespace Tool
 {
@@ -265,11 +265,6 @@ void CameraControl::setAspectRatio(const std::string& camName, float width, floa
 		Ogre::Camera* cam = mSceneMan->getCamera(camName);
 		cam->setAspectRatio(width / height);
 	}
-}
-
-void CameraControl::eventHandler(BFG::Controller_::VipEvent* ve)
-{
-
 }
 
 void CameraControl::onMousePressed(MyGUI::Widget* widget, int x, int y, MyGUI::MouseButton id)
