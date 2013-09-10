@@ -81,7 +81,7 @@ struct Binder
 	{
 		BOOST_FOREACH(typename ConnectionMapT::value_type vt, mBindings)
 		{
-			Callable* c = boost::any_cast<Callable*>(vt.mBinding);
+			Callable* c = vt.mBinding;
 			delete c;
 		}
 	}
@@ -104,7 +104,7 @@ struct Binder
 		}
 		else
 		{
-			c = boost::any_cast<Callable*>(it->mBinding);
+			c = it->mBinding;
 		}
 		
 		Binding<PayloadT, SenderIdT>* b = static_cast<Binding<PayloadT, SenderIdT>*>(c);
@@ -127,7 +127,7 @@ struct Binder
 			//! \todo event id not found in this EventBinder
 			return;
 
-		Callable* c = boost::any_cast<Callable*>(it->mBinding);
+		Callable* c = it->mBinding;
 		sl.unlock();
 
 		Binding<PayloadT, SenderIdT>* b = static_cast<Binding<PayloadT, SenderIdT>*>(c);
@@ -227,7 +227,7 @@ struct Binder
 	{
 		BOOST_FOREACH(const ConnectionT& conn, mBindings)
 		{
-			if (boost::any_cast<Callable*>(conn.mBinding) == c)
+			if (conn.mBinding == c)
 			{
 				id          = conn.mEventId;
 				destination = conn.mDestinationId;

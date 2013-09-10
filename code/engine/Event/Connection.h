@@ -27,7 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_EVENT_CONNECTION_H
 #define BFG_EVENT_CONNECTION_H
 
-#include <boost/any.hpp>
+#include <Event/Callable.h>
 
 namespace BFG {
 namespace Event {
@@ -39,7 +39,7 @@ struct Connection
 
 	IdT            mEventId;
 	DestinationIdT mDestinationId;
-	boost::any     mBinding;       //! \todo: This can probably become Callable*
+	Callable*      mBinding;
 };
 
 } // namespace Event
