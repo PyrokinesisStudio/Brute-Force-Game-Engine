@@ -2,6 +2,11 @@
 #include <vector>
 #include <boost/test/unit_test.hpp>
 
+// https://wiki.apache.org/stdcxx/C%2B%2B0xCompilerSupport
+// http://msdn.microsoft.com/en-US/library/vstudio/hh567368.aspx
+// http://gcc.gnu.org/projects/cxx0x.html
+// http://clang.llvm.org/cxx_status.html
+
 struct Cpp11Notification
 {
 	Cpp11Notification()
