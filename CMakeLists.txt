@@ -2,7 +2,7 @@
 # This is the root CMakeLists.txt #
 # ------------------------------- #
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.9)
 
 # Our helper scripts are located in this folder
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/share/cmake/Modules)
@@ -41,6 +41,21 @@ IF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
    "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	LOG_ACTION("Explicitly activating C++11 for ${CMAKE_CXX_COMPILER_ID}")
 	ADD_DEFINITIONS("-std=c++0x")
+ENDIF()
+
+# -------------------------- #
+# Detect 64 bit architecture #
+# -------------------------- #
+
+IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	LOG_ACTION("Detected 64bit architecture.")
+	SET(BFG_AMD64 TRUE)
+ENDIF()
+
+# BUG: Automatic PIC Workaround. See #97 on GitHub
+IF(BFG_AMD64)
+	LOG_ACTION("Using Position Independent Code (PIC) if necessary.")
+	SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 ENDIF()
 
 # --------------------#
@@ -278,7 +293,7 @@ ELSEIF(UNIX)
 		SET(CPACK_STRIP_FILES FALSE)
 	ENDIF()
 
-	IF(AMD64)
+	IF(BFG_AMD64)
 		SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
 	ELSE()
 		SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
