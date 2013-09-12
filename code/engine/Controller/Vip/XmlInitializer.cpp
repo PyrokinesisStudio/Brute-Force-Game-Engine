@@ -74,8 +74,8 @@ namespace Def
 	const ID::DeviceType device   = ID::DT_Keyboard;
 	const ID::ButtonState filter  = ID::BS_Pressed;
 	const bool flip               = false;
-	const long frequency          = 100L;
-	const bool hold              = false;
+	const u32 frequency           = 100;
+	const bool hold               = false;
 	const ID::KeyboardButton mod  = ID::KeyboardButton();
 	const f32 range               = 1.0f;
 	const f32 sensitivity         = 1.0f;
@@ -121,6 +121,16 @@ void assign(T& target,
 		target = boost::lexical_cast<T>(it->second);
 }
 
+template <typename T>
+static void uglyBoostUnitsWorkaroundForFrequency(FrequencyT& target,
+                                                 const VipData& vipData,
+                                                 const std::string& attributeName,
+                                                 const T& defaultValue)
+{
+	T freq = Def::frequency;
+	assign(freq, vipData, Attr::frequency, Def::frequency);
+	target = freq * boost::units::si::hertz;
+}
 
 XmlInitializer::XmlInitializer(State* state,
                                const ActionMapT& actionMap) :
@@ -375,9 +385,10 @@ void XmlInitializer::Init(SteerEnv& env, const VipData& vipData) const
 
 	assign(env.mSensitivity, vipData, Attr::sensitivity, Def::sensitivity);
 	assign(env.mRange, vipData, Attr::range, Def::range);
-	assign(env.mFrequency, vipData, Attr::frequency, Def::frequency);
 	assign(env.mSwing, vipData, Attr::swing, Def::swing);
 	assign(env.mFlip, vipData, Attr::flip, Def::flip);
+	
+	uglyBoostUnitsWorkaroundForFrequency(env.mFrequency, vipData, Attr::frequency, Def::frequency);
 }
 
 void XmlInitializer::Init(ClickEnv& env, const VipData& vipData) const
@@ -406,7 +417,8 @@ void XmlInitializer::Init(FeedbackEnv& env, const VipData& vipData) const
 {
 	assignDevice(env, vipData.mDevice);
 	assignButton(env, vipData, Attr::button);
-	assign(env.mFrequency, vipData, Attr::frequency, Def::frequency);
+	
+	uglyBoostUnitsWorkaroundForFrequency(env.mFrequency, vipData, Attr::frequency, Def::frequency);
 }
 
 void XmlInitializer::Init(VAxisEnv& env, const VipData& vipData) const
@@ -416,7 +428,7 @@ void XmlInitializer::Init(VAxisEnv& env, const VipData& vipData) const
 	ButtonCodeT lower = assignButton(env, vipData, Attr::lower);
 	ButtonCodeT raise = assignButton(env, vipData, Attr::raise);
 
-	assign(env.mFrequency, vipData, Attr::frequency, Def::frequency);
+	uglyBoostUnitsWorkaroundForFrequency(env.mFrequency, vipData, Attr::frequency, Def::frequency);
 	assign(env.mStep, vipData, Attr::step);
 	assignAxisMode(env, vipData.mAxisMode, ID::AM_Absolute);
 	assign(env.mStopAtZero, vipData, Attr::stopatzero, Def::stopatzero);

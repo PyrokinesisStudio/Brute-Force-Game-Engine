@@ -31,46 +31,56 @@ namespace BFG {
 namespace Controller_ { 
 namespace Vip { 
 
-//! \todo Find a better name for this module.
+//! \brief Waits a 'tick' of time and triggers a callback.
+//!
+//! This function uses a user supplied frequency in order to simulate a
+//! *fixed* tick rate behaviour.
+//!
+//! If a tick was missed due to not having enough time, the callback will be
+//! fired multiple times in order to catch up.
+//!
 template <typename Parent>
 class FeedbackTrigger : public Parent
 {
 public:
 	explicit FeedbackTrigger(typename Parent::EnvT& env) :
-		Parent(env),
-		mFrequency(0),
-		mTimeDeficit(0)
-	{
-		if (env.mFrequency > 0)
-			mFrequency = ONE_SEC_IN_MICROSECS / env.mFrequency;
-	}
+	Parent(env),
+	mFeedbackDuration(1.0f / env.mFrequency),
+	mTimeDeficit(0.0f * boost::units::si::seconds)
+	{}
 
-	virtual void onFeedback(long microseconds_passed) = 0;
+	//! \brief Tick callback
+	//! \note Only called if enough time has been passed and if
+	//!       Parent::NeedsTime() returns true.
+	virtual void onFeedback(TimeT timeSinceLastTick) = 0;
 
 protected:
-	long mFrequency;
-	long mTimeDeficit;
+	//! The amount of time necessary to trigger feedback
+	const TimeT mFeedbackDuration;
+	
+	//! Collects passed time
+	TimeT mTimeDeficit;
 
 private:
 	//! Overwrites CommonBase::FeedTime()
-	virtual void FeedTime(long microseconds_passed)
+	virtual void FeedTime(TimeT timeSinceLastTick)
 	{
-		if (mFrequency == 0)
+		if (mFeedbackDuration == 0 * boost::units::si::seconds)
 			return;
 	
-		mTimeDeficit += microseconds_passed;
+		mTimeDeficit += timeSinceLastTick;
 
 		// Be very careful here.
 		// Each tiny change may introduce a new race condition.
-		while (Parent::NeedsTime() && mTimeDeficit >= mFrequency)
+		while (Parent::NeedsTime() && mTimeDeficit >= mFeedbackDuration)
 		{
-			mTimeDeficit -= mFrequency;
-			onFeedback(microseconds_passed);
+			mTimeDeficit -= mFeedbackDuration;
+			onFeedback(timeSinceLastTick);
 		}
 		
-		if (mTimeDeficit > mFrequency)
+		if (mTimeDeficit > mFeedbackDuration)
 		{
-			mTimeDeficit = mFrequency;
+			mTimeDeficit = mFeedbackDuration;
 		}
 	}
 };

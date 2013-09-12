@@ -43,7 +43,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace BFG {
 namespace Controller_ { 
-	
+
+//! \todo Define this in Core Time.h
+typedef boost::units::quantity<boost::units::si::time, f32> TimeT;
+typedef boost::units::quantity<boost::units::si::frequency, f32> FrequencyT;
+
 class State;
 
 namespace Vip { 
@@ -83,8 +87,8 @@ public:
 	}
 	
 	//! Optional. Only used if feedback is needed.
-	//! This gets always called by State. (r636)
-	virtual void FeedTime(long /*microseconds_passed*/)
+	//! This gets always called by State.
+	virtual void FeedTime(TimeT /*timeSinceLastTick*/)
 	{
 	}
 	

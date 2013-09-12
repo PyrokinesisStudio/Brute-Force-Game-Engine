@@ -41,7 +41,7 @@ public:
 	{
 	}
 	
-	virtual void onFeedback(long /*microseconds_passed*/)
+	virtual void onFeedback(TimeT /*timeSinceLastTicklong*/)
 	{
 		Parent::emit(Parent::getResult());
 	}

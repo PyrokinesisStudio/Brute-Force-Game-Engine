@@ -38,7 +38,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace BFG {
 namespace Controller_ { 
-	
+
 class State;
 
 namespace Vip { 
@@ -49,7 +49,7 @@ namespace Vip {
 struct DefaultEnv
 {
 	BFG::Event::IdT mAction;
-	State*   mState;
+	State*          mState;
 	
 	//! This is a filter. Only buttons and axis which were put into these
 	//! containers will be forwarded by the Delegater to the vip who gets
@@ -66,7 +66,7 @@ struct DefaultEnv
 
 struct FeedbackEnv : public DefaultEnv
 {
-	long mFrequency;
+	FrequencyT mFrequency;
 };
 
 struct SteerEnv : public FeedbackEnv

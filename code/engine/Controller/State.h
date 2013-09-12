@@ -56,7 +56,7 @@ public:
 
 	void capture();
 
-	void sendFeedback(long microseconds_passed);
+	void sendFeedback(TimeT timeSinceLastTick);
 
 	Event::SubLanePtr eventSubLane() const;
 

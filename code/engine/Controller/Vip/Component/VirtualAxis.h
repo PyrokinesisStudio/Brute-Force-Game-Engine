@@ -56,7 +56,7 @@ public:
 		Parent::FeedButtonData(dt,bs,code);
 	}
 	
-	virtual void onFeedback(long /*microseconds_passed*/)
+	virtual void onFeedback(TimeT /*timeSinceLastTick*/)
 	{
 		if (mButtonCache[mLower])
 			lower();

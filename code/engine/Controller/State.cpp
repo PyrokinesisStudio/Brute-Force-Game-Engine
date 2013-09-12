@@ -140,13 +140,13 @@ void State::capture()
 		mJoystick.capture();
 }
 
-void State::sendFeedback(long microseconds_passed)
+void State::sendFeedback(TimeT timeSinceLastTick)
 {
 	for_each
 	(
-	    mFeedbacks.begin(),
-	    mFeedbacks.end(),
-	    boost::bind(&Vip::CommonBase::FeedTime, _1, microseconds_passed)
+		mFeedbacks.begin(),
+		mFeedbacks.end(),
+		boost::bind(&Vip::CommonBase::FeedTime, _1, timeSinceLastTick)
 	);
 }
 

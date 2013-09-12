@@ -93,7 +93,7 @@ struct AxisCache : public Parent
 	{
 	}
 	
-	virtual void onFeedback(long /*microseconds_passed*/)
+	virtual void onFeedback(TimeT /*microseconds_passed*/)
 	{
 		/**
 			\note

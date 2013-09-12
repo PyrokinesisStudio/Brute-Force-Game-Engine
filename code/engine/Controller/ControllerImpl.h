@@ -29,6 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/units/quantity.hpp>
 
 #include <Core/Types.h>
 
@@ -38,6 +39,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Event/Event.h>
 
 namespace BFG {
+
+//! \todo Define this in Core Time.h
+typedef boost::units::quantity<boost::units::si::time, f32> TimeT;
+typedef boost::units::quantity<boost::units::si::frequency, f32> FrequencyT;
 
 namespace Clock {
 	class SleepFrequently;
@@ -53,9 +58,7 @@ public:
 	Controller(Event::Lane& eventLane);
 	~Controller();
 
-	void init(int maxFrameratePerSec);
-
-	void nextTick();
+	void nextTick(TimeT timeSinceLastTick);
 
 	void resetInternalClock();
 
@@ -64,7 +67,7 @@ public:
 private:
 	void capture();
 	
-	void sendFeedback(long microseconds_passed);
+	void sendFeedback(TimeT timeSinceLastTick);
 
 	void insertState(const StateInsertion& si);
 	void removeState(GameHandle state);
@@ -84,8 +87,6 @@ private:
 
 	StateContainerT                           mStates;
 	ActionMapT                                mActions;
-
-	boost::scoped_ptr<Clock::SleepFrequently> mClock;
 
 	Event::Lane&                              mEventLane;
 };

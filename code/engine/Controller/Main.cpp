@@ -39,7 +39,6 @@ mFrequency(frequency)
 void Main::main(Event::Lane* eventLane)
 {
 	mController.reset(new Controller(*eventLane));
-	mController->init(mFrequency);
 }
 
 } // namespace Controller_
