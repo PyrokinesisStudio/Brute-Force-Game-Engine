@@ -82,7 +82,7 @@ void CameraControl::createDefaultCamera()
 		0
 	);
 	
-	emit<View::Event>(BFG::ID::VE_CREATE_CAMERA, cc, mData->mState);
+	mSubLane->emit(BFG::ID::VE_CREATE_CAMERA, cc, mData->mState);
 
 	for (size_t i = 0; i < 4; ++i)
 	{
@@ -107,8 +107,8 @@ void CameraControl::createDefaultCamera()
 			orientation = mViewParameterMap[look].mOrientation;
 		}
 
-		emit<View::Event>(BFG::ID::VE_UPDATE_POSITION, position, mData->mCameras[i]);
-		emit<View::Event>(BFG::ID::VE_UPDATE_ORIENTATION, orientation, mData->mCameras[i]);
+		mSubLane->emit(BFG::ID::VE_UPDATE_POSITION, position, mData->mCameras[i]);
+		mSubLane->emit(BFG::ID::VE_UPDATE_ORIENTATION, orientation, mData->mCameras[i]);
 
 		MyGUI::Widget* title = mViews[i]->findWidget("Title");
 		const std::string type(mViews[i]->getUserString("type"));
@@ -129,7 +129,7 @@ void CameraControl::createCam(BFG::GameHandle camHandle, Ogre::SceneNode** node)
 		mFullSize.height / 2
 	);
 
-	emit<View::Event>(BFG::ID::VE_CREATE_CAMERA, cc, mData->mState);
+	mSubLane->emit(BFG::ID::VE_CREATE_CAMERA, cc, mData->mState);
 }
 
 void CameraControl::setCanvas(MyGUI::Canvas* canvas, BFG::GameHandle camHandle, Ogre::RenderTarget** target)

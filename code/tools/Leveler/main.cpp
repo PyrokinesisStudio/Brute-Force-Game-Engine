@@ -58,7 +58,7 @@ struct LevelerModelState
 	{
 		mLane.connectV(A_QUIT, this, &LevelerModelState::shutDown);
 		mLane.connectV(A_SCREENSHOT, this, &LevelerModelState::screenshot);
-		mLane.connectLoop(this, &onLoop);
+		mLane.connectLoop(this, &LevelerModelState::onLoop);
 	}
 
 	void shutDown()

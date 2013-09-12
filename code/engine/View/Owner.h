@@ -37,8 +37,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <View/Enums.hh>
 
-class EventLoop;
-
 namespace BFG {
 namespace View {
 

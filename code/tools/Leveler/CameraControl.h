@@ -77,9 +77,9 @@ class CameraControl : public BaseFeature
 public:
 	typedef std::map<std::string, Ogre::SceneNode*> RacePointMap;
 	
-	CameraControl(BFG::Event::SubLanePtr subLane, boost::shared_ptr<SharedData> data) :
+	CameraControl(BFG::Event::Lane& lane, boost::shared_ptr<SharedData> data) :
 	BaseFeature("CameraControl", false),
-	mSubLane(subLane),
+	mSubLane(lane.createSubLane()),
 	mData(data),
 	mFullView(NULL),
 	mCameraPosition(NULL),
