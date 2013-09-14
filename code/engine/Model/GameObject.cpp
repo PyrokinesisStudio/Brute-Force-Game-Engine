@@ -331,6 +331,29 @@ void GameObject::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 	}
 }
 
+void GameObject::activate()
+{
+	mActivated = true;
+
+	sendValueUpdate(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
+	sendValueUpdate(ID::PV_Orientation, ValueId::ENGINE_PLUGIN_ID);
+	sendValueUpdate(ID::PV_Velocity, ValueId::ENGINE_PLUGIN_ID);
+	sendValueUpdate(ID::PV_RelativeVelocity, ValueId::ENGINE_PLUGIN_ID);
+	sendValueUpdate(ID::PV_RotationVelocity, ValueId::ENGINE_PLUGIN_ID);
+	sendValueUpdate(ID::PV_RelativeRotationVelocity, ValueId::ENGINE_PLUGIN_ID);
+	sendValueUpdate(ID::PV_Mass, ValueId::ENGINE_PLUGIN_ID);
+	sendValueUpdate(ID::PV_Inertia, ValueId::ENGINE_PLUGIN_ID);
+}
+
+void GameObject::sendValueUpdate(Property::ValueId::VarIdT varId,
+                                 Property::PluginId pluginId)
+{
+	ValueId valueId(varId, pluginId);
+	
+	if (mActivated)
+		mSubLane->emit(ID::GOE_VALUE_UPDATED, valueId, getHandle());
+}
+
 void GameObject::internalSynchronize()
 {
 	if (!mActivated)
@@ -352,7 +375,7 @@ void GameObject::setValue(Property::ValueId::VarIdT varId,
 	ValueId valueId(varId, pluginId);
 	mValues[valueId] = value;
 
-	mSubLane->emit(ID::GOE_VALUE_UPDATED, valueId, getHandle());
+	sendValueUpdate(varId, pluginId);
 }
 
 //! \note This MUST be called from within a Concept constructor!

@@ -169,11 +169,14 @@ public:
 	
 	bool docked() const { return mDocked; }
 
-	void activate() { mActivated = true; }
+	void activate(); // { mActivated = true; }
 	bool isActivated() { return mActivated; }
 
 private:
 	friend class Property::Concept;
+
+	void sendValueUpdate(Property::ValueId::VarIdT varId,
+                         Property::PluginId pluginId);
 
 	Event::SubLanePtr subLane();
 	//! Updates the GameObject as well as all its Modules
