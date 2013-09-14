@@ -108,15 +108,16 @@ void Cannon::fireRocket(bool autoRocket)
 	op.mLocation = spawnLocation;
 	op.mLinearVelocity = v3(projectileSpeed) * ownOrientation.zAxis();
 
-	mSubLane->emit(ID::S_CREATE_GO, op);
-	mSubLane->emit(ID::AE_SOUND_EMITTER_PROCESS_SOUND, mLaserSound);
-
+	op.mStorage.emit(ID::AE_SOUND_EMITTER_PROCESS_SOUND, mLaserSound);
+	
 	if (autoRocket)
 	{
 		u32 target = rand() % targets.size();
 		
 		GameHandle randomInvader = targets[target];
-		mSubLane->emit(ID::GOE_AUTONAVIGATE, randomInvader, op.mHandle);
+		op.mStorage.emit(ID::GOE_AUTONAVIGATE, randomInvader, op.mHandle);
 	}
+
+	mSubLane->emit(ID::S_CREATE_GO, op);
 }
 
