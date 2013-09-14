@@ -113,6 +113,8 @@ GameObjectFactory::createGameObject(const ObjectParameter& parameter)
 	mGoModules[parameter.mName] = moduleNameHandleMap;
 	mGameObjects[parameter.mName] = gameObject;
 
+	parameter.mStorage.call(mLane.createSubLane());
+
 	return gameObject;
 }
 
