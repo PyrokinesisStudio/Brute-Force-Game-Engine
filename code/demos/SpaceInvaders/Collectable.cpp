@@ -39,7 +39,7 @@ Collectable::Collectable(GameObject& Owner, BFG::PluginId pid) :
 	subLane()->connect(ID::PE_CONTACT, this, &Collectable::onCollect, ownerHandle());
 }
 
-void Collectable::onCollect(const Physics::ModulePenetration& mp, GameHandle sender)
+void Collectable::onCollect(const Physics::ModulePenetration& mp)
 {
 	// Ignore additional PE_CONTACT events
 	if (mUsed)

@@ -39,7 +39,7 @@ class Collectable : public Property::Concept
 public:
 	Collectable(GameObject& Owner, BFG::PluginId pid);
 	
-	void onCollect(const Physics::ModulePenetration& mp, GameHandle sender);
+	void onCollect(const Physics::ModulePenetration& mp);
 	
 	bool mUsed;
 };
