@@ -135,7 +135,9 @@ void AutoNavigator::rotate(const qv4& rotation)
 	const v3& currentRotationVel = getGoValue<v3>(ID::PV_RelativeRotationVelocity, pluginId());
 
 	// braking distance in radian
-	v3 b = (currentRotationVel * currentRotationVel) / (2.0f * mMaxAngularAcceleration.value());
+	v3 b;
+	if (!nearEnough(mMaxAngularAcceleration.value(), 0.0f, EPSILON_F))
+		b = (currentRotationVel * currentRotationVel) / (2.0f * mMaxAngularAcceleration.value());
 
 	// reduce the vibration caused by the time delay of 2 frames by using the braking distance * 3 
 	b *= 2.0f;
