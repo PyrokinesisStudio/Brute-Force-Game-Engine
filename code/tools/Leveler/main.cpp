@@ -42,6 +42,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/GameHandle.h>
 #include <View/View.h>
 
+#include <Model/State.h>
+
 #include <Actions.h>
 #include <BaseFeature.h>
 #include <CameraControl.h>
@@ -51,9 +53,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 using namespace BFG;
 using namespace boost::units;
 
-struct LevelerModelState
+GameHandle gLevelerHandle = generateHandle();
+
+struct LevelerModelState : State
 {
 	LevelerModelState(GameHandle handle, Event::Lane& lane) :
+	State(lane),
 	mLane(lane)
 	{
 		mLane.connectV(A_QUIT, this, &LevelerModelState::shutDown);
@@ -194,18 +199,34 @@ private:
 	MyGUI::VectorWidgetPtr mContainer;
 };
 
+struct Main : Base::LibraryMainBase<Event::Lane>
+{
+	Main() {}
+
+	virtual void main(Event::Lane* lane)
+	{
+		mMain.reset(new LevelerModelState(gLevelerHandle, *lane));
+	}
+
+	boost::scoped_ptr<LevelerModelState> mMain;
+};
+
+struct ViewMain : Base::LibraryMainBase<Event::Lane>
+{
+	ViewMain ()
+	{}
+
+	virtual void main(Event::Lane* lane)
+	{
+		mViewState.reset(new LevelerViewState(gLevelerHandle, *lane));
+	}
+
+	boost::scoped_ptr<LevelerViewState> mViewState;
+};
+
 // This is the Ex-'GameStateManager::SingleThreadEntryPoint(void*)' function
 void* SingleThreadEntryPoint(void *iPointer)
 {
-	EventLoop* loop = static_cast<EventLoop*>(iPointer);
-	
-	assert(loop);
-
-	GameHandle levelerHandle = BFG::generateHandle();
-	
-	// Hack: Using leaking pointers, because vars would go out of scope
-	LevelerModelState* lms = new LevelerModelState(levelerHandle, loop);
-	LevelerViewState* lvs = new LevelerViewState(levelerHandle, loop);
 
 	// Init Controller
 	GameHandle handle = generateHandle();
@@ -220,7 +241,7 @@ void* SingleThreadEntryPoint(void *iPointer)
 
 	Path path;
 	const std::string config_path = path.Expand("Leveler.xml");
-	const std::string state_name = "Leveler";
+	const std::string state_name = "Leveler: He levels everything!";
 
 	BFG::View::WindowAttributes wa;
 	BFG::View::queryWindowAttributes(wa);
@@ -246,20 +267,23 @@ int main( int argc, const char* argv[] ) try
 {
 	Base::Logger::Init(Base::Logger::SL_DEBUG, "Logs/Leveler.log");
 
-	EventLoop iLoop(true);
+	const u32 EVENT_LOOP_FREQUENCY = 100;
 
-	size_t controllerFrequency = 1000;
+	Event::Synchronizer synchronizer;
 
-	const std::string caption = "Leveler: He levels everything!";
+	Event::Lane viewLane(synchronizer, EVENT_LOOP_FREQUENCY, "View");
+	const std::string caption = "Leveler";
+	viewLane.addEntry<View::Main>(caption);
+	viewLane.addEntry<ViewMain>();
 
-	BFG::Controller_::Main controllerMain(controllerFrequency);
-	BFG::View::Main viewMain(caption);
+	Event::Lane controllerLane(synchronizer, EVENT_LOOP_FREQUENCY, "Controller");
+	controllerLane.addEntry<BFG::Controller_::Main>(EVENT_LOOP_FREQUENCY);
 
-	iLoop.addEntryPoint(viewMain.entryPoint());
-	iLoop.addEntryPoint(controllerMain.entryPoint());
-	iLoop.addEntryPoint(new Base::CEntryPoint(SingleThreadEntryPoint));
+	BFG::Event::Lane gameLane(synchronizer, 100, "Game", BFG::Event::RL3);
+	gameLane.addEntry<Main>();
 
-	iLoop.run();
+	synchronizer.start();
+	synchronizer.finish(true);
 }
 catch (Ogre::Exception& e)
 {
