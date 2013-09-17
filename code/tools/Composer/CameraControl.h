@@ -30,7 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreSceneNode.h>
 
 #include <Core/Math.h>
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 #include <Model/GameObject.h>
 #include <Model/Environment.h>
 #include <View/Owner.h>
@@ -43,12 +43,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace Tool
 {
 
-class CameraControl : public BaseFeature, public Emitter
+class CameraControl : public BaseFeature
 {
 public:
-	CameraControl(EventLoop* loop, boost::shared_ptr<SharedData> data) :
+	CameraControl(BFG::Event::SubLanePtr sublane, boost::shared_ptr<SharedData> data) :
 	BaseFeature("CameraControl", false),
-	Emitter(loop),
+	mSubLane(sublane),
 	mData(data),
 	mCameraPosition(NULL),
 	mCameraRotation(NULL),
@@ -64,10 +64,7 @@ public:
 		createDefaultCamera();
 	}
 
-	virtual ~CameraControl()
-	{
-
-	}
+	virtual ~CameraControl() {}
 
 	virtual void load(){mLoaded = true;}
 	virtual void unload(){mLoaded = false;}
@@ -75,17 +72,16 @@ public:
 	virtual void activate()
 	{
 		mActive = true;
-		emit<Tool::Event>(A_UPDATE_FEATURES, 0);
+		mSubLane->emit(A_UPDATE_FEATURES, BFG::Event::Void());
 	}
+	
 	virtual void deactivate()
 	{
 		mActive = false;
-		emit<Tool::Event>(A_UPDATE_FEATURES, 0);
+		mSubLane->emit(A_UPDATE_FEATURES, BFG::Event::Void());
 	}
 
 	void createDefaultCamera();
-
-	void eventHandler(BFG::Controller_::VipEvent* ve);
 
 	virtual void update(const Ogre::FrameEvent& evt);
 
@@ -112,6 +108,8 @@ private:
 	{
 		mCameraRotation->setOrientation(Ogre::Quaternion::IDENTITY);
 	}
+
+	BFG::Event::SubLanePtr mSubLane;
 
 	boost::shared_ptr<SharedData> mData;
 
