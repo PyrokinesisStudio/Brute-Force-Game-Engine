@@ -61,6 +61,25 @@ struct LevelerModelState : State
 	State(lane),
 	mLane(lane)
 	{
+		// Init Controller
+		BFG::Controller_::ActionMapT actions;
+		actions[A_QUIT] = "A_QUIT";
+		actions[A_SCREENSHOT] = "A_SCREENSHOT";
+		actions[A_UPDATE_FEATURES] = "A_UPDATE_FEATURES";
+
+		BFG::Controller_::fillWithDefaultActions(actions);	
+		BFG::Controller_::sendActionsToController(mLane, actions);
+
+		Path path;
+		const std::string config_path = path.Expand("Leveler.xml");
+		const std::string state_name = "Leveler: He levels everything!";
+
+		BFG::View::WindowAttributes wa;
+		BFG::View::queryWindowAttributes(wa);
+		Controller_::StateInsertion si(config_path, state_name, generateHandle(), true, wa);
+
+		mLane.emit(ID::CE_LOAD_STATE, si);
+		
 		mLane.connectV(A_QUIT, this, &LevelerModelState::shutDown);
 		mLane.connectV(A_SCREENSHOT, this, &LevelerModelState::screenshot);
 		mLane.connectLoop(this, &LevelerModelState::onLoop);
@@ -69,6 +88,7 @@ struct LevelerModelState : State
 	void shutDown()
 	{
 		mLane.emit(BFG::ID::VE_SHUTDOWN, Event::Void());
+		mLane.emit(ID::EA_FINISH, Event::Void());
 	}
 
 	void screenshot()
@@ -78,12 +98,12 @@ struct LevelerModelState : State
 
 	void onLoop(Event::TickData tickData)
 	{
-		tick(tickData.mTimeSinceLastTick);
+		onTick(tickData.timeSinceLastTick());
 	}
 		
-	void tick(const f32 timeSinceLastFrame)
+	void onTick(const TickTimeT timeSinceLastFrame)
 	{
-		if (timeSinceLastFrame < EPSILON_F)
+		if (timeSinceLastFrame.value() < EPSILON_F)
 			return;
 	}
 
@@ -109,7 +129,7 @@ public:
 		mLoadedFeatures.push_back(feature);
 		feature->activate();
 
-		mLoadedFeatures.push_back(new Tool::MeshControl(mData));
+		mLoadedFeatures.push_back(new Tool::MeshControl(mData, mLane));
 
 		mLane.connectV(A_UPDATE_FEATURES, this, &LevelerViewState::onUpdateFeatures);
 
@@ -223,45 +243,6 @@ struct ViewMain : Base::LibraryMainBase<Event::Lane>
 
 	boost::scoped_ptr<LevelerViewState> mViewState;
 };
-
-// This is the Ex-'GameStateManager::SingleThreadEntryPoint(void*)' function
-void* SingleThreadEntryPoint(void *iPointer)
-{
-
-	// Init Controller
-	GameHandle handle = generateHandle();
-
-	BFG::Controller_::ActionMapT actions;
-	actions[A_QUIT] = "A_QUIT";
-	actions[A_SCREENSHOT] = "A_SCREENSHOT";
-	actions[A_UPDATE_FEATURES] = "A_UPDATE_FEATURES";
-
-	BFG::Controller_::fillWithDefaultActions(actions);	
-	BFG::Controller_::sendActionsToController(loop, actions);
-
-	Path path;
-	const std::string config_path = path.Expand("Leveler.xml");
-	const std::string state_name = "Leveler: He levels everything!";
-
-	BFG::View::WindowAttributes wa;
-	BFG::View::queryWindowAttributes(wa);
-	Controller_::StateInsertion si(config_path, state_name, handle, true, wa);
-
-	EventFactory::Create<Controller_::ControlEvent>
-	(
-		loop,
-		ID::CE_LOAD_STATE,
-		si
-	);
-
-	loop->connect(A_QUIT, lms, &LevelerModelState::ControllerEventHandler);
-	loop->connect(A_SCREENSHOT, lms, &LevelerModelState::ControllerEventHandler);
-	loop->connect(A_UPDATE_FEATURES, lvs, &LevelerViewState::toolEventHandler);
-
-	loop->registerLoopEventListener(lms, &LevelerModelState::LoopEventHandler);
-
-	return 0;
-}
 
 int main( int argc, const char* argv[] ) try
 {
