@@ -34,7 +34,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Path.h>
 #include <Event/Event.h>
 
-#include <Event_fwd.h>
 #include <OpenSaveDialog.h>
 #include <SharedData.h>
 

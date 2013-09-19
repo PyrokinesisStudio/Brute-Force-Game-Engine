@@ -42,9 +42,10 @@ namespace Tool
 class MeshControl : public BaseFeature
 {
 public:
-	MeshControl(boost::shared_ptr<SharedData> data) :
+	MeshControl(boost::shared_ptr<SharedData> data, BFG::Event::Lane& lane) :
 	BaseFeature("Mesh", true),
-	mData(data)
+	mData(data),
+	mLane(lane)
 	{
 		BFG::Path p;
 
@@ -63,17 +64,11 @@ public:
 		);
 	}
 
-	virtual ~MeshControl()
-	{
-	}
-
 	virtual void load();
 	virtual void unload();
 
 	virtual void activate();
 	virtual void deactivate();
-
-protected:
 
 private:
 	void onLoadOk(MyGUI::Widget* w);
@@ -81,6 +76,7 @@ private:
 	boost::shared_ptr<SharedData> mData;
 	OpenSaveDialog mDialog;
 	std::string mPath;
+	BFG::Event::Lane& mLane;
 }; // class MeshControl
 
 } // namespace Tool

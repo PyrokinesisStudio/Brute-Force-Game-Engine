@@ -77,14 +77,18 @@ void MeshControl::onLoadOk(MyGUI::Widget* w)
 	}
 
 	mData->mRenderObjects[mData->mRootMesh].reset();
-	mData->mRenderObjects[mData->mRootMesh].reset(new BFG::View::RenderObject
+	
+	//! \todo To give mLane here is probably not thread save!
+	mData->mRenderObjects[mData->mRootMesh].reset
 	(
-		BFG::NULL_HANDLE,
-		mData->mRootMesh,
-		meshName,
-		BFG::v3::ZERO,
-		BFG::qv4::IDENTITY
-	));
+		new BFG::View::RenderObject
+		(
+			mLane,
+			BFG::NULL_HANDLE,
+			mData->mRootMesh,
+			meshName
+		)
+	);
 
 	mData->mMeshNames[mData->mRootMesh] = meshName;
 	mData->mActiveMesh = mData->mRootMesh;

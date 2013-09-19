@@ -28,20 +28,18 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define SKYBOXSELECT
 
 #include <BaseFeature.h>
-
-#include <EventSystem/Emitter.h>
-
+#include <Event/Event.h>
 #include <SharedData.h>
 
 namespace Tool
 {
 
-class SkyBoxSelect : public BaseFeature, public BFG::Emitter
+class SkyBoxSelect : public BaseFeature
 {
 public:
-	SkyBoxSelect(EventLoop* loop, boost::shared_ptr<SharedData> data) :
+	SkyBoxSelect(BFG::Event::SubLanePtr sublane, boost::shared_ptr<SharedData> data) :
 	BaseFeature("SkyBox", true),
-	Emitter(loop),
+	mSubLane(sublane),
 	mData(data)
 	{
 	}
@@ -51,11 +49,6 @@ public:
 
 	virtual void activate();
 	virtual void deactivate();
-
-	virtual void eventHandler(BFG::Controller_::VipEvent* ve)
-	{
-
-	}
 
 private:
 
@@ -69,6 +62,8 @@ private:
 	boost::shared_ptr<SharedData> mData;
 
 	MyGUI::ListBox* mList;
+
+	BFG::Event::SubLanePtr mSubLane;
 
 }; // class SkyBoxSelect
 

@@ -30,8 +30,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/GameHandle.h>
 #include <Core/XmlFileHandleFactory.h>
+#include <View/Enums.hh>
 #include <Model/Property/SpacePlugin.h>
-#include <View/Event.h>
+
 
 const std::string OBJECTS("ObjectConfigs");
 const std::string OBJECT("ObjectConfig");
@@ -124,24 +125,18 @@ namespace Tool
 		mActive = false;
 	}
 
-	void ModuleControl::toolEventHandler(Event* e)
+	void ModuleControl::onUpdateAdapter()
 	{
 		if (!mLoaded)
 			return;
 
-		switch(e->id())
-		{
-		case A_UPDATE_ADAPTER:
-			{
-				if (!mUpdate->getStateSelected())
-					return;
+		if (!mUpdate->getStateSelected())
+			return;
 
-				if (!mActivePreview)
-					return;
+		if (!mActivePreview)
+			return;
 
-				reAttach();
-			}
-		}
+		reAttach();
 	}
 
 	void ModuleControl::onCloseClicked(MyGUI::Window*, const std::string& button)
@@ -398,14 +393,18 @@ namespace Tool
 		}
 
 		mData->mRenderObjects[mData->mRootMesh].reset();
-		mData->mRenderObjects[mData->mRootMesh].reset(new BFG::View::RenderObject
+		mData->mRenderObjects[mData->mRootMesh].reset
 		(
-			NULL_HANDLE,
-			mData->mRootMesh,
-			meshName,
-			BFG::v3::ZERO,
-			BFG::qv4::IDENTITY
-		));
+			new BFG::View::RenderObject
+			(
+				mLane,
+				NULL_HANDLE,
+				mData->mRootMesh,
+				meshName,
+				BFG::v3::ZERO,
+				BFG::qv4::IDENTITY
+			)
+		);
 
 		mData->mMeshNames[mData->mRootMesh] = meshName;
 		mData->mActiveMesh = mData->mRootMesh;
@@ -416,8 +415,15 @@ namespace Tool
 
 		BFG::Property::PluginMapT plugMap;
 		plugMap.insert(sp);
-		mData->mGameObject = 
-			new BFG::GameObject(mLoop, mData->mRootMesh, "Test", plugMap, mData->mEnvironment);
+		mData->mGameObject = new BFG::GameObject
+		(
+			mLane, 
+			mData->mRootMesh, 
+			"Test", 
+			plugMap, 
+			mData->mEnvironment
+		);
+
 		boost::shared_ptr<BFG::Module> module;
 		module.reset(new BFG::Module(mData->mRootMesh));
 
@@ -448,6 +454,7 @@ namespace Tool
 				mData->mRenderObjects[moduleHandle].reset();
 				mData->mRenderObjects[moduleHandle].reset(new BFG::View::RenderObject
 				(
+					mLane,
 					mModuleMap[parentName],
 					moduleHandle,
 					childModule->mMesh->getItemNameAt(childModule->mMesh->getIndexSelected()),
@@ -472,7 +479,7 @@ namespace Tool
 
 				mModuleMap[fromName] = moduleHandle;
 
-				emit<BFG::View::Event>(BFG::ID::VE_ATTACH_OBJECT, moduleHandle, mData->mGameObject->getHandle());
+				mLane.emit(BFG::ID::VE_ATTACH_OBJECT, moduleHandle, mData->mGameObject->getHandle());
 
 				addModuleTo(fromName);
 			}

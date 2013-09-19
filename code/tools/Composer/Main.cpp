@@ -43,7 +43,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Actions.h>
 #include <BaseFeature.h>
-#include <Event.h>
 
 #include <AdapterControl.h>
 #include <AnimationControl.h>
@@ -144,11 +143,10 @@ struct ViewComposerState : public View::State
 public:
 	typedef std::vector<Tool::BaseFeature*> FeatureListT;
 
-	ViewComposerState(GameHandle handle, EventLoop* loop) :
-	State(handle, loop),
-	mControllerAdapter(handle, loop)
+	ViewComposerState(GameHandle handle, Event::Lane& lane) :
+	State(handle, lane),
+	mControllerAdapter(handle, lane)
 	{
-		registerEventHandler();
 		createGui();
 
 		mData.reset(new SharedData);
@@ -183,44 +181,32 @@ public:
 		sceneMan->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
 		sceneMan->setShadowColour(Ogre::ColourValue(0, 0, 0));
 
-		loop->connect(A_LOADING_MESH, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_LOADING_MATERIAL, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_CAMERA_AXIS_X, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_CAMERA_AXIS_Y, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_CAMERA_AXIS_Z, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_CAMERA_MOVE, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_CAMERA_RESET, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_CAMERA_ORBIT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_LOADING_SKY, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		// Don't know where to connect these.
+		//loop->connect(A_LOADING_MESH, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(A_LOADING_MATERIAL, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(A_LOADING_SKY, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
 
-		loop->connect(A_CREATE_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_DESTROY_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_PREV_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_NEXT_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_FIRST_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_LAST_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(A_CREATE_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(A_DESTROY_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(A_PREV_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(A_NEXT_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(A_FIRST_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(A_LAST_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
 
-		loop->connect(A_INFO_WINDOW, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_SUB_MESH, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_TEX_UNIT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_ANIMATION, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_ADAPTER, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(A_INFO_WINDOW, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(A_SUB_MESH, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(A_TEX_UNIT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(A_ANIMATION, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(A_ADAPTER, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
 
-		loop->connect(A_CAMERA_MOUSE_X, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_CAMERA_MOUSE_Y, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_CAMERA_MOUSE_Z, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(A_CAMERA_MOUSE_MOVE, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
+		//loop->connect(BFG::ID::A_MOUSE_LEFT_PRESSED, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
 
-		loop->connect(BFG::ID::A_MOUSE_MIDDLE_PRESSED, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(BFG::ID::A_MOUSE_LEFT_PRESSED, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		loop->connect(BFG::ID::A_MOUSE_RIGHT_PRESSED, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-
-		loop->connect(A_UPDATE_FEATURES, gViewComposerState.get(), &ViewComposerState::toolEventHandler);
+		//loop->connect(A_UPDATE_FEATURES, gViewComposerState.get(), &ViewComposerState::toolEventHandler);
 	}
 
 	~ViewComposerState()
 	{
-		emit<BFG::View::Event>(BFG::ID::VE_SHUTDOWN, 0);
+		mLane.emit(BFG::ID::VE_SHUTDOWN, Event::Void());
 		
 		mActiveFeatures.clear();
 
@@ -327,15 +313,9 @@ public:
 	}
 
 private:
-	void registerEventHandler()
-	{
-	}
-	void unregisterEventHandler()
-	{
-	}
 	
-	virtual void pause(){ registerEventHandler(); }
-	virtual void resume(){ unregisterEventHandler(); }
+	virtual void pause() {}
+	virtual void resume() {}
 
 	BFG::View::ControllerMyGuiAdapter mControllerAdapter;
 
@@ -344,6 +324,8 @@ private:
 
 	boost::shared_ptr<SharedData> mData;
 	MyGUI::VectorWidgetPtr mContainer;
+
+	BFG::Event::Lane& mLane;
 };
 
 boost::scoped_ptr<ViewComposerState> gViewComposerState;

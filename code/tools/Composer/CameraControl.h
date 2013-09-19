@@ -37,7 +37,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Actions.h>
 #include <BaseFeature.h>
-#include <Event_fwd.h>
 #include <SharedData.h>
 
 namespace Tool
@@ -62,6 +61,21 @@ public:
 	mIsZooming(false)
 	{
 		createDefaultCamera();
+		
+		mSubLane->connect(A_CAMERA_AXIS_X, this, &CameraControl::onCamX);
+		mSubLane->connect(A_CAMERA_AXIS_Y, this, &CameraControl::onCamY);
+		mSubLane->connect(A_CAMERA_AXIS_Z, this, &CameraControl::onCamZ);
+		mSubLane->connect(A_CAMERA_MOUSE_X, this, &CameraControl::onCamX);
+		mSubLane->connect(A_CAMERA_MOUSE_Y, this, &CameraControl::onCamY);
+		mSubLane->connect(A_CAMERA_MOUSE_Z, this, &CameraControl::onCamZ);
+		mSubLane->connect(A_CAMERA_MOUSE_MOVE, this, &CameraControl::onCamMouseMove);
+		
+		mSubLane->connect(A_CAMERA_MOVE, this, &CameraControl::onCamMove);
+		mSubLane->connectV(A_CAMERA_RESET, this, &CameraControl::onReset);
+		mSubLane->connect(A_CAMERA_ORBIT, this, &CameraControl::onCamOrbit);
+
+		mSubLane->connect(BFG::ID::A_MOUSE_MIDDLE_PRESSED, this, &CameraControl::onMouseRight);
+		mSubLane->connect(BFG::ID::A_MOUSE_RIGHT_PRESSED, this, &CameraControl::onMouseMiddle);
 	}
 
 	virtual ~CameraControl() {}
@@ -85,8 +99,6 @@ public:
 
 	virtual void update(const Ogre::FrameEvent& evt);
 
-protected:
-
 private:
 
 	void onCamX(f32 x)
@@ -107,6 +119,41 @@ private:
 	void onReset()
 	{
 		mCameraRotation->setOrientation(Ogre::Quaternion::IDENTITY);
+	}
+
+	void onCamMove(f32 value)
+	{
+		if (value > EPSILON_F || value < -EPSILON_F)
+		{
+			mIsZooming = true;
+			mDeltaDis += value;
+		}
+		else
+		{
+			mIsZooming = false;
+			mDeltaDis = 0.0f;
+		}
+	}
+
+	void onCamMouseMove(f32 deltaDis)
+	{
+		mIsZooming = false;
+		mDeltaDis = deltaDis;
+	}
+
+	void onCamOrbit(bool camOrbit)
+	{
+		mCamOrbit = camOrbit;
+	}
+
+	void onMouseRight(bool mouseCamRoll)
+	{
+		mMouseCamRoll = mouseCamRoll;
+	}
+
+	void onMouseMiddle(bool pitchYaw)
+	{
+		mMouseCamPitchYaw = pitchYaw;
 	}
 
 	BFG::Event::SubLanePtr mSubLane;

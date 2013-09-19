@@ -135,7 +135,7 @@ void AnimationControl::activate()
 	}
 
 	mActive = true;
-	emit<Tool::Event>(A_UPDATE_FEATURES, 0);
+	mSubLane->emit(A_UPDATE_FEATURES, Event::Void());
 }
 
 void AnimationControl::deactivate()
@@ -155,7 +155,7 @@ void AnimationControl::deactivate()
 	}
 
 	mActive = false;
-	emit<Tool::Event>(A_UPDATE_FEATURES, 0);
+	mSubLane->emit(A_UPDATE_FEATURES, Event::Void());
 }
 
 void AnimationControl::update(const Ogre::FrameEvent& evt)
