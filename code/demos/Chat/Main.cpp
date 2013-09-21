@@ -26,21 +26,26 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <MyGUI.h>
 
+#include <boost/thread.hpp>
+
+#include <Base/ShowException.h>
 #include <Base/EntryPoint.h>
 #include <Base/Logger.h>
 #include <Base/ResolveDns.h>
 #include <Base/Pause.h>
-#include <Controller/Action.h>
-#include <Controller/StateInsertion.h>
-#include <Core/CharArray.h>
-#include <Core/Path.h>
-#include <Base/ShowException.h>
+
 #include <Core/Types.h>
 #include <Core/GameHandle.h>
-#include <EventSystem/Core/EventLoop.h>
-#include <EventSystem/Emitter.h>
-#include <EventSystem/Event_fwd.h>
+#include <Core/Path.h>
+#include <Core/CharArray.h>
+
+#include <Event/Event.h>
+
+#include <Controller/Action.h>
+#include <Controller/StateInsertion.h>
+
 #include <Network/Network.h>
+
 #include <View/HudElement.h>
 #include <View/View.h>
 
@@ -53,76 +58,51 @@ using namespace BFG;
 
 #define CHAT_MESSAGE 10000
 
-typedef Event<EventIdT, CharArray512T, GameHandle, GameHandle> ChatEvent;
+//typedef Event<EventIdT, CharArray512T, GameHandle, GameHandle> ChatEvent;
 
-struct Server : Emitter
+struct Server
 {
-	Server(EventLoop* loop) :
-	Emitter(loop),
-	mHandle(123)
+	Server(BFG::Event::SubLanePtr sublane) :
+	mHandle(123),
+	mSubLane(sublane)
 	{
-		loop->connect(ID::NE_CONNECTED, this, &Server::netControlHandler);
-		loop->connect(ID::NE_DISCONNECTED, this, &Server::netControlHandler);
-		loop->connect(ID::NE_RECEIVED, this, &Server::netPacketHandler, mHandle);
+		sublane->connect(ID::NE_CONNECTED, this, &Server::onConnected);
+		sublane->connect(ID::NE_DISCONNECTED, this, &Server::onDisconnected);
+		sublane->connect(ID::NE_RECEIVED, this, &Server::netPacketHandler, mHandle);
 	}
 	
-	~Server()
+	void onConnected(const Network::PeerIdT& peerId)
 	{
-		loop()->disconnect(ID::NE_CONNECTED, this);
-		loop()->disconnect(ID::NE_DISCONNECTED, this);
-		loop()->disconnect(ID::NE_RECEIVED, this);
+		dbglog << "Chat::Server: Adding " <<  peerId << " to list.";
+		peers.push_back(peerId);
 	}
-	
-	void netControlHandler(Network::ControlEvent* e)
+
+	void onDisconnected(const Network::PeerIdT& peerId)
 	{
-		dbglog << "Chat::Server::netControlHandler: " << ID::asStr(static_cast<ID::NetworkAction>(e->id()));
+		dbglog << "Chat::Server: Removing " << peerId << " from list.";
+		std::vector<Network::PeerIdT>::iterator it = std::find(peers.begin(), peers.end(), peerId);
 		
-		switch (e->id())
-		{
-		case ID::NE_CONNECTED:
-		{
-			Network::PeerIdT peerId = boost::get<Network::PeerIdT>(e->data());
-			dbglog << "Chat::Server: Adding " <<  peerId << " to list.";
-			peers.push_back(peerId);
-			break;
-		}
-		case ID::NE_DISCONNECTED:
-		{
-			Network::PeerIdT peerId = boost::get<Network::PeerIdT>(e->data());
-			dbglog << "Chat::Server: Removing " << peerId << " from list.";
-			std::vector<Network::PeerIdT>::iterator it = std::find(peers.begin(), peers.end(), peerId);
-			if (it != peers.end())
-				peers.erase(it);
-
-		}
-		default:
-		{
-			warnlog << "Server::netControlHandler: Got unhandled event: " << e->id();
-			break;
-		}
-		} // switch
+		if (it != peers.end())
+			peers.erase(it);
 	}
-	
-	void netPacketHandler(Network::DataPacketEvent* e)
-	{
-		dbglog << "Chat::Server::netPacketHandler: " << ID::asStr(static_cast<ID::NetworkAction>(e->id()));
 
-		const Network::DataPayload& payload = e->data();
+	void netPacketHandler(const Network::DataPayload& payload, Event::SenderIdT sender)
+	{
+		dbglog << "Chat::Server::netPacketHandler: " << ID::asStr(static_cast<ID::NetworkAction>(ID::NE_RECEIVED));
+
 		std::string msg(payload.mAppData.data(), payload.mAppDataLen);
-		
-		dbglog << Network::debug(*e);
 		
 		Network::DataPayload answer = payload;
 		answer.mAppDestination = payload.mAppSender;
 		answer.mAppSender = mHandle;
 		
-		dbglog << "Chat::Server: Sending NOT to " << e->sender();
+		dbglog << "Chat::Server: Sending NOT to " << sender;
 		for (size_t i=0; i<peers.size(); ++i)
 		{
-			if (peers[i] != e->sender())
+			if (peers[i] != sender)
 			{
 				dbglog << "Chat::Server: Sending to " << peers[i];
-				emit<Network::DataPacketEvent>(ID::NE_SEND, answer, peers[i], 0);
+				mSubLane->emit(ID::NE_SEND, answer, peers[i]);
 			}
 		}
 // 		dbglog << "Chat::Server: Sending broadcast.";
@@ -133,18 +113,19 @@ struct Server : Emitter
 	
 	std::vector<Network::PeerIdT> peers;
 	GameHandle mHandle;
+	Event::SubLanePtr mSubLane;
 };
 
 class ChatWindow : public View::HudElement
 {
 public:
-	ChatWindow(EventLoop* loop) :
+	ChatWindow(Event::Lane& lane) :
 	View::HudElement("ChatWindow.layout", "ChatWindow"),
-	mControllerAdapter(generateHandle(), loop)
+	mControllerAdapter(generateHandle(), lane)
 	{
 		BFG::Controller_::ActionMapT actions;
 		BFG::Controller_::fillWithDefaultActions(actions);
-		BFG::Controller_::sendActionsToController(loop, actions);
+		BFG::Controller_::sendActionsToController(lane, actions);
 	
 		BFG::Path path;
 		const std::string config_path = path.Expand("MyGUI.xml");
@@ -152,81 +133,52 @@ public:
 
 		BFG::View::WindowAttributes wa;
 		BFG::View::queryWindowAttributes(wa);
-
 		BFG::Controller_::StateInsertion si(config_path, state_name, generateHandle(), true, wa);
 
-		BFG::EventFactory::Create<BFG::Controller_::ControlEvent>
-		(
-			loop,
-			BFG::ID::CE_LOAD_STATE,
-			si
-		);
+		lane.emit(ID::CE_LOAD_STATE, si);
 	}
 
 private:
-	virtual void internalUpdate(f32 time)
-	{}
+	virtual void internalUpdate(f32 time) {}
 
 	View::ControllerMyGuiAdapter mControllerAdapter;
 };
 
-struct Client : Emitter
+struct Client
 {
-	Client(EventLoop* loop) :
-	Emitter(loop),
-	mHandle(456)
+	Client(Event::Lane& lane) :
+		mHandle(456),
+		mLane(lane)
 	{
 		BFG::Controller_::ActionMapT actions;
 		BFG::Controller_::fillWithDefaultActions(actions);
-		BFG::Controller_::sendActionsToController(loop, actions);
+		BFG::Controller_::sendActionsToController(lane, actions);
 
-		loop->connect(ID::NE_CONNECTED, this, &Client::netControlHandler);
-		loop->connect(ID::NE_DISCONNECTED, this, &Client::netControlHandler);
-		loop->connect(ID::NE_RECEIVED, this, &Client::netPacketHandler, mHandle);
+		lane.connect(ID::NE_CONNECTED, this, &Client::onConnected);
+		lane.connect(ID::NE_DISCONNECTED, this, &Client::onDisconnected);
+		lane.connect(ID::NE_RECEIVED, this, &Client::netPacketHandler, mHandle);
+	}
+
+	void onConnected(const Network::PeerIdT& peerId)
+	{
+		mChatWindow.reset(new ChatWindow(mLane));
+		MyGUI::Gui& gui = MyGUI::Gui::getInstance();
+		mChatOutput = gui.findWidget<MyGUI::EditBox>("chatOutput");
+		mChatInput = gui.findWidget<MyGUI::EditBox>("chatInput");
+
+		mChatInput->eventEditSelectAccept += newDelegate(this, &Client::onTextEntered);
+	}
+
+	void onDisconnected(const Network::PeerIdT& peerId)
+	{
+		dbglog << "Connection to Server was lost.";
 	}
 	
-	~Client()
+	void netPacketHandler(const Network::DataPayload& payload, Event::SenderIdT sender)
 	{
-		loop()->disconnect(ID::NE_CONNECTED, this);
-		loop()->disconnect(ID::NE_DISCONNECTED, this);
-		loop()->disconnect(ID::NE_RECEIVED, this);
-	}
+		dbglog << "Chat::Client::netPacketHandler: " << ID::asStr(static_cast<ID::NetworkAction>(ID::NE_RECEIVED));
 
-	void netControlHandler(Network::ControlEvent* e)
-	{
-		dbglog << "Chat::Client::netControlHandler: " << ID::asStr(static_cast<ID::NetworkAction>(e->id()));
-		
-		switch(e->id())
-		{
-		case ID::NE_CONNECTED:
-		{
-			mChatWindow.reset(new ChatWindow(loop()));
-			MyGUI::Gui& gui = MyGUI::Gui::getInstance();
-			mChatOutput = gui.findWidget<MyGUI::EditBox>("chatOutput");
-			mChatInput = gui.findWidget<MyGUI::EditBox>("chatInput");
-
-			mChatInput->eventEditSelectAccept += newDelegate(this, &Client::onTextEntered);
-
-			break;
-		}
-		case ID::NE_DISCONNECTED:
-		{
-			dbglog << "Connection to Server was lost.";
-			break;
-		}
-		default:
-			warnlog << "Client::netControlHandler: Got unhandled event: " << e->id();
-		}
-	}
-
-	void netPacketHandler(Network::DataPacketEvent* e)
-	{
-		dbglog << "Chat::Client::netPacketHandler: " << ID::asStr(static_cast<ID::NetworkAction>(e->id()));
-
-		const Network::DataPayload& payload = e->data();
 		std::string msg(payload.mAppData.data(), payload.mAppDataLen);
-
-		dbglog << Network::debug(*e);
 		dbglog << "Chat::Client: " << msg;
 		std::string oldChat(mChatOutput->getCaption());
 		mChatOutput->setCaption(oldChat + "\n" + msg);
@@ -238,58 +190,62 @@ struct Client : Emitter
 		CharArray512T data = stringToArray<512>(msg);
 
 		Network::DataPayload payload(CHAT_MESSAGE, 123, mHandle, msg.length(), data);
-		emit<Network::DataPacketEvent>(ID::NE_SEND, payload);
+		mLane.emit(ID::NE_SEND, payload);
 
 		sender->setCaption("");
 	}
 
 	GameHandle mHandle;
+	Event::Lane& mLane;
 	boost::scoped_ptr<ChatWindow> mChatWindow;
 	MyGUI::EditBox* mChatOutput;
 	MyGUI::EditBox* mChatInput;
 };
 
-void serverInitHandler(EventLoop& loop)
-{
-	Server s(&loop);
-	boost::this_thread::sleep(boost::posix_time::milliseconds(500));
-	Base::pause();
-	loop.stop();
-}
-
-void clientInitHandler(EventLoop& loop)
-{
-	Client c(&loop);
-	Base::pause();
-	loop.stop();
-}
+using namespace BFG;
 
 int main(int argc, const char* argv[]) try
 {
-	BFG::Configuration cfg("bfgChat");
+	// Fill configuration for initialization.
+	
+	Init::Configuration cfg("bfgChat");
+	
 	if  (argc == 2)
 	{
-		cfg.handler = boost::bind(&serverInitHandler, _1);
 		cfg.port = argv[1];
+		cfg.runMode = Init::RM_SERVER;
 	}
 	else if (argc == 3)
 	{
-		cfg.handler = boost::bind(&clientInitHandler, _1);
 		cfg.ip = argv[1];
 		cfg.port = argv[2];
+		cfg.runMode = Init::RM_CLIENT;
 	}
 	else
 	{
 		std::cerr << "For Server use: bfgChat <Port>\n"
-			"For Client use: bfgChat <IP> <Port>\n";
-		BFG::Base::pause();
+		          << "For Client use: bfgChat <IP> <Port>\n";
+		Base::pause();
 		return 0;
 	}
 	
-	BFG::MainContainerT mains = BFG::engineInit(cfg);
+	// Init engine modules and logger.
+	Init::engine(cfg);
 
-	// Give EventSystem some time to stop all loops
-	boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+	// Init custom modules, states etc ...
+
+	boost::scoped_ptr<Server> server;
+	boost::scoped_ptr<Client> client;
+
+	if (cfg.runMode == Init::RM_SERVER)
+		server.reset(new Server(Init::gNetworkLane->createSubLane()));
+	else if (cfg.runMode == Init::RM_CLIENT)
+		//! \note Client has direct contact to View elements so it must run in the same Lane
+		client.reset(new Client(*Init::gViewLane));
+
+	// Lets go!
+	Init::startEngine(cfg);
+
 	dbglog << "Good bye!";
 }
 catch (std::exception& ex)

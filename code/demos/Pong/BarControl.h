@@ -29,9 +29,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/Location.h>
 #include <Core/Math.h>
+
+#include <Model/Enums.hh>
 #include <Model/GameObject.h>
 #include <Model/Property/Concept.h>
-#include <Physics/Event.h>
+#include <Physics/Enums.hh>
 
 #include "Pong/PongDefinitions.h"
 
@@ -43,9 +45,22 @@ public:
 	mInitialized(false)
 	{
 		require("Physical");
-		requestEvent(BFG::ID::GOE_CONTROL_YAW);
+		subLane()->connect(BFG::ID::GOE_CONTROL_YAW, this, &BarControl::onYaw);
 	}
 	
+	void onYaw(BFG::f32 yaw)
+	{
+		if (getGoValue<bool>(BFG::ID::PV_Remote, BFG::ValueId::ENGINE_PLUGIN_ID))
+			return;
+
+		subLane()->emit
+		(
+			BFG::ID::PE_UPDATE_VELOCITY,	
+			v3(yaw * BAR_MAX_SPEED, 0, 0),
+			ownerHandle()
+		);
+	}
+
 	void internalUpdate(quantity<si::time, BFG::f32> timeSinceLastFrame)
 	{
 		using namespace BFG;
@@ -53,58 +68,33 @@ public:
 		if (getGoValue<bool>(ID::PV_Remote, ValueId::ENGINE_PLUGIN_ID))
 			return;
 
-		Location go = getGoValue<Location>(ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
+		v3 position = getGoValue<v3>(BFG::ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
+
 		if (!mInitialized)
 		{
-			Location go = getGoValue<Location>(ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
-			emit<Physics::Event>(ID::PE_UPDATE_POSITION, go.position, ownerHandle());
-			emit<Physics::Event>(ID::PE_UPDATE_ORIENTATION, qv4::IDENTITY, ownerHandle());
-			emit<Physics::Event>(ID::PE_UPDATE_ROTATION_VELOCITY, v3::ZERO, ownerHandle());
+			subLane()->emit(ID::PE_UPDATE_POSITION, position, ownerHandle());
+			subLane()->emit(ID::PE_UPDATE_ORIENTATION, qv4::IDENTITY, ownerHandle());
+			subLane()->emit(ID::PE_UPDATE_ROTATION_VELOCITY, v3::ZERO, ownerHandle());
 			mInitialized = true;
 		}
 
 		// Simulate a wall
-		if (std::abs(go.position.x) > DISTANCE_TO_WALL)
+		if (std::abs(position.x) > DISTANCE_TO_WALL)
 		{
-			emit<Physics::Event>(ID::PE_UPDATE_VELOCITY, v3::ZERO, ownerHandle());
-			go.position.x = sign(go.position.x) * (DISTANCE_TO_WALL - 0.01f);
-			emit<Physics::Event>(ID::PE_UPDATE_POSITION, go.position, ownerHandle());
+			subLane()->emit(ID::PE_UPDATE_VELOCITY, v3::ZERO, ownerHandle());
+			position.x = sign(position.x) * (DISTANCE_TO_WALL - 0.01f);
+			subLane()->emit(ID::PE_UPDATE_POSITION, position, ownerHandle());
 		}
 	
 		// Make sure it doesn't move to much on the z axis
-		if (std::abs(go.position.z) - OBJECT_Z_POSITION > EPSILON_F)
+		if (std::abs(position.z) - OBJECT_Z_POSITION > EPSILON_F)
 		{
-			go.position.z = OBJECT_Z_POSITION + SPECIAL_PACKER_MESH_OFFSET;
-			emit<Physics::Event>(ID::PE_UPDATE_POSITION, go.position, ownerHandle());
+			position.z = OBJECT_Z_POSITION + SPECIAL_PACKER_MESH_OFFSET;
+			subLane()->emit(ID::PE_UPDATE_POSITION, position, ownerHandle());
 		}
 
 	}
 	
-	void internalOnEvent(EventIdT action,
-	                     BFG::Property::Value payload,
-	                     BFG::GameHandle module,
-	                     BFG::GameHandle sender)
-	{
-		using namespace BFG;
-
-		if (getGoValue<bool>(ID::PV_Remote, ValueId::ENGINE_PLUGIN_ID))
-			return;
-	
-		switch(action)
-		{
-			case ID::GOE_CONTROL_YAW:
-			{
-				emit<Physics::Event>
-				(
-					ID::PE_UPDATE_VELOCITY,
-					v3(payload * BAR_MAX_SPEED, 0, 0),
-					ownerHandle()
-				);
-				break;
-			}
-		}
-	}
-
 	bool mInitialized;
 };
 

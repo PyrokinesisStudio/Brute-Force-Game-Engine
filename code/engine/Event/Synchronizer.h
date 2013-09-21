@@ -58,6 +58,9 @@ enum RunLevel
 template <typename _EnvelopeT>
 struct BasicLane;
 
+// More meaningful than 'true'
+const bool blockUntilFinishEvent = true;
+
 template <typename _LaneT>
 struct BasicSynchronizer
 {

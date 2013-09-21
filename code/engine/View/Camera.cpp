@@ -51,7 +51,9 @@ Camera::Camera(Event::Lane& lane,
                Ogre::SceneNode* camNode, 
                Ogre::RenderTarget* renderTarget, 
                s32 width, 
-               s32 height) :
+               s32 height,
+               const v3& position,
+               const qv4& orientation) :
 mSubLane(lane.createSubLane()),
 mCameraNode(camNode),
 mRenderTarget(renderTarget),
@@ -72,8 +74,8 @@ mRenderTargetCreated(false)
 			mNodeCreated = true;
 		}
 	}
-	mCameraNode->resetOrientation();
-	mCameraNode->setPosition(toOgre(v3::ZERO));
+	mCameraNode->setOrientation(toOgre(orientation));
+	mCameraNode->setPosition(toOgre(position));
 
 	v3 target = toBFG(mCameraNode->getOrientation().zAxis());
 	norm(target);
@@ -84,7 +86,7 @@ mRenderTargetCreated(false)
 	cam->setFOVy(Ogre::Degree(60.0f));
 	cam->setNearClipDistance(0.1f);
 	cam->setFarClipDistance(250000.0f);
-	cam->lookAt(toOgre(target) * 10);
+	mCameraNode->lookAt(toOgre(target) * 10, Ogre::SceneNode::TS_WORLD);
 	mCameraNode->attachObject(cam);
 
 	infolog << "Camera: " << stringify(mHandle) << " created.";

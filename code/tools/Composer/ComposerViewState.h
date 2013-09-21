@@ -24,18 +24,56 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_VIEW_LOADMESH_H
-#define BFG_VIEW_LOADMESH_H
+#ifndef COMPOSER_VIEW_STATE_H
+#define COMPOSER_VIEW_STATE_H
 
-#include <Core/Mesh.h>
-#include <View/Defs.h>
+#include <MyGUI_Widget.h>
+#include <View/State.h>
+#include <View/ControllerMyGuiAdapter.h>
 
-namespace BFG {
-namespace View {
+using namespace BFG;
+using namespace boost::units;
 
-Mesh VIEW_API loadMesh(const std::string& meshName);
+namespace Tool {
 
-} // namespace View
-} // namespace BFG
+class BaseFeature;
+struct SharedData;
+
+struct ComposerViewState : public View::State
+{
+public:
+	typedef std::vector<BaseFeature*> FeatureListT;
+
+	ComposerViewState(GameHandle handle, Event::Lane& lane);
+	~ComposerViewState();
+
+	void createGui();
+
+	void createViewCamera(View::CameraCreation& CC);
+	void onUpdateFeatures();
+
+	// Ogre loop
+	bool frameStarted(const Ogre::FrameEvent& evt);
+
+	bool frameRenderingQueued(const Ogre::FrameEvent& evt) { return true; }
+	bool frameEnded(const Ogre::FrameEvent& evt) { return true;	}
+
+private:
+	
+	virtual void pause() {}
+	virtual void resume() {}
+
+	View::ControllerMyGuiAdapter mControllerAdapter;
+
+	FeatureListT mLoadedFeatures;
+	FeatureListT mActiveFeatures;
+
+	boost::shared_ptr<SharedData> mData;
+	MyGUI::VectorWidgetPtr mContainer;
+
+	Event::Lane& mLane;
+};
+
+} // namespace Tool
 
 #endif

@@ -114,7 +114,9 @@ void Owner::createCamera(const CameraCreation& CC)
 		node,
 		target,
 		CC.mWidth,
-		CC.mHeight
+		CC.mHeight,
+		CC.mPosition,
+		CC.mOrientation
 	));
 	mCameras.push_back(cam);
 }

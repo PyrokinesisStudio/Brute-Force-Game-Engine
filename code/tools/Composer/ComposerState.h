@@ -24,18 +24,28 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_VIEW_LOADMESH_H
-#define BFG_VIEW_LOADMESH_H
+#ifndef COMPOSER_STATE_H
+#define COMPOSER_STATE_H
 
-#include <Core/Mesh.h>
-#include <View/Defs.h>
+#include <boost/units/quantity.hpp>
+#include <Model/State.h>
 
-namespace BFG {
-namespace View {
+using namespace boost::units;
+using namespace BFG;
 
-Mesh VIEW_API loadMesh(const std::string& meshName);
+struct ComposerState : State
+{
+	ComposerState(GameHandle handle, Event::Lane& lane);
 
-} // namespace View
-} // namespace BFG
+	void onQuit(s32);
+	void onScreenshot(s32);
+
+	void onTick(const quantity<si::time, f32>) {}
+
+private:
+	void initController();
+
+	Event::Lane& mLane;
+};
 
 #endif

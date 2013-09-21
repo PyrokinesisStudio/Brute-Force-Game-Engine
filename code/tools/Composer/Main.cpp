@@ -24,353 +24,68 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <boost/units/quantity.hpp>
-#include <boost/units/systems/si/time.hpp>
 
-#include <OgreRoot.h>
-#include <OgreSceneManager.h>
-#include <OgreSceneNode.h>
-#include <OgreEntity.h>
-
-#include <Controller/Controller.h>
-#include <Core/ClockUtils.h>
-#include <Core/Path.h>
+#include <Base/LibraryMainBase.h>
 #include <Base/ShowException.h>
-#include <Core/Types.h>
-#include <Core/GameHandle.h>
-#include <Model/State.h>
-#include <View/View.h>
 
-#include <Actions.h>
-#include <BaseFeature.h>
+#include <OgreException.h>
 
-#include <AdapterControl.h>
-#include <AnimationControl.h>
-#include <CameraControl.h>
-#include <LightControl.h>
-#include <MaterialChange.h>
-#include <MeshControl.h>
-#include <ModuleControl.h>
-#include <SkyBoxSelect.h>
-#include <SubEntitySelect.h>
-#include <TextureControl.h>
+#include <Event/Event.h>
+#include <Controller/Main.h>
+#include <View/Main.h>
 
-using namespace BFG;
-using namespace boost::units;
+#include <ComposerState.h>
+#include <ComposerViewState.h>
 
-struct ComposerState : State
+GameHandle gStateHandle = BFG::generateHandle();
+
+struct Main : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 {
-	ComposerState(GameHandle handle, Event::Lane& lane) :
-	State(lane),
-	mLane(lane)
+	virtual void main(BFG::Event::Lane* lane)
 	{
-		initController();
-
-		mLane.connect(A_QUIT, this, &ComposerState::onQuit);
-		mLane.connectV(A_SCREENSHOT, this, &ComposerState::onScreenshot);
+		mMainState.reset(new ComposerState(gStateHandle, *lane));
 	}
 
-
-	void onQuit(BFG::s32)
-	{
-		mLane.emit(ID::EA_FINISH, Event::Void());
-	}
-
-	void onScreenshot()
-	{
-	}
-
-	virtual void onTick(const quantity<si::time, f32> timeSinceLastFrame)
-	{}
-
-private:
-	void initController()
-	{
-		BFG::Controller_::ActionMapT actions;
-		actions[A_QUIT] = "A_QUIT";
-		actions[A_LOADING_MESH] = "A_LOADING_MESH";
-		actions[A_LOADING_MATERIAL] = "A_LOADING_MATERIAL";
-		actions[A_CAMERA_AXIS_X] = "A_CAMERA_AXIS_X";
-		actions[A_CAMERA_AXIS_Y] = "A_CAMERA_AXIS_Y";
-		actions[A_CAMERA_AXIS_Z] = "A_CAMERA_AXIS_Z";
-		actions[A_CAMERA_MOVE] = "A_CAMERA_MOVE";
-		actions[A_CAMERA_RESET] = "A_CAMERA_RESET";
-		actions[A_CAMERA_ORBIT] = "A_CAMERA_ORBIT";
-		actions[A_SCREENSHOT] = "A_SCREENSHOT";
-		actions[A_LOADING_SKY] = "A_LOADING_SKY";
-
-		actions[A_CREATE_LIGHT] = "A_CREATE_LIGHT";
-		actions[A_DESTROY_LIGHT] = "A_DESTROY_LIGHT";
-		actions[A_PREV_LIGHT] = "A_PREV_LIGHT";
-		actions[A_NEXT_LIGHT] = "A_NEXT_LIGHT";
-		actions[A_FIRST_LIGHT] = "A_FIRST_LIGHT";
-		actions[A_LAST_LIGHT] = "A_LAST_LIGHT";
-
-		actions[A_INFO_WINDOW] = "A_INFO_WINDOW";
-
-		actions[A_CAMERA_MOUSE_X] = "A_CAMERA_MOUSE_X";
-		actions[A_CAMERA_MOUSE_Y] = "A_CAMERA_MOUSE_Y";
-		actions[A_CAMERA_MOUSE_Z] = "A_CAMERA_MOUSE_Z";
-		actions[A_CAMERA_MOUSE_MOVE] = "A_CAMERA_MOUSE_MOVE";
-
-		actions[A_SUB_MESH] = "A_SUB_MESH";
-		actions[A_TEX_UNIT] = "A_TEX_UNIT";
-		actions[A_ANIMATION] = "A_ANIMATION";
-		actions[A_ADAPTER] = "A_ADAPTER";
-
-		actions[A_UPDATE_FEATURES] = "A_UPDATE_FEATURES";
-
-		BFG::Controller_::fillWithDefaultActions(actions);	
-		BFG::Controller_::sendActionsToController(loop, actions);
-
-		Path path;
-		const std::string config_path = path.Expand("Composer.xml");
-		const std::string state_name = "Composer";
-		
-		BFG::View::WindowAttributes wa;
-		BFG::View::queryWindowAttributes(wa);
-		
-		Controller_::StateInsertion si(config_path, state_name, generateHandle(), true, wa);
-
-		mLane.emit(ID::CE_LOAD_STATE, si);
-	}
-
-	Event::Lane& mLane;
+	boost::scoped_ptr<ComposerState> mMainState;
 };
 
-struct ViewComposerState : public View::State
+struct ViewMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 {
-public:
-	typedef std::vector<Tool::BaseFeature*> FeatureListT;
-
-	ViewComposerState(GameHandle handle, Event::Lane& lane) :
-	State(handle, lane),
-	mControllerAdapter(handle, lane)
+	virtual void main(BFG::Event::Lane* lane)
 	{
-		createGui();
-
-		mData.reset(new SharedData);
-		mData->mState = handle;
-		mData->mCamera = generateHandle();
-
-		Tool::BaseFeature* feature = new Tool::CameraControl(loop, mData);
-		mLoadedFeatures.push_back(feature);
-		feature->activate();
-
-		mLoadedFeatures.push_back(new Tool::MeshControl(mData));
-
-		mLoadedFeatures.push_back(new Tool::MaterialChange(mData));
-
-		mLoadedFeatures.push_back(new Tool::SubEntitySelect(loop, mData));
-
-		mLoadedFeatures.push_back(new Tool::SkyBoxSelect(loop, mData));
-
-		mLoadedFeatures.push_back(new Tool::LightControl(mData));
-
-		mLoadedFeatures.push_back(new Tool::AdapterControl(loop, mData));
-
-		mLoadedFeatures.push_back(new Tool::ModuleControl(loop, mData));
-
-		mLoadedFeatures.push_back(new Tool::AnimationControl(loop, mData));
-
-		mLoadedFeatures.push_back(new Tool::TextureControl(mData));
-
-		onUpdateFeatures();
-
-		Ogre::SceneManager* sceneMan = Ogre::Root::getSingletonPtr()->getSceneManager(BFG_SCENEMANAGER);
-		sceneMan->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
-		sceneMan->setShadowColour(Ogre::ColourValue(0, 0, 0));
-
-		// Don't know where to connect these.
-		//loop->connect(A_LOADING_MESH, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		//loop->connect(A_LOADING_MATERIAL, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		//loop->connect(A_LOADING_SKY, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-
-		//loop->connect(A_CREATE_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		//loop->connect(A_DESTROY_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		//loop->connect(A_PREV_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		//loop->connect(A_NEXT_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		//loop->connect(A_FIRST_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		//loop->connect(A_LAST_LIGHT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-
-		//loop->connect(A_INFO_WINDOW, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		//loop->connect(A_SUB_MESH, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		//loop->connect(A_TEX_UNIT, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		//loop->connect(A_ANIMATION, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-		//loop->connect(A_ADAPTER, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-
-		//loop->connect(BFG::ID::A_MOUSE_LEFT_PRESSED, gViewComposerState.get(), &ViewComposerState::controllerEventHandler);
-
-		//loop->connect(A_UPDATE_FEATURES, gViewComposerState.get(), &ViewComposerState::toolEventHandler);
+		mViewState.reset(new Tool::ComposerViewState(gStateHandle, *lane));
 	}
 
-	~ViewComposerState()
-	{
-		mLane.emit(BFG::ID::VE_SHUTDOWN, Event::Void());
-		
-		mActiveFeatures.clear();
-
-		FeatureListT::iterator it = mLoadedFeatures.begin();
-		for (; it != mLoadedFeatures.end(); ++it)
-		{
-			(*it)->unload();
-		}
-		mLoadedFeatures.clear();
-		
-		if (!mContainer.empty())
-		{
-			MyGUI::LayoutManager* layMan = MyGUI::LayoutManager::getInstancePtr();
-			layMan->unloadLayout(mContainer);
-		}
-	}
-
-	void createGui()
-	{
-		using namespace MyGUI;
-
-  		LayoutManager* layMan = LayoutManager::getInstancePtr();
-		mContainer = layMan->loadLayout("Composer.layout");
-
-		Gui& gui = Gui::getInstance();
-		Widget* box = gui.findWidgetT("MenuBox");
-		if (!box)
-			throw std::runtime_error("MenuBox not found!");
-
-		IntSize boxSize = box->getSize();
-		RenderManager& renderMgr = RenderManager::getInstance();
-		IntSize size = renderMgr.getViewSize();
-		// leave 1 pixel space to the sides
-		box->setSize(size.width - 2, boxSize.height);  
-	}
-
-	void createViewCamera(View::CameraCreation& CC)
-	{
-		createCamera(CC);
-	}
-
-	void controllerEventHandler(Controller_::VipEvent* ve)
-	{
-		FeatureListT::iterator it = mActiveFeatures.begin();
-		for (; it != mActiveFeatures.end(); ++it)
-		{
-			(*it)->eventHandler(ve);
-		}
-	}
-
-	void viewEventHandler(View::Event* e)
-	{
-		dbglog << e->id();
-	}
-
-	void toolEventHandler(Tool::Event* e)
-	{
-		switch(e->id())
-		{
-		case A_UPDATE_FEATURES:
-			onUpdateFeatures();
-			break;
-		default:
-			throw std::logic_error("Unknown ToolEvent!");
-			break;
-		}
-	}
-
-	void onUpdateFeatures()
-	{
-		mActiveFeatures.clear();
-
-		FeatureListT::iterator it = mLoadedFeatures.begin();
-		for (; it != mLoadedFeatures.end(); ++it)
-		{
-			bool active = (*it)->isActive();
-			if (active)
-			{
-				mActiveFeatures.push_back(*it);
-			}
-		}
-	}
-
-	// Ogre loop
-	bool frameStarted(const Ogre::FrameEvent& evt)
-	{
-		FeatureListT::iterator it = mActiveFeatures.begin();
-		for (; it != mActiveFeatures.end(); ++it)
-		{
-			(*it)->update(evt);
-		}
-
-		return true;
-	}
-
-	bool frameRenderingQueued(const Ogre::FrameEvent& evt)
-	{
-		return true;
-	}
-
-	bool frameEnded(const Ogre::FrameEvent& evt)
-	{
-		return true;
-	}
-
-private:
-	
-	virtual void pause() {}
-	virtual void resume() {}
-
-	BFG::View::ControllerMyGuiAdapter mControllerAdapter;
-
-	FeatureListT mLoadedFeatures;
-	FeatureListT mActiveFeatures;
-
-	boost::shared_ptr<SharedData> mData;
-	MyGUI::VectorWidgetPtr mContainer;
-
-	BFG::Event::Lane& mLane;
+	boost::scoped_ptr<Tool::ComposerViewState> mViewState;
 };
-
-boost::scoped_ptr<ViewComposerState> gViewComposerState;
-boost::scoped_ptr<ComposerState> gComposerState;
-
-// This is the Ex-'GameStateManager::SingleThreadEntryPoint(void*)' function
-void* SingleThreadEntryPoint(void *iPointer)
-{
-	EventLoop* loop = static_cast<EventLoop*>(iPointer);
-	
-	GameHandle siHandle = BFG::generateHandle();
-
-	gViewComposerState.reset(new ViewComposerState(siHandle, loop));
-	gComposerState.reset(new ComposerState(siHandle, loop));
-
-	// Init Controller
-	GameHandle handle = generateHandle();
-
-	{
-
-	}
-	return 0;
-}
 
 int main( int argc, const char* argv[] ) try
 {
-	Base::Logger::Init(Base::Logger::SL_DEBUG, "Logs/Composer.log");
+	const char* logFileName = "Logs/Composer.log";
 
-	EventLoop loop(true);
+#if defined(_DEBUG) || !defined(NDEBUG)
+	Base::Logger::Init(Base::Logger::SL_DEBUG, logFileName);
+#else
+	Base::Logger::Init(Base::Logger::SL_INFORMATION, logFileName);
+#endif
 
-	size_t controllerFrequency = 1000;
+	BFG::Event::Synchronizer synchronizer;
 
+	BFG::u32 eventLoopFrequency = 100;
 	const std::string caption = "Composer: He composes everything!";
 
-	BFG::View::Main viewMain(caption);
-	BFG::Controller_::Main controllerMain(controllerFrequency);
+	BFG::Event::Lane controllerLane(synchronizer, eventLoopFrequency, "Controller");
+	controllerLane.addEntry<BFG::Controller_::Main>(eventLoopFrequency);
 
-	loop.addEntryPoint(viewMain.entryPoint());
-	loop.addEntryPoint(controllerMain.entryPoint());
-	loop.addEntryPoint(new Base::CEntryPoint(SingleThreadEntryPoint));
+	BFG::Event::Lane viewLane(synchronizer, eventLoopFrequency, "View");
+	viewLane.addEntry<BFG::View::Main>(caption);
+	viewLane.addEntry<ViewMain>();
+		
+	BFG::Event::Lane toolLane(synchronizer, eventLoopFrequency, "Game", BFG::Event::RL3);
+	toolLane.addEntry<Main>();
 
-	loop.run();
-	
-	gViewComposerState.reset();
-	gComposerState.reset();
+	synchronizer.start();
+	synchronizer.finish(true);
 }
 catch (Ogre::Exception& e)
 {
