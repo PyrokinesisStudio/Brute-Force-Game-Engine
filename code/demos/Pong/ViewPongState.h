@@ -29,9 +29,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/GameHandle.h>
 
+#include <Event/Event.h>
+
 #include <View/Owner.h>
-#include <View/Interface.h>
-#include <View/Event.h>
 #include <View/State.h>
 #include <View/RenderObject.h>
 #include <View/Main.h>
@@ -41,8 +41,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 struct ViewPongState : public BFG::View::State
 {
 public:
-	ViewPongState(BFG::GameHandle handle, EventLoop* loop) :
-	State(handle, loop)
+	ViewPongState(BFG::GameHandle handle, BFG::Event::Lane& lane) :
+	State(handle, lane),
+	mScore(lane.createSubLane())
 	{
 		registerEventHandler();
 	}
@@ -51,11 +52,6 @@ public:
 	{
 		unregisterEventHandler();
 	}
-
-	void viewEventHandler(BFG::View::Event* VE)
-	{
-	}
-
 
 	bool frameStarted(const Ogre::FrameEvent& evt)
 	{
