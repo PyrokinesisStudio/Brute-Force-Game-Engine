@@ -100,9 +100,6 @@ void initLogger(const std::string& fileName, Base::Logger::SeverityLevel level)
 	Base::Logger::Init(level, p.Get(ID::P_LOGS) + "/" + fileName);
 }
 
-
-//RunMode gRunMode = RM_SINGLE;
-
 std::string strNetworkMode(RunMode rm)
 {
 	switch (rm)
