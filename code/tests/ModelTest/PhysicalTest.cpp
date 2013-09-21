@@ -39,11 +39,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/test/unit_test.hpp>
 
+#include "Utils.h"
+
 using BFG::f32;
 using BFG::m3x3;
-
-const BFG::GameHandle handle1 = BFG::generateHandle();
-const BFG::GameHandle handle2 = BFG::generateHandle();
 
 BFG::PluginId enginePluginId = BFG::Property::ValueId::ENGINE_PLUGIN_ID;
 
@@ -62,28 +61,6 @@ BFG::Physics::FullSyncData createTestFullSyncData()
 	return fsd;
 }
 
-boost::shared_ptr<BFG::GameObject> createTestGameObject(BFG::Event::Lane& lane)
-{
-	BFG::Property::PluginMapT pluginMap;
-	boost::shared_ptr<BFG::SpacePlugin> sp(new BFG::SpacePlugin(enginePluginId));
-	pluginMap.insert(sp);
-	
-	boost::shared_ptr<BFG::Environment> environment(new BFG::Environment());
-	
-	boost::shared_ptr<BFG::GameObject> go
-	(
-		new BFG::GameObject
-		(
-			lane,
-			handle1,
-			"TestObject",
-			pluginMap,
-			environment
-		)
-	);
-	return go;
-}
-
 // ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE(PhysicalTestSuite)
@@ -93,13 +70,14 @@ BOOST_AUTO_TEST_CASE (FullSyncTest)
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane lane(sync, 100);
 	
-	boost::shared_ptr<BFG::GameObject> go = createTestGameObject(lane);
+	BFG::Property::PluginMapT pluginMap;
+	boost::shared_ptr<BFG::GameObject> go = createTestGameObject(lane, pluginMap).first;
 	BFG::Physical physical(*go, enginePluginId);
 	
 	BOOST_CHECK(!go->isActivated());
 
 	const BFG::Physics::FullSyncData fsd = createTestFullSyncData();
-	lane.emit(BFG::ID::PE_FULL_SYNC, fsd, handle1);
+	lane.emit(BFG::ID::PE_FULL_SYNC, fsd, go->getHandle());
 	
 	sync.start();
 	sync.finish();
@@ -122,17 +100,18 @@ BOOST_AUTO_TEST_CASE (ViewUpdateTestAfterFullSync)
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane lane(sync, 100);
 	
-	boost::shared_ptr<BFG::GameObject> go = createTestGameObject(lane);
+	BFG::Property::PluginMapT pluginMap;
+	boost::shared_ptr<BFG::GameObject> go = createTestGameObject(lane, pluginMap).first;
 	BFG::Physical physical(*go, enginePluginId);
 	
-	BFG::Event::Catcher<v3> cPos(lane, BFG::ID::VE_UPDATE_POSITION , handle1);
-	BFG::Event::Catcher<qv4> cOri(lane, BFG::ID::VE_UPDATE_ORIENTATION, handle1);
+	BFG::Event::Catcher<v3> cPos(lane, BFG::ID::VE_UPDATE_POSITION , go->getHandle());
+	BFG::Event::Catcher<qv4> cOri(lane, BFG::ID::VE_UPDATE_ORIENTATION, go->getHandle());
 	
 	// Can't synchronize since no PE_FULL_SYNC has been received yet.
 	BOOST_CHECK_THROW(physical.synchronize(), std::runtime_error);
 	
 	const BFG::Physics::FullSyncData fsd = createTestFullSyncData();
-	lane.emit(BFG::ID::PE_FULL_SYNC, fsd, handle1);
+	lane.emit(BFG::ID::PE_FULL_SYNC, fsd, go->getHandle());
 	
 	sync.start();
 	sync.finish();
@@ -151,11 +130,13 @@ BOOST_AUTO_TEST_CASE (ViewUpdateTestAfterDelta)
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane lane(sync, 100);
 	
-	boost::shared_ptr<BFG::GameObject> go = createTestGameObject(lane);
+	BFG::Property::PluginMapT pluginMap;
+	BFG::GameHandle handle = BFG::generateHandle();
+	boost::shared_ptr<BFG::GameObject> go = createTestGameObject(lane, pluginMap, handle).first;
 	BFG::Physical physical(*go, enginePluginId);
 	
-	BFG::Event::Catcher<v3> cPos(lane, BFG::ID::VE_UPDATE_POSITION , handle1);
-	BFG::Event::Catcher<qv4> cOri(lane, BFG::ID::VE_UPDATE_ORIENTATION, handle1);
+	BFG::Event::Catcher<v3> cPos(lane, BFG::ID::VE_UPDATE_POSITION , handle);
+	BFG::Event::Catcher<qv4> cOri(lane, BFG::ID::VE_UPDATE_ORIENTATION, handle);
 	
 	// Can't synchronize since no delta updates have been received yet.
 	BOOST_CHECK_THROW(physical.synchronize(), std::runtime_error);
@@ -165,14 +146,14 @@ BOOST_AUTO_TEST_CASE (ViewUpdateTestAfterDelta)
 	//!       What are they good for? Why are they defined in the Model as
 	//!       PV_RelativeVelocity and PV_RelativeRotationVelocity?
 	const BFG::Physics::FullSyncData fsd = createTestFullSyncData();
-	lane.emit(BFG::ID::PE_POSITION, fsd.get<0>(), handle1);
-	lane.emit(BFG::ID::PE_ORIENTATION, fsd.get<1>(), handle1);
-	lane.emit(BFG::ID::PE_VELOCITY, fsd.get<2>(), handle1);
-	//lane.emit(BFG::ID::PE_RELATIVE_VELOCITY, fsd.get<3>(), handle1);
-	lane.emit(BFG::ID::PE_ROTATION_VELOCITY, fsd.get<4>(), handle1);
-	//lane.emit(BFG::ID::PE_RELATIVE_ROTATION_VELOCITY, fsd.get<5>(), handle1);
-	lane.emit(BFG::ID::PE_TOTAL_MASS, fsd.get<6>(), handle1);
-	lane.emit(BFG::ID::PE_TOTAL_INERTIA, fsd.get<7>(), handle1);
+	lane.emit(BFG::ID::PE_POSITION, fsd.get<0>(), handle);
+	lane.emit(BFG::ID::PE_ORIENTATION, fsd.get<1>(), handle);
+	lane.emit(BFG::ID::PE_VELOCITY, fsd.get<2>(), handle);
+	//lane.emit(BFG::ID::PE_RELATIVE_VELOCITY, fsd.get<3>(), handle);
+	lane.emit(BFG::ID::PE_ROTATION_VELOCITY, fsd.get<4>(), handle);
+	//lane.emit(BFG::ID::PE_RELATIVE_ROTATION_VELOCITY, fsd.get<5>(), handle);
+	lane.emit(BFG::ID::PE_TOTAL_MASS, fsd.get<6>(), handle);
+	lane.emit(BFG::ID::PE_TOTAL_INERTIA, fsd.get<7>(), handle);
 	
 	sync.start();
 	sync.finish();

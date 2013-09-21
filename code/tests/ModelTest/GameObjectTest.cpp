@@ -26,9 +26,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Event/Event.h>
 
-#include <Model/Environment.h>
-#include <Model/GameObject.h>
-#include <Model/Property/SpacePlugin.h>
+#include <Model/Property/Plugin.h>
+#include "Utils.h"
 
 #define BOOST_TEST_MODULE ModelTest
 #include <boost/test/unit_test.hpp>
@@ -36,21 +35,21 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 const BFG::GameHandle handle1 = BFG::generateHandle();
 const BFG::GameHandle handle2 = BFG::generateHandle();
 
-
 BOOST_AUTO_TEST_SUITE(GameObjectTestSuite)
 
 BOOST_AUTO_TEST_CASE (GameObjectTest)
 {
-	BFG::Property::PluginMapT pluginMap;
-	BFG::PluginId spId = BFG::Property::ValueId::ENGINE_PLUGIN_ID;
-	boost::shared_ptr<BFG::SpacePlugin> sp(new BFG::SpacePlugin(spId));
-	pluginMap.insert(sp);
-
-	boost::shared_ptr<BFG::Environment> environment(new BFG::Environment());
-
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane lane(sync, 100);
-	boost::shared_ptr<BFG::GameObject> go(new BFG::GameObject(lane, handle1, "TestObject", pluginMap, environment));
+	
+	boost::shared_ptr<BFG::GameObject> go;
+	boost::shared_ptr<BFG::SpacePlugin> spacePlugin;
+	BFG::Property::PluginMapT pluginMap;
+	boost::tie(go, spacePlugin) = createTestGameObject(lane, pluginMap);
+	BFG::PluginId spId = spacePlugin->id();
+	
+	sync.start();
+	sync.finish();
 
 	// test getValue
  	BOOST_CHECK_EQUAL(go->getValue<bool>(BFG::ID::PV_Remote, spId), false);
@@ -58,6 +57,7 @@ BOOST_AUTO_TEST_CASE (GameObjectTest)
  	BOOST_CHECK_THROW(go->getValue<bool>(BFG::ID::PV_Armor, spId), std::runtime_error);
  	BOOST_CHECK_THROW(go->getValue<BFG::u32>(BFG::ID::PV_Remote, spId), boost::bad_any_cast);
 
+	
 	// test attachModule
 	// test attachModule
 	// test detachModule

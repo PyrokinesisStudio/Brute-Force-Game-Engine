@@ -24,26 +24,24 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_EVENT_CONNECTION_H
-#define BFG_EVENT_CONNECTION_H
+#ifndef MODELTEST_UTILS_H
+#define MODELTEST_UTILS_H
 
-#include <Event/Callable.h>
-#include <Event/Envelope.h>
+#include <boost/shared_ptr.hpp>
+#include <boost/tuple/tuple.hpp>
 
-namespace BFG {
-namespace Event {
+#include <Core/GameHandle.h>
+#include <Event/Lane.h>
+#include <Model/GameObject.h>
+#include <Model/Property/SpacePlugin.h>
 
-template <typename _EnvelopeT>
-struct Connection
-{
-	USING_ENVELOPE(_EnvelopeT);
-
-	IdT            mEventId;
-	DestinationIdT mDestinationId;
-	Callable*      mBinding;
-};
-
-} // namespace Event
-} // namespace BFG
+typedef std::pair <
+	boost::shared_ptr<BFG::GameObject>,
+	boost::shared_ptr<BFG::SpacePlugin>
+> GoAndSpacePluginT;
+GoAndSpacePluginT createTestGameObject(BFG::Event::Lane& lane,
+                                       BFG::Property::PluginMapT&,
+                                       BFG::GameHandle = BFG::generateHandle(),
+                                       const BFG::Module::ValueStorageT& vs = BFG::Module::ValueStorageT());
 
 #endif

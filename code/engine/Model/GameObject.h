@@ -87,11 +87,12 @@ public:
 
 	typedef boost::shared_ptr<Managed> ChildT;
 
-	         GameObject(Event::Lane& lane,
-	                    const GameHandle handle,
-	                    const std::string& publicName,
-	                    const Property::PluginMapT& propertyPlugins,
-	                    boost::shared_ptr<Environment> environment);
+	GameObject(Event::Lane& lane,
+                   const GameHandle handle,
+                   const std::string& publicName,
+                   const Module::ValueStorageT& goValues,
+                   const Property::PluginMapT& propertyPlugins,
+                   boost::shared_ptr<Environment> environment);
 
 	virtual ~GameObject();
 
