@@ -32,6 +32,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Controller/StateInsertion.h>
 #include <Controller/Enums.hh>
 #include <View/WindowAttributes.h>
+#include <View/Enums.hh>
 
 #include <Actions.h>
 
@@ -42,13 +43,18 @@ ComposerState::ComposerState(GameHandle handle, Event::Lane& lane) :
 	initController();
 
 	mLane.connect(A_QUIT, this, &ComposerState::onQuit);
-	mLane.connectV(A_SCREENSHOT, this, &ComposerState::onScreenshot);
+	mLane.connect(A_SCREENSHOT, this, &ComposerState::onScreenshot);
 }
 
 
 void ComposerState::onQuit(s32)
 {
 	mLane.emit(ID::EA_FINISH, Event::Void());
+}
+
+void ComposerState::onScreenshot(s32)
+{
+	mLane.emit(BFG::ID::VE_SCREENSHOT, Event::Void());
 }
 
 void ComposerState::initController()

@@ -38,7 +38,7 @@ struct ComposerState : State
 	ComposerState(GameHandle handle, Event::Lane& lane);
 
 	void onQuit(s32);
-	void onScreenshot() {}
+	void onScreenshot(s32);
 
 	void onTick(const quantity<si::time, f32>) {}
 
