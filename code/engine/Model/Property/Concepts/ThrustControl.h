@@ -46,7 +46,7 @@ using namespace boost::units;
 
 namespace BFG {
 
-class ThrustControl : public Property::Concept
+class MODEL_API ThrustControl : public Property::Concept
 {
 public:
 	ThrustControl(GameObject& owner, PluginId pid);

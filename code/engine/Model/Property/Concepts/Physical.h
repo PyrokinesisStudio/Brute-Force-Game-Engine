@@ -34,7 +34,7 @@ using namespace boost::units;
 
 namespace BFG {
 
-class Physical : public Property::Concept
+class MODEL_API Physical : public Property::Concept
 {
 public:
 	Physical(GameObject& owner, PluginId pid);

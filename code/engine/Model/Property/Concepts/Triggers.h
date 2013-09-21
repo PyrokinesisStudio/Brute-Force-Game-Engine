@@ -31,7 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace BFG {
 
-class Triggers : public Property::Concept
+class MODEL_API Triggers : public Property::Concept
 {
 public:
 	Triggers(GameObject& Owner, PluginId pid);
