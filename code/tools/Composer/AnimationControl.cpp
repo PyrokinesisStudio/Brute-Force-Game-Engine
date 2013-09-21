@@ -33,7 +33,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/GameHandle.h>
 
 #include <Actions.h>
-#include <Event_fwd.h>
 
 namespace Tool
 {
