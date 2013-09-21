@@ -54,7 +54,9 @@ public:
 	       Ogre::SceneNode* camNode = NULL,
 	       Ogre::RenderTarget* renderTarget = NULL,
 	       s32 width = 0,
-	       s32 height = 0);
+	       s32 height = 0,
+	       const v3& position = v3::ZERO,
+	       const qv4& orientation = qv4::IDENTITY);
 
 	virtual ~Camera();
 
