@@ -290,6 +290,18 @@ BOOST_AUTO_TEST_CASE (Test)
 	sync.finish();
 }
 
+BOOST_AUTO_TEST_CASE (TestEmptySynchronizerInactive)
+{
+	BFG::Event::Synchronizer sync;
+}
+
+BOOST_AUTO_TEST_CASE (TestEmptySynchronizerActive)
+{
+	BFG::Event::Synchronizer sync;
+	sync.start();
+	sync.finish();
+}
+
 BOOST_AUTO_TEST_CASE (CopyParameter)
 {
 	BFG::Event::Synchronizer sync;
