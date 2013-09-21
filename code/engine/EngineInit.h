@@ -134,7 +134,6 @@ void initAudio(const Configuration& cfg)
 
 // CONTROLLER ################################################
 #ifdef BFG_USE_CONTROLLER
-//	#include <Controller/Controller.h>
 	const u32 CONTROLLER_FREQ = 100;
 	boost::scoped_ptr<Event::Lane> gControllerLane;
 #endif
@@ -149,7 +148,6 @@ void initController(const Configuration& cfg)
 
 // PHYSICS ################################################
 #ifdef BFG_USE_PHYSICS
-//	#include <Physics/Physics.h>
 	const u32 PHYSICS_FREQ = 100;
 	boost::scoped_ptr<Event::Lane> gPhysicsLane;
 #endif
@@ -164,7 +162,6 @@ void initPhysics(const Configuration& cfg)
 
 // VIEW ################################################
 #ifdef BFG_USE_VIEW
-//	#include <View/View.h>
 	const u32 VIEW_FREQ = 100;
 	boost::scoped_ptr<Event::Lane> gViewLane;
 #endif
