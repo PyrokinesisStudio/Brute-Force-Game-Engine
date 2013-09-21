@@ -40,7 +40,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Event/Event.h>
 
 #ifdef BFG_USE_AUDIO
-	#include <Audio/Interface.h>
+	#include <Audio/Audio.h>
 #endif
 
 #ifdef BFG_USE_CONTROLLER
@@ -121,7 +121,7 @@ Event::Synchronizer gSynchronizer;
 // AUDIO ################################################
 #ifdef BFG_USE_AUDIO
 	const u32 AUDIO_FREQ = 100;
-	boost::scoped_ptr<Event::Lane> mAudioLane;
+	boost::scoped_ptr<Event::Lane> gAudioLane;
 #endif
 
 void initAudio(const Configuration& cfg) 
@@ -134,7 +134,6 @@ void initAudio(const Configuration& cfg)
 
 // CONTROLLER ################################################
 #ifdef BFG_USE_CONTROLLER
-//	#include <Controller/Controller.h>
 	const u32 CONTROLLER_FREQ = 100;
 	boost::scoped_ptr<Event::Lane> gControllerLane;
 #endif
@@ -149,7 +148,6 @@ void initController(const Configuration& cfg)
 
 // PHYSICS ################################################
 #ifdef BFG_USE_PHYSICS
-//	#include <Physics/Physics.h>
 	const u32 PHYSICS_FREQ = 100;
 	boost::scoped_ptr<Event::Lane> gPhysicsLane;
 #endif
@@ -157,14 +155,13 @@ void initController(const Configuration& cfg)
 void initPhysics(const Configuration& cfg)
 {
 #ifdef BFG_USE_PHYSICS
-	gPhysicsLane.reset(new Event::Lane(gSynchronizer, PHYSICS_FREQ, "Physics", Event::RL2);
+	gPhysicsLane.reset(new Event::Lane(gSynchronizer, PHYSICS_FREQ, "Physics", Event::RL2));
 	gPhysicsLane->addEntry<Physics::Main>();
 #endif
 }
 
 // VIEW ################################################
 #ifdef BFG_USE_VIEW
-//	#include <View/View.h>
 	const u32 VIEW_FREQ = 100;
 	boost::scoped_ptr<Event::Lane> gViewLane;
 #endif

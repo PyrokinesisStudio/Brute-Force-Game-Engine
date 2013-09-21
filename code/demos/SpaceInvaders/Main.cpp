@@ -74,39 +74,36 @@ struct ViewMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 	boost::scoped_ptr<ViewMainState> mViewState;
 };
 
+#define BFG_USE_CONTROLLER
+#define BFG_USE_PHYSICS
+#define BFG_USE_VIEW
+#define BFG_USE_AUDIO
+#include <EngineInit.h>
+
+using namespace BFG;
 
 int main( int argc, const char* argv[] ) try
 {
+	Init::Configuration cfg("SpaceInvaders");
+	cfg.controllerFrequency = 1000;
+	
+	//! \todo Move this somewhere else ...
 	srand(time(NULL));
-
+	
 #if defined(_DEBUG) || !defined(NDEBUG)
-	Base::Logger::Init(Base::Logger::SL_DEBUG, "Logs/Si.log");
+	cfg.logLevel = Base::Logger::SL_DEBUG;
 #else
-	Base::Logger::Init(Base::Logger::SL_INFORMATION, "Logs/Si.log");
+	cfg.logLevel = Base::Logger::SL_INFORMATION;
 #endif
 
-	BFG::Event::Synchronizer synchronizer;
+	Init::engine(cfg);
 	
-	BFG::Event::Lane physicsLane(synchronizer, 100, "Physics", BFG::Event::RL2);
-	physicsLane.addEntry<BFG::Physics::Main>();
-	
-	BFG::u32 controllerFrequency = 1000;
-	BFG::Event::Lane controllerLane(synchronizer, controllerFrequency, "Controller");
-	controllerLane.addEntry<BFG::Controller_::Main>(controllerFrequency);
-	
-	BFG::Event::Lane viewLane(synchronizer, 100, "View");
-	const std::string caption = "Engine Test 02: Space Invaders";
-	viewLane.addEntry<BFG::View::Main>(caption);
-	viewLane.addEntry<ViewMain>();
-	
-	BFG::Event::Lane gameLane(synchronizer, 100, "Game", BFG::Event::RL3);
+	// Custom States
+	Init::gViewLane->addEntry<ViewMain>();
+	Event::Lane gameLane(Init::gSynchronizer, 100, "Game", Event::RL3);
 	gameLane.addEntry<Main>();
-	
-	BFG::Event::Lane audioLane(synchronizer, 100, "Audio");
-	audioLane.addEntry<BFG::Audio::Main>();
-	
-	synchronizer.start();
-	synchronizer.finish(true);
+
+	Init::startEngine(cfg);
 }
 catch (Ogre::Exception& e)
 {
