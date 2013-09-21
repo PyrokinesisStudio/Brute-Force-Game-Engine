@@ -47,6 +47,8 @@ namespace BFG {
 
 struct ObjectParameter;
 
+struct ObjectParameter;
+
 //! \todo Deprecated usage in serialize. Remove when nobody uses this mehthod.
 template <typename ArrayT>
 u32 valueToArray(const ObjectParameter& val, ArrayT& output, const size_t offset);
