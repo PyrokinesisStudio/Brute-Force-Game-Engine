@@ -85,7 +85,7 @@ GameObjectFactory::createGameObject(const ObjectParameter& parameter)
 	bool isRoot = true;
 
 	boost::shared_ptr<GameObject> gameObject =
-		createEmptyGameObject(parameter.mName, goHandle);
+		createEmptyGameObject(parameter.mName, goHandle, parameter.mGoValues);
 
 	ModuleConfigT modules = mModuleParameters.requestConfig(parameter.mType);
 	if (!modules)
@@ -119,7 +119,9 @@ GameObjectFactory::createGameObject(const ObjectParameter& parameter)
 }
 
 boost::shared_ptr<GameObject>
-GameObjectFactory::createEmptyGameObject(const std::string& name, GameHandle goHandle)
+GameObjectFactory::createEmptyGameObject(const std::string& name,
+                                         GameHandle goHandle,
+                                         const Module::ValueStorageT& goValues)
 {
 	boost::shared_ptr<BFG::GameObject> go(
 		new GameObject
@@ -127,6 +129,7 @@ GameObjectFactory::createEmptyGameObject(const std::string& name, GameHandle goH
 			mLane,
 			goHandle,
 			name,
+			goValues,
 			mPropertyPlugins,
 			mEnvironment
 		)
@@ -315,7 +318,7 @@ GameObjectFactory::createCamera(const CameraParameter& cameraParameter,
 	mLane.emit(ID::PE_ATTACH_MODULE, mcp);
 
 	boost::shared_ptr<GameObject> camera =
-		createEmptyGameObject("Camera", camHandle);
+		createEmptyGameObject("Camera", camHandle, Module::ValueStorageT());
 
 	// Create Root Module
 	boost::shared_ptr<Module> camModule(new Module(camHandle));

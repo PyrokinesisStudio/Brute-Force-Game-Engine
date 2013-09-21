@@ -80,8 +80,11 @@ public:
 	const GoMapT& names() const { return mGameObjects; }
 
 private:
+	//! \brief Creates a new GameObject without Modules (thus "empty").
 	boost::shared_ptr<GameObject>
-	createEmptyGameObject(const std::string& name, GameHandle goHandle);
+	createEmptyGameObject(const std::string& name,
+	                      GameHandle goHandle,
+	                      const Module::ValueStorageT& goValues);
 
 	boost::shared_ptr<Module>
 	createModule(const ObjectParameter& parameter,

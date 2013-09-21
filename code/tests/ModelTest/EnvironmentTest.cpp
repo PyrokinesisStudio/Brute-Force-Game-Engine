@@ -28,6 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Model/Environment.h>
 #include <Model/GameObject.h>
+#include <Model/Data/GameObjectFactory.h>
 #include <Model/Property/SpacePlugin.h>
 
 const BFG::GameHandle handle1 = BFG::generateHandle();
@@ -61,7 +62,9 @@ BOOST_AUTO_TEST_CASE (EnvironmentTest)
 
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane lane(sync, 100);
-	boost::shared_ptr<BFG::GameObject> go(new BFG::GameObject(lane, BFG::NULL_HANDLE, "TestObject", pluginMap, environment));
+	
+	BFG::Module::ValueStorageT emptyValues;
+	boost::shared_ptr<BFG::GameObject> go(new BFG::GameObject(lane, BFG::NULL_HANDLE, "TestObject", emptyValues, pluginMap, environment));
 
 	// add null handle object
 	BOOST_CHECK_EQUAL(environment->exists(BFG::NULL_HANDLE), false);
@@ -70,14 +73,14 @@ BOOST_AUTO_TEST_CASE (EnvironmentTest)
 
 	BOOST_CHECK_NO_THROW(environment->removeGameObject(BFG::NULL_HANDLE));
 
-	go.reset(new BFG::GameObject(lane, handle1, "TestObject", pluginMap, environment));
+	go.reset(new BFG::GameObject(lane, handle1, "TestObject", emptyValues, pluginMap, environment));
 
 	// add normal object
 	BOOST_CHECK_NO_THROW(environment->addGameObject(go));
 	BOOST_CHECK_EQUAL(environment->exists(handle1), true);
 
 	// destroy old object and create new
-	go.reset(new BFG::GameObject(lane, handle2, "TestObject2", pluginMap, environment));
+	go.reset(new BFG::GameObject(lane, handle2, "TestObject2", emptyValues, pluginMap, environment));
 	BOOST_CHECK_NO_THROW(environment->addGameObject(go));
 	BOOST_CHECK_EQUAL(environment->exists(handle2), true);
 
@@ -86,7 +89,7 @@ BOOST_AUTO_TEST_CASE (EnvironmentTest)
 	BOOST_CHECK_THROW(environment->getGoValue<bool>(handle1, BFG::ID::PV_Remote, spId), std::logic_error);
 
 	// create first object again
-	boost::shared_ptr<BFG::GameObject> go2(new BFG::GameObject(lane, handle1, "TestObject", pluginMap, environment));
+	boost::shared_ptr<BFG::GameObject> go2(new BFG::GameObject(lane, handle1, "TestObject", emptyValues, pluginMap, environment));
 	BOOST_CHECK_NO_THROW(environment->addGameObject(go2));
 	BOOST_CHECK_EQUAL(environment->exists(handle1), true);
 	BOOST_CHECK_EQUAL(environment->exists(handle2), true);
@@ -101,6 +104,13 @@ BOOST_AUTO_TEST_CASE (EnvironmentTest)
 	BOOST_CHECK_EQUAL(environment->prevHandle(handle2), handle1);
 	BOOST_CHECK_EQUAL(environment->prevHandle(handle1), handle2);
 
+	// test find not successful (GameObjects aren't activated yet)
+	BOOST_CHECK_EQUAL(environment->find(&findGo1), BFG::NULL_HANDLE);
+	BOOST_CHECK_EQUAL(environment->find(&findGo2), BFG::NULL_HANDLE);
+
+	go->activate();
+	go2->activate();
+	
 	// test find successful
 	BOOST_CHECK_EQUAL(environment->find(&findGo1), handle1);
 	BOOST_CHECK_EQUAL(environment->find(&findGo2), handle2);

@@ -51,6 +51,13 @@ Property::Concept(owner, "AutoNavigator", pid)
 	subLane()->connect(ID::GOE_AUTONAVIGATE, this, &AutoNavigator::onAutonavigate, ownerHandle());
 	subLane()->connect(ID::GOE_VALUE_UPDATED, this, &AutoNavigator::onValueUpdated, ownerHandle());
 
+	try
+	{
+		mTargets = getGoValue<TargetContainerT>(ID::PV_FirstTargets, pluginId());
+	}
+	catch (std::runtime_error& ex)
+	{}
+	
 	assert(ownerHandle() == rootModule() &&
 		"AutoNavigator: This code may contain some out-dated assumptions.");
 }

@@ -73,12 +73,14 @@ GameObject::GameObject(
 	Event::Lane& lane,
 	const GameHandle handle,
 	const std::string& publicName,
+	const Module::ValueStorageT& goValues,
 	const Property::PluginMapT& propertyPlugins,
 	boost::shared_ptr<Environment> environment) :
 Managed(handle, publicName, ID::OT_GameObject),
 mSubLane(lane.createSubLane()),
 mEnvironment(environment),
 mPropertyPlugins(propertyPlugins),
+mValues(goValues),
 mDocked(false),
 mActivated(false)
 {
