@@ -80,6 +80,8 @@ struct ViewMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 #define BFG_USE_AUDIO
 #include <EngineInit.h>
 
+using namespace BFG;
+
 int main( int argc, const char* argv[] ) try
 {
 	Init::Configuration cfg("SpaceInvaders");
@@ -94,11 +96,11 @@ int main( int argc, const char* argv[] ) try
 	cfg.logLevel = Base::Logger::SL_INFORMATION;
 #endif
 
-	BFG::Init::engine(cfg);
+	Init::engine(cfg);
 	
 	// Custom States
-	BFG::Init::gViewLane->addEntry<ViewMain>();
-	BFG::Event::Lane gameLane(Init::gSynchronizer, 100, "Game", BFG::Event::RL3);
+	Init::gViewLane->addEntry<ViewMain>();
+	Event::Lane gameLane(Init::gSynchronizer, 100, "Game", Event::RL3);
 	gameLane.addEntry<Main>();
 
 	Init::startEngine(cfg);
