@@ -65,9 +65,9 @@ public:
 		mSubLane->connect(A_CAMERA_AXIS_X, this, &CameraControl::onCamX);
 		mSubLane->connect(A_CAMERA_AXIS_Y, this, &CameraControl::onCamY);
 		mSubLane->connect(A_CAMERA_AXIS_Z, this, &CameraControl::onCamZ);
-		mSubLane->connect(A_CAMERA_MOUSE_X, this, &CameraControl::onCamX);
-		mSubLane->connect(A_CAMERA_MOUSE_Y, this, &CameraControl::onCamY);
-		mSubLane->connect(A_CAMERA_MOUSE_Z, this, &CameraControl::onCamZ);
+		mSubLane->connect(A_CAMERA_MOUSE_X, this, &CameraControl::onCamMouseX);
+		mSubLane->connect(A_CAMERA_MOUSE_Y, this, &CameraControl::onCamMouseY);
+		mSubLane->connect(A_CAMERA_MOUSE_Z, this, &CameraControl::onCamMouseZ);
 		mSubLane->connect(A_CAMERA_MOUSE_MOVE, this, &CameraControl::onCamMouseMove);
 		
 		mSubLane->connect(A_CAMERA_MOVE, this, &CameraControl::onCamMove);
@@ -104,6 +104,24 @@ private:
 	void onCamX(f32 x)
 	{
 		mDeltaRot.x = (f32)M_PI * x;
+	}
+
+	void onCamMouseX(f32 x)
+	{
+		if (mMouseCamPitchYaw)
+			onCamX(x);
+	}
+
+	void onCamMouseY(f32 y)
+	{
+		if (mMouseCamPitchYaw)
+			onCamY(y);
+	}
+
+	void onCamMouseZ(f32 z)
+	{
+		if (mMouseCamRoll)
+			onCamZ(z);
 	}
 
 	void onCamY(f32 y)
