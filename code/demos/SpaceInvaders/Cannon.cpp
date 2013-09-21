@@ -31,6 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Environment.h>
 #include <Model/Data/GameObjectFactory.h>
 #include <Model/Sector.h>
+#include <Model/Property/Concepts/AutoNavigator.h>
 
 #include "Globals.h"
 
@@ -115,7 +116,11 @@ void Cannon::fireRocket(bool autoRocket)
 		u32 target = rand() % targets.size();
 		
 		GameHandle randomInvader = targets[target];
-		op.mStorage.emit(ID::GOE_AUTONAVIGATE, randomInvader, op.mHandle);
+
+		BFG::Property::ValueId v(ID::PV_FirstTargets, ValueId::ENGINE_PLUGIN_ID);
+		BFG::AutoNavigator::TargetContainerT targets;
+		targets.push_back(randomInvader);
+		op.mGoValues[v] = targets;
 	}
 
 	mSubLane->emit(ID::S_CREATE_GO, op);
