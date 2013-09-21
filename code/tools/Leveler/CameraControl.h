@@ -251,7 +251,7 @@ private:
 
 	void setCanvas(MyGUI::Canvas* _value, BFG::GameHandle camHandle, Ogre::RenderTarget** target);
 	void destroy(MyGUI::Canvas* _value);
-	void createCam(BFG::GameHandle camHandle, Ogre::SceneNode** node);
+	void createCam(BFG::GameHandle camHandle, Ogre::SceneNode** node, const v3& position, const qv4& orientation);
 
 	void onMousePressed(MyGUI::Widget* widget, int x, int y, MyGUI::MouseButton id);
 	void onMouseReleased(MyGUI::Widget* widget, int x, int y, MyGUI::MouseButton id);

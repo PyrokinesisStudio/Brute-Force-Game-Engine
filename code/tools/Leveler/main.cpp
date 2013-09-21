@@ -80,18 +80,18 @@ struct LevelerModelState : State
 
 		mLane.emit(ID::CE_LOAD_STATE, si);
 		
-		mLane.connectV(A_QUIT, this, &LevelerModelState::shutDown);
-		mLane.connectV(A_SCREENSHOT, this, &LevelerModelState::screenshot);
+		mLane.connect(A_QUIT, this, &LevelerModelState::shutDown);
+		mLane.connect(A_SCREENSHOT, this, &LevelerModelState::screenshot);
 		mLane.connectLoop(this, &LevelerModelState::onLoop);
 	}
 
-	void shutDown()
+	void shutDown(BFG::s32)
 	{
 		mLane.emit(BFG::ID::VE_SHUTDOWN, Event::Void());
 		mLane.emit(ID::EA_FINISH, Event::Void());
 	}
 
-	void screenshot()
+	void screenshot(BFG::s32)
 	{
 		mLane.emit(BFG::ID::VE_SCREENSHOT, Event::Void());
 	}
