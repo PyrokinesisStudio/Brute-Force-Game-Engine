@@ -255,7 +255,6 @@ void startEngine(const Configuration& cfg)
 	gSynchronizer.start();
 	startNetwork(cfg);
 	gSynchronizer.finish(Event::blockUntilFinishEvent);
-	Base::pause();
 }
 
 } // namespace Init
