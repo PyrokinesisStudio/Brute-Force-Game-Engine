@@ -148,9 +148,9 @@ BOOST_AUTO_TEST_CASE (ViewUpdateTestAfterDelta)
 	const BFG::Physics::FullSyncData fsd = createTestFullSyncData();
 	lane.emit(BFG::ID::PE_POSITION, fsd.get<0>(), handle);
 	lane.emit(BFG::ID::PE_ORIENTATION, fsd.get<1>(), handle);
-	lane.emit(BFG::ID::PE_VELOCITY, fsd.get<2>(), handle);
+	lane.emit(BFG::ID::PE_VELOCITY, boost::make_tuple(fsd.get<2>(), fsd.get<3>()), handle);
 	//lane.emit(BFG::ID::PE_RELATIVE_VELOCITY, fsd.get<3>(), handle);
-	lane.emit(BFG::ID::PE_ROTATION_VELOCITY, fsd.get<4>(), handle);
+	lane.emit(BFG::ID::PE_ROTATION_VELOCITY, boost::make_tuple(fsd.get<4>(), fsd.get<5>()), handle);
 	//lane.emit(BFG::ID::PE_RELATIVE_ROTATION_VELOCITY, fsd.get<5>(), handle);
 	lane.emit(BFG::ID::PE_TOTAL_MASS, fsd.get<6>(), handle);
 	lane.emit(BFG::ID::PE_TOTAL_INERTIA, fsd.get<7>(), handle);
