@@ -28,6 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_EVENT_CONNECTION_H
 
 #include <Event/Callable.h>
+#include <Event/Envelope.h>
 
 namespace BFG {
 namespace Event {
