@@ -130,7 +130,7 @@ protected:
 };
 
 
-class Camera : public Property::Concept
+class MODEL_API Camera : public Property::Concept
 {
 public:
 	Camera(GameObject& owner, PluginId pid);

@@ -31,7 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace BFG {
 
-class WeaponRack : public Property::Concept
+class MODEL_API WeaponRack : public Property::Concept
 {
 public:
 	const static s32 ROCKET_AMMO_START_AMOUNT_FOR_TESTING = 100;

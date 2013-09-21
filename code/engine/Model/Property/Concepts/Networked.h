@@ -35,7 +35,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG
 {
 
-class Networked : public Property::Concept
+class MODEL_API Networked : public Property::Concept
 {
 public:
 	Networked(GameObject& owner, PluginId pid);

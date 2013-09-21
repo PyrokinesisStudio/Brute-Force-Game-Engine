@@ -42,7 +42,7 @@ namespace BFG {
 
 struct Module;
 
-class AutoNavigator : public Property::Concept
+class MODEL_API AutoNavigator : public Property::Concept
 {
 public:
 	typedef std::vector<GameHandle> TargetContainerT;

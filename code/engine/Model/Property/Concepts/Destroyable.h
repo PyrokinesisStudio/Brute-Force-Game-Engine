@@ -34,7 +34,7 @@ namespace BFG {
 
 class Sector;
 
-class Destroyable : public Property::Concept
+class MODEL_API Destroyable : public Property::Concept
 {
 public:
 	Destroyable(GameObject& owner, PluginId pid);
