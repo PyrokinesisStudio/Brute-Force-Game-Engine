@@ -175,6 +175,10 @@ void GameObject::attachModule(GameObject::ChildT managed,
 		mod->mValues[positionId] = fromRootToNewOne;
 		mod->mValues[orientationId] = finalOrientation;
 		
+		//! \todo in non-physical systems it is necessary to initialize the render objects but 
+		//!       view updates should always be emitted from physical or an equivalent Concept.
+		mSubLane->emit(ID::VE_UPDATE_POSITION, fromRootToNewOne, managed->getHandle());
+		mSubLane->emit(ID::VE_UPDATE_ORIENTATION, finalOrientation,  managed->getHandle());
 		mSubLane->emit(ID::PE_UPDATE_MODULE_POSITION, fromRootToNewOne,	managed->getHandle());
 		mSubLane->emit(ID::PE_UPDATE_MODULE_ORIENTATION, finalOrientation, managed->getHandle());
 
