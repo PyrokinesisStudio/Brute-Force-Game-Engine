@@ -240,7 +240,8 @@ int main(int argc, const char* argv[]) try
 	if (cfg.runMode == Init::RM_SERVER)
 		server.reset(new Server(Init::gNetworkLane->createSubLane()));
 	else if (cfg.runMode == Init::RM_CLIENT)
-		client.reset(new Client(*Init::gNetworkLane));
+		//! \note Client has direct contact to View elements so it must run in the same Lane
+		client.reset(new Client(*Init::gViewLane));
 
 	// Lets go!
 	Init::startEngine(cfg);

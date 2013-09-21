@@ -205,7 +205,7 @@ void startNetwork(const Configuration& cfg)
 	
 	try 
 	{
-		boost::lexical_cast<u16>(cfg.port);
+		intPort = boost::lexical_cast<u16>(cfg.port);
 	} 
 	catch(boost::bad_lexical_cast& e)
 	{
