@@ -97,11 +97,9 @@ int main( int argc, const char* argv[] ) try
 	BFG::Init::engine(cfg);
 	
 	// Custom States
-	//BFG::Init::gViewLane->addEntry<ViewMain>();
 	BFG::Init::gViewLane->addEntry<ViewMain>();
 	BFG::Event::Lane gameLane(Init::gSynchronizer, 100, "Game", BFG::Event::RL3);
 	gameLane.addEntry<Main>();
-	// ---
 
 	Init::startEngine(cfg);
 }
