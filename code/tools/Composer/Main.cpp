@@ -24,78 +24,68 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <boost/units/quantity.hpp>
-#include <boost/units/systems/si/time.hpp>
 
-#include <OgreRoot.h>
-#include <OgreSceneManager.h>
-#include <OgreSceneNode.h>
-#include <OgreEntity.h>
-
-#include <Controller/Controller.h>
-#include <Core/ClockUtils.h>
-#include <Core/Path.h>
+#include <Base/LibraryMainBase.h>
 #include <Base/ShowException.h>
-#include <Core/Types.h>
-#include <Core/GameHandle.h>
-#include <Model/State.h>
-#include <View/View.h>
 
-#include <Actions.h>
-#include <BaseFeature.h>
+#include <OgreException.h>
 
-#include <AdapterControl.h>
-#include <AnimationControl.h>
-#include <CameraControl.h>
-#include <LightControl.h>
-#include <MaterialChange.h>
-#include <MeshControl.h>
-#include <ModuleControl.h>
-#include <SkyBoxSelect.h>
-#include <SubEntitySelect.h>
-#include <TextureControl.h>
+#include <Event/Event.h>
+#include <Controller/Main.h>
+#include <View/Main.h>
 
-using namespace BFG;
-using namespace boost::units;
+#include <ComposerState.h>
+#include <ComposerViewState.h>
 
-boost::scoped_ptr<ViewComposerState> gViewComposerState;
-boost::scoped_ptr<ComposerState> gComposerState;
+GameHandle gStateHandle = BFG::generateHandle();
 
-// This is the Ex-'GameStateManager::SingleThreadEntryPoint(void*)' function
-void* SingleThreadEntryPoint(void *iPointer)
+struct Main : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 {
-	EventLoop* loop = static_cast<EventLoop*>(iPointer);
-	
-	GameHandle siHandle = BFG::generateHandle();
+	virtual void main(BFG::Event::Lane* lane)
+	{
+		mMainState.reset(new ComposerState(gStateHandle, *lane));
+	}
 
-	gViewComposerState.reset(new ViewComposerState(siHandle, loop));
-	gComposerState.reset(new ComposerState(siHandle, loop));
+	boost::scoped_ptr<ComposerState> mMainState;
+};
 
+struct ViewMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
+{
+	virtual void main(BFG::Event::Lane* lane)
+	{
+		mViewState.reset(new Tool::ComposerViewState(gStateHandle, *lane));
+	}
 
-	return 0;
-}
+	boost::scoped_ptr<Tool::ComposerViewState> mViewState;
+};
 
 int main( int argc, const char* argv[] ) try
 {
-	Base::Logger::Init(Base::Logger::SL_DEBUG, "Logs/Composer.log");
+	const char* logFileName = "Logs/Composer.log";
 
-	EventLoop loop(true);
+#if defined(_DEBUG) || !defined(NDEBUG)
+	Base::Logger::Init(Base::Logger::SL_DEBUG, logFileName);
+#else
+	Base::Logger::Init(Base::Logger::SL_INFORMATION, logFileName);
+#endif
 
-	size_t controllerFrequency = 1000;
+	BFG::Event::Synchronizer synchronizer;
 
+	BFG::u32 eventLoopFrequency = 100;
 	const std::string caption = "Composer: He composes everything!";
 
-	BFG::View::Main viewMain(caption);
-	BFG::Controller_::Main controllerMain(controllerFrequency);
+	BFG::Event::Lane controllerLane(synchronizer, eventLoopFrequency, "Controller");
+	controllerLane.addEntry<BFG::Controller_::Main>(eventLoopFrequency);
 
-	loop.addEntryPoint(viewMain.entryPoint());
-	loop.addEntryPoint(controllerMain.entryPoint());
-	loop.addEntryPoint(new Base::CEntryPoint(SingleThreadEntryPoint));
+	BFG::Event::Lane viewLane(synchronizer, eventLoopFrequency, "View");
+	viewLane.addEntry<BFG::View::Main>(caption);
+	viewLane.addEntry<ViewMain>();
+		
+	BFG::Event::Lane toolLane(synchronizer, eventLoopFrequency, "Game", BFG::Event::RL3);
+	toolLane.addEntry<Main>();
 
-	loop.run();
-	
-	gViewComposerState.reset();
-	gComposerState.reset();
+	synchronizer.start();
+	synchronizer.finish(true);
 }
 catch (Ogre::Exception& e)
 {

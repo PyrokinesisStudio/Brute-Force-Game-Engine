@@ -39,13 +39,13 @@ namespace Tool {
 class BaseFeature;
 struct SharedData;
 
-struct ViewComposerState : public View::State
+struct ComposerViewState : public View::State
 {
 public:
 	typedef std::vector<BaseFeature*> FeatureListT;
 
-	ViewComposerState(GameHandle handle, Event::Lane& lane);
-	~ViewComposerState();
+	ComposerViewState(GameHandle handle, Event::Lane& lane);
+	~ComposerViewState();
 
 	void createGui();
 

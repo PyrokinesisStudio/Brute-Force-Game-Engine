@@ -47,7 +47,7 @@ namespace Tool
 
 typedef std::vector<BaseFeature*> FeatureListT;
 
-ViewComposerState::ViewComposerState(GameHandle handle, Event::Lane& lane) :
+ComposerViewState::ComposerViewState(GameHandle handle, Event::Lane& lane) :
 	State(handle, lane),
 	mControllerAdapter(handle, lane),
 	mLane(lane)
@@ -78,10 +78,10 @@ ViewComposerState::ViewComposerState(GameHandle handle, Event::Lane& lane) :
 	sceneMan->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
 	sceneMan->setShadowColour(Ogre::ColourValue(0, 0, 0));
 
-	lane.connectV(A_UPDATE_FEATURES, this, &ViewComposerState::onUpdateFeatures);
+	lane.connectV(A_UPDATE_FEATURES, this, &ComposerViewState::onUpdateFeatures);
 }
 
-ViewComposerState::~ViewComposerState()
+ComposerViewState::~ComposerViewState()
 {
 	mLane.emit(BFG::ID::VE_SHUTDOWN, Event::Void());
 		
@@ -101,7 +101,7 @@ ViewComposerState::~ViewComposerState()
 	}
 }
 
-void ViewComposerState::createGui()
+void ComposerViewState::createGui()
 {
 	using namespace MyGUI;
 
@@ -120,12 +120,12 @@ void ViewComposerState::createGui()
 	box->setSize(size.width - 2, boxSize.height);  
 }
 
-void ViewComposerState::createViewCamera(View::CameraCreation& CC)
+void ComposerViewState::createViewCamera(View::CameraCreation& CC)
 {
 	createCamera(CC);
 }
 
-void ViewComposerState::onUpdateFeatures()
+void ComposerViewState::onUpdateFeatures()
 {
 	mActiveFeatures.clear();
 
@@ -141,7 +141,7 @@ void ViewComposerState::onUpdateFeatures()
 }
 
 // Ogre loop
-bool ViewComposerState::frameStarted(const Ogre::FrameEvent& evt)
+bool ComposerViewState::frameStarted(const Ogre::FrameEvent& evt)
 {
 	FeatureListT::iterator it = mActiveFeatures.begin();
 	for (; it != mActiveFeatures.end(); ++it)
