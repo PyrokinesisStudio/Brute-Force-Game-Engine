@@ -212,7 +212,7 @@ void startNetwork(const Configuration& cfg)
 	} 
 	catch(boost::bad_lexical_cast& e)
 	{
-		throw std::logic_error("Error during cast 'port'. " + cfg.port + " is probably not a number!");
+		throw std::logic_error("Error during cast 'port'. " + cfg.port + " is probably not a number! " + e.what());
 	}
 
 	if (cfg.runMode == RM_SERVER)
