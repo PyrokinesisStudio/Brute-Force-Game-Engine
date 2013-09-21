@@ -26,17 +26,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <OgreException.h>
 
-#include <Event/Event.h>
-
-#include <Core/GameHandle.h>
-#include <Core/Path.h>
 #include <Base/ShowException.h>
 #include <Base/Logger.h>
 
-#include <Audio/Audio.h>
-#include <Controller/Controller.h>
-#include <Physics/Physics.h>
-#include <View/View.h>
+#include <Core/GameHandle.h>
+
+#include <Event/Event.h>
 
 #include "MainState.h"
 #include "AudioState.h"
@@ -48,9 +43,6 @@ static const int EVENT_FREQU = 100;
 
 struct Main : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 {
-	Main()
-	{}
-
 	virtual void main(BFG::Event::Lane* lane)
 	{
 		mGameState.reset(new MainState(gStateHandle, *lane));
@@ -63,9 +55,6 @@ struct Main : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 
 struct ViewMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 {
-	ViewMain ()
-	{}
-
 	virtual void main(BFG::Event::Lane* lane)
 	{
 		mViewState.reset(new ViewMainState(gStateHandle, *lane));
