@@ -411,11 +411,13 @@ BOOST_AUTO_TEST_CASE (ConnectionTestU32)
 	EventCounter ec;
 	ModuleConnect mc(ec);
 
-	USING_ENVELOPE(BFG::Event::Envelope);
-	typedef BFG::Event::Binding<BFG::u32, SenderIdT> BindingT;
+	typedef BFG::Event::Envelope::IdT IdT;
+	typedef BFG::Event::Envelope::SenderIdT SenderIdT;
+	typedef BFG::Event::Envelope::DestinationIdT DestinationIdT;
+	typedef BFG::Event::Binding<IdT, SenderIdT> BindingT;
 
-	BFG::u32 id = 32;
-	BFG::GameHandle dest = BFG::generateHandle();
+	IdT id = 32;
+	DestinationIdT dest = BFG::generateHandle();
 
 	// Create a new Binding and try to put it into a Connection object,
 	// then try to get it back.
@@ -490,7 +492,6 @@ BOOST_AUTO_TEST_CASE (ConnectionTestString)
 	// Create a new Binding and try to put it into a Connection object,
 	// then try to get it back.
 	BFG::Event::Callable* cs1 = new BindingT();
-	USING_ENVELOPE(BFG::Event::Envelope);
 	BFG::Event::Connection<BFG::Event::Envelope> con1 = {id, dest, cs1};
 	BindingT* bs1 = static_cast<BindingT*>(cs1);
 
@@ -561,7 +562,6 @@ BOOST_AUTO_TEST_CASE (ConnectionTestVoid)
 	// Create a new Binding and try to put it into a Connection object,
 	// then try to get it back.
 	BFG::Event::Callable* cv1 = new BindingT();
-	USING_ENVELOPE(BFG::Event::Envelope);
 	BFG::Event::Connection<BFG::Event::Envelope> con1 = {id, dest, cv1};
 	BindingT* bv1 = static_cast<BindingT*>(cv1);
 
