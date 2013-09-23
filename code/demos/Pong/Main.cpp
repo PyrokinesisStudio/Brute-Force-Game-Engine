@@ -305,7 +305,7 @@ struct ServerState: public SynchronizationTestState
 
 		mSubLane->emit(BFG::ID::NE_SEND, payload, peerId);
 
-		if (mClientList.size() < 1)
+		if (mClientList.empty())
 		{
 			mClientList.insert(std::make_pair(peerId, mPlayer1));
 		}

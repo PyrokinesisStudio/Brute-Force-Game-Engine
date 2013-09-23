@@ -118,14 +118,13 @@ namespace Generator
 			int b64decode(char *s)
 			{
 				char *b64 = (char*)("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
-				int bit_offset, byte_offset, idx, i, n;
+				int i=0, n=0;
 				unsigned char *d = (unsigned char *)s;
 				char *p;
-				n=i=0;
 				while (*s && (p=strchr(b64,*s))) {
-					idx = (int)(p - b64);
-					byte_offset = (i*6)/8;
-					bit_offset = (i*6)%8;
+					int idx = (int)(p - b64);
+					int byte_offset = (i*6)/8;
+					int bit_offset = (i*6)%8;
 					d[byte_offset] &= ~((1<<(8-bit_offset))-1);
 					if (bit_offset < 3) {
 						 d[byte_offset] |= (idx << (2-bit_offset));

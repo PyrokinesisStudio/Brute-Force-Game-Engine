@@ -47,11 +47,11 @@ void InvaderGeneral::onDestroy(GameHandle handle)
 {
 	mInvader.erase(handle);
 	
-	if (mInvader.size() > 0)
-		return;
-
-	spawnWave();
-	++mWaveCount;
+	if (mInvader.empty())
+	{
+		spawnWave();
+		++mWaveCount;
+	}
 }
 
 void InvaderGeneral::spawnWave()

@@ -41,7 +41,6 @@ InvaderControl::InvaderControl(GameObject& Owner, BFG::PluginId pid) :
 void InvaderControl::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 {
 	v3 ownPosition = getGoValue<v3>(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
-	qv4 ownOrientation = getGoValue<qv4>(ID::PV_Orientation, ValueId::ENGINE_PLUGIN_ID);
 
 	v3 delta = INVADER_VELOCITY * timeSinceLastFrame.value() * mDirection;
 	ownPosition += delta;
@@ -50,7 +49,7 @@ void InvaderControl::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 
 	checkPosition(ownPosition, mDirection);
 
-	ownOrientation = INVADER_ORIENTATION;
+	qv4 ownOrientation = INVADER_ORIENTATION;
 
 	subLane()->emit(ID::PE_UPDATE_POSITION, ownPosition, ownerHandle());
 	subLane()->emit(ID::PE_UPDATE_ORIENTATION, ownOrientation, ownerHandle());

@@ -177,13 +177,11 @@ void Destroyable::respawn(GameHandle module)
 	const v3& ownPosition = getGoValue<v3>(ID::PV_Position, pluginId());
 	const qv4& ownOrientation = getGoValue<qv4>(ID::PV_Orientation, pluginId());
 
-	v3 modulePosition = value<v3>(ID::PV_Position, module);
-	qv4 moduleOrientation = value<qv4>(ID::PV_Orientation, module);
-	
 	//! \todo Describe what is this all about.	
+	v3 modulePosition = value<v3>(ID::PV_Position, module);
 	modulePosition += ownPosition;
 	modulePosition -= ownOrientation.zAxis() * distance_in_meters;
-	moduleOrientation = ownOrientation;
+	qv4 moduleOrientation = ownOrientation;
 
 	mSubLane->emit(ID::GOE_CONTROL_MAGIC_STOP, Event::Void(), ownerHandle());
 

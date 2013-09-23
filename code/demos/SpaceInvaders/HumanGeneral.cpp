@@ -32,10 +32,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include "Globals.h"
 
 HumanGeneral::HumanGeneral(Event::SubLanePtr sublane,
-						   boost::shared_ptr<BFG::Environment> environment) :
-	mSubLane(sublane),
-	mEnvironment(environment),
-	mLastPowerupSpawned(0 * si::seconds)
+                           boost::shared_ptr<BFG::Environment> environment) :
+mEnvironment(environment),
+mLastPowerupSpawned(0 * si::seconds),
+mSubLane(sublane)
 {
 }
 

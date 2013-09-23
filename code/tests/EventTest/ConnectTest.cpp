@@ -173,7 +173,8 @@ struct ModuleConnect : public BFG::Event::EntryPoint<BFG::Event::Lane>
 struct SubModuleConnect : ModuleConnect
 {
 	SubModuleConnect(EventCounter& ec) :
-	ModuleConnect(ec)
+	ModuleConnect(ec),
+	lane(NULL)
 	{}
 	
 	void run(BFG::Event::Lane* l)

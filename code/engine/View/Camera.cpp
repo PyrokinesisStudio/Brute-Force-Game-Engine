@@ -144,9 +144,9 @@ mRenderTargetCreated(false)
 		}
 		pass->setLightingEnabled(false);
 
-		Ogre::TextureUnitState* txState = NULL;
 		if (pass->getNumTextureUnitStates() > 0)
 		{
+			Ogre::TextureUnitState* txState = NULL;
 			txState = pass->getTextureUnitState(0);
 			txState->setTextureName(stringify(mHandle));
 		}

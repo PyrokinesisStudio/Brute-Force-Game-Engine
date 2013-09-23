@@ -158,6 +158,7 @@ static bool falseIn30Seconds()
 struct Main : Base::LibraryMainBase<Event::Lane>
 {
 	Main() :
+	mEventLane(NULL),
 	mStateCounter(0),
 	mLoopCounter(0)
 	{}

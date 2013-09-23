@@ -51,7 +51,6 @@ struct HumanGeneral
 	boost::shared_ptr<BFG::Environment> mEnvironment;	
 	quantity<si::time, f32>             mLastPowerupSpawned;
 	Event::SubLanePtr                   mSubLane;
-
 };
 
 #endif
