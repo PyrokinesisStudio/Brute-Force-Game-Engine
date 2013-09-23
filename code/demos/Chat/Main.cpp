@@ -29,7 +29,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/thread.hpp>
 
 #include <Base/ShowException.h>
-#include <Base/EntryPoint.h>
 #include <Base/Logger.h>
 #include <Base/ResolveDns.h>
 #include <Base/Pause.h>

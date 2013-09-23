@@ -30,7 +30,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
-#include <Base/EntryPoint.h>
 #include <Core/ClockUtils.h>
 
 #include <Event/Event.h>

@@ -27,7 +27,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
-#include <Base/EntryPoint.h>
 #include <Base/Logger.h>
 #include <Base/Pause.h>
 #include <Base/ResolveDns.h>

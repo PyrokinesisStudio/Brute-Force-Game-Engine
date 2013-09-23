@@ -31,8 +31,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/thread.hpp>
 
-#include <Base/EntryPoint.h>
-
 #include <Core/CharArray.h>
 #include <Core/ClockUtils.h>
 #include <Core/Types.h>
