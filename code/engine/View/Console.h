@@ -30,17 +30,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <View/HudElement.h>
 
 #include <Base/Logger.h>      // Included to fix an operator problem with clang
+#include <Event/Event.h>
 #include <iostream>
 #include <boost/log/sinks.hpp>
 #include <OgreFrameListener.h>
-#include <EventSystem/Emitter.h>
-#include <Controller/ControllerEvents_fwd.h>
+
 
 namespace Ogre {
 	class Rectangle2D;
 }
-
-class EventLoop;
 
 namespace BFG {
 namespace View {
@@ -48,11 +46,10 @@ namespace View {
 //! The Class is derived from std::streambuf, so it's possible to redirect
 //! the logger output.
 class Console : public std::streambuf,
-                Ogre::FrameListener,
-                Emitter
+                Ogre::FrameListener
 {
 public:
-	Console(EventLoop*, boost::shared_ptr<Ogre::Root> root);
+	Console(Event::Lane& lane, boost::shared_ptr<Ogre::Root> root);
 	~Console();
 	
 	//! \brief Hides or Shows the Console
@@ -80,8 +77,8 @@ private:
 	//! This function is expected to display one char.
 	int overflow(int);
 
-	void eventHandler(Controller_::VipEvent* event);
-	
+	void onKeyPressed(s32 _code);
+
 	//! \brief Is called, when someone presses enter in the inputline
 	void onReturn();
 
@@ -99,7 +96,7 @@ private:
 
 	std::string mConsoleContent;
 
-	EventLoop* mLoop;
+	Event::SubLanePtr mSubLane;
 
 	boost::shared_ptr<Ogre::Root> mRoot;
 	boost::shared_ptr<Ogre::Rectangle2D> mRect;

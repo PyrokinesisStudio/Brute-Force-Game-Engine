@@ -29,23 +29,20 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <BaseFeature.h>
 
-#include <EventSystem/Emitter.h>
-
-#include <Event_fwd.h>
+#include <Event/Event.h>
 #include <SharedData.h>
 
 namespace Tool
 {
 
-class SubEntitySelect : public BaseFeature, public BFG::Emitter
+class SubEntitySelect : public BaseFeature
 {
 public:
-	SubEntitySelect(EventLoop* loop,boost::shared_ptr<SharedData> data) :
+	SubEntitySelect(BFG::Event::SubLanePtr sublane, boost::shared_ptr<SharedData> data) :
 	BaseFeature("SubEntity", true),
-	Emitter(loop),
+	mSubLane(sublane),
 	mData(data)
 	{
-
 	}
 
 	virtual void load();
@@ -53,10 +50,6 @@ public:
 
 	virtual void activate();
 	virtual void deactivate();
-
-	virtual void eventHandler(BFG::Controller_::VipEvent* ve)
-	{
-	}
 
 	virtual void update(const Ogre::FrameEvent& evt);
 
@@ -68,6 +61,8 @@ private:
 
 	MyGUI::ListBox* mList;
 	std::string mMeshName;
+
+	BFG::Event::SubLanePtr mSubLane;
 
 }; // class SubEntitySelect
 

@@ -459,7 +459,7 @@ void AdapterControl::onPositionChanged(MyGUI::Edit*)
 		BFG::View::toOgre(adapter.mParentOrientation)
 	);
 
-	emit<Tool::Event>(A_UPDATE_ADAPTER, 0);
+	mSubLane->emit(A_UPDATE_ADAPTER, Event::Void());
 }
 
 
@@ -507,7 +507,7 @@ void AdapterControl::updateOrientation()
 			adapter.mParentOrientation.z
 		)
 	);
-	emit<Tool::Event>(A_UPDATE_ADAPTER, 0);
+	mSubLane->emit(A_UPDATE_ADAPTER, Event::Void());
 }
 
 void AdapterControl::clearAdapterFields()

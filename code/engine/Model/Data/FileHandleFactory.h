@@ -30,14 +30,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <boost/weak_ptr.hpp>
 
-#include <EventSystem/Emitter.h>
-
 #include <Core/XmlFileHandleFactory.h>
 //#include <Model/Property/Plugin.h>
 
 namespace BFG {
 
-//! This class provides the creation of filehanling objects of a specific type.
+//! This class provides the creation of filehandling objects of a specific type.
 //! ConfigT Type of config data object
 template<class FileHandlerT>
 class FileHandleFactory

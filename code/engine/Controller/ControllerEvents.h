@@ -29,6 +29,5 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Controller/StateInsertion.h>
 #include <Controller/ControllerEvents_fwd.h>
-#include <EventSystem/Event.h>
 
 #endif // BFG_CONTROLLER_EVENTS_H

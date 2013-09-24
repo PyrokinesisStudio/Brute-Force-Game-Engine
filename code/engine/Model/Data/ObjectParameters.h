@@ -40,7 +40,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Math.h>
 
 #include <Model/Data/Connection.h>
-
+#include <Model/Data/EventStorage.h>
+#include <Model/Module.h>
 
 namespace BFG {
 
@@ -101,6 +102,9 @@ struct ObjectParameter
 	v3 mLinearVelocity;
 	v3 mAngularVelocity;
 	Connection mConnection;
+	Module::ValueStorageT mGoValues;
+
+	mutable EventStorage mStorage;
 
 protected:
 	

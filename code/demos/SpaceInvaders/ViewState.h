@@ -27,19 +27,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef SI_VIEW_STATE
 #define SI_VIEW_STATE
 
-
-#include <boost/units/systems/si/velocity.hpp>
-#include <boost/units/systems/si/length.hpp>
-
 #include <OgreRoot.h>
 #include <OgreSceneManager.h>
 #include <OgreParticleSystem.h>
 
-#include <EventSystem/Core/EventLoop.h>
+#include <Event/Event.h>
 
 #include <View/Effect.h>
 #include <View/State.h>
-#include <View/Event.h>
+#include <View/EffectCreation.h>
 
 
 using namespace BFG;
@@ -47,23 +43,19 @@ using namespace BFG;
 struct ViewMainState : public View::State
 {
 public:
-	ViewMainState(GameHandle handle, EventLoop* loop);
+	ViewMainState(GameHandle handle, Event::Lane& lane);
 	~ViewMainState();
-
-	void viewEventHandler(View::Event* VE);
 
 	bool frameStarted(const Ogre::FrameEvent& evt);
 	bool frameRenderingQueued(const Ogre::FrameEvent& evt);
 	bool frameEnded(const Ogre::FrameEvent& evt);
 
 private:
-	void registerEventHandler();
-	void unregisterEventHandler();
-	
+
 	void onEffect(const View::EffectCreation& ec);
 
-	virtual void pause(){ registerEventHandler(); }
-	virtual void resume(){ unregisterEventHandler(); }
+	virtual void pause(){}
+	virtual void resume(){}
 	
 	std::vector<boost::shared_ptr<View::Effect> > mEffects;
 };

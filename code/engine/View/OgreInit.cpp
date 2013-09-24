@@ -56,56 +56,65 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <View/Camera.h>
 #include <View/Console.h>
-#include <View/Fps.h>
 #include <View/Defs.h>
 #include <View/Enums.hh>
-#include <View/Event.h>
+#include <View/Fps.h>
+#include <View/LoadMesh.h>
 
 namespace BFG {
 namespace View {
 
-template <typename T>
-struct ShutdownDeleter
-{
-	void operator()(T* ptr)
-	{
-		ptr->shutdown();
-	}
-};
-
-OgreInit::OgreInit(EventLoop* loop, const std::string& windowTitle) :
-mLoop(loop),
+OgreInit::OgreInit(Event::Lane& lane, const std::string& windowTitle) :
+mLane(lane),
+mSubLane(lane.createSubLane()),
 mShutdown(false),
 mWindowTitle(windowTitle),
 mSceneMgr(NULL)
 {
-	mLoop->connect(ID::VE_SHUTDOWN, this, &OgreInit::eventHandler);
-	mLoop->connect(ID::VE_DEBUG_FPS, this, &OgreInit::eventHandler);
-	mLoop->connect(ID::VE_SCREENSHOT, this, &OgreInit::eventHandler);
-	mLoop->connect(ID::VE_CONSOLE, this, &OgreInit::eventHandler);
+	mSubLane->connectV(ID::VE_SHUTDOWN, this, &OgreInit::onShutdown);
+	mSubLane->connect(ID::VE_DEBUG_FPS, this, &OgreInit::onDebugFps);
+	mSubLane->connectV(ID::VE_SCREENSHOT, this, &OgreInit::onScreenShot);
+	mSubLane->connect(ID::VE_CONSOLE, this, &OgreInit::onConsole);
+	mSubLane->connect(ID::VE_REQUEST_MESH, this, &OgreInit::onRequestMesh);
 	
 	initOgre();
 	initMyGui();
 
-	mLoop->registerLoopEventListener<OgreInit>(this, &OgreInit::loopEventHandler);
+	mLane.connectLoop(this, &OgreInit::onTick);
 }
 
 OgreInit::~OgreInit()
 {
-	mLoop->disconnect(ID::VE_SHUTDOWN, this);
-	mLoop->disconnect(ID::VE_DEBUG_FPS, this);
-	mLoop->disconnect(ID::VE_SCREENSHOT, this);
-	mLoop->disconnect(ID::VE_CONSOLE, this);
-	
-	mLoop->unregisterLoopEventListener(this);
+	mSubLane.reset();
+
+	mConsole.reset();
+	mFps.reset();
+	mMainCamera.reset();
+
+	if (mGui)
+	{
+		mGui->shutdown();
+		mGui.reset();
+	}
+
+	if (mPlatform)
+	{
+		mPlatform->shutdown();
+		mPlatform.reset();
+	}
+
+	if (mRoot)
+	{
+		mRoot->shutdown();
+		mRoot.reset();
+	}
 }
 
-void OgreInit::loopEventHandler(LoopEvent* iLE)
+void OgreInit::onTick(Event::TickData)
 {
 	if (! doRenderTick() || mShutdown)
 	{
-		// Error happend, while Rendering
-		iLE->data().getLoop()->setExitFlag();
+		mSubLane->emit(ID::EA_FINISH, Event::Void());
 	}
 }
 
@@ -143,8 +152,7 @@ void OgreInit::initializeRoot()
 	
 	mRoot.reset
 	(
-		new Root(pluginCfg, "ogre.cfg", p.Get(ID::P_LOGS) + "ogre.log"),
-		ShutdownDeleter<Ogre::Root>()
+		new Root(pluginCfg, "ogre.cfg", p.Get(ID::P_LOGS) + "ogre.log")
 	);
 
 	if(mRoot->restoreConfig() || mRoot->showConfigDialog())
@@ -238,7 +246,7 @@ void OgreInit::createMainCamera()
 
 	GameHandle camHandle = generateHandle();
 	
-	mMainCamera.reset(new Camera(camHandle, NULL, mRoot->getAutoCreatedWindow()));
+	mMainCamera.reset(new Camera(mLane, camHandle, NULL, mRoot->getAutoCreatedWindow()));
 
 	infolog << "OGRE: Create main camera done.";
 }
@@ -250,7 +258,7 @@ void OgreInit::initMyGui()
 	
 	const std::string log = p.Get(ID::P_LOGS) + "MyGUI.log";
 	
-	mPlatform.reset(new MyGUI::OgrePlatform, ShutdownDeleter<MyGUI::OgrePlatform>());
+	mPlatform.reset(new MyGUI::OgrePlatform);
 	mPlatform->initialise
 	(
 		mRoot->getAutoCreatedWindow(),
@@ -259,35 +267,10 @@ void OgreInit::initMyGui()
 		log
 	);
 	mPlatform->getRenderManagerPtr()->setActiveViewport(0); 
-	mGui.reset(new MyGUI::Gui, ShutdownDeleter<MyGUI::Gui>());
+	mGui.reset(new MyGUI::Gui);
 	mGui->initialise("guiBase.xml");
 	
 	infolog << "MyGui: Initialize MyGui done.";
-}
-
-void OgreInit::eventHandler(Event* VE)
-{
-	switch (VE->id())
-	{
-	case ID::VE_SCREENSHOT:
-		onScreenShot();
-		break;
-		
-	case ID::VE_SHUTDOWN:
-		mShutdown = true;
-		break;
-		
-	case ID::VE_DEBUG_FPS:
-		onDebugFps(boost::get<bool>(VE->data()));
-		break;
-
-	case ID::VE_CONSOLE:
-		onConsole(boost::get<bool>(VE->data()));
-		break;
-
-	default:
-		throw std::logic_error("View::OgreInit::eventHandler: received unhandled event!");
-	}
 }
 
 void OgreInit::onDebugFps(bool enable)
@@ -301,9 +284,14 @@ void OgreInit::onDebugFps(bool enable)
 void OgreInit::onConsole(bool enable)
 {
 	if (!mConsole)
-		mConsole.reset(new Console(mLoop, mRoot));
+		mConsole.reset(new Console(mLane, mRoot));
 
 	mConsole->toggleVisible(enable);
+}
+
+void OgreInit::onShutdown()
+{
+	mShutdown = true;
 }
 
 void OgreInit::onScreenShot()
@@ -321,6 +309,14 @@ void OgreInit::onScreenShot()
 	} while (boost::filesystem::exists(ss.str()));
 
 	mRoot->getAutoCreatedWindow()->writeContentsToFile(ss.str());
+}
+
+void OgreInit::onRequestMesh(const std::string& meshName, GameHandle sender)
+{
+	const Mesh mesh = loadMesh(meshName);
+	NamedMesh namedMesh(meshName, mesh);
+	dbglog << "Processing mesh request \"" << meshName << "\" for #" << sender;
+	mLane.emit(ID::VE_DELIVER_MESH, namedMesh);
 }
 
 #ifdef _WIN32

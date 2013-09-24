@@ -28,7 +28,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_MENUEVENTDATA_H
 
 #include <string>
-#include <Core/CharArray.h>
 #include <View/Defs.h>
 
 namespace BFG {
@@ -38,7 +37,7 @@ struct VIEW_API MenuEventData
 {
 	MenuEventData(const std::string& level);
 
-	CharArray128T mLevel;
+	std::string mLevel;
 };
 
 } // namespace View

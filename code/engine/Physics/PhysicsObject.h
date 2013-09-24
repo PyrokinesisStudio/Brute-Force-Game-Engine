@@ -35,16 +35,19 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <ode/ode.h>
 
 #include <map>
+#include <set>
 
+#include <Core/ExternalTypes_fwd.h>
+#include <Core/Mesh.h>
+#include <Core/qv4.h>
 #include <Core/Types.h>
 #include <Core/v3.h>
-#include <Core/qv4.h>
-#include <Core/ExternalTypes_fwd.h>
 
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 
 #include <Physics/Defs.h>
 #include <Physics/Event_fwd.h>
+#include <Physics/Interpolator.h>
 
 using namespace boost::units;
 
@@ -60,28 +63,23 @@ struct PHYSICS_API GeomData
 	ID::CollisionMode collisionMode;
 };
 
-class PHYSICS_API PhysicsObject : Emitter
+class PHYSICS_API PhysicsObject
 {
 public:
-	PhysicsObject(EventLoop* loop,
+	PhysicsObject(Event::Lane& lane,
 	              dWorldID worldId,
 	              dSpaceID spaceId,
 	              const Location& location);
 	              
 	~PhysicsObject();
 
-	void addModule(GameHandle moduleHandle,
-	               const std::string& meshName,
-	               ID::CollisionMode collisionMode,
-	               const v3& position,
-	               const qv4& orientation,
-	               f32 density);
+	void addModule(const ModuleCreationParams& mcp);
+	
+	void attachObject(boost::shared_ptr<PhysicsObject>,
+	                  const v3& position,
+	                  const qv4& orientation);
 
-	void addModule(boost::shared_ptr<PhysicsObject>,
-	               const v3& position,
-	               const qv4& orientation);
-
-	void removeModule(boost::shared_ptr<PhysicsObject> po,
+	void detachObject(boost::shared_ptr<PhysicsObject> po,
 	                  const v3& position,
 	                  const qv4& orientation);
 
@@ -100,7 +98,17 @@ public:
 
 	void performInterpolation(quantity<si::time, f32> timeSinceLastFrame);
 
+	void notifyAboutCollision(GameHandle ownModule,
+	                          GameHandle otherModule,
+	                          f32 penetrationDepth) const;
+	
+	void onMeshDelivery(const NamedMesh& namedMesh);
+	void createPendingModules();
 private:
+	void asyncRequestMesh(const std::string& meshName);
+	
+	void createModule(const ModuleCreationParams& mcp);
+
 	void debugOutput(std::string& output) const;
 
 	void setPosition(const v3& pos);
@@ -131,8 +139,6 @@ private:
 
 	void recalculateMass();
 
-	void updateForces(const v3& force, const v3& torque);
-
 	void magicStop();
 	void modulateMass(f32 factor) const;
 	
@@ -142,9 +148,6 @@ private:
 	typedef std::map<std::string, boost::shared_ptr<OdeTriMesh> > MeshCacheT;
 
 	void registerEvents();
-	void unregisterEvents();
-
-	void eventHandler(Physics::Event*);
 
 	void notifyControlAboutChangeInMass() const;
 
@@ -153,6 +156,8 @@ private:
 
 	void onForce(const v3& force);
 	void onTorque(const v3& torque);
+	
+	void onDebug();
 
 	typedef std::map
 	<
@@ -160,6 +165,8 @@ private:
 		GeomData
 	> GeomMapT;
 
+	Event::SubLanePtr mSubLane;
+	
 	dBodyID           mOdeBody;
 	GeomMapT          mGeometry;
 	dSpaceID          mSpaceId;
@@ -172,24 +179,16 @@ private:
 	v3                mForce;
 	v3                mTorque;
 	
-	bool              mInterpolatePosition;
-	f32               mPositionInterpolationParameter;
-	v3                mInterpolationStartPosition;
-	v3                mInterpolationEndPosition;
-
-	bool              mInterpolateOrientation;
-	f32               mOrientationInterpolationParameter;
-	qv4               mInterpolationStartOrientation;
-	qv4               mInterpolationEndOrientation;
-
+	Interpolator mInterpolator;
 
 	mutable FullSyncData mDeltaStorage;
 
 	ID::CollisionMode mCollisionMode;
 	
-	std::vector<ID::PhysicsAction> mPhysicsEvents;
-	
 	static MeshCacheT mMeshCache;
+	
+	std::deque<ModuleCreationParams> mAsyncAddModuleRequests;
+	static std::set<std::string> mPendingRequests;
 	
 	friend std::ostream& operator << (std::ostream& lhs, const PhysicsObject& rhs);
 };

@@ -31,11 +31,11 @@ using namespace boost;
 namespace BFG {
 namespace Network { 
 
-TcpModule::TcpModule(EventLoop* loop_,
+TcpModule::TcpModule(Event::Lane& lane,
                      asio::io_service& service,
                      PeerIdT peerId,
                      shared_ptr<Clock::StopWatch> localTime) :
-NetworkModule<Tcp>(loop_, service, peerId, localTime),
+NetworkModule<Tcp>(lane, service, peerId, localTime),
 mRoundTripTimer(Clock::milliSecond),
 mTimestampOffset(0),
 mSocket(service)
@@ -79,7 +79,7 @@ void TcpModule::readHeaderHandler(const system::error_code &ec, std::size_t byte
 			dbglog << "TcpModule: connection was closed!";
 		else
 			printErrorCode(ec, "TcpModule::readHeaderHandler", mPeerId);
-		emit<ControlEvent>(ID::NE_DISCONNECT, mPeerId);
+		mLane.emit(ID::NE_DISCONNECT, mPeerId);
 		return;
 	}
 
@@ -131,7 +131,7 @@ void TcpModule::readDataHandler(const system::error_code &ec, std::size_t bytesT
 			dbglog << "TcpModule: connection was closed!";
 		else
 			printErrorCode(ec, "TcpModule::readDataHandler", mPeerId);
-		emit<ControlEvent>(ID::NE_DISCONNECT, mPeerId);
+		mLane.emit(ID::NE_DISCONNECT, mPeerId);
 		return;
 	}
 	
@@ -181,7 +181,7 @@ void TcpModule::onReceive(OPacket<Tcp>& oPacket, PeerIdT peerId)
 		try 
 		{
 			dbglog << "TcpModule::onReceive: Emitting NE_RECEIVED to: " << payload.mAppDestination << " from: " << peerId;
-			emit<DataPacketEvent>(ID::NE_RECEIVED, payload, payload.mAppDestination, peerId);
+			mLane.emit(ID::NE_RECEIVED, payload, payload.mAppDestination, peerId);
 		}
 		catch (std::exception& ex)
 		{

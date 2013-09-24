@@ -28,6 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define AUDIO_TEST_LOADER_H_
 
 #include <Audio/Audio.h>
+#include <Event/Event.h>
 #include <tests/AudioTest/functions.h>
 
 namespace BFG
@@ -40,19 +41,14 @@ class AudioTestLoader
 
 public:
 
-	AudioTestLoader()
+	AudioTestLoader() : mLane(mSynchronizer, 100)
 	{
-		mEventLoop = new EventLoop(true);
 		startEventLoop();
 	}
 
 	~AudioTestLoader()
 	{
-		mEventLoop->setExitFlag();
-		boost::this_thread::sleep(boost::posix_time::seconds(1));
-
-		delete mEventLoop;
-		mEventLoop = NULL;
+		mSynchronizer.finish();
 	}
 
 	static void registerTestFunction(pFunc testFunction)
@@ -62,32 +58,27 @@ public:
 
 private:
 
-	static void * EventLoopEntryPoint(void * iPointer)
-	{
-		mTestFunction();
-		((EventLoop*)iPointer)->setExitFlag();
-		return 0;
-	}
-
 	void startEventLoop()
 	{
 		using namespace BFG;
 
-		mEventLoop->addEntryPoint(mAudioMain.entryPoint());
-		mEventLoop->addEntryPoint(new Base::CEntryPoint(EventLoopEntryPoint));
-		mEventLoop->registerLoopEventListener(this, &AudioTestLoader::loopEventHandler);
-
-		mEventLoop->run();
+		mLane.addEntry<Audio::Main>();
+		mLane.connectLoop(this, &AudioTestLoader::loopEventHandler);
+		mSynchronizer.start();
+		
+		mTestFunction();
 	}
 
-	void loopEventHandler(LoopEvent* loopEvent)
+	void loopEventHandler(const Event::TickData tickData)
 	{
 		//boost::this_thread::sleep(boost::posix_time::millisec(2));
 	}
 
 	static pFunc mTestFunction;
 	Audio::Main mAudioMain;
-	EventLoop* mEventLoop;
+
+	Event::Synchronizer mSynchronizer;
+	Event::Lane mLane;
 };
 
 }

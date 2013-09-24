@@ -43,24 +43,27 @@ namespace BFG {
 AutoNavigator::AutoNavigator(GameObject& owner, PluginId pid) :
 Property::Concept(owner, "AutoNavigator", pid)
 {
-	initvar(ID::PV_TriggerRadius);
+	requiredPvInitialized(ID::PV_TriggerRadius);
 
 	require("ThrustControl");
 	require("Physical");
 
-	requestEvent(ID::GOE_VALUE_UPDATED);
-	requestEvent(ID::GOE_AUTONAVIGATE);
+	subLane()->connect(ID::GOE_AUTONAVIGATE, this, &AutoNavigator::onAutonavigate, ownerHandle());
+	subLane()->connect(ID::GOE_VALUE_UPDATED, this, &AutoNavigator::onValueUpdated, ownerHandle());
 
+	try
+	{
+		mTargets = getGoValue<TargetContainerT>(ID::PV_FirstTargets, pluginId());
+	}
+	catch (std::runtime_error& ex)
+	{}
+	
 	assert(ownerHandle() == rootModule() &&
 		"AutoNavigator: This code may contain some out-dated assumptions.");
 }
 
 AutoNavigator::~AutoNavigator()
-{
-	//! \todo This needs to be done when this module is actually "switched off".
-	stopDelivery(ID::GOE_VALUE_UPDATED);
-	stopDelivery(ID::GOE_AUTONAVIGATE);
-}
+{}
 
 void AutoNavigator::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 {
@@ -77,33 +80,20 @@ void AutoNavigator::internalSynchronize()
 	if (mTargets.empty())
 		return;
 
-	emit<GameObjectEvent>(ID::GOE_CONTROL_PITCH, mRotationFactorPitch, ownerHandle());
-	emit<GameObjectEvent>(ID::GOE_CONTROL_YAW, mRotationFactorYaw, ownerHandle());
-	emit<GameObjectEvent>(ID::GOE_CONTROL_THRUST,mAccelerationFactor, ownerHandle());
+	subLane()->emit(ID::GOE_CONTROL_PITCH, mRotationFactorPitch, ownerHandle());
+	subLane()->emit(ID::GOE_CONTROL_YAW, mRotationFactorYaw, ownerHandle());
+	subLane()->emit(ID::GOE_CONTROL_THRUST, mAccelerationFactor, ownerHandle());
 }
 
-void AutoNavigator::internalOnEvent(EventIdT action,
-                                    Property::Value payload,
-                                    GameHandle module,
-                                    GameHandle sender)
+void AutoNavigator::onAutonavigate(GameHandle target)
 {
-	switch(action)
-	{
-	case ID::GOE_AUTONAVIGATE:
-		mTargets.push_back(static_cast<GameHandle>(payload));
-		break;
-		
-	case ID::GOE_VALUE_UPDATED:
-	{
-		Property::ValueId valueId = payload;
-		if (valueId.mVarId == ID::PV_MaxAngularAcceleration)
-			recalculateParameters();
-		break;
-	}
+	mTargets.push_back(target);
+}
 
-	default:
-		break;
-	}
+void AutoNavigator::onValueUpdated(const Property::ValueId& valueId)
+{
+	if (valueId.mVarId == ID::PV_MaxAngularAcceleration)
+		recalculateParameters();
 }
 
 void AutoNavigator::operate()
@@ -117,10 +107,10 @@ void AutoNavigator::operate()
 		return;
 	}
 	
-	const Location& own = getGoValue<Location>(ID::PV_Location, pluginId());
-	Location target = environment()->getGoValue<Location>(targetHandle, ID::PV_Location, pluginId());
-	
-	if (nearEnough(own.position, target.position, mRadius.value()))
+	const v3& ownPosition = getGoValue<v3>(ID::PV_Position, pluginId());
+	v3 targetPosition = environment()->getGoValue<v3>(targetHandle, ID::PV_Position, pluginId());
+
+	if (nearEnough(ownPosition, targetPosition, mRadius.value()))
 	{
 		mTargets.erase(mTargets.begin());
 		return;
@@ -130,11 +120,13 @@ void AutoNavigator::operate()
 	const v3& ownVelocity = getGoValue<v3>(ID::PV_Velocity, pluginId());
 	
 	// use two further frame positions because it takes 2 frames for the value to reach the physics
-	v3 targetPositionEx(target.position + targetVelocity * 2.0f * mTime.value());
-	v3 ownPositionEx(own.position + ownVelocity * 2.0f * mTime.value());
+	v3 targetPositionEx(targetPosition + targetVelocity * 2.0f * mTime.value());
+	v3 ownPositionEx(ownPosition + ownVelocity * 2.0f * mTime.value());
 	
+	const qv4& ownOrientation = getGoValue<qv4>(ID::PV_Orientation, pluginId());
+
 	// \todo use rotation velocity to approximate the orientation in the next frame
-	v3 VectorToTarget(unitInverse(own.orientation) * (targetPositionEx - ownPositionEx));
+	v3 VectorToTarget(unitInverse(ownOrientation) * (targetPositionEx - ownPositionEx));
 
 	rotate( rotationTo(v3::UNIT_Z, VectorToTarget) );
 
@@ -150,7 +142,9 @@ void AutoNavigator::rotate(const qv4& rotation)
 	const v3& currentRotationVel = getGoValue<v3>(ID::PV_RelativeRotationVelocity, pluginId());
 
 	// braking distance in radian
-	v3 b = (currentRotationVel * currentRotationVel) / (2.0f * mMaxAngularAcceleration.value());
+	v3 b;
+	if (!nearEnough(mMaxAngularAcceleration.value(), 0.0f, EPSILON_F))
+		b = (currentRotationVel * currentRotationVel) / (2.0f * mMaxAngularAcceleration.value());
 
 	// reduce the vibration caused by the time delay of 2 frames by using the braking distance * 3 
 	b *= 2.0f;
@@ -195,7 +189,7 @@ void AutoNavigator::accelerate(quantity<si::velocity, f32> targetSpeed)
 void AutoNavigator::recalculateParameters()
 {
 	// GameObject values
-	f32 maa = environment()->getGoValue<f32>
+	const f32& maa = environment()->getGoValue<f32>
 	(
 		ownerHandle(),
 		ID::PV_MaxAngularAcceleration,
@@ -204,7 +198,7 @@ void AutoNavigator::recalculateParameters()
 
 	mMaxAngularAcceleration = maa * radian_per_second_squared;
 
-	f32 ms = environment()->getGoValue<f32>
+	const f32& ms = environment()->getGoValue<f32>
 	(
 		ownerHandle(),
 		ID::PV_MaxSpeed,

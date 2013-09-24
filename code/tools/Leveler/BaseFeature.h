@@ -31,6 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <OgreFrameListener.h>
 
+#include <Event/Event.h>
 #include <Controller/ControllerEvents.h>
 
 namespace Tool
@@ -64,8 +65,6 @@ public:
 	virtual void activate() = 0;
 	virtual void deactivate() = 0;
 	virtual bool isActive() {return mActive;}
-
-	virtual void eventHandler(BFG::Controller_::VipEvent* ve) = 0;
 
 	virtual void update(const Ogre::FrameEvent& evt){}
 

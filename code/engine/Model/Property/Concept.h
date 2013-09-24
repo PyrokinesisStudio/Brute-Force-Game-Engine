@@ -31,12 +31,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/variant.hpp>
 
 #include <boost/units/systems/si/time.hpp>
 #include <boost/units/quantity.hpp>
-
-#include <EventSystem/Core/EventDefs.h>
 
 #include <Core/Types.h>
 
@@ -44,7 +41,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Enums.hh>
 #include <Model/GameObject.h>
 #include <Model/Module.h>
-#include <Model/Events/GameObjectEvent_fwd.h>
 #include <Model/Property/ConceptId.h>
 #include <Model/Property/Value.h>
 #include <Model/Property/ValueId.h>
@@ -71,7 +67,7 @@ namespace Property {
 	Allows communication between derived classes and a GameObject as well as
 	the configuration of event forwarding.
 */
-class MODEL_API Concept : protected Emitter
+class MODEL_API Concept
 {
 public:
 	//! \brief Container used to return data when calling getValueRange()
@@ -89,8 +85,6 @@ public:
 	void update(quantity<si::time, f32> timeSinceLastFrame);
 	void synchronize();
 
-	void onEvent(EventIdT, Value payload, GameHandle module, GameHandle sender);
-
 	ConceptId concept() const { return mSelf; }
 	PluginId  pluginId() const { return mPluginId; }
 
@@ -107,40 +101,19 @@ protected:
 	//! TODO
 	virtual void internalSynchronize();
 	
-	/** \bug
-		Do not call setGoValue within this function.
-		The application will crash and the reason is, that Concept 's
-		need to be informed instantly of changed values. This is done right
-		away after setGoValue is done. A ID::GOE_VALUE_UPDATED event will be sent.
-		Triggering the same event while catching it -> stack overflow.
-	*/
-	virtual void internalOnEvent(EventIdT,
-	                             Value payload,
-	                             GameHandle module,
-	                             GameHandle sender);
-
 	virtual void internalOnModuleAttached(GameHandle) {}
 	virtual void internalOnModuleDetached(GameHandle) {}
-
-	//! \brief Notifies the owner GameObject that the stated event must
-	//!        be forwarded to this Concept.
-	//! \see stopDelivery
-	void requestEvent(EventIdT);
-
-	//! \brief Stops forwarding of a certain event.
-	//! \see requestEvent
-	void stopDelivery(EventIdT);
 
 	//! \brief Performs a dependency check.
 	//! Mostly called within the constructor of Concept implementations.
 	void require(ConceptId) const;
 
-	//! \brief Checks if all necessary Value 's are existing
+	//! \brief Short and clear: "I need this PropertyValue initialized here!"
 	//! Initialization is done by Value 's now. Therefore, some of them
 	//! are mandatory. Missing PVs may lead to UB or exceptions. So every time
 	//! a new Module gets attached to this PC, we'll check here if it has all
 	//! PVs which are required for initialization.
-	void initvar(ValueId::VarIdT);
+	void requiredPvInitialized(ValueId::VarIdT);
 
 	/** \brief Simplified accessor for Property::Value 's.
 
@@ -241,10 +214,13 @@ protected:
 	GameHandle ownerHandle() const;
 
 	GameObject& owner() const;
+	Event::SubLanePtr subLane() const;
 	
 	//! Forwarder to GameObject::environment()
 	const boost::shared_ptr<Environment> environment() const;
 	
+	Event::SubLanePtr mSubLane;
+
 	const ConceptId mSelf;
 	
 	const PluginId mPluginId;

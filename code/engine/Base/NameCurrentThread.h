@@ -33,6 +33,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <sys/prctl.h>
 #endif
 
+// LCOV_EXCL_START
+
 namespace BFG {
 
 //! Names a thread. Useful for debugging
@@ -49,6 +51,8 @@ inline void nameCurrentThread(const std::string& name) { /* Not Implemented */ }
 #endif
 
 } // namespace BFG
+
+// LCOV_EXCL_STOP
 
 #endif
 

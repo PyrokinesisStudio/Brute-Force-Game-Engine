@@ -30,9 +30,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/v3.h>
 #include <Controller/ControllerEvents_fwd.h>
+#include <Event/Event.h>
 #include <View/Defs.h>
-
-class EventLoop;
 
 namespace BFG {
 namespace View {
@@ -40,16 +39,20 @@ namespace View {
 class VIEW_API ControllerMyGuiAdapter
 {
 public:
-	         ControllerMyGuiAdapter(BFG::GameHandle stateHandle, EventLoop*);
-	virtual ~ControllerMyGuiAdapter();
+	ControllerMyGuiAdapter(BFG::GameHandle stateHandle, Event::Lane&);
 
 private:
-	void eventHandler(BFG::Controller_::VipEvent*);
-	
-	EventLoop* mAdapterLoop;
-	BFG::v3    mMouseBuffer;
+	void onMouseMoveX(f32 value);
+	void onMouseMoveY(f32 value);
+	void onMouseMoveZ(f32 value);
+	void onMouseLeftPressed(bool value);
+	void onMouseRightPressed(bool isPressed);
+	void onMouseMiddlePressed(bool isPressed);
+	void onKeyPressed(s32 key);
+	void onKeyReleased(s32 key);
 
-	std::vector<BFG::ID::ControllerAction> mAdapterEvents;
+	Event::SubLanePtr mSubLane;
+	BFG::v3    mMouseBuffer;
 };
 
 } // namespace View

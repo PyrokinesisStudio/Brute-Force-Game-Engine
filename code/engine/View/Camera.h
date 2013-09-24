@@ -33,8 +33,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Types.h>
 #include <Core/v3.h>
 
+#include <Event/Event.h>
+
 #include <View/Defs.h>
-#include <View/Event_fwd.h>
 
 namespace Ogre
 {
@@ -48,11 +49,14 @@ namespace View {
 class VIEW_API Camera
 {
 public:
-	Camera(GameHandle cameraHandle, 
+	Camera(Event::Lane& lane,
+	       GameHandle cameraHandle, 
 	       Ogre::SceneNode* camNode = NULL,
 	       Ogre::RenderTarget* renderTarget = NULL,
 	       s32 width = 0,
-	       s32 height = 0);
+	       s32 height = 0,
+	       const v3& position = v3::ZERO,
+	       const qv4& orientation = qv4::IDENTITY);
 
 	virtual ~Camera();
 
@@ -62,18 +66,15 @@ public:
 	void updateOrientation(const qv4& ori);
 
 private:
-	void viewEventHandler(Event* VE);
-
 	void prepareRenderTarget();
 
-
+	Event::SubLanePtr mSubLane;
 	Ogre::SceneNode* mCameraNode;
 	Ogre::RenderTarget* mRenderTarget;
 	
 	GameHandle mHandle;
 	bool mNodeCreated;
 	bool mRenderTargetCreated;
-
 }; // class Camera
 
 } // namespace View

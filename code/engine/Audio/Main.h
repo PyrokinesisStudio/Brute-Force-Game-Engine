@@ -30,25 +30,20 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Base/LibraryMainBase.h>
 
+#include <Event/Event.h>
 #include <Audio/Defines.h>
-#include <Audio/Init.h>
-#include <Audio/Listener.h>
-
-class EventLoop;
 
 namespace BFG {
 namespace Audio {
 
-//! This is the ancor of the module.
-class BFG_AUDIO_API Main : public Base::LibraryMainBase<EventLoop>
+class Init;
+class Listener;
+
+class BFG_AUDIO_API Main : public Base::LibraryMainBase<Event::Lane>
 {
-public:
-	static EventLoop* eventLoop();
-	
 private:
-	void main(EventLoop*);
+	void main(Event::Lane* lane);
 	
-	static EventLoop* mLoop;
 	boost::shared_ptr<Init> mInit;
 	boost::shared_ptr<Listener> mListener;
 };

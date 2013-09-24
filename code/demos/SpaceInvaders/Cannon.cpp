@@ -27,10 +27,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include "Cannon.h"
 
 #include <Core/Path.h>
-#include <Audio/AudioEvent.h>
+#include <Audio/Enums.hh>
 #include <Model/Environment.h>
 #include <Model/Data/GameObjectFactory.h>
 #include <Model/Sector.h>
+#include <Model/Property/Concepts/AutoNavigator.h>
 
 #include "Globals.h"
 
@@ -45,40 +46,29 @@ Cannon::Cannon(GameObject& Owner, BFG::PluginId pid) :
 	Path path;
 	mLaserSound = path.Get(ID::P_SOUND_EFFECTS)+"Laser_003.wav";
 
-	initvar(ID_PROJECTILE_SPEED);
-	initvar(ID_PROJECTILE_SPAWN_DISTANCE);
+	requiredPvInitialized(ID_PROJECTILE_SPEED);
+	requiredPvInitialized(ID_PROJECTILE_SPAWN_DISTANCE);
 
-	requestEvent(ID::GOE_FIRE_ROCKET);
-	requestEvent(ID::GOE_POWERUP);
+	mSubLane->connectV(ID::GOE_FIRE_ROCKET, this, &Cannon::onFireRocket, ownerHandle());
+	mSubLane->connect(ID::GOE_POWERUP, this, &Cannon::onPowerUp, ownerHandle());
 }
 
-void Cannon::internalOnEvent(EventIdT action,
-							 Property::Value payload,
-							 GameHandle module,
-							 GameHandle sender)
+void Cannon::onFireRocket()
 {
-	switch(action)
+	if (mAutoRocketAmmo > 0)
 	{
-		case ID::GOE_FIRE_ROCKET:
-		{
-			if (mAutoRocketAmmo > 0)
-			{
-				fireRocket(true);
-				--mAutoRocketAmmo;
-			}
-			else
-			{
-				fireRocket(false);
-			}
-			break;
-		}
-		case ID::GOE_POWERUP:
-		{
-			s32 newAmmo = payload;
-			mAutoRocketAmmo += newAmmo;
-			break;
-		}
+		fireRocket(true);
+		--mAutoRocketAmmo;
 	}
+	else
+	{
+		fireRocket(false);
+	}
+}
+
+void Cannon::onPowerUp(s32 ammo)
+{
+ 	mAutoRocketAmmo += ammo;
 }
 
 void Cannon::fireRocket(bool autoRocket)
@@ -88,18 +78,21 @@ void Cannon::fireRocket(bool autoRocket)
 	if (autoRocket && targets.empty())
 		return;
 
-	const Location& go = getGoValue<Location>(ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
+	const v3& ownPosition = getGoValue<v3>(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
+	const qv4& ownOrientation = getGoValue<qv4>(ID::PV_Orientation, ValueId::ENGINE_PLUGIN_ID);
+
 
 	const f32& projectileSpeed = value<f32>(ID_PROJECTILE_SPEED, rootModule());
 	const f32& projectileSpawnDistance = value<f32>(ID_PROJECTILE_SPAWN_DISTANCE, rootModule());
 
 	Location spawnLocation;
-	spawnLocation.position = go.position + go.orientation.zAxis() * projectileSpawnDistance;
-	spawnLocation.orientation = go.orientation;
+	spawnLocation.position = ownPosition + ownOrientation.zAxis() * projectileSpawnDistance;
+	spawnLocation.orientation = ownOrientation;
 
 	// Make Name
 	static size_t count = 0;
 	++count;
+	
 	std::stringstream ss;
 	ss << "Projectile " << count;
 
@@ -107,18 +100,29 @@ void Cannon::fireRocket(bool autoRocket)
 	ObjectParameter op;
 	op.mHandle = generateHandle();
 	op.mName = ss.str();
-	if (autoRocket) op.mType = "AutoProjectile";
-	else            op.mType = "Projectile";
+	
+	if (autoRocket) 
+		op.mType = "AutoProjectile";
+	else
+		op.mType = "Projectile";
+	
 	op.mLocation = spawnLocation;
-	op.mLinearVelocity = v3(projectileSpeed) * go.orientation.zAxis();
+	op.mLinearVelocity = v3(projectileSpeed) * ownOrientation.zAxis();
 
-	emit<SectorEvent>(ID::S_CREATE_GO, op);
-	emit<Audio::AudioEvent>(ID::AE_SOUND_EMITTER_PROCESS_SOUND, mLaserSound);
-
+	op.mStorage.emit(ID::AE_SOUND_EMITTER_PROCESS_SOUND, mLaserSound);
+	
 	if (autoRocket)
 	{
-		GameHandle randomInvader = targets[rand()%targets.size()];
-		emit<GameObjectEvent>(ID::GOE_AUTONAVIGATE, randomInvader, op.mHandle);
+		u32 target = rand() % targets.size();
+		
+		GameHandle randomInvader = targets[target];
+
+		BFG::Property::ValueId v(ID::PV_FirstTargets, ValueId::ENGINE_PLUGIN_ID);
+		BFG::AutoNavigator::TargetContainerT targets;
+		targets.push_back(randomInvader);
+		op.mGoValues[v] = targets;
 	}
+
+	mSubLane->emit(ID::S_CREATE_GO, op);
 }
 

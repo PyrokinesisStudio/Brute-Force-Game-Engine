@@ -29,6 +29,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
 
+// LCOV_EXCL_START
+
 namespace BFG {
 namespace Base {
 namespace Deco {
@@ -75,5 +77,7 @@ void h3(const std::string& text, size_t width)
 } // namespace Deco
 } // namespace Base
 } // namespace BFG
+
+// LCOV_EXCL_STOP
 
 #endif

@@ -30,18 +30,17 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <string>
 
-#include <boost/function.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <Base/LibraryMainBase.h>
 #include <Base/Logger.h>
 #include <Base/Pause.h>
 #include <Core/Path.h>
 #include <Core/Types.h>
-#include <EventSystem/Core/EventLoop.h>
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 
 #ifdef BFG_USE_AUDIO
-	#include <Audio/Interface.h>
+	#include <Audio/Audio.h>
 #endif
 
 #ifdef BFG_USE_CONTROLLER
@@ -61,33 +60,22 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 namespace BFG {
+namespace Init {
 
-typedef boost::function<void(EventLoop&)> InitHandlerT;
-typedef std::vector<boost::shared_ptr<Base::LibraryMainBase<EventLoop> > > MainContainerT;
-
-namespace detail {
+enum RunMode
+{
+	RM_SERVER,
+	RM_CLIENT,
+	RM_SINGLE
+};
 	
-	inline void idle(EventLoop&) {
-		Base::pause();
-	}
-	
-	template <class T>
-	inline bool from_string(T& t, 
-	                        const std::string& s, 
-	                        std::ios_base& (*f)(std::ios_base&))
-	{
-		std::istringstream iss(s);
-		return !(iss >> f >> t).fail();
-	}
-}
-
 struct Configuration
 {
-	Configuration(const std::string& appName) :
+	Configuration(const std::string& appName, RunMode rm = RM_SINGLE) :
 	appName(appName),
+	runMode(rm),
 	logLevel(Base::Logger::SL_WARNING),
-	controllerFrequency(1000),
-	handler(&detail::idle)
+	controllerFrequency(1000)
 	{
 		if (appName.empty())
 			throw std::logic_error
@@ -96,6 +84,7 @@ struct Configuration
 	
 	// Mandatory Parameters
 	const std::string appName;
+	RunMode runMode;
 
 	// Optional Parameters
 	Base::Logger::SeverityLevel logLevel;
@@ -103,92 +92,126 @@ struct Configuration
 	std::string logName;
 	std::string ip;
 	std::string port;
-	InitHandlerT handler;
 };
 
-//! Initializes the BFG-Engine.
-MainContainerT engineInit(const Configuration& cfg)
+void initLogger(const std::string& fileName, Base::Logger::SeverityLevel level)
+{
+	Path p;
+	Base::Logger::Init(level, p.Get(ID::P_LOGS) + "/" + fileName);
+}
+
+std::string strNetworkMode(RunMode rm)
+{
+	switch (rm)
+	{
+	case RM_SERVER:
+		return "Server";
+	case RM_CLIENT:
+		return "Client";
+	}
+	
+	return "";
+}
+
+Event::Synchronizer gSynchronizer;
+
+// AUDIO ################################################
+#ifdef BFG_USE_AUDIO
+	const u32 AUDIO_FREQ = 100;
+	boost::scoped_ptr<Event::Lane> gAudioLane;
+#endif
+
+void initAudio(const Configuration& cfg) 
+{
+#ifdef BFG_USE_AUDIO
+	gAudioLane.reset(new Event::Lane(gSynchronizer, AUDIO_FREQ, "Audio"));
+	gAudioLane->addEntry<Audio::Main>();
+#endif
+}
+
+// CONTROLLER ################################################
+#ifdef BFG_USE_CONTROLLER
+	const u32 CONTROLLER_FREQ = 100;
+	boost::scoped_ptr<Event::Lane> gControllerLane;
+#endif
+
+void initController(const Configuration& cfg)
+{
+#ifdef BFG_USE_CONTROLLER
+	gControllerLane.reset(new Event::Lane(gSynchronizer, CONTROLLER_FREQ, "Controller"));
+	gControllerLane->addEntry<Controller_::Main>(cfg.controllerFrequency);
+#endif
+}
+
+// PHYSICS ################################################
+#ifdef BFG_USE_PHYSICS
+	const u32 PHYSICS_FREQ = 100;
+	boost::scoped_ptr<Event::Lane> gPhysicsLane;
+#endif
+
+void initPhysics(const Configuration& cfg)
+{
+#ifdef BFG_USE_PHYSICS
+	gPhysicsLane.reset(new Event::Lane(gSynchronizer, PHYSICS_FREQ, "Physics", Event::RL2));
+	gPhysicsLane->addEntry<Physics::Main>();
+#endif
+}
+
+// VIEW ################################################
+#ifdef BFG_USE_VIEW
+	const u32 VIEW_FREQ = 100;
+	boost::scoped_ptr<Event::Lane> gViewLane;
+#endif
+
+void initView(const Configuration& cfg)
+{
+#ifdef BFG_USE_VIEW
+	gViewLane.reset(new Event::Lane(gSynchronizer, VIEW_FREQ, "View"));
+	gViewLane->addEntry<View::Main>(cfg.appName);
+#endif
+}
+
+// NETWORK ################################################
+#ifdef BFG_USE_NETWORK
+	const u32 NETWORK_FREQ = 100;
+	boost::scoped_ptr<Event::Lane> gNetworkLane;
+#endif
+
+void initNetwork(const Configuration& cfg)
 {
 #ifdef BFG_USE_NETWORK
-	// Parse port
-	u16 intPort = 0;
-	if (!detail::from_string(intPort, cfg.port, std::dec))
-		throw std::runtime_error("Port not a number: " + cfg.port);
 
+	//! \todo This is not a good method to determine server or client!
 	// Determine if server or client
 	bool isServer = cfg.ip.empty();
-	u8     intNetworkMode = (isServer?BFG_SERVER:BFG_CLIENT);
-	std::string strNetworkMode = (isServer?"Server":"Client");
-#else
-	std::string strNetworkMode; // For logName suffix
-#endif
 	
-	// Set logname if there is none
-	std::string logName = cfg.logName;
-	if (logName.empty())
-		logName = cfg.appName + strNetworkMode + ".log";
+	gNetworkLane.reset(new Event::Lane(gSynchronizer, NETWORK_FREQ, "Network"));
 
-	// Initialize logger
-	Path p;
-	Base::Logger::Init(cfg.logLevel, p.Get(ID::P_LOGS) + "/" + logName);
-	
-	EventLoop loop
-	(
-		true,
-		new EventSystem::BoostThread<>("Loop"),
-		new EventSystem::InterThreadCommunication()
-	);
-
-	if (!cfg.port.empty())
-		dbglog << "Starting as " + strNetworkMode;
-
-	
-	MainContainerT mains;
-	
-#ifdef BFG_USE_NETWORK
-	MainContainerT::value_type networkMain(new Network::Main(&loop, intNetworkMode));
-	mains.push_back(networkMain);
+	u8 intNetworkMode = (isServer?BFG_SERVER:BFG_CLIENT);
+	gNetworkLane->addEntry<Network::Main>(intNetworkMode);
 #else
 	assert(cfg.port.empty() && "You forgot to define BFG_USE_NETWORK!");
 #endif
+}
 
+void startNetwork(const Configuration& cfg)
+{
 #ifdef BFG_USE_NETWORK
-	if (!isServer)
-#endif
+
+	u16 intPort;
+	
+	try 
 	{
-#ifdef BFG_USE_AUDIO
-		MainContainerT::value_type audioMain(new Audio::Main);
-		mains.push_back(audioMain);
-#endif
-
-#ifdef BFG_USE_CONTROLLER
-		MainContainerT::value_type controllerMain(new Controller_::Main(cfg.controllerFrequency));
-		mains.push_back(controllerMain);
-#endif
-
-		
-#ifdef BFG_USE_PHYSICS
-		MainContainerT::value_type physicsMain(new Physics::Main(&loop));
-		mains.push_back(physicsMain);
-#endif
-
-#ifdef BFG_USE_VIEW
-		MainContainerT::value_type viewMain(new View::Main(cfg.appName));
-		mains.push_back(viewMain);
-#endif
+		intPort = boost::lexical_cast<u16>(cfg.port);
+	} 
+	catch(boost::bad_lexical_cast& e)
+	{
+		throw std::logic_error("Error during cast 'port'. " + cfg.port + " is probably not a number! " + e.what());
 	}
 
-	MainContainerT::iterator it = mains.begin();
-	for (; it != mains.end(); ++it)
-		loop.addEntryPoint((*it)->entryPoint());
-	
-	loop.run();
-	Emitter e(&loop);
-
-#ifdef BFG_USE_NETWORK
-	if (isServer)
+	if (cfg.runMode == RM_SERVER)
 	{
-		e.emit<Network::ControlEvent>(ID::NE_LISTEN, intPort);
+		gNetworkLane->emit(ID::NE_LISTEN, intPort);
 	}
 	else
 	{
@@ -197,14 +220,41 @@ MainContainerT engineInit(const Configuration& cfg)
 			stringToArray<128>(cfg.ip),
 			stringToArray<128>(cfg.port)
 		);
-		e.emit<Network::ControlEvent>(ID::NE_CONNECT, payload);
+		gNetworkLane->emit(ID::NE_CONNECT, payload);
 	}
+
+	dbglog << "Starting as " + strNetworkMode(cfg.runMode);
 #endif
-	
-	cfg.handler(loop);
-	return mains;
 }
 
+//! Initializes the BFG-Engine.
+void engine(const Configuration& cfg)
+{
+	initNetwork(cfg);
+
+	if (cfg.runMode != RM_SERVER)
+	{
+		initPhysics(cfg);
+		initController(cfg);
+		initView(cfg);
+		initAudio(cfg);
+	}
+
+	// Initialize logger
+	if (cfg.logName.empty())
+		initLogger(cfg.appName + strNetworkMode(cfg.runMode) + ".log", cfg.logLevel);
+	else
+		initLogger(cfg.logName, cfg.logLevel);
+}
+
+void startEngine(const Configuration& cfg)
+{
+	gSynchronizer.start();
+	startNetwork(cfg);
+	gSynchronizer.finish(Event::blockUntilFinishEvent);
+}
+
+} // namespace Init
 } // namespace BFG
 
 #endif

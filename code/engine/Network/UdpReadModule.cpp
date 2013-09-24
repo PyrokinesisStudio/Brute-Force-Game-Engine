@@ -34,12 +34,12 @@ namespace Network {
 
 namespace asio = boost::asio;
 
-UdpReadModule::UdpReadModule(EventLoop* loop_,
+UdpReadModule::UdpReadModule(Event::Lane& lane,
                              asio::io_service& service,
                              boost::shared_ptr<Clock::StopWatch> localTime,
                              boost::shared_ptr<Udp::SocketT> socket,
                              EndpointIdentificatorT endpointIdentificator) :
-NetworkModule<Udp>(loop_, service, UNIQUE_PEER, localTime),
+NetworkModule<Udp>(lane, service, UNIQUE_PEER, localTime),
 mSocket(socket),
 mEndpointIdentificator(endpointIdentificator)
 {
@@ -84,7 +84,7 @@ void UdpReadModule::readHandler(const boost::system::error_code& ec,
 	if (ec)
 	{
 		printErrorCode(ec, "UdpReadModule::readHandler", UNIQUE_PEER);
-		emit<ControlEvent>(ID::NE_DISCONNECT, mPeerId);
+		mLane.emit(ID::NE_DISCONNECT, mPeerId);
 		return;
 	}
 	
@@ -147,7 +147,7 @@ void UdpReadModule::onReceive(OPacket<Udp>& oPacket, PeerIdT peerId)
 		try
 		{
 			dbglog << "UdpReadModule::onReceive: Emitting NE_RECEIVED to: " << payload.mAppDestination << " from: " << peerId;
-			emit<DataPacketEvent>(ID::NE_RECEIVED, payload, payload.mAppDestination, peerId);
+			mLane.emit(ID::NE_RECEIVED, payload, payload.mAppDestination, peerId);
 		}
 		catch (std::exception& ex)
 		{

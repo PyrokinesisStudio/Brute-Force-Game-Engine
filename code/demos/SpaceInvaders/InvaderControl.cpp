@@ -26,7 +26,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "InvaderControl.h"
-#include <Physics/Event.h>
+#include <Physics/Enums.hh>
 #include "Globals.h"
 
 InvaderControl::InvaderControl(GameObject& Owner, BFG::PluginId pid) :
@@ -40,19 +40,19 @@ InvaderControl::InvaderControl(GameObject& Owner, BFG::PluginId pid) :
 
 void InvaderControl::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 {
-	Location go = getGoValue<Location>(ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
+	v3 ownPosition = getGoValue<v3>(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
 
 	v3 delta = INVADER_VELOCITY * timeSinceLastFrame.value() * mDirection;
-	go.position += delta;
+	ownPosition += delta;
 
 	mDistanceFromStart.x += delta.x;
 
-	checkPosition(go.position, mDirection);
+	checkPosition(ownPosition, mDirection);
 
-	go.orientation = INVADER_ORIENTATION;
+	qv4 ownOrientation = INVADER_ORIENTATION;
 
-	emit<Physics::Event>(ID::PE_UPDATE_POSITION, go.position, ownerHandle());
-	emit<Physics::Event>(ID::PE_UPDATE_ORIENTATION, go.orientation, ownerHandle());
+	subLane()->emit(ID::PE_UPDATE_POSITION, ownPosition, ownerHandle());
+	subLane()->emit(ID::PE_UPDATE_ORIENTATION, ownOrientation, ownerHandle());
 }
 
 void InvaderControl::checkPosition(v3& position, v3& direction) const

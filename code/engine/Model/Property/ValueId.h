@@ -35,7 +35,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Property {
 
-//! \todo This whole file badly needs documentation!
+//! \brief (Hopefully) unique identifier composed out of two parts.
+//! \tparam PartialT_ Type of one half of the identifier
+//! \tparam CompleteT_ Type of the full identifier
 template <typename PartialT_, typename CompleteT_>
 struct ComposedId
 {
@@ -46,10 +48,12 @@ struct ComposedId
 	typedef PartialT                             VarIdT;
 	
 	typedef ComposedId<PartialT, CompleteT>      ThisT;
-	
+
+	//! \brief Default value for properties of the BFG engine
 	const static PluginIdT ENGINE_PLUGIN_ID;
-	
-	const static size_t PARTIAL_TYPE_BITS = sizeof(PartialT) * 8;
+
+	//! \brief Number of bits of the partial type
+	const static std::size_t PARTIAL_TYPE_BITS = sizeof(PartialT) * 8;
 
 	ComposedId() :
 	mVarId(0),
@@ -64,7 +68,8 @@ struct ComposedId
 		// One 'CompleteT' consists out of exactly two 'PartialT's.
 		BOOST_STATIC_ASSERT((sizeof(PartialT)*2 == sizeof(CompleteT)));
 	}
-	
+
+	//! \brief Returns the ComposedId as a whole
 	CompleteT full() const
 	{
 		return static_cast<CompleteT>(mPluginId) << PARTIAL_TYPE_BITS | mVarId;
@@ -93,8 +98,10 @@ struct ComposedId
 template <typename PartialT_, typename CompleteT_>
 const PartialT_ ComposedId<PartialT_, CompleteT_>::ENGINE_PLUGIN_ID = 0;
 
-// These should be the most common cases
+//! \brief Unique identifier for a value composed out of PluginId and VarId.
 typedef ComposedId<s16, s32> ValueId;
+
+//! \brief Unique identifier for a Plugin.
 typedef ValueId::PluginIdT PluginId;
 
 namespace detail

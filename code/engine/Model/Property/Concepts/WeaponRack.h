@@ -31,7 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace BFG {
 
-class WeaponRack : public Property::Concept
+class MODEL_API WeaponRack : public Property::Concept
 {
 public:
 	const static s32 ROCKET_AMMO_START_AMOUNT_FOR_TESTING = 100;
@@ -40,11 +40,13 @@ public:
 
 private:
 	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
-	virtual void internalOnEvent(EventIdT action, Property::Value payload, GameHandle module, GameHandle sender);
 
-	void fireRocket();
-	void fireLaser();
-
+	void onFireRocket();
+	void onFireLaser();
+	
+	void onSetWeaponTarget(GameHandle target);
+	void onReinitialize();
+	
 	void updateGuiAmmo() const;
 	
 	void calculateVelocity(f32 startImpulse,

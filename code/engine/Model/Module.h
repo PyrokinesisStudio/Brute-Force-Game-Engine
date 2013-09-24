@@ -27,7 +27,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_MODULE__
 #define BFG_MODULE__
 
-#include <Model/Events/GameObjectEvent_fwd.h>
 #include <Model/Property/ConceptId.h>
 #include <Model/Property/ValueId.h>
 #include <Model/Property/Value.h>

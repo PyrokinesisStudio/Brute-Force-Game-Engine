@@ -42,21 +42,20 @@ namespace BFG {
 
 struct Module;
 
-class AutoNavigator : public Property::Concept
+class MODEL_API AutoNavigator : public Property::Concept
 {
 public:
+	typedef std::vector<GameHandle> TargetContainerT;
+
 	AutoNavigator(GameObject& owner, PluginId pid);
 	~AutoNavigator();
 
 private:
-	typedef std::vector<GameHandle> TargetContainerT;
-
 	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
 	virtual void internalSynchronize();
-	virtual void internalOnEvent(EventIdT action,
-	                             Property::Value payload,
-	                             GameHandle module,
-	                             GameHandle sender);
+
+	void onAutonavigate(GameHandle target);
+	void onValueUpdated(const Property::ValueId& valueId);
 
 	void operate();
 	void rotate(const qv4& rotation);

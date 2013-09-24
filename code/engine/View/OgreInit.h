@@ -37,9 +37,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/shared_ptr.hpp>
 
 #include <Core/Types.h>
-#include <EventSystem/Core/EventLoop.h>
+#include <Event/Event.h>
 
-#include <View/Event_fwd.h>
+#include <View/Defs.h>
 
 namespace Ogre
 {
@@ -75,7 +75,7 @@ public:
 	//! eventHandler. It initializes Ogre and MyGUI.
 	//! \param[in] loop EventLoop
 	//! \param[in] windowTitle Window caption displayed in window mode.
-	OgreInit(EventLoop* loop, const std::string& windowTitle);
+	OgreInit(Event::Lane& lane, const std::string& windowTitle);
 
 	//! \brief 
 	//! Destructor unregisters VE_SHUTDOWN, VE_CONSOLE, VE_DEBUG_FPS and VE_SCREENSHOT.
@@ -100,12 +100,11 @@ private:
 	//! \brief Initializes MyGUI using guiBase.xml.
 	void initMyGui();
 
-	//! \brief Handles the following View-Events:
-	//! \param[in] VE can be VE_SHUTDOWN, VE_CONSOLE (bool - display console), VE_DEBUG_FPS (bool - display FPS) or VE_SCREENSHOT.
-	void eventHandler(Event* VE);
-	
 	//! \brief Creates a screenshot and puts it in the "Screenshot" folder.
 	void onScreenShot();
+
+	//! \brief Sets the shutdown flag.
+	void onShutdown();
 
 	//! \brief Shows/hides the Debug frames-per-second display.
 	//! \param[in] enable Show display
@@ -115,14 +114,19 @@ private:
 	//! \param[in] enable Show console
 	void onConsole(bool enable);
 	
+	//! \brief Used by other modules to request mesh loading
+	//! \param[in] meshName Filename of the requested mesh
+	void onRequestMesh(const std::string& meshName, GameHandle sender);
+	
 	//! \brief Handles the Loop-Event and checks if there was an error in Ogre or if the view is shut down.
 	//! \param[in] iLE LoopEvent
-	void loopEventHandler(LoopEvent* iLE);
+	void onTick(Event::TickData);
 
 	//! \brief Calls Ogres RenderOneFrame
 	bool doRenderTick();
 
-	EventLoop* mLoop;
+	Event::Lane& mLane;
+	Event::SubLanePtr mSubLane;
 
 	bool              mShutdown;
 	const std::string mWindowTitle;
@@ -132,14 +136,14 @@ private:
 	boost::shared_ptr<Ogre::Root> mRoot;
 	Ogre::SceneManager* mSceneMgr;
 
+	// Leave this MyGui-pointer order because gui must be deleted first.
+	boost::shared_ptr<MyGUI::OgrePlatform> mPlatform;
+	boost::shared_ptr<MyGUI::Gui> mGui;
+
 	// for initialization only !!
 	boost::scoped_ptr<Camera> mMainCamera;
 	boost::scoped_ptr<Fps> mFps;
 	boost::scoped_ptr<Console> mConsole;
-	
-	// Leave this MyGui-pointer order because gui must be deleted first.
-	boost::shared_ptr<MyGUI::OgrePlatform> mPlatform;
-	boost::shared_ptr<MyGUI::Gui> mGui;
 };
 
 } // namespace View

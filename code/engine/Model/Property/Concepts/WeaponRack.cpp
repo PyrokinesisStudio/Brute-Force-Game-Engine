@@ -30,9 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/GameHandle.h>
 
-#include <Model/Events/SectorEvent.h>
-#include <Model/Events/GameObjectEvent.h>
-
+#include <Model/Data/ObjectParameters.h>
 #include <Model/Environment.h>
 
 namespace BFG {
@@ -43,52 +41,19 @@ mRocketAmmo(ROCKET_AMMO_START_AMOUNT_FOR_TESTING),
 mTarget(NULL_HANDLE)
 {
 	require("Physical");
-
-	requestEvent(ID::GOE_FIRE_ROCKET);
-	requestEvent(ID::GOE_FIRE_LASER);
-	requestEvent(ID::GOE_SET_WEAPON_TARGET);
-	requestEvent(ID::GOE_REINITIALIZE);
 	
+	subLane()->connectV(ID::GOE_FIRE_ROCKET, this, &WeaponRack::onFireRocket, ownerHandle());
+	subLane()->connectV(ID::GOE_FIRE_LASER, this, &WeaponRack::onFireLaser, ownerHandle());
+	subLane()->connect(ID::GOE_SET_WEAPON_TARGET, this, &WeaponRack::onSetWeaponTarget, ownerHandle());
+	subLane()->connectV(ID::GOE_REINITIALIZE, this, &WeaponRack::onReinitialize, ownerHandle());
+
 	updateGuiAmmo();
 }
 
-void WeaponRack::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
-{
-}
+void WeaponRack::internalUpdate(quantity<si::time, f32> /*timeSinceLastFrame*/)
+{}
 
-void WeaponRack::internalOnEvent(EventIdT action,
-                                 Property::Value payload,
-                                 GameHandle module,
-                                 GameHandle sender)
-{
-	switch(action)
-	{
-	case ID::GOE_FIRE_ROCKET:
-		fireRocket();
-		break;
-
-	case ID::GOE_FIRE_LASER:
-		fireLaser();
-		break;
-
-	case ID::GOE_SET_WEAPON_TARGET:
-		mTarget = payload;
-		infolog << "WeaponRack_New Target: " << mTarget;
-		break;
-		
-	case ID::GOE_REINITIALIZE:
-		mRocketAmmo = ROCKET_AMMO_START_AMOUNT_FOR_TESTING;
-		updateGuiAmmo();
-		break;
-
-	default:
-		warnlog << "WeaponRack: Can't handle event with ID: "
-		        << action;
-		break;
-	}
-}
-
-void WeaponRack::fireRocket()
+void WeaponRack::onFireRocket()
 {
 	// No target?
 	if (mTarget == NULL_HANDLE)
@@ -122,13 +87,13 @@ void WeaponRack::fireRocket()
 	op.mLocation = spawnLocation;
 	op.mLinearVelocity = startVelocity;
 	
-	emit<SectorEvent>(ID::S_CREATE_GO, op);
-	emit<GameObjectEvent>(ID::GOE_AUTONAVIGATE, mTarget, op.mHandle);
+	subLane()->emit(ID::S_CREATE_GO, op);
+	subLane()->emit(ID::GOE_AUTONAVIGATE, mTarget, op.mHandle);
 	
 	updateGuiAmmo();
 }
 
-void WeaponRack::fireLaser()
+void WeaponRack::onFireLaser()
 {
 	const float spawnDistance = 15.0f;
 	const float startImpulse = 800.0f;	// 200 m/s
@@ -152,16 +117,28 @@ void WeaponRack::fireLaser()
 	op.mLocation = spawnLocation;
 	op.mLinearVelocity = startVelocity;
 	
-	emit<SectorEvent>(ID::S_CREATE_GO, op);
+	subLane()->emit(ID::S_CREATE_GO, op);
+}
+
+void WeaponRack::onSetWeaponTarget(GameHandle target)
+{
+	infolog << "New WeaponRack Target: " << mTarget;
+	mTarget = target;
+}
+
+void WeaponRack::onReinitialize()
+{
+	mRocketAmmo = ROCKET_AMMO_START_AMOUNT_FOR_TESTING;
+	updateGuiAmmo();
 }
 
 void WeaponRack::updateGuiAmmo() const
 {
-	emit<GameObjectEvent>
+	subLane()->emit
 	(
 		ID::GOE_ROCKET_AMMO,
 		mRocketAmmo,
-		0,
+		NULL_HANDLE,
 		ownerHandle()
 	);
 }
@@ -170,9 +147,9 @@ void WeaponRack::calculateVelocity(f32 startImpulse,
                                    v3& newVelocity,
                                    bool addShipVelocity) const
 {
-	const Location& go = getGoValue<Location>(ID::PV_Location, pluginId());
-
-	newVelocity = go.orientation * v3(0, 0, startImpulse);
+	const qv4& ownOrientation = getGoValue<qv4>(ID::PV_Orientation, pluginId());
+	
+	newVelocity = ownOrientation * v3(0, 0, startImpulse);
 
 	if (addShipVelocity)
 	{
@@ -184,10 +161,12 @@ void WeaponRack::calculateVelocity(f32 startImpulse,
 void WeaponRack::calculateSpawnLocation(Location& spawnLocation,
                                         f32 spawnDistance) const
 {
-	const Location& go = getGoValue<Location>(ID::PV_Location, pluginId());
+	const v3& ownPosition = getGoValue<v3>(ID::PV_Position, pluginId());
+	const qv4& ownOrientation = getGoValue<qv4>(ID::PV_Orientation, pluginId());
+
 	
-	spawnLocation.position = go.position + go.orientation.zAxis() * spawnDistance;
-	spawnLocation.orientation = go.orientation;
+	spawnLocation.position = ownPosition + ownOrientation.zAxis() * spawnDistance;
+	spawnLocation.orientation = ownOrientation;
 }
 
 } // namespace BFG

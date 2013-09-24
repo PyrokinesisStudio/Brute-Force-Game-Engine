@@ -31,8 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
-#include <EventSystem/Core/EventLoop.h>
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 
 #include <Network/Network.h>
 
@@ -49,6 +48,7 @@ struct EventStatus
 		gotReceived = false;
 		gotTcpData = false;
 		gotUdpData = false;
+		gotReady = false;
 	}
 	
 	bool operator == (const EventStatus& rhs) const
@@ -58,7 +58,8 @@ struct EventStatus
 			gotDisconnected == rhs.gotDisconnected &&
 			gotReceived == rhs.gotReceived &&
 			gotTcpData == rhs.gotTcpData &&
-			gotUdpData == rhs.gotUdpData;
+			gotUdpData == rhs.gotUdpData &&
+			gotReady == rhs.gotReady;
 	}
 	
 	bool operator != (const EventStatus& rhs) const
@@ -71,6 +72,7 @@ struct EventStatus
 	bool gotReceived;
 	bool gotTcpData;
 	bool gotUdpData;
+	bool gotReady;         // Server Only
 };
 
 template <typename T>
@@ -84,36 +86,33 @@ void periodicWaitForEqual(const T& lhs, const T& rhs, boost::posix_time::time_du
 		this_thread::sleep(interval);
 		slept += interval;
 	}
+	
+	if (lhs != rhs)
+		BOOST_TEST_MESSAGE("periodicWaitForEqual: Time expired.");
 }
 
 template <typename ApplicationT, BFG::u8 mode, BFG::GameHandle appHandle>
 struct NetworkContext
 {
-	boost::shared_ptr<EventLoop> loop;
-	boost::scoped_ptr<ApplicationT> application;
-	boost::scoped_ptr<BFG::Network::Main> mNetworkMain;
-	boost::shared_ptr<BFG::Emitter> emitter;
-	EventStatus status;
-	
-	NetworkContext(const char*const Threadname, const std::string& testMsg)
+	NetworkContext(const char*const Threadname, const std::string& testMsg) :
+	lane(synchronizer, 100)
 	{
-		loop.reset(new EventLoop(false, new EventSystem::BoostThread<>(Threadname), new EventSystem::NoCommunication()));
-		mNetworkMain.reset(new BFG::Network::Main(loop.get(), mode));
-		loop->addEntryPoint(mNetworkMain->entryPoint());
-		application.reset(new ApplicationT(loop.get(), status, appHandle, testMsg));
-		loop->run();
-		emitter.reset(new BFG::Emitter(loop.get()));
+		lane.addEntry<BFG::Network::Main>(mode);
+		
+		application.reset(new ApplicationT(lane, status, appHandle, testMsg));
+		synchronizer.start();
 	}
-	
+
 	~NetworkContext()
 	{
-		application.reset();
-		loop->setExitFlag();
-		boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-		emitter.reset();
-		mNetworkMain.reset();
-		loop.reset();
+		synchronizer.finish();
 	}
+	
+	BFG::Event::Synchronizer synchronizer;
+	BFG::Event::Lane lane;
+
+	boost::scoped_ptr<ApplicationT> application;
+	EventStatus status;
 };
 
 #endif

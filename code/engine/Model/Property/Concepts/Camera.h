@@ -130,7 +130,7 @@ protected:
 };
 
 
-class Camera : public Property::Concept
+class MODEL_API Camera : public Property::Concept
 {
 public:
 	Camera(GameObject& owner, PluginId pid);
@@ -139,7 +139,8 @@ public:
 private:
 	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
 	virtual void internalSynchronize();
-	virtual void internalOnEvent(EventIdT action, Property::Value payload, GameHandle module, GameHandle sender);
+
+	void onSetCameraTarget(GameHandle target);
 
 	virtual void internalOnModuleAttached(GameHandle module);
 
@@ -156,7 +157,9 @@ private:
 
 	Location mLastObjLocation;
 	Location mOwnLocation;
-	Location mNewLocation;
+	
+	v3 mNewPosition;
+	qv4 mNewOrientation;
 
 	v3 mMaxRotationVelocity;
 	v3 mRotationInput;

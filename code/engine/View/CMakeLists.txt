@@ -39,7 +39,6 @@ TARGET_LINK_LIBRARIES(bfgView
 	${OIS_LIBRARIES}
 	bfgBase
 	bfgController
-	bfgEventCore
 	bfgCore
 )
 

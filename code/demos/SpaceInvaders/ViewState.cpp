@@ -28,39 +28,26 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include "ViewState.h"
 
 #include <Base/Cpp.h>
+#include <Base/Logger.h>
 
 #include <View/Main.h>
+#include <View/EffectCreation.h>
 #include <View/Explosion.h>
 
 #include "PowerUpEffect.h"
 
 
-ViewMainState::ViewMainState(GameHandle handle, EventLoop* loop) :
-	State(handle, loop)
+ViewMainState::ViewMainState(GameHandle handle,  Event::Lane& lane) :
+	State(handle, lane)
 {
-	registerEventHandler();
+	lane.connect(ID::VE_EFFECT, this, &ViewMainState::onEffect);
 }
 
 
 ViewMainState::~ViewMainState()
 {
-	unregisterEventHandler();
-	emit<BFG::View::Event>(BFG::ID::VE_SHUTDOWN, 0);
+	mLane.emit(BFG::ID::VE_SHUTDOWN, Event::Void());
 }
-
-
-void ViewMainState::viewEventHandler(View::Event* e)
-{
-	switch(e->id())
-	{
-	case ID::VE_EFFECT:
-		onEffect(boost::get<View::EffectCreation>(e->data()));
-		break;
-	default:
-		throw std::logic_error("ViewMainState::eventHandler: received unhandled event!");
-	}
-}
-
 
 bool ViewMainState::frameStarted(const Ogre::FrameEvent& evt)
 {
@@ -80,22 +67,9 @@ bool ViewMainState::frameEnded(const Ogre::FrameEvent& evt)
 	return true;
 }
 
-
-void ViewMainState::registerEventHandler()
-{
-	View::Main::eventLoop()->connect(ID::VE_EFFECT, this, &ViewMainState::viewEventHandler);
-}
-
-
-void ViewMainState::unregisterEventHandler()
-{
-	View::Main::eventLoop()->disconnect(ID::VE_EFFECT, this);
-}
-
-
 void ViewMainState::onEffect(const View::EffectCreation& ec)
 {
-	const CharArray128T& ca = ec.get<0>();
+	const std::string& ca = ec.get<0>();
 	const v3& position = ec.get<1>();
 	const f32 intensity = ec.get<2>();
 	const std::string effect(ca.data());

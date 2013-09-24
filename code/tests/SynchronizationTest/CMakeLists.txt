@@ -36,7 +36,6 @@ TARGET_LINK_LIBRARIES(bfgSynchronizationTest
 	bfgBase
 	bfgController
 	bfgCore
-	bfgEventCore
 	bfgModel
 	bfgNetwork
 	bfgPhysics

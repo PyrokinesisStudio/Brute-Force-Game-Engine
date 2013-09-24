@@ -29,25 +29,21 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <OgreFrameListener.h>
 
-#include <EventSystem/Emitter.h>
-#include <Core/Types.h>
+#include <Core/GameHandle.h>
 
 #include <View/Owner.h>
 #include <View/Defs.h>
 
 using BFG::GameHandle;
 
-class EventLoop;
-
 namespace BFG {
 namespace View {
 
 class VIEW_API State : public Ogre::FrameListener,
-                       protected Owner,
-                       protected Emitter
+                       protected Owner
 {
 public:
-	         State(GameHandle handle, EventLoop* loop);
+	State(GameHandle handle, Event::Lane& lane);
 	virtual ~State();
 	
 	virtual void pause() = 0;

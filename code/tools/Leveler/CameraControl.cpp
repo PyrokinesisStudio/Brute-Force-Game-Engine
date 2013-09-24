@@ -30,7 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/GameHandle.h>
 #include <View/CameraCreation.h>
-#include <View/Event.h>
+#include <View/Enums.hh>
 
 namespace Tool
 {
@@ -82,12 +82,11 @@ void CameraControl::createDefaultCamera()
 		0
 	);
 	
-	emit<View::Event>(BFG::ID::VE_CREATE_CAMERA, cc, mData->mState);
+	mSubLane->emit(BFG::ID::VE_CREATE_CAMERA, cc, mData->mState);
 
 	for (size_t i = 0; i < 4; ++i)
 	{
 		mData->mCameras[i] = generateHandle();
-		createCam(mData->mCameras[i], &mViewNodes[i]);
 		setCanvas(mViews[i], mData->mCameras[i], &mViewTargets[i]);
 
 		BFG::v3 position;
@@ -107,8 +106,7 @@ void CameraControl::createDefaultCamera()
 			orientation = mViewParameterMap[look].mOrientation;
 		}
 
-		emit<View::Event>(BFG::ID::VE_UPDATE_POSITION, position, mData->mCameras[i]);
-		emit<View::Event>(BFG::ID::VE_UPDATE_ORIENTATION, orientation, mData->mCameras[i]);
+		createCam(mData->mCameras[i], &mViewNodes[i], position, orientation);
 
 		MyGUI::Widget* title = mViews[i]->findWidget("Title");
 		const std::string type(mViews[i]->getUserString("type"));
@@ -116,7 +114,7 @@ void CameraControl::createDefaultCamera()
 	}
 }
 
-void CameraControl::createCam(BFG::GameHandle camHandle, Ogre::SceneNode** node)
+void CameraControl::createCam(BFG::GameHandle camHandle, Ogre::SceneNode** node, const v3& position, const qv4& orientation)
 {
 	(*node) = mSceneMan->getRootSceneNode()->createChildSceneNode(stringify(camHandle));
 
@@ -126,10 +124,12 @@ void CameraControl::createCam(BFG::GameHandle camHandle, Ogre::SceneNode** node)
 		camHandle,
 		false,
 		mFullSize.width / 2,
-		mFullSize.height / 2
+		mFullSize.height / 2,
+		position,
+		orientation
 	);
 
-	emit<View::Event>(BFG::ID::VE_CREATE_CAMERA, cc, mData->mState);
+	mSubLane->emit(BFG::ID::VE_CREATE_CAMERA, cc, mData->mState);
 }
 
 void CameraControl::setCanvas(MyGUI::Canvas* canvas, BFG::GameHandle camHandle, Ogre::RenderTarget** target)
@@ -265,11 +265,6 @@ void CameraControl::setAspectRatio(const std::string& camName, float width, floa
 		Ogre::Camera* cam = mSceneMan->getCamera(camName);
 		cam->setAspectRatio(width / height);
 	}
-}
-
-void CameraControl::eventHandler(BFG::Controller_::VipEvent* ve)
-{
-
 }
 
 void CameraControl::onMousePressed(MyGUI::Widget* widget, int x, int y, MyGUI::MouseButton id)

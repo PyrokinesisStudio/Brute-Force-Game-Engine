@@ -51,6 +51,7 @@ HWND createInputGrabbingWindow()
 		throw std::runtime_error("Failed to create an input grabbing window!");
 	}
 
+	DisableProcessWindowsGhosting();
 	ShowWindow(hWnd, SW_SHOW);
 	return hWnd;
 }

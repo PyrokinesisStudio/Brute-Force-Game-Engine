@@ -27,7 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_PHYSICS_PHYSICS_H
 #define BFG_PHYSICS_PHYSICS_H
 
-#include <Physics/Event.h>
+#include <Physics/Event_fwd.h>
 #include <Physics/Main.h>
 
 #endif

@@ -26,7 +26,6 @@ SET_TARGET_PROPERTIES(bfgChat PROPERTIES OUTPUT_NAME_DEBUG "bfgChat_d")
 TARGET_LINK_LIBRARIES(bfgChat
 	bfgBase
 	bfgCore
-	bfgEventCore
 	bfgNetwork
 	bfgView
 	${BoostLog_LIBRARIES}

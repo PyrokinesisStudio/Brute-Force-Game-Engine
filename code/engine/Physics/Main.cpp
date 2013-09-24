@@ -27,14 +27,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Physics/Main.h>
 #include <Physics/PhysicsManager.h>
 
-class EventLoop;
-
 namespace BFG {
 namespace Physics { 
 
-void Main::main(EventLoop* loop)
+void Main::main(Event::Lane* lane)
 {
-	mPhysicsManager.reset(new PhysicsManager(loop));
+	mPhysicsManager.reset(new PhysicsManager(*lane));
 }
 
 } // namespace Physics

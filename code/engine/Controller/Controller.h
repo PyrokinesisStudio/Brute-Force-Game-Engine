@@ -28,7 +28,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_CONTROLLER_CONTROLLER_H
 
 #include <Controller/Action.h>
-#include <Controller/ControllerEvents.h>
+#include <Controller/ControllerEvents_fwd.h>
+#include <Controller/ControllerImpl.h>
+#include <Controller/Enums.hh>
 #include <Controller/Main.h>
 #include <Controller/StateInsertion.h>
 

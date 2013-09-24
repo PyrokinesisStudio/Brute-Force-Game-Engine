@@ -32,7 +32,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreSceneManager.h>
 
 #include <Core/Math.h>
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 #include <Model/GameObject.h>
 #include <Model/Environment.h>
 #include <View/Convert.h>
@@ -72,14 +72,14 @@ struct ViewParameter
 	}
 };
 
-class CameraControl : public BaseFeature, public Emitter
+class CameraControl : public BaseFeature
 {
 public:
 	typedef std::map<std::string, Ogre::SceneNode*> RacePointMap;
 	
-	CameraControl(EventLoop* loop, boost::shared_ptr<SharedData> data) :
+	CameraControl(BFG::Event::Lane& lane, boost::shared_ptr<SharedData> data) :
 	BaseFeature("CameraControl", false),
-	Emitter(loop),
+	mSubLane(lane.createSubLane()),
 	mData(data),
 	mFullView(NULL),
 	mCameraPosition(NULL),
@@ -207,18 +207,16 @@ public:
 	virtual void activate()
 	{
 		mActive = true;
-		emit<Tool::Event>(A_UPDATE_FEATURES, 0);
+		mSubLane->emit(A_UPDATE_FEATURES, Event::Void());
 	}
 	virtual void deactivate()
 	{
 		mActive = false;
-		emit<Tool::Event>(A_UPDATE_FEATURES, 0);
+		mSubLane->emit(A_UPDATE_FEATURES, Event::Void());
 	}
 
 	void createDefaultCamera();
 	void create4ViewScene();
-
-	void eventHandler(BFG::Controller_::VipEvent* ve);
 
 	virtual void update(const Ogre::FrameEvent& evt);
 
@@ -253,7 +251,7 @@ private:
 
 	void setCanvas(MyGUI::Canvas* _value, BFG::GameHandle camHandle, Ogre::RenderTarget** target);
 	void destroy(MyGUI::Canvas* _value);
-	void createCam(BFG::GameHandle camHandle, Ogre::SceneNode** node);
+	void createCam(BFG::GameHandle camHandle, Ogre::SceneNode** node, const v3& position, const qv4& orientation);
 
 	void onMousePressed(MyGUI::Widget* widget, int x, int y, MyGUI::MouseButton id);
 	void onMouseReleased(MyGUI::Widget* widget, int x, int y, MyGUI::MouseButton id);
@@ -274,6 +272,8 @@ private:
 	void selectRacePoint(MyGUI::Widget* widget, int x, int y);
 	void setSelectedRacePoint(const std::string& name);
 
+	BFG::Event::SubLanePtr mSubLane;
+	
 	boost::shared_ptr<SharedData> mData;
 
 	MyGUI::Canvas* mFullView;

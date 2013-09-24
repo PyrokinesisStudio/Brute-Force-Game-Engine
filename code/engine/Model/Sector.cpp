@@ -26,35 +26,32 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Model/Sector.h>
 
-#include <EventSystem/Core/EventLoop.h>
-
-#include <Model/Events/SectorEvent.h>
 #include <Model/GameObject.h>
 #include <Model/Data/GameObjectFactory.h>
 
-#include <Physics/Event.h>
-#include <View/Event.h>
+#include <Physics/Event_fwd.h>
+
+#include <View/Enums.hh>
 
 namespace BFG {
 
-Sector::Sector(EventLoop* loop,
+Sector::Sector(Event::Lane& lane,
                GameHandle handle,
                const std::string& name,
                boost::shared_ptr<GameObjectFactory> gof) :
 Managed(handle, name, ID::OT_Sector),
-Emitter(loop),
+mSubLane(lane.createSubLane()),
 mGameObjectFactory(gof)
 {
 	assert(gof && "GameObjectFactory must be initialized");
 
-	loop->connect(ID::S_CREATE_GO, this, &Sector::onCreateObject);
-	loop->connect(ID::S_DESTROY_GO, this, &Sector::onDestroyObject);
+	mSubLane->connect(ID::S_CREATE_GO, this, &Sector::onCreateObject);
+	mSubLane->connect(ID::S_DESTROY_GO, this, &Sector::onDestroyObject);
 }
 
 Sector::~Sector()
 {
-	loop()->disconnect(ID::S_CREATE_GO, this);
-	loop()->disconnect(ID::S_DESTROY_GO, this);
+	mSubLane.reset();
 }
 
 void Sector::addObject(boost::shared_ptr<Managed> object)
@@ -108,25 +105,21 @@ void Sector::deleteMarkedObjectsForRemoval()
 	{
 		mObjectMap.erase(mToRemove[i]);
 		
-		emit<View::Event>(ID::VE_DESTROY_OBJECT, mToRemove[i]);
-		emit<Physics::Event>(ID::PE_DELETE_OBJECT, mToRemove[i]);
+		mSubLane->emit(ID::VE_DESTROY_OBJECT, mToRemove[i]);
+		mSubLane->emit(ID::PE_DELETE_OBJECT, mToRemove[i]);
 	}
 	mToRemove.clear();
 }
 
-void Sector::onCreateObject(SectorEvent* se)
+void Sector::onCreateObject(const ObjectParameter& op)
 {
-	boost::shared_ptr<GameObject> go = mGameObjectFactory->createGameObject
-	(	
-		boost::get<ObjectParameter>(se->data())
-	);
+	boost::shared_ptr<GameObject> go = mGameObjectFactory->createGameObject(op);
 	
 	addObject(go);
 }
 
-void Sector::onDestroyObject(SectorEvent* se)
+void Sector::onDestroyObject(GameHandle handle)
 {
-	GameHandle handle = boost::get<GameHandle>(se->data());
 	removeObject(handle);
 }
 

@@ -56,11 +56,8 @@ public:
 	virtual void activate();
 	virtual void deactivate();
 
-	virtual void eventHandler(BFG::Controller_::VipEvent* ve)
-	{
-	}
-
 	virtual void update(const Ogre::FrameEvent& evt);
+
 private:
 
 	void onCloseClicked(MyGUI::Window*, const std::string& button);

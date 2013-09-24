@@ -28,19 +28,22 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define DESTROYABLE_H_
 
 #include <Model/Property/Concept.h>
+#include <Physics/Physics_fwd.h>
 
 namespace BFG {
 
 class Sector;
 
-class Destroyable : public Property::Concept
+class MODEL_API Destroyable : public Property::Concept
 {
 public:
 	Destroyable(GameObject& owner, PluginId pid);
 
 private:
 	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
-	virtual void internalOnEvent(EventIdT action, Property::Value payload, GameHandle module, GameHandle sender);
+	
+	void onContact(const Physics::ModulePenetration& mp);
+	void onReinitialize();
 	
 	void updateModule(GameHandle, quantity<si::time, f32> timeSinceLastFrame);
 	void updateGui(f32 damage, f32 armor);

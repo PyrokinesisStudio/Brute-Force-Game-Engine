@@ -29,7 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/Types.h>
 
-#include <EventSystem/Event.h>
+#include <Event/Event.h>
 
 #include <Model/GameObject.h>
 #include <Model/Property/Concept.h>
@@ -41,10 +41,8 @@ class Cannon : public Property::Concept
 public:
 	Cannon(GameObject& Owner, BFG::PluginId pid);
 
-	void internalOnEvent(EventIdT action,
-	                     Property::Value payload,
-	                     GameHandle module,
-	                     GameHandle sender);
+	void onFireRocket();
+	void onPowerUp(s32 ammo);
 
 	void fireRocket(bool autoRocket);
 	

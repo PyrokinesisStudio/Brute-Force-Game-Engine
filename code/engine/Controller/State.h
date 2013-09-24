@@ -38,15 +38,13 @@ namespace OIS
 	class InputManager;
 }
 
-class EventLoop;
-
 namespace BFG {
 namespace Controller_ {
 
 class State
 {
-public:	
-	explicit State(EventLoop* loop);
+public:
+	explicit State(Event::Lane& eventLane);
 	~State();
 
 	void init(const std::string& state,
@@ -58,9 +56,9 @@ public:
 
 	void capture();
 
-	void sendFeedback(long microseconds_passed);
+	void sendFeedback(TimeT timeSinceLastTick);
 
-	EventLoop* eventLoop() const;
+	Event::SubLanePtr eventSubLane() const;
 
 	const std::string& getStateID() const;
 
@@ -86,7 +84,7 @@ private:
 
 	FeedbackT mFeedbacks;
 
-	EventLoop* mEventLoop;
+	Event::SubLanePtr mEventSubLane;
 };
 
 } // namespace Controller_

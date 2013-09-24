@@ -30,7 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <MyGUI.h>
 #include <OgreAnimationState.h>
 
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 
 #include <BaseFeature.h>
 #include <SharedData.h>
@@ -39,12 +39,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace Tool
 {
 
-class AnimationControl : public BaseFeature, public BFG::Emitter
+class AnimationControl : public BaseFeature
 {
 public:
-	AnimationControl(EventLoop* loop, boost::shared_ptr<SharedData> data) :
+	AnimationControl(BFG::Event::SubLanePtr sublane, boost::shared_ptr<SharedData> data) :
 	BaseFeature("Animation", true),
-	Emitter(loop),
+	mSubLane(sublane),
 	mData(data),
 	mAnimationState(NULL),
 	mAnimationLoop(false)
@@ -62,10 +62,6 @@ public:
 	virtual void activate();
 	virtual void deactivate();
 
-	virtual void eventHandler(BFG::Controller_::VipEvent* ve)
-	{
-	}
-
 	virtual void update(const Ogre::FrameEvent& evt);
 private:
 
@@ -76,6 +72,8 @@ private:
 	void onPlayPressed(MyGUI::Widget*);
 	void onPausePressed(MyGUI::Widget*);
 	void onStopPressed(MyGUI::Widget*);
+
+	BFG::Event::SubLanePtr mSubLane;
 
 	boost::shared_ptr<SharedData> mData;
 

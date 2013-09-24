@@ -16,6 +16,7 @@
             <value>NE_CONNECTED</value>
             <value>NE_DISCONNECTED</value>
             <value>NE_LISTEN</value>
+            <value>NE_SERVER_READY</value>
             <value>NE_CONNECT</value>
             <value>NE_DISCONNECT</value>
             <value>NE_SHUTDOWN</value>

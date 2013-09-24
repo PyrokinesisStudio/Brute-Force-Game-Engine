@@ -34,7 +34,7 @@ namespace BFG {
 SelfDestruction::SelfDestruction(GameObject& owner, PluginId pid) :
 Property::Concept(owner, "SelfDestruction", pid)
 {
-	initvar(ID::PV_SelfDestructCountdown);
+	requiredPvInitialized(ID::PV_SelfDestructCountdown);
 
 	require("Destroyable");	
 }
@@ -66,11 +66,13 @@ void SelfDestruction::internalSynchronize()
 {
 	while (!mToDestroy.empty())
 	{
-		emit<GameObjectEvent>(ID::PE_CONTACT, 999999.0f, ownerHandle());
-		mToDestroy.pop();
-	}	// TODO: separate calculation and emitting
-	
+		GameHandle handle = mToDestroy.front();
+		f32& damage = value<f32>(ID::PV_Damage, handle);
+		
+		damage = 999999.9f;
 
+		mToDestroy.pop();
+	}
 }
 
 } // namespace BFG

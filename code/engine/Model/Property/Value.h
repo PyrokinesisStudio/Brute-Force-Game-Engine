@@ -29,7 +29,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 #include <sstream>
-#include <Model/Events/GameObjectEvent_fwd.h>
+
+#include <boost/any.hpp>
 
 #include <Model/Defs.h>
 
@@ -57,25 +58,25 @@ public:
 	template <typename T>
 	operator T&()
 	{
-		return boost::get<T>(mValue);
+		return boost::any_cast<T&>(mValue);
 	}
 	
 	template <typename T>
 	operator const T&() const
 	{
-		return boost::get<T>(mValue);
+		return boost::any_cast<const T&>(mValue);
 	}
 	
 	template <typename T>
 	bool operator == (const T& rhs) const
 	{
-		return boost::get<T>(mValue) == rhs;
+		return boost::any_cast<const T&>(mValue) == rhs;
 	}
 	
 	template <typename T>
 	bool operator > (const T& rhs) const
 	{
-		return boost::get<T>(mValue) > rhs;
+		return boost::any_cast<const T&>(mValue) > rhs;
 	}
 	
 	//! Might conflict with boost::units::operator * and become ambigous.
@@ -85,7 +86,7 @@ public:
 	template <typename T>
 	T operator * (const T& rhs) const
 	{
-		return boost::get<T>(mValue) * rhs;
+		return  boost::any_cast<const T&>(mValue) * rhs;
 	}
 
 #if DEACTIVATED_DUE_TO_INFINITE_RECURSION_BETWEEN_THESE_TWO_FUNCTIONS
@@ -109,7 +110,7 @@ public:
 #endif
 
 private:
-	GoePayloadT mValue;
+	boost::any mValue;
 };
 
 } // namespace Property

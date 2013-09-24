@@ -27,11 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_VIEW_CAMERACREATION_H
 #define BFG_VIEW_CAMERACREATION_H
 
-#include <boost/array.hpp>
-
 #include <Core/Types.h>
-
-#include <View/Enums.hh>
 
 namespace BFG {
 namespace View {
@@ -42,19 +38,24 @@ struct VIEW_API CameraCreation
 	               GameHandle nodeHandle,
 	               bool fullscreen,
 	               s32 width,
-	               s32 height) :
+	               s32 height,
+	               const v3& position = v3::ZERO,
+	               const qv4& orientation = qv4::IDENTITY) :
 	mHandle(handle),
 	mNodeHandle(nodeHandle),
 	mFullscreen(fullscreen),
 	mWidth(width),
-	mHeight(height){}
+	mHeight(height),
+	mPosition(position),
+	mOrientation(orientation){}
 	
-	               
 	GameHandle mHandle;
 	GameHandle mNodeHandle;
 	bool mFullscreen;
 	s32 mWidth;
 	s32 mHeight;
+	v3 mPosition;
+	qv4 mOrientation;
 };
 
 } // namespace View

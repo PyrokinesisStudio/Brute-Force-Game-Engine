@@ -31,32 +31,25 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <MyGUI.h>
 
-#include <EventSystem/Emitter.h>
-
 #include <Actions.h>
 #include <BaseFeature.h>
-#include <Event_fwd.h>
+#include <Event/Lane.h>
 #include <OpenSaveDialog.h>
 #include <SharedData.h>
 
 namespace Tool
 {
 
-class ModuleControl : public BaseFeature, public BFG::Emitter
+class ModuleControl : public BaseFeature
 {
 public:
-	ModuleControl(EventLoop* loop, boost::shared_ptr<SharedData> data) :
+	ModuleControl(BFG::Event::Lane& lane, boost::shared_ptr<SharedData> data) :
 	BaseFeature("Module", true),
-	Emitter(loop),
-	mLoop(loop),
+	mLane(lane),
 	mData(data),
 	mActivePreview(false)
 	{
-		mLoop->connect(A_UPDATE_ADAPTER, this, &ModuleControl::toolEventHandler);
-	}
-
-	virtual ~ModuleControl()
-	{
+		mLane.connectV(A_UPDATE_ADAPTER, this, &ModuleControl::onUpdateAdapter);
 	}
 
 	virtual void load();
@@ -65,10 +58,7 @@ public:
 	virtual void activate();
 	virtual void deactivate();
 
-	virtual void eventHandler(BFG::Controller_::VipEvent* ve)
-	{}
-
-	virtual void toolEventHandler(Event* te);
+	virtual void onUpdateAdapter();
 
 private:
 	void onCloseClicked(MyGUI::Window*, const std::string& name);
@@ -104,7 +94,7 @@ private:
 	void clearFields();
 	void clearGO();
 
-	EventLoop* mLoop;
+	BFG::Event::Lane& mLane;
 	boost::shared_ptr<SharedData> mData;
 
 	MyGUI::Button* mAddModule;

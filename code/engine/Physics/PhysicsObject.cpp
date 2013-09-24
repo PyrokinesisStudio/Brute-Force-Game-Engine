@@ -26,19 +26,18 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Physics/PhysicsObject.h>
 
+#include <cassert>
+
 #include <boost/foreach.hpp>
 
-#include <Base/Interpolate.h>
 #include <Base/Logger.h>
 
 #include <Core/ExternalTypes.h>
 #include <Core/Math.h>
 
-#include <View/LoadMesh.h>
+#include <View/Enums.hh>
 
-#include <Model/Events/GameObjectEvent.h>
-
-#include <Physics/Event.h>
+#include <Physics/OdeDefs.h>
 #include <Physics/OdeTriMesh.h>
 
 
@@ -46,26 +45,20 @@ namespace BFG {
 namespace Physics {
 
 PhysicsObject::MeshCacheT PhysicsObject::mMeshCache;
+std::set<std::string> PhysicsObject::mPendingRequests;
 
-PhysicsObject::PhysicsObject(EventLoop* loop,
+PhysicsObject::PhysicsObject(Event::Lane& lane,
                              dWorldID worldId,
                              dSpaceID spaceId,
                              const Location& location) :
-Emitter(loop), 
+mSubLane(lane.createSubLane()),
 mRootModule(NULL_HANDLE),
 mBodyOffset(v3::ZERO),
 mForce(v3::ZERO),
-mTorque(v3::ZERO),
-mInterpolatePosition(false),
-mPositionInterpolationParameter(0),
-mInterpolationStartPosition(v3::ZERO),
-mInterpolationEndPosition(v3::ZERO),
-mInterpolateOrientation(false),
-mOrientationInterpolationParameter(0),
-mInterpolationStartOrientation(qv4::IDENTITY),
-mInterpolationEndOrientation(qv4::IDENTITY)
+mTorque(v3::ZERO)
 {
 	mOdeBody = dBodyCreate(worldId);
+	dBodyDisable(mOdeBody);
 	mSpaceId = dHashSpaceCreate(spaceId);
 	dMassSetZero(&mOriginalMass);
 
@@ -81,51 +74,87 @@ PhysicsObject::~PhysicsObject()
 
 	dBodyDestroy(mOdeBody);
 	dSpaceDestroy(mSpaceId);
+}
+
+
+void PhysicsObject::addModule(const ModuleCreationParams& mcp)
+{
+	if (mRootModule == NULL_HANDLE)
+	{
+		assert(mGeometry.empty());
+		mRootModule = mcp.mModuleHandle;
+	}
 	
-	unregisterEvents();
-}
-
-std::string odeVectorOut(const dReal* v)
-{
-	std::stringstream ss;
-	ss << "{ ";
-	ss << v[0] << ", ";
-	ss << v[1] << ", ";
-	ss << v[2] << ", ";
-	ss << v[3] << " }";
-
-	return ss.str();
-}
-
-std::string odeMatrixOut(const dReal* m)
-{
-	std::stringstream ss;
-	ss << "[\n";
-	ss << "\t" << odeVectorOut(m) << "\n";
-	ss << "\t" << odeVectorOut(m + 4) << "\n";
-	ss << "\t" << odeVectorOut(m + 8) << "\n";
-	ss << " ]";
-	return ss.str();
-}
-
-void PhysicsObject::addModule(GameHandle moduleHandle,
-                              const std::string& meshName,
-                              ID::CollisionMode collisionMode,
-                              const v3& position,
-                              const qv4& orientation,
-                              f32 density)
-{
-	MeshCacheT::const_iterator it = mMeshCache.find(meshName);
+	MeshCacheT::const_iterator it = mMeshCache.find(mcp.mMeshName);
 	if (it == mMeshCache.end())
 	{
-		boost::shared_ptr<OdeTriMesh> ptr(new OdeTriMesh(View::loadMesh(meshName)));
+		if (mPendingRequests.find(mcp.mMeshName) == mPendingRequests.end())
+			asyncRequestMesh(mcp.mMeshName);
+		mAsyncAddModuleRequests.push_back(mcp);
+	}
+	else
+	{
+		createModule(mcp);
+	}
+}
+
+void PhysicsObject::asyncRequestMesh(const std::string& meshName)
+{
+	dbglog << "Sending mesh request \"" << meshName << "\" for #" << mRootModule;
+	mSubLane->emit(ID::VE_REQUEST_MESH, meshName, NULL_HANDLE, mRootModule);
+
+	mPendingRequests.insert(meshName);
+}
+
+void PhysicsObject::onMeshDelivery(const NamedMesh& namedMesh)
+{
+	// Unpack tuple
+	const std::string& meshName = namedMesh.get<0>();
+	const Mesh& mesh = namedMesh.get<1>();
+	
+	dbglog << "Mesh " << meshName << " was delivered to #" << mRootModule;
+	
+	// Save delivered mesh in cache
+	boost::shared_ptr<OdeTriMesh> ptr(new OdeTriMesh(mesh));
+	
+	MeshCacheT::iterator it = mMeshCache.find(meshName);
+
+	if (it == mMeshCache.end())
+	{
 		mMeshCache[meshName] = ptr;
 	}
+	
+	mPendingRequests.erase(meshName);
+
+	createPendingModules();
+}
+
+void PhysicsObject::createPendingModules()
+{
+	for (; !mAsyncAddModuleRequests.empty(); mAsyncAddModuleRequests.pop_front())
+	{
+		const ModuleCreationParams& mcp = mAsyncAddModuleRequests.front();
+
+		MeshCacheT::iterator meshIt = mMeshCache.find(mcp.mMeshName);
+		if (meshIt == mMeshCache.end())
+			break;
+
+		createModule(mcp);
+
+		dbglog << "Created pending Module for #" << mRootModule;
+	}
+}
+
+void PhysicsObject::createModule(const ModuleCreationParams& mcp)
+{
+	dbglog << "Creating physics module #" << mcp.mModuleHandle << " for #" << mRootModule;
+
+	boost::shared_ptr<OdeTriMesh> mesh = mMeshCache[mcp.mMeshName];
 
 	dGeomID odeGeometry = dCreateTriMesh
 	(
 		mSpaceId,
-		mMeshCache[meshName]->getTriMesh(),
+		mesh->getTriMesh(),
 		NULL, 
 		NULL,
 		NULL
@@ -133,25 +162,19 @@ void PhysicsObject::addModule(GameHandle moduleHandle,
 
 	if (!odeGeometry)
 	{
-		errlog << "Create ode geometry failed for " << moduleHandle << "!";
+		errlog << "Create ode geometry failed for " << mcp.mModuleHandle << "!";
 		throw std::logic_error("Unable to create ODE geom!");
 	}
 	
-	GameHandle* ptr = new GameHandle(moduleHandle);
+	GameHandle* ptr = new GameHandle(mcp.mModuleHandle);
  	dGeomSetData(odeGeometry, reinterpret_cast<void*>(ptr));
 
 	dMass geomMass; 
-	dMassSetTrimesh(&geomMass, density, odeGeometry);
+	dMassSetTrimesh(&geomMass, mcp.mDensity, odeGeometry);
 
-// 	dbglog << "GeomMass: " << geomMass.mass;
-// 	dbglog << "GeomCenter: " << odeVectorOut(geomMass.c);
-// 	dbglog << "GeomInertia: " << odeMatrixOut(geomMass.I);
+	dBodyEnable(mOdeBody);
 
 	dBodyGetMass(mOdeBody, &mOriginalMass);
-
-//  dbglog << "BodyMass: " << mOriginalMass.mass;
-//  dbglog << "BodyCenter: " << odeVectorOut(mOriginalMass.c);
-//  dbglog << "BodyInertia: " << odeMatrixOut(mOriginalMass.I);
 
 	dMassAdd(&mOriginalMass, &geomMass);
 
@@ -162,40 +185,37 @@ void PhysicsObject::addModule(GameHandle moduleHandle,
 
 	dBodyGetMass(mOdeBody, &mOriginalMass);
 
-//  dbglog << "NewBodyMass: " << mOriginalMass.mass;
-//  dbglog << "NewCenter: " << odeVectorOut(mOriginalMass.c);
-//  dbglog << "NewInertia: " << odeMatrixOut(mOriginalMass.I);
-
 	bool isRootModule = mGeometry.empty();
 	
-	assert(mGeometry.find(moduleHandle) == mGeometry.end() && 
+	assert(mGeometry.find(mcp.mModuleHandle) == mGeometry.end() && 
 		"Module Handle already in geometry map!");
 
-	mGeometry[moduleHandle].geomId = odeGeometry;
-	mGeometry[moduleHandle].density = density;
-	setCollisionModeGeom(moduleHandle, collisionMode);
+	mGeometry[mcp.mModuleHandle].geomId = odeGeometry;
+	mGeometry[mcp.mModuleHandle].density = mcp.mDensity;
+	setCollisionModeGeom(mcp.mModuleHandle, mcp.mCollisionMode);
 
 	if (isRootModule)
 	{
-		mRootModule = moduleHandle;
-		
 		// It isn't possible to register events (with a destination GameHandle)
 		// before a root Module has been attached.
 		registerEvents();
+		setPosition(mcp.mPosition);
+		setOrientation(mcp.mOrientation);
+		setVelocity(mcp.mVelocity);
+		setRotationVelocity(mcp.mRotationVelocity);
 	}
 	else
 	{
-// 		infolog << "SetOffsetPosition: " << position;
-		setOffsetPosition(moduleHandle, position);
-		setOffsetOrientation(moduleHandle, orientation);
+		setOffsetPosition(mcp.mModuleHandle, mcp.mPosition);
+		setOffsetOrientation(mcp.mModuleHandle, mcp.mOrientation);
 	}
-	
-	notifyControlAboutChangeInMass();
+
+	sendFullSync();
 }
 
-void PhysicsObject::addModule(boost::shared_ptr<PhysicsObject> po,
-                              const v3& position,
-                              const qv4& orientation)
+void PhysicsObject::attachObject(boost::shared_ptr<PhysicsObject> po,
+                                 const v3& position,
+                                 const qv4& orientation)
 {
 	po->mBodyOffset = position;
 
@@ -245,7 +265,7 @@ void PhysicsObject::addModule(boost::shared_ptr<PhysicsObject> po,
 	notifyControlAboutChangeInMass();
 }
 
-void PhysicsObject::removeModule(boost::shared_ptr<PhysicsObject> po,
+void PhysicsObject::detachObject(boost::shared_ptr<PhysicsObject> po,
                                  const v3& position,
                                  const qv4& orientation)
 {
@@ -290,7 +310,7 @@ void PhysicsObject::sendDeltas() const
 	const v3 position = getPosition();
 	if (!nearEnough(position, mDeltaStorage.get<0>(), epsilon))
 	{
-		emit<Physics::Event>(ID::PE_POSITION, position, mRootModule);
+		mSubLane->emit(ID::PE_POSITION, position, mRootModule);
 		mDeltaStorage.get<0>() = position;
 	}
 	
@@ -298,7 +318,7 @@ void PhysicsObject::sendDeltas() const
 	const qv4 orientation = getOrientation();
 	if (!equals(orientation, mDeltaStorage.get<1>(), epsilon))
 	{
-		emit<Physics::Event>(ID::PE_ORIENTATION, orientation, mRootModule);
+		mSubLane->emit(ID::PE_ORIENTATION, orientation, mRootModule);
 		mDeltaStorage.get<1>() = orientation;
 	}
 
@@ -306,7 +326,7 @@ void PhysicsObject::sendDeltas() const
 	const VelocityComposite velocity = boost::make_tuple(getVelocity(), getVelocityRelative());
 	if (!nearEnough(velocity.get<0>(), mDeltaStorage.get<2>(), epsilon) || !nearEnough(velocity.get<1>(), mDeltaStorage.get<3>(), epsilon))
 	{
-		emit<Physics::Event>(ID::PE_VELOCITY, velocity, mRootModule);
+		mSubLane->emit(ID::PE_VELOCITY, velocity, mRootModule);
 		mDeltaStorage.get<2>() = velocity.get<0>();
 		mDeltaStorage.get<3>() = velocity.get<1>();
 	}
@@ -315,7 +335,7 @@ void PhysicsObject::sendDeltas() const
 	const VelocityComposite rotVelocity = boost::make_tuple(getRotationVelocity(), getRotationVelocityRelative());
 	if (!nearEnough(rotVelocity.get<0>(), mDeltaStorage.get<4>(), epsilon) || !nearEnough(rotVelocity.get<1>(), mDeltaStorage.get<5>(), epsilon))
 	{
-		emit<Physics::Event>(ID::PE_ROTATION_VELOCITY, rotVelocity, mRootModule);
+		mSubLane->emit(ID::PE_ROTATION_VELOCITY, rotVelocity, mRootModule);
 		mDeltaStorage.get<4>() = rotVelocity.get<0>();
 		mDeltaStorage.get<5>() = rotVelocity.get<1>();
 	}
@@ -340,76 +360,31 @@ void PhysicsObject::sendFullSync() const
 		inertia
 	);
 	
-	emit<Physics::Event>(ID::PE_FULL_SYNC, fsd, mRootModule);
+	mSubLane->emit(ID::PE_FULL_SYNC, fsd, mRootModule);
+	dbglog << "Sending PE_FULL_SYNC for #" << mRootModule;
 }
 
 void PhysicsObject::performInterpolation(quantity<si::time, f32> timeSinceLastFrame)
 {
-	// Depends on UPDATES_PER_SECOND in Networked::internalUpdate
-	// This is UPDATE_DELAY / 1000
-	const quantity<si::time, f32> INTERPOLATION_DURATION = 1.0f * si::seconds;
+	if (mInterpolator.interpolatePosition(timeSinceLastFrame.value()))
+		setPosition(mInterpolator.mInterpolatedPosition);
 
-	// We interpolate from 0.0f to 1.0f
-	const f32 INTERPOLATION_SCALE = 1.0f;
+	if (mInterpolator.interpolateOrientation(timeSinceLastFrame.value()))
+		setOrientation(mInterpolator.mInterpolatedOrientation);
+}
 
-	if (mInterpolatePosition)
-	{
-#if 0
-		Base::EaseInOutInterpolation x(mInterpolationStartPosition.x, mInterpolationEndPosition.x);
-		Base::EaseInOutInterpolation y(mInterpolationStartPosition.y, mInterpolationEndPosition.y);
-		Base::EaseInOutInterpolation z(mInterpolationStartPosition.z, mInterpolationEndPosition.z);
-#endif
-
-		mPositionInterpolationParameter += (timeSinceLastFrame / INTERPOLATION_DURATION).value();
-#if 0
-		v3 interpolatedPosition
-		(
-			x.interpolate(mPositionInterpolationParameter),
-			y.interpolate(mPositionInterpolationParameter),
-			z.interpolate(mPositionInterpolationParameter)
-		);
-#endif
-		v3 interpolatedPosition = interpolate
-		(
-			mInterpolationStartPosition,
-			mInterpolationEndPosition,
-			mPositionInterpolationParameter
-		);
-		
-#if 0
-		dbglog << "Ode Pos: " << getPosition()
-		       << " Interp Pos: " << interpolatedPosition
-		       << " at: " << mPositionInterpolationParameter;
-#endif
-		setPosition(interpolatedPosition);
-		
-		if (mPositionInterpolationParameter >= INTERPOLATION_SCALE)
-			mInterpolatePosition = false;
-	}
-
-	if (mInterpolateOrientation)
-	{
-		mOrientationInterpolationParameter += (timeSinceLastFrame / INTERPOLATION_DURATION).value();
-
- 		qv4 interpolatedOrientation
- 		(
-			lerp
-			(
-				mInterpolationStartOrientation, 
- 				mInterpolationEndOrientation,
-				mOrientationInterpolationParameter
-			)
- 		);
-#if 0
-		warnlog << "Ode Ori: " << getOrientation()
-		        << " Interp Ori: " << interpolatedOrientation
-		        << " at: " << mOrientationInterpolationParameter;
-#endif
-		setOrientation(interpolatedOrientation);
-		
-		if (mOrientationInterpolationParameter >= INTERPOLATION_SCALE)
-			mInterpolateOrientation = false;
-	}
+//! Cannot be performed by PhysicsManager because it is possible that two modules collide
+//! where non of them is root.
+void PhysicsObject::notifyAboutCollision(GameHandle ownModule,
+                                         GameHandle otherModule,
+                                         f32 penetrationDepth) const
+{
+	mSubLane->emit
+	(
+		ID::PE_CONTACT,
+		boost::make_tuple(ownModule, otherModule, penetrationDepth),
+		mRootModule
+	);
 }
 
 void PhysicsObject::debugOutput(std::string& output) const
@@ -492,7 +467,7 @@ void PhysicsObject::setPosition(const v3& pos)
 {
 	dBodySetPosition(mOdeBody, pos.x, pos.y, pos.z);
 	
-	emit<Physics::Event>(ID::PE_POSITION, pos, mRootModule);
+	mSubLane->emit(ID::PE_POSITION, pos, mRootModule);
 }
 
 void PhysicsObject::setOffsetPosition(GameHandle moduleHandle, const v3& pos)
@@ -509,7 +484,7 @@ void PhysicsObject::setOrientation(const qv4& rot )
 
 	dBodySetQuaternion(mOdeBody, rot.ptr());
 
-	emit<Physics::Event>(ID::PE_ORIENTATION, rot, mRootModule);
+	mSubLane->emit(ID::PE_ORIENTATION, rot, mRootModule);
 }
 
 void PhysicsObject::setOffsetOrientation(GameHandle moduleHandle, const qv4& rot)
@@ -524,42 +499,12 @@ void PhysicsObject::setOffsetOrientation(GameHandle moduleHandle, const qv4& rot
 
 void PhysicsObject::interpolatePosition(const InterpolationDataV3& interpData)
 {
-	mInterpolatePosition = true;
-	
-	u32 timeStamp = interpData.get<0>(); // TODO: Unused parameter
-	u16 age = interpData.get<1>();
-	const v3& pos = interpData.get<2>();
-
-	v3 deltaVelocity = getVelocity() * static_cast<f32>(age) / 1000.0f;
-	dbglog << "dv/dt: " << deltaVelocity;
-	
-	v3 estimatedPosition = pos + deltaVelocity;
-	
-	mInterpolationEndPosition = estimatedPosition;
-	mInterpolationStartPosition = getPosition();
-	mPositionInterpolationParameter = 0.0f;
-	
-	dbglog << "Interpolating from " << getPosition()
-	       << " over last " << pos
-	       << " to estimated: " << estimatedPosition
-	       << " (" << static_cast<f32>(age)/1000.0f << "s)";
+	mInterpolator.preparePosition(interpData, getPosition(), getVelocity());
 }
 
 void PhysicsObject::interpolateOrientation(const InterpolationDataQv4& interpData)
 {
-	mInterpolateOrientation = true;
-
-	u32 timeStamp = interpData.get<0>();
-	u16 age = interpData.get<1>();
-	const qv4& ori = interpData.get<2>();
-
-	qv4 estimatedOrientation = ori * eulerToQuaternion(getRotationVelocity() * static_cast<f32>(age) / 1000.0f);
-
-	mInterpolationEndOrientation = estimatedOrientation;
-	mInterpolationStartOrientation = getOrientation();
-	mOrientationInterpolationParameter = 0.0f;
-
-	dbglog << "Interpolating from " << getOrientation() << " over " << ori << " to " << estimatedOrientation;
+	mInterpolator.prepareOrientation(interpData, getOrientation(), getRotationVelocity());
 }
 
 v3 PhysicsObject::getPosition() const
@@ -698,7 +643,7 @@ void PhysicsObject::magicStop()
 
 void PhysicsObject::modulateMass(f32 factor) const
 {
-	//! \note This could be optimized, since Ode internally recalculates our
+	//! \todo This could be optimized, since Ode internally recalculates our
 	//!       factor (in dMassAdjust).
 	dMass newMass = mOriginalMass;        // don't modify the original value
 	f32 weight = newMass.mass * factor;   // calculate new weight for adjust()
@@ -717,7 +662,7 @@ quantity<si::mass, f32> PhysicsObject::getTotalWeight() const
 
 void PhysicsObject::notifyControlAboutChangeInMass() const
 {
-	emit<Event>
+	mSubLane->emit
 	(
 		ID::PE_TOTAL_MASS,
 		getTotalWeight().value(),
@@ -746,89 +691,18 @@ void PhysicsObject::getTotalInertia(m3x3& inertia) const
 
 void PhysicsObject::registerEvents()
 {
-	mPhysicsEvents.push_back(ID::PE_UPDATE_POSITION);
-	mPhysicsEvents.push_back(ID::PE_UPDATE_ORIENTATION);
-
-	mPhysicsEvents.push_back(ID::PE_UPDATE_VELOCITY);
-	mPhysicsEvents.push_back(ID::PE_UPDATE_ROTATION_VELOCITY);
-	
-	mPhysicsEvents.push_back(ID::PE_INTERPOLATE_POSITION);
-	mPhysicsEvents.push_back(ID::PE_INTERPOLATE_ORIENTATION);
-	
-	mPhysicsEvents.push_back(ID::PE_DEBUG);
-		
-	mPhysicsEvents.push_back(ID::PE_APPLY_FORCE);
-	mPhysicsEvents.push_back(ID::PE_APPLY_TORQUE);
-	mPhysicsEvents.push_back(ID::PE_MODULATE_MASS);
-	
-	BOOST_FOREACH(BFG::ID::PhysicsAction action, mPhysicsEvents)
-	{
-		loop()->connect(action, this, &PhysicsObject::eventHandler, mRootModule);
-	}
-}
-
-void PhysicsObject::unregisterEvents()
-{
-	BOOST_FOREACH(BFG::ID::PhysicsAction action, mPhysicsEvents)
-	{
-		loop()->disconnect(action, this);
-	}
-	
-	mPhysicsEvents.clear();
-}
-
-void PhysicsObject::eventHandler(Physics::Event* e)
-{
-	switch (e->id())
-	{
-	case ID::PE_UPDATE_POSITION:
-		setPosition(boost::get<v3>(e->data()));
-		break;
-
-	case ID::PE_UPDATE_ORIENTATION:
-		setOrientation(boost::get<qv4>(e->data()));
-		break;
-		
-	case ID::PE_UPDATE_VELOCITY:
-		setVelocity(boost::get<v3>(e->data()));
-		break;
-
-	case ID::PE_UPDATE_ROTATION_VELOCITY:
-		setRotationVelocity(boost::get<v3>(e->data()));
-		break;
-
-	case ID::PE_INTERPOLATE_POSITION:
-		interpolatePosition(boost::get<InterpolationDataV3>(e->data()));
-		break;
-		
-	case ID::PE_INTERPOLATE_ORIENTATION:
-		interpolateOrientation(boost::get<InterpolationDataQv4>(e->data()));
-		break;
-
-	case ID::PE_DEBUG:
-	{
-		std::string s;
-		debugOutput(s);
-		dbglog << s;
-		break;
-	}
-
-	case ID::PE_APPLY_FORCE:
-		onForce(boost::get<v3>(e->data()));
-		break;
-
-	case ID::PE_APPLY_TORQUE:
-		onTorque(boost::get<v3>(e->data()));
-		break;
-		
-	case ID::PE_MODULATE_MASS:
-		modulateMass(boost::get<f32>(e->data()));
-		break;
-
-	default:
-		throw std::logic_error
-			("PhysicsObject::eventHandler: Received unknown event!");
-	}
+	mSubLane->connect(ID::PE_UPDATE_POSITION, this, &PhysicsObject::setPosition, mRootModule);
+	mSubLane->connect(ID::PE_UPDATE_ORIENTATION, this, &PhysicsObject::setOrientation, mRootModule);
+	mSubLane->connect(ID::PE_UPDATE_VELOCITY, this, &PhysicsObject::setVelocity, mRootModule);
+	mSubLane->connect(ID::PE_UPDATE_ROTATION_VELOCITY, this, &PhysicsObject::setRotationVelocity, mRootModule);
+	mSubLane->connect(ID::PE_UPDATE_COLLISION_MODE, this, &PhysicsObject::setCollisionMode, mRootModule);
+	mSubLane->connect(ID::PE_INTERPOLATE_POSITION, this, &PhysicsObject::interpolatePosition, mRootModule);
+	mSubLane->connect(ID::PE_INTERPOLATE_ORIENTATION, this, &PhysicsObject::interpolateOrientation, mRootModule);
+	mSubLane->connectV(ID::PE_DEBUG, this, &PhysicsObject::onDebug, mRootModule);
+	mSubLane->connect(ID::PE_APPLY_FORCE, this, &PhysicsObject::onForce, mRootModule);
+	mSubLane->connect(ID::PE_APPLY_TORQUE, this, &PhysicsObject::onTorque, mRootModule);
+	mSubLane->connect(ID::PE_MODULATE_MASS, this, &PhysicsObject::modulateMass, mRootModule);
+	mSubLane->connectV(ID::PE_MAGIC_STOP, this, &PhysicsObject::magicStop, mRootModule);
 }
 
 void PhysicsObject::setVelocity(const v3& velocity)
@@ -880,6 +754,13 @@ void PhysicsObject::onForce(const v3& force)
 void PhysicsObject::onTorque(const v3& torque)
 {
 	mTorque = torque;
+}
+
+void PhysicsObject::onDebug()
+{
+	std::string s;
+	debugOutput(s);
+	dbglog << s;
 }
 
 std::ostream& operator << (std::ostream& lhs, const PhysicsObject& rhs)

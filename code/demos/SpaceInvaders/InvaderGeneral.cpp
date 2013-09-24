@@ -27,34 +27,46 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include "InvaderGeneral.h"
 
-#include <Model/Events/SectorEvent.h>
 #include <Model/Data/GameObjectFactory.h>
 
 #include "Globals.h"
 
-InvaderGeneral::InvaderGeneral(EventLoop* loop,
-							   boost::shared_ptr<BFG::Environment> environment) :
-	Emitter(loop),
-	mEnvironment(environment),
-	mLastShot(0),
-	mWaveCount(0)
+InvaderGeneral::InvaderGeneral(Event::SubLanePtr lane,
+                               boost::shared_ptr<BFG::Environment> environment) :
+mEnvironment(environment),
+mLastShot(0),
+mWaveCount(0),
+mLane(lane)
 {
 	spawnWave();
 	++mWaveCount;
+	lane->connect(ID::S_DESTROY_GO, this, &InvaderGeneral::onDestroy);
+}
+
+void InvaderGeneral::onDestroy(GameHandle handle)
+{
+	mInvader.erase(handle);
+	
+	if (mInvader.empty())
+	{
+		spawnWave();
+		++mWaveCount;
+	}
 }
 
 void InvaderGeneral::spawnWave()
 {
 	ObjectParameter op;
 
-	for (size_t i=0; i < (size_t) INVADERS_PER_ROW; ++i)
+	BFG::u32 invaderRow = static_cast<BFG::u32>(INVADERS_PER_ROW);
+	BFG::u32 invaderCol = static_cast<BFG::u32>(INVADERS_PER_COL);
+
+	for (size_t i=0; i < invaderRow; ++i)
 	{
-		for (size_t j=0; j < (size_t) INVADERS_PER_COL; ++j)
+		for (size_t j=0; j < invaderCol; ++j)
 		{
 			std::stringstream ss;
 			ss << "Invader No. X:" << i << " Y:" << j;
-
-			boost::shared_ptr<GameObject> invader;
 
 			op = ObjectParameter();
 			op.mHandle = generateHandle();
@@ -69,7 +81,9 @@ void InvaderGeneral::spawnWave()
 			op.mLocation.orientation = INVADER_ORIENTATION;
 			op.mLinearVelocity = v3::ZERO;
 
-			emit<SectorEvent>(ID::S_CREATE_GO, op);
+			mLane->emit(ID::S_CREATE_GO, op);
+
+			mInvader.insert(op.mHandle);
 		}
 	}
 }
@@ -81,44 +95,37 @@ void InvaderGeneral::update(quantity<si::time, f32> timeSinceLastFrame)
 	if (mLastShot < INVADER_FIRE_INTERVAL)
 		return;
 
-	if (mEnvironment->find(isInvader) == NULL_HANDLE)
-	{
-		spawnWave();
-		++mWaveCount;
-		return;
-	}
-
 	GameHandle player = mEnvironment->find(isPlayer);
 
 	// Player dead?
 	if (player == NULL_HANDLE)
 		return;
 
-	const Location& playerLoc = mEnvironment->getGoValue<Location>(player, ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
-
-	f32 lastPlayerInvaderDistance = 0;
-	for (size_t i=0; i < mWaveCount; ++i)
-	{
-		// Handle of Invader and its Distance to the Player
-		std::pair<GameHandle, f32> bestCandidate(NULL_HANDLE, 999999.9f);
-
-		mEnvironment->find
-		(
-			boost::bind
-			(
-				nearestToPlayer,
-				_1,
-				boost::ref(bestCandidate),
-				boost::ref(lastPlayerInvaderDistance),
-				boost::ref(playerLoc.position)
-			)
-		);
-
-		emit<GameObjectEvent>(ID::GOE_FIRE_ROCKET, 0, bestCandidate.first);
-
-		lastPlayerInvaderDistance = bestCandidate.second + 0.1f;
-	}
-
-	mLastShot = 0;
+	const v3& playerPosition = mEnvironment->getGoValue<v3>(player, ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
+ 
+ 	f32 lastPlayerInvaderDistance = 0;
+ 	for (size_t i=0; i < mWaveCount; ++i)
+ 	{
+ 		// Handle of Invader and its Distance to the Player
+ 		std::pair<GameHandle, f32> bestCandidate(NULL_HANDLE, 999999.9f);
+ 
+ 		mEnvironment->find
+ 		(
+ 			boost::bind
+ 			(
+ 				nearestToPlayer,
+ 				_1,
+ 				boost::ref(bestCandidate),
+ 				boost::ref(lastPlayerInvaderDistance),
+ 				boost::ref(playerPosition)
+ 			)
+ 		);
+ 
+ 		mLane->emit(ID::GOE_FIRE_ROCKET, Event::Void(), bestCandidate.first);
+ 
+ 		lastPlayerInvaderDistance = bestCandidate.second + 0.1f;
+ 	}
+ 
+ 	mLastShot = 0;
 }
 

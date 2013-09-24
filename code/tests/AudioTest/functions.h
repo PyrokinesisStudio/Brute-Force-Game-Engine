@@ -34,7 +34,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <alc.h>
 
 #include <Core/Path.h>
-#include <EventSystem/Core/EventLoop.h>
 
 
 void printAlError()

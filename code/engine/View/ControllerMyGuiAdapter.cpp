@@ -29,7 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/foreach.hpp>
 #include <MyGUI.h>
 #include <OISMouse.h>
-#include <EventSystem/Core/EventLoop.h>
+
 #include <Controller/ControllerEvents.h>
 #include <Controller/OISUtils.h>
 
@@ -39,169 +39,147 @@ namespace View {
 using BFG::f32;
 
 ControllerMyGuiAdapter::ControllerMyGuiAdapter(BFG::GameHandle stateHandle,
-                                               EventLoop* loop) :
-mAdapterLoop(loop)
+                                               Event::Lane& lane) :
+mSubLane(lane.createSubLane())
 {
-	mAdapterEvents.push_back(BFG::ID::A_MOUSE_MOVE_X);
-	mAdapterEvents.push_back(BFG::ID::A_MOUSE_MOVE_Y);
-	mAdapterEvents.push_back(BFG::ID::A_MOUSE_MOVE_Z);
-	mAdapterEvents.push_back(BFG::ID::A_MOUSE_LEFT_PRESSED);
-	mAdapterEvents.push_back(BFG::ID::A_MOUSE_RIGHT_PRESSED);
-	mAdapterEvents.push_back(BFG::ID::A_MOUSE_MIDDLE_PRESSED);
-	mAdapterEvents.push_back(BFG::ID::A_KEY_PRESSED);
-	mAdapterEvents.push_back(BFG::ID::A_KEY_RELEASED);
+	mSubLane->connect(ID::A_MOUSE_MOVE_X, this, &ControllerMyGuiAdapter::onMouseMoveX);
+	mSubLane->connect(ID::A_MOUSE_MOVE_Y, this, &ControllerMyGuiAdapter::onMouseMoveY);
+	mSubLane->connect(ID::A_MOUSE_MOVE_Z, this, &ControllerMyGuiAdapter::onMouseMoveZ);
+	mSubLane->connect(ID::A_MOUSE_LEFT_PRESSED, this, &ControllerMyGuiAdapter::onMouseLeftPressed);
+	mSubLane->connect(ID::A_MOUSE_RIGHT_PRESSED, this, &ControllerMyGuiAdapter::onMouseRightPressed);
+	mSubLane->connect(ID::A_MOUSE_MIDDLE_PRESSED, this, &ControllerMyGuiAdapter::onMouseMiddlePressed);
+	mSubLane->connect(ID::A_KEY_PRESSED, this, &ControllerMyGuiAdapter::onKeyPressed);
+	mSubLane->connect(ID::A_KEY_RELEASED, this, &ControllerMyGuiAdapter::onKeyReleased);
+}
 
-	BOOST_FOREACH(BFG::ID::ControllerAction ca, mAdapterEvents)
+void ControllerMyGuiAdapter::onMouseMoveX(f32 value)
+{
+	mMouseBuffer.x = value;
+	MyGUI::InputManager::getInstance().injectMouseMove
+	(
+		mMouseBuffer.x,
+		mMouseBuffer.y,
+		mMouseBuffer.z
+	);
+}
+
+void ControllerMyGuiAdapter::onMouseMoveY(f32 value)
+{
+	mMouseBuffer.y = value;
+	MyGUI::InputManager::getInstance().injectMouseMove
+	(
+		mMouseBuffer.x,
+		mMouseBuffer.y,
+		mMouseBuffer.z
+	);
+}
+
+void ControllerMyGuiAdapter::onMouseMoveZ(f32 value)
+{
+	mMouseBuffer.z = value;
+	MyGUI::InputManager::getInstance().injectMouseMove
+	(
+		mMouseBuffer.x,
+		mMouseBuffer.y,
+		mMouseBuffer.z
+	);
+}
+
+void ControllerMyGuiAdapter::onMouseLeftPressed(bool isPressed)
+{
+	if (isPressed)
 	{
-		loop->connect(ca, this, &ControllerMyGuiAdapter::eventHandler);
+		MyGUI::InputManager::getInstance().injectMousePress
+		(
+			mMouseBuffer.x,
+			mMouseBuffer.y,
+			MyGUI::MouseButton::Enum(OIS::MB_Left)
+		);
+	}
+	else
+	{
+		MyGUI::InputManager::getInstance().injectMouseRelease
+		(
+			mMouseBuffer.x,
+			mMouseBuffer.y,
+			MyGUI::MouseButton::Enum(OIS::MB_Left)
+		);
 	}
 }
 
-ControllerMyGuiAdapter::~ControllerMyGuiAdapter()
+void ControllerMyGuiAdapter::onMouseRightPressed(bool isPressed)
 {
-	BOOST_FOREACH(BFG::ID::ControllerAction ca, mAdapterEvents)
+	if (isPressed)
 	{
-		mAdapterLoop->disconnect(ca, this);
-	}	
+		MyGUI::InputManager::getInstance().injectMousePress
+		(
+			mMouseBuffer.x,
+			mMouseBuffer.y,
+			MyGUI::MouseButton::Enum(OIS::MB_Right)
+		);
+	}
+	else
+	{
+		MyGUI::InputManager::getInstance().injectMouseRelease
+		(
+			mMouseBuffer.x,
+			mMouseBuffer.y,
+			MyGUI::MouseButton::Enum(OIS::MB_Right)
+		);
+	}
 }
 
-void ControllerMyGuiAdapter::eventHandler(BFG::Controller_::VipEvent* e)
+void ControllerMyGuiAdapter::onMouseMiddlePressed(bool isPressed)
 {
-	switch(e->id())
+	if (isPressed)
 	{
-	case BFG::ID::A_MOUSE_MOVE_X:
-	{
-		mMouseBuffer.x = boost::get<f32>(e->data());
-		MyGUI::InputManager::getInstance().injectMouseMove
+		MyGUI::InputManager::getInstance().injectMousePress
 		(
 			mMouseBuffer.x,
 			mMouseBuffer.y,
-			mMouseBuffer.z
+			MyGUI::MouseButton::Enum(OIS::MB_Middle)
 		);
-		break;
 	}
-	
-	case BFG::ID::A_MOUSE_MOVE_Y:
+	else
 	{
-		mMouseBuffer.y = boost::get<f32>(e->data());
-		MyGUI::InputManager::getInstance().injectMouseMove
+		MyGUI::InputManager::getInstance().injectMouseRelease
 		(
 			mMouseBuffer.x,
 			mMouseBuffer.y,
-			mMouseBuffer.z
+			MyGUI::MouseButton::Enum(OIS::MB_Middle)
 		);
-		break;
 	}
-	
-	case BFG::ID::A_MOUSE_MOVE_Z:
-	{
-		mMouseBuffer.z = boost::get<f32>(e->data());
-		MyGUI::InputManager::getInstance().injectMouseMove
-		(
-			mMouseBuffer.x,
-			mMouseBuffer.y,
-			mMouseBuffer.z
-		);
-		break;
-	}
-	
-	case BFG::ID::A_MOUSE_LEFT_PRESSED:
-	{
-		if (boost::get<bool>(e->data()))
-		{
-			MyGUI::InputManager::getInstance().injectMousePress
-			(
-				mMouseBuffer.x,
-				mMouseBuffer.y,
-				MyGUI::MouseButton::Enum(OIS::MB_Left)
-			);
-		}
-		else
-		{
-			MyGUI::InputManager::getInstance().injectMouseRelease
-			(
-				mMouseBuffer.x,
-				mMouseBuffer.y,
-				MyGUI::MouseButton::Enum(OIS::MB_Left)
-			);
-		}
-		break;
-	}
-	
-	case BFG::ID::A_MOUSE_RIGHT_PRESSED:
-	{
-		if (boost::get<bool>(e->data()))
-		{
-			MyGUI::InputManager::getInstance().injectMousePress
-			(
-				mMouseBuffer.x,
-				mMouseBuffer.y,
-				MyGUI::MouseButton::Enum(OIS::MB_Right)
-			);
-		}
-		else
-		{
-			MyGUI::InputManager::getInstance().injectMouseRelease
-			(
-				mMouseBuffer.x,
-				mMouseBuffer.y,
-				MyGUI::MouseButton::Enum(OIS::MB_Right)
-			);
-		}
-		break;
-	}
+}
 
-	case BFG::ID::A_MOUSE_MIDDLE_PRESSED:
-	{
-		if (boost::get<bool>(e->data()))
-		{
-			MyGUI::InputManager::getInstance().injectMousePress
-			(
-				mMouseBuffer.x,
-				mMouseBuffer.y,
-				MyGUI::MouseButton::Enum(OIS::MB_Middle)
-			);
-		}
-		else
-		{
-			MyGUI::InputManager::getInstance().injectMouseRelease
-			(
-				mMouseBuffer.x,
-				mMouseBuffer.y,
-				MyGUI::MouseButton::Enum(OIS::MB_Middle)
-			);
-		}
-		break;
-	}
+void ControllerMyGuiAdapter::onKeyPressed(s32 key)
+{
+	ID::KeyboardButton code = (ID::KeyboardButton) key;
 
+	OIS::KeyCode ois_key;
+	BFG::s32 ois_ch;
 
-	case BFG::ID::A_KEY_PRESSED:
-	case BFG::ID::A_KEY_RELEASED:
-	{
-		BFG::ID::KeyboardButton code = (BFG::ID::KeyboardButton) boost::get<BFG::s32>(e->data());
+	Controller_::Utils::convertToBrainDamagedOisStyle(code, ois_key, ois_ch);
+	MyGUI::KeyCode::Enum mygui_key = (MyGUI::KeyCode::Enum) ois_key;
+	MyGUI::Char mygui_ch = ois_ch;
 
-		OIS::KeyCode ois_key;
-		BFG::s32 ois_ch;
+	MyGUI::InputManager::getInstance().injectKeyPress(mygui_key, mygui_ch);
+}
 
-		BFG::Controller_::Utils::convertToBrainDamagedOisStyle(code, ois_key, ois_ch);
-		MyGUI::KeyCode::Enum mygui_key = (MyGUI::KeyCode::Enum) ois_key;
-		MyGUI::Char mygui_ch = ois_ch;
-		
-		if (e->id() == BFG::ID::A_KEY_PRESSED)
-		{
-			MyGUI::InputManager::getInstance().injectKeyPress(mygui_key, mygui_ch);
-		}
-		else // A_KEY_RELEASED
-		{
-			if (mygui_key == MyGUI::KeyCode::None)
-				mygui_key = MyGUI::KeyCode::Enum(mygui_ch);
+void ControllerMyGuiAdapter::onKeyReleased(s32 key)
+{
+	BFG::ID::KeyboardButton code = (BFG::ID::KeyboardButton) key;
 
-			MyGUI::InputManager::getInstance().injectKeyRelease(mygui_key);
-		}
+	OIS::KeyCode ois_key;
+	s32 ois_ch;
 
-		break;
-	}
-	}
+	Controller_::Utils::convertToBrainDamagedOisStyle(code, ois_key, ois_ch);
+	MyGUI::KeyCode::Enum mygui_key = (MyGUI::KeyCode::Enum) ois_key;
+	MyGUI::Char mygui_ch = ois_ch;
+
+	if (mygui_key == MyGUI::KeyCode::None)
+		mygui_key = MyGUI::KeyCode::Enum(mygui_ch);
+
+	MyGUI::InputManager::getInstance().injectKeyRelease(mygui_key);
 }
 
 } // namespace View

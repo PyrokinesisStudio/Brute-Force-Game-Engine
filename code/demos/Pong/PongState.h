@@ -27,9 +27,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef __PONG_STATE_H_
 #define __PONG_STATE_H_
 
-#include <EventSystem/Emitter.h>
-#include <EventSystem/EventFactory.h>
-
 #include <Core/ClockUtils.h>
 #include <Core/Path.h>
 #include <Core/Types.h>
@@ -48,6 +45,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include "Pong/PongDefinitions.h"
 #include "Pong/PongFactory.h"
 #include <Pong/PropertyPlugin.h>
+
+#if 0
 
 struct PongServerState : BFG::Emitter
 {
@@ -145,8 +144,6 @@ struct PongServerState : BFG::Emitter
 		mBall->update(TSLF);
 		mLowerBar->update(TSLF);
 		mUpperBar->update(TSLF);
-
-		emit<BFG::Physics::Event>(BFG::ID::PE_STEP, TSLF.value());
 	}
 
 	boost::shared_ptr<BFG::GameObject> mBall;
@@ -209,5 +206,5 @@ struct PongClientState : BFG::Emitter
 	
 	bool mExitNextTick;
 };
-
+#endif
 #endif //__PONG_STATE_H_

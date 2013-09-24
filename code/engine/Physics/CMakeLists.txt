@@ -44,11 +44,10 @@ TARGET_LINK_LIBRARIES(bfgPhysics
 	${ODE_LIBRARY}
 	bfgBase
 	bfgCore
-	bfgEventCore
-	bfgView              # View::loadMesh()
+	bfgView # because auf Ogre::Matrix3
 )
 
-ADD_DEPENDENCIES(bfgPhysics PhysicsEnums)
+ADD_DEPENDENCIES(bfgPhysics PhysicsEnums ViewEnums)
 
 INSTALL(TARGETS bfgPhysics
 	RUNTIME DESTINATION ${BFG_BIN_DIR}

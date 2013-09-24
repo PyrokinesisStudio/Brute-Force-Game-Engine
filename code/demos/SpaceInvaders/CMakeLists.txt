@@ -42,7 +42,6 @@ TARGET_LINK_LIBRARIES(bfgSpaceInvaders
 	bfgBase
 	bfgController
 	bfgCore
-	bfgEventCore
 	bfgModel
 	bfgView
 )
