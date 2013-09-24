@@ -33,6 +33,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
   #include <sys/prctl.h>
 #endif
 
+// LCOV_EXCL_START
+
 namespace BFG {
 
 #ifdef _WIN32
@@ -66,3 +68,4 @@ void nameCurrentThread(const std::string& name)
 
 } // namespace BFG
 
+// LCOV_EXCL_STOP
