@@ -33,7 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Mesh.h>
 #include <Core/Path.h>
 #include <Event/Event.h>
-#include <View/Main.h>
+#include <View/MiniMain.h>
 #include <View/Enums.hh>
 
 // ---------------------------------------------------------------------------
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE (testLibraryInit)
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane viewLane(sync, 100, "View");
 	
-	viewLane.addEntry<BFG::View::Main>("ViewTest Window");
+	viewLane.addEntry<BFG::View::MiniMain>();
 
 	sync.start();
 	
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE (meshTest)
 
 	BFG::Event::Lane moduleLane(sync, 100, "Module", BFG::Event::RL2);
 
-	viewLane.addEntry<BFG::View::Main>("ViewTest Window");
+	viewLane.addEntry<BFG::View::MiniMain>();
 	moduleLane.addEntry<ModuleDeliveryTest>();
 
 	sync.start();

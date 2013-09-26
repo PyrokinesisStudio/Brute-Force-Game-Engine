@@ -1,5 +1,6 @@
 <?xml version="1.0" standalone="no" ?>
 <all>
+	<path type = "P_GRAPHICS_MESHES" location = "." />
 	<path type = "P_SCRIPTS" location = "../../scripts" />
 	<path type = "P_SCRIPTS_CONTROL" location = "../../scripts/control" />
 	<path type = "P_SCRIPTS_LEVELS" location = "../../scripts/levels" />
