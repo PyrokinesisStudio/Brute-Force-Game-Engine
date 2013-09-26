@@ -67,7 +67,7 @@ struct ViewMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 #define BFG_USE_PHYSICS
 #define BFG_USE_VIEW
 #define BFG_USE_AUDIO
-#include <EngineInit.h>
+#include <Core/EngineInit.h>
 
 using namespace BFG;
 

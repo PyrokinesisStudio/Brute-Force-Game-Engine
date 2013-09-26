@@ -51,7 +51,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_USE_CONTROLLER
 #define BFG_USE_NETWORK
 #define BFG_USE_VIEW
-#include <EngineInit.h>
+#include <Core/EngineInit.h>
 
 using namespace BFG;
 
