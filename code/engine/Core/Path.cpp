@@ -106,7 +106,14 @@ struct PathLoader
 
 Path::Path()
 {
-	load<detail::PathLoader>();
+	try
+	{
+		load<detail::PathLoader>();
+	}
+	catch (std::runtime_error& ex)
+	{
+		warnlog << ex.what();
+	}
 }
 
 std::string Path::Expand(const std::string& Filename) const
