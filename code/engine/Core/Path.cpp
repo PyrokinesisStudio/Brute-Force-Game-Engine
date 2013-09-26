@@ -31,6 +31,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <tinyxml.h>
 
+#include <Base/Logger.h>
+
 namespace BFG {
 
 namespace detail {
