@@ -155,6 +155,8 @@ void ThrustControl::onControlThrust(f32 factor)
 	typedef quantity<si::velocity, f32> VelocityT;
 	typedef quantity<si::dimensionless, f32> DimensionlessT;
 	
+	assert(std::isfinite(factor) && "ThrustControl::onControlThrust(factor): Argument must not be NaN or infinite.");
+
 	VelocityT targetSpeed = factor * mMaxSpeed;
 
 	mTargetSpeed = v3

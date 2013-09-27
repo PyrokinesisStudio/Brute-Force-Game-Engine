@@ -26,6 +26,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Model/Property/Concepts/AutoNavigator.h>
 
+#include <cmath>
+
 #include <Core/Math.h>
 
 #include <Model/Environment.h>
@@ -41,9 +43,19 @@ BOOST_UNITS_STATIC_CONSTANT
 namespace BFG {
 
 AutoNavigator::AutoNavigator(GameObject& owner, PluginId pid) :
-Property::Concept(owner, "AutoNavigator", pid)
+Property::Concept(owner, "AutoNavigator", pid),
+mOptimalAngle(0),
+mMaxSpeed(1.0 * si::meter_per_second),
+mMaxAngularAcceleration(0),
+mRadius(0),
+mTime(0),
+mRotationFactorPitch(0),
+mRotationFactorYaw(0),
+mAccelerationFactor(0),
+mMaxAngularVelocity(0,0,0)
 {
 	requiredPvInitialized(ID::PV_TriggerRadius);
+	requiredPvInitialized(ID::PV_MaxSpeed);
 
 	require("ThrustControl");
 	require("Physical");
@@ -142,7 +154,7 @@ void AutoNavigator::rotate(const qv4& rotation)
 	const v3& currentRotationVel = getGoValue<v3>(ID::PV_RelativeRotationVelocity, pluginId());
 
 	// braking distance in radian
-	v3 b;
+	v3 b(0,0,0);
 	if (!nearEnough(mMaxAngularAcceleration.value(), 0.0f, EPSILON_F))
 		b = (currentRotationVel * currentRotationVel) / (2.0f * mMaxAngularAcceleration.value());
 
@@ -183,6 +195,7 @@ void AutoNavigator::rotate(const qv4& rotation)
 
 void AutoNavigator::accelerate(quantity<si::velocity, f32> targetSpeed)
 {
+	assert(std::isnormal(mMaxSpeed.value()) && "Division by zero.");
 	mAccelerationFactor = targetSpeed.value() / mMaxSpeed.value();
 }
 
