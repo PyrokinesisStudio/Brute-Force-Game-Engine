@@ -75,7 +75,7 @@ int main( int argc, const char* argv[] ) try
 	const std::string caption = "Composer: He composes everything!";
 
 	BFG::Event::Lane controllerLane(synchronizer, eventLoopFrequency, "Controller");
-	controllerLane.addEntry<BFG::Controller_::Main>(eventLoopFrequency);
+	controllerLane.addEntry<BFG::Controller_::Main>();
 
 	BFG::Event::Lane viewLane(synchronizer, eventLoopFrequency, "View");
 	viewLane.addEntry<BFG::View::Main>(caption);

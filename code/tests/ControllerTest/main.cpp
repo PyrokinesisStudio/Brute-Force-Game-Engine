@@ -463,7 +463,7 @@ void startMultiThreaded()
 	Event::Synchronizer sync;
 	Event::Lane controllerLane(sync, frequency);
 	
-	controllerLane.addEntry<Controller_::Main>(frequency);
+	controllerLane.addEntry<Controller_::Main>();
 	controllerLane.addEntry<Main>();
 	sync.start();
 	

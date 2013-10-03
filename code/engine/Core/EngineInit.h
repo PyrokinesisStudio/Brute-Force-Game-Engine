@@ -139,7 +139,7 @@ void initController(const Configuration& cfg)
 {
 #ifdef BFG_USE_CONTROLLER
 	gControllerLane.reset(new Event::Lane(gSynchronizer, CONTROLLER_FREQ, "Controller"));
-	gControllerLane->addEntry<Controller_::Main>(cfg.controllerFrequency);
+	gControllerLane->addEntry<Controller_::Main>();
 #endif
 }
 

@@ -258,7 +258,7 @@ int main( int argc, const char* argv[] ) try
 	viewLane.addEntry<ViewMain>();
 
 	Event::Lane controllerLane(synchronizer, EVENT_LOOP_FREQUENCY, "Controller");
-	controllerLane.addEntry<BFG::Controller_::Main>(EVENT_LOOP_FREQUENCY);
+	controllerLane.addEntry<BFG::Controller_::Main>();
 
 	BFG::Event::Lane gameLane(synchronizer, 100, "Game", BFG::Event::RL3);
 	gameLane.addEntry<Main>();

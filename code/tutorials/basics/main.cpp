@@ -182,7 +182,7 @@ int main() try
 	
 	// Setting up callbacks for module initialization
 	viewLane.addEntry<BFG::View::Main>(caption);
-	controllerLane.addEntry<BFG::Controller_::Main>(controllerFrequency);
+	controllerLane.addEntry<BFG::Controller_::Main>();
 	gameLane.addEntry<Main>();
 	
 	sync.start();

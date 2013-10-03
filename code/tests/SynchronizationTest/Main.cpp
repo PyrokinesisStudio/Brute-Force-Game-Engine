@@ -633,7 +633,7 @@ int main( int argc, const char* argv[] ) try
 		physicsLane.addEntry<BFG::Physics::Main>();
 		viewLane.addEntry<BFG::View::Main>("SynchronizationTest");
 		viewLane.addEntry<ClientViewMain>();
-		controllerLane.addEntry<BFG::Controller_::Main>(controllerFrequency);
+		controllerLane.addEntry<BFG::Controller_::Main>();
 		clientLane.addEntry<ClientMain>();
 		
 		synchronizer.start();
