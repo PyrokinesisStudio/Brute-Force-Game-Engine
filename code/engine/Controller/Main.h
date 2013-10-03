@@ -41,15 +41,10 @@ class Controller;
 
 class CONTROLLER_API Main : public Base::LibraryMainBase<Event::Lane>
 {
-public:
-	Main(size_t frequency);
-
 private:
 	void main(Event::Lane* eventLane);
 	
 	boost::shared_ptr<Controller_::Controller> mController;
-	
-	size_t mFrequency;
 };
 
 } // namespace Controller_

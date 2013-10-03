@@ -32,10 +32,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Controller_ {
 
-Main::Main(size_t frequency) :
-mFrequency(frequency)
-{}
-
 void Main::main(Event::Lane* eventLane)
 {
 	mController.reset(new Controller(*eventLane));
