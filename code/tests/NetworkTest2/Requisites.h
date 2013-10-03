@@ -31,6 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
+#include <Base/PeriodicWaitForEqual.h>
 #include <Event/Event.h>
 
 #include <Network/Network.h>
@@ -74,22 +75,6 @@ struct EventStatus
 	bool gotUdpData;
 	bool gotReady;         // Server Only
 };
-
-template <typename T>
-void periodicWaitForEqual(const T& lhs, const T& rhs, boost::posix_time::time_duration wait)
-{
-	using namespace boost;
-	posix_time::time_duration slept;
-	const posix_time::time_duration interval(posix_time::milliseconds(100));
-	while (lhs != rhs && slept < wait)
-	{
-		this_thread::sleep(interval);
-		slept += interval;
-	}
-	
-	if (lhs != rhs)
-		BOOST_TEST_MESSAGE("periodicWaitForEqual: Time expired.");
-}
 
 template <typename ApplicationT, BFG::u8 mode, BFG::GameHandle appHandle>
 struct NetworkContext

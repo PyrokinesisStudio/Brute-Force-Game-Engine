@@ -29,11 +29,13 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <boost/test/unit_test.hpp>
 
-#include <Base/TestAppDeco.h>
 #include <Base/Logger.h>
+#include <Base/PeriodicWaitForEqual.h>
+#include <Base/TestAppDeco.h>
 
 #include "Requisites.h"
 
+using BFG::Base::periodicWaitForEqual;
 
 const BFG::GameHandle serverAppHandle = 123;
 const BFG::GameHandle client_1_AppHandle = 456;
