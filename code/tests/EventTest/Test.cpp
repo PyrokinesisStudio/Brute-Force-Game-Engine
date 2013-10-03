@@ -302,6 +302,15 @@ BOOST_AUTO_TEST_CASE (TestEmptySynchronizerActive)
 	sync.finish();
 }
 
+BOOST_AUTO_TEST_CASE (TestSynchronizerFinishFinish)
+{
+	BFG::Event::Synchronizer sync;
+	sync.start();
+	sync.finish();
+	sync.finish();
+}
+
+
 BOOST_AUTO_TEST_CASE (CopyParameter)
 {
 	BFG::Event::Synchronizer sync;
