@@ -30,6 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include <Core/ClockUtils.h>
+#include <Core/Units.h>
 
 #include <Controller/Enums.hh>
 
@@ -47,7 +48,7 @@ struct MainState : State
 {
 	MainState(GameHandle handle, Event::Lane& lane);
 
-	void onTick(const TickTimeT timeSinceLastTick);
+	void onTick(const TimeT timeSinceLastTick);
 	
 	void onAxisY(f32 factor);
 	void onFps(bool on);

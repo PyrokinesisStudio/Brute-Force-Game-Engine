@@ -145,7 +145,7 @@ void MainState::onQuit(BFG::s32)
 	mLane.emit(ID::EA_FINISH, Event::Void());
 }
 
-void MainState::onTick(const TickTimeT timeSinceLastTick)
+void MainState::onTick(const TimeT timeSinceLastTick)
 {
 	mSector->update(timeSinceLastTick);
 	mInvaderGeneral->update(timeSinceLastTick);

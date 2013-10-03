@@ -101,7 +101,7 @@ struct LevelerModelState : State
 		onTick(tickData.timeSinceLastTick());
 	}
 		
-	void onTick(const TickTimeT timeSinceLastFrame)
+	void onTick(const TimeT timeSinceLastFrame)
 	{
 		if (timeSinceLastFrame.value() < EPSILON_F)
 			return;

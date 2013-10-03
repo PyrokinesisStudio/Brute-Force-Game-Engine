@@ -35,6 +35,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Defs.h>
 
 #include <Core/Types.h>
+#include <Core/Units.h>
 
 namespace BFG {
 
@@ -43,8 +44,6 @@ class MODEL_API State
 public:
 	State(Event::Lane&);
 	virtual ~State();
-
-	typedef boost::units::quantity<boost::units::si::time, f32> TickTimeT;
 
 	//! \brief Periodically called function for application timing.
 	//! Most games have a game loop, in which the most important modules
@@ -56,7 +55,7 @@ public:
 	//! variable which is a delta to the previous absolute time. Also, we
 	//! check if we decided to end the update process of this module, and
 	//! notice the event system if true.
-	virtual void onTick(const TickTimeT timeSinceLastTick) = 0;
+	virtual void onTick(const TimeT timeSinceLastTick) = 0;
 
 	//! \brief Calling this will hold the update process of this State.
 	//! No further events might be received after this. It is the proper

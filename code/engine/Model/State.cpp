@@ -26,11 +26,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Model/State.h>
 
-#include <Core/ClockUtils.h>
-#include <Core/Types.h>
-
-using namespace boost::units;
-
 namespace BFG {
 
 State::State(Event::Lane& lane)
