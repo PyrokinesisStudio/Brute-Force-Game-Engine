@@ -41,38 +41,21 @@ typedef std::vector<GameHandle> HandleVector;
 
 namespace Trigger {
 
-template <typename EventT>
-struct DefaultFilter
-{
-	typedef std::set<GameHandle> ContainerT;
-	
-	static bool Applies(const ContainerT& filter, EventT* te)
-	{
-		assert(! "TODO: This is broken, adapt for new event here");
-		//return filter.find(te->getData().mGOhandle) == filter.end();
-		return true;
-	}
-};
-
-template <typename FilterPolicy = DefaultFilter<Trigger::Event> >
+template <typename Unused = int>
 class Sequence : public Managed,
                  boost::noncopyable
 {
 public:
-	typedef typename FilterPolicy::ContainerT FilterContainerT;
-	
 	Sequence(Event::Lane& lane,
 	         GameHandle handle,
 	         const HandleVector& goHandles,
 	         const Environment& environment,
-	         const FilterContainerT& filter,
 	         f32 radius,
 	         bool activated = true) :
 	Managed(handle, "Trigger::Sequence", ID::OT_Trigger),
 	mSubLane(lane.createSubLane()),
 	mGoHandles(goHandles),
 	mEnvironment(environment),
-	mFilter(filter),
 	mRadius(radius),
 	mActivated(activated),
 	mCurrentWP(0)
@@ -158,7 +141,6 @@ private:
 	Event::SubLanePtr           mSubLane;
 	HandleVector                mGoHandles;
 	const Environment&          mEnvironment;
-	FilterContainerT            mFilter;
 	f32                         mRadius;
 	bool                        mActivated;
 	s32                         mCurrentWP;
