@@ -27,6 +27,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_EVENT_CATCHER_H
 #define BFG_EVENT_CATCHER_H
 
+#include <vector>
+
 namespace BFG {
 namespace Event { 
 
@@ -34,6 +36,8 @@ namespace Event {
 template <typename PayloadT>
 struct Catcher
 {
+	typedef std::vector<PayloadT> PayloadsT;
+	
 	template <typename LaneT, typename IdT, typename DestinationIdT>
 	Catcher(LaneT& lane, IdT eventId, DestinationIdT destinationId) :
 	mSubLane(lane.createSubLane()),
@@ -48,14 +52,22 @@ struct Catcher
 		return mEventCount;
 	}
 
+	//! \brief Returns all received payloads.
+	const PayloadsT& payloads() const
+	{
+		return mPayloads;
+	}
+
 private:
 	void callback(const PayloadT& payload)
 	{
 		++mEventCount;
+		mPayloads.push_back(payload);
 	}
 	
 	SubLanePtr mSubLane;
-	s32 mEventCount;
+	s32        mEventCount;
+	PayloadsT  mPayloads;
 };
 
 } // namespace Event
