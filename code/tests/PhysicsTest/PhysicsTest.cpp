@@ -28,6 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/test/unit_test.hpp>
 
 #include <Base/Pause.h>
+#include <Base/PeriodicWaitForEqual.h>
 
 #include <Core/Math.h>
 
@@ -47,6 +48,9 @@ BOOST_AUTO_TEST_SUITE(PhysicsTestSuite)
 
 BOOST_AUTO_TEST_CASE (testLibraryInit)
 {
+	// Logger init may be done within the first test.
+	BFG::Base::Logger::Init(BFG::Base::Logger::SL_DEBUG, "PhysicsTest.log");
+	
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane physicsLane(sync, 100);
 	
@@ -86,8 +90,8 @@ BOOST_AUTO_TEST_CASE (testCreateOneObject)
 BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModule)
 {
 	BFG::Event::Synchronizer sync;
-	BFG::Event::Lane physicsLane(sync, 100);
-	BFG::Event::Lane miniView(sync, 100);
+	BFG::Event::Lane physicsLane(sync, 100, "Physics", BFG::Event::RL1);
+	BFG::Event::Lane miniView(sync, 100, "View", BFG::Event::RL2);
 	
 	physicsLane.addEntry<BFG::Physics::Main>();
 	miniView.addEntry<BFG::View::MiniMain>();
@@ -123,8 +127,8 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithOneModule)
 BOOST_AUTO_TEST_CASE (testCreateOneObjectWithTwoModulesAndSetValues)
 {
 	BFG::Event::Synchronizer sync;
-	BFG::Event::Lane physicsLane(sync, 100);
-	BFG::Event::Lane miniView(sync, 100);
+	BFG::Event::Lane physicsLane(sync, 100, "Physics", BFG::Event::RL1);
+	BFG::Event::Lane miniView(sync, 100, "View", BFG::Event::RL2);
 
 	physicsLane.addEntry<BFG::Physics::Main>();
 	miniView.addEntry<BFG::View::MiniMain>();
@@ -148,8 +152,8 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithTwoModulesAndSetValues)
 	// First module (root module)
 	auto expectedRootPos = v3::UNIT_X;
 	auto expectedRootOri = BFG::qv4(0,1,0,0);
-	auto expectedRootVel = BFG::v3::NEGATIVE_UNIT_Y;
-	auto expectedRootRotVel = BFG::v3::NEGATIVE_UNIT_Z;
+	auto expectedRootVel = BFG::v3::ZERO;
+	auto expectedRootRotVel = BFG::v3::ZERO;
 	
 	BFG::Physics::ModuleCreationParams mcp
 	(
@@ -164,9 +168,9 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithTwoModulesAndSetValues)
 		expectedRootRotVel
 	);
 	physicsLane.emit(BFG::ID::PE_ATTACH_MODULE, mcp);
-	sync.finish();
-
+	
 	// By now, exactly one FullSyncData event should have been arrived.
+	BFG::Base::periodicWaitForEqual(catcher.count(), 1, boost::posix_time::milliseconds(500));
 	BOOST_REQUIRE_EQUAL(catcher.count(), 1);
 
 	auto fstFullSyncData = catcher.payloads()[0];
@@ -179,8 +183,6 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithTwoModulesAndSetValues)
 	BOOST_CHECK(BFG::equals(receivedOri, expectedRootOri));
 	BOOST_CHECK(BFG::nearEnough(receivedVel, expectedRootVel, 0.001f));
 	BOOST_CHECK(BFG::nearEnough(receivedRotVel, expectedRootRotVel, 0.001f));
-
-	sync.start();
 
 	// Now we'll create the second module. It will emit another FullSyncData
 	// event. The transmitted start values are relative to the first module
@@ -201,9 +203,8 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithTwoModulesAndSetValues)
 	);
 	physicsLane.emit(BFG::ID::PE_ATTACH_MODULE, mcp2);
 	
-	sync.finish();
-
 	// By now, exactly two FullSyncData events should have been arrived.
+	BFG::Base::periodicWaitForEqual(catcher.count(), 2, boost::posix_time::milliseconds(500));
 	BOOST_REQUIRE_EQUAL(catcher.count(), 2);
 
 	fstFullSyncData = catcher.payloads()[1];
@@ -219,8 +220,6 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithTwoModulesAndSetValues)
 	BOOST_CHECK(BFG::nearEnough(receivedVel, expectedRootVel, 0.001f));
 	BOOST_CHECK(BFG::nearEnough(receivedRotVel, expectedRootRotVel, 0.001f));
 
-	sync.start();
-	
 	// Now, let's set some values for the whole object (root module).
 	BFG::Event::Catcher<BFG::v3> posCatcher(physicsLane, BFG::ID::PE_POSITION, handle);
 	BFG::Event::Catcher<BFG::qv4> oriCatcher(physicsLane, BFG::ID::PE_ORIENTATION, handle);
@@ -233,8 +232,6 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithTwoModulesAndSetValues)
 	
 	physicsLane.emit(BFG::ID::PE_UPDATE_POSITION, newPos, handle);
 	physicsLane.emit(BFG::ID::PE_UPDATE_ORIENTATION, newOri, handle);
-	physicsLane.emit(BFG::ID::PE_UPDATE_VELOCITY, newVel, handle);
-	physicsLane.emit(BFG::ID::PE_UPDATE_ROTATION_VELOCITY, newRotVel, handle);
 
 	sync.finish();
 	
@@ -242,8 +239,14 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithTwoModulesAndSetValues)
 	BOOST_CHECK_EQUAL(catcher.count(), 2);
 	
 	// But exactly one PE_POSITION and one PE_ORIENTATION event
-	BOOST_REQUIRE_EQUAL(posCatcher.count(), 1);
-	BOOST_REQUIRE_EQUAL(oriCatcher.count(), 1);
+	BOOST_REQUIRE_NE(posCatcher.count(), 0);
+	BOOST_REQUIRE_NE(oriCatcher.count(), 0);
+
+	// Use latest data
+	receivedPos = posCatcher.payloads().back();
+	receivedOri = oriCatcher.payloads().back();
+	BOOST_CHECK(BFG::nearEnough(receivedPos, newPos, 0.001f));
+	BOOST_CHECK(BFG::equals(receivedOri, newOri));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
