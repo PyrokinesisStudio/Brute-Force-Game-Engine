@@ -195,7 +195,6 @@ void AutoNavigator::rotate(const qv4& rotation)
 
 void AutoNavigator::accelerate(quantity<si::velocity, f32> targetSpeed)
 {
-	assert(std::isnormal(mMaxSpeed.value()) && "Division by zero.");
 	mAccelerationFactor = targetSpeed.value() / mMaxSpeed.value();
 }
 

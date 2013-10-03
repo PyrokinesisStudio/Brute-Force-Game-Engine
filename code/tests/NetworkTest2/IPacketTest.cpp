@@ -24,6 +24,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <boost/mpl/list.hpp>
+
 #include <Core/ClockUtils.h>
 #include <Network/Packet.h>
 #include <Network/Tcp.h>
