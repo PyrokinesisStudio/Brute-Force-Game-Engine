@@ -9,24 +9,6 @@
 
             <value set = "3000">A_FIRST_VIEWACTION</value>
 
-					<!-- TODO: not used in the engine at all -->
-					<value>VE_PAUSE_STATE</value>
-					<value>VE_RESUME_STATE</value>
-					<value>VE_WEAPON_AMMO</value>
-					<value>VE_CREATE_PLANE</value>
-					<value>VE_SET_MATERIAL</value>
-					<value>VE_HUD_CREATE_FLIGHTMAP</value>
-					<value>VE_HUD_CREATE_CROSSHAIR</value>
-					<value>VE_HUD_CREATE_WEAPONS</value>
-					<value>VE_HUD_DESTROY_FLIGHTMAP</value>
-					<value>VE_HUD_DESTROY_CROSSHAIR</value>
-					<value>VE_HUD_DESTROY_WEAPONS</value>
-					<value>VE_NEXT_MENU_ENTRY</value>
-					<value>VE_PREV_MENU_ENTRY</value>
-					<value>VE_CONFIRM_MENU_ENTRY</value>
-					<value>VE_LEVEL_CHOSEN</value>
-					<value>VE_EXIT</value>
-
 					<!-- TODO: not used in View -->
 					<value>VE_EFFECT</value>
 
