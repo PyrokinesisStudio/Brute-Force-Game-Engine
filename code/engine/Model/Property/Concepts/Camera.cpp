@@ -159,7 +159,7 @@ void Camera::internalOnModuleAttached(GameHandle module)
 	assert(mModules.size() == 1 && 
 		"Camera: only one Camera allowed at the moment!");
 
-	mMode = static_cast<ID::CameraMode>(value<s32>(ID::PV_CameraMode, module));
+	mMode = value<ID::CameraMode>(ID::PV_CameraMode, module);
 
 	setMode(mMode);
 	
@@ -255,8 +255,17 @@ void Camera::updateFixed(quantity<si::time, f32> timeSinceLastFrame)
 
 	if (mTarget != NULL_HANDLE)
 	{
-		const v3& targetPosition = environment()->getGoValue<v3>(mTarget, ID::PV_Position, pluginId());
-		const qv4& targetOrientation = environment()->getGoValue<qv4>(mTarget, ID::PV_Orientation, pluginId());
+		v3 targetPosition;
+		qv4 targetOrientation;
+		try
+		{
+			targetPosition = environment()->getGoValue<v3>(mTarget, ID::PV_Position, pluginId());
+			targetOrientation = environment()->getGoValue<qv4>(mTarget, ID::PV_Orientation, pluginId());
+		}
+		catch (const std::runtime_error& e)
+		{
+			return;
+		}
 		
 		updateOwnLocation(timeSinceLastFrame);
 
