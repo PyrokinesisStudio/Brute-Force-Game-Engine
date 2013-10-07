@@ -316,7 +316,7 @@ void Networked::onSynchronizationMode(ID::SynchronizationMode mode)
 	{
 		ModuleMapT::iterator it = mModules.begin();
 		for (; it != mModules.end(); ++it)
-			subLane()->emit(ID::PE_UPDATE_COLLISION_MODE, (s32) ID::CM_Disabled, it->first);
+			subLane()->emit(ID::PE_UPDATE_COLLISION_MODE, ID::CM_Disabled, it->first);
 	}
 	
 	dbglog << "Networked: setting synchronization mode to " << mode;

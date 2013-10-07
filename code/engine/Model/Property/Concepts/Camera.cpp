@@ -255,6 +255,7 @@ void Camera::updateFixed(quantity<si::time, f32> timeSinceLastFrame)
 
 	if (mTarget != NULL_HANDLE)
 	{
+		//! \todo find a better solution to not-found property values
 		v3 targetPosition;
 		qv4 targetOrientation;
 		try

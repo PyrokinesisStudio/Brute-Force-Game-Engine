@@ -157,7 +157,7 @@ void Destroyable::destroy(GameHandle module, bool respawns)
 
 	if (respawns)
 	{
-		subLane()->emit(ID::PE_UPDATE_COLLISION_MODE, (s32) ID::CM_Disabled, module);
+		subLane()->emit(ID::PE_UPDATE_COLLISION_MODE, ID::CM_Disabled, module);
 		subLane()->emit(ID::PE_UPDATE_SIMULATION_FLAG, false, module);
 		subLane()->emit(ID::VE_SET_VISIBLE, false, module);
 	}
@@ -188,7 +188,7 @@ void Destroyable::respawn(GameHandle module)
 	setGoValue(ID::PV_Position, pluginId(), modulePosition);
 	setGoValue(ID::PV_Orientation, pluginId(), moduleOrientation);
 	
-	subLane()->emit(ID::PE_UPDATE_COLLISION_MODE, (s32) ID::CM_Standard, module);
+	subLane()->emit(ID::PE_UPDATE_COLLISION_MODE, ID::CM_Standard, module);
 	subLane()->emit(ID::PE_UPDATE_SIMULATION_FLAG, true, module);
 
 	subLane()->emit(ID::VE_SET_VISIBLE, true, module);
