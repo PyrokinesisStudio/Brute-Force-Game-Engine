@@ -86,7 +86,7 @@ mRenderTargetCreated(false)
 	cam->setFOVy(Ogre::Degree(60.0f));
 	cam->setNearClipDistance(0.1f);
 	cam->setFarClipDistance(250000.0f);
-	mCameraNode->lookAt(toOgre(target) * 10, Ogre::SceneNode::TS_WORLD);
+	cam->lookAt(toOgre(target)*10);
 	mCameraNode->attachObject(cam);
 
 	infolog << "Camera: " << stringify(mHandle) << " created.";
