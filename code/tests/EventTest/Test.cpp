@@ -250,6 +250,19 @@ struct ThrowingModule : public BFG::Event::EntryPoint<BFG::Event::Lane>
 	}
 };
 
+struct ThrowingLoop : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		lane->connectLoop(this, &ThrowingLoop::update);
+	}
+
+	void update(const BFG::Event::TickData ld)
+	{
+		throw std::runtime_error("ThrowingLoop Test");
+	}
+};
+
 struct TestContainerModule : public BFG::Event::EntryPoint<BFG::Event::Lane>
 {
 	void run(BFG::Event::Lane* lane)
@@ -564,6 +577,16 @@ BOOST_AUTO_TEST_CASE (OneLaneOneEventWithException)
 	sync.start();
 	
 	lane.emit(5, BFG::Event::Void());
+	sync.finish();
+}
+
+BOOST_AUTO_TEST_CASE (OneLaneOneLoopWithException)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+	
+	lane.addEntry<ThrowingLoop>();
+	sync.start();
 	sync.finish();
 }
 

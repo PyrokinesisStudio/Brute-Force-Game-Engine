@@ -232,7 +232,19 @@ private:
 			return;
 
 		mLoopBinding.emit(TickData(mTickWatch.restart()), static_cast<SenderIdT>(0));
-		mLoopBinding.call();
+
+		try
+		{
+			mLoopBinding.call();
+		}
+		catch (std::exception& ex)
+		{
+			handleLoopException(ex);
+		}
+		catch (...)
+		{
+			handleLoopException();
+		}
 
 		mBinder.tick();
 	
@@ -268,6 +280,16 @@ private:
 		{
 			boost::this_thread::sleep(boost::posix_time::milliseconds(remainingTime));
 		}
+	}
+
+	void handleLoopException(const std::exception& ex) const
+	{
+		errlog << "Lane \"" << mThreadName << "\" loop catched std exception: " << ex.what();
+	}
+	
+	void handleLoopException() const
+	{
+		errlog << "Lane \"" << mThreadName << "\" loop catched unknown exception.";
 	}
 	
 	SynchronizerT&    mSynchronizer;
