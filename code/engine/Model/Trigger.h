@@ -46,6 +46,8 @@ class Sequence : public Managed,
                  boost::noncopyable
 {
 public:
+	typedef Sequence<Unused> This;
+
 	Sequence(Event::Lane& lane,
 	         GameHandle handle,
 	         const HandleVector& goHandles,
@@ -62,8 +64,8 @@ public:
 	{
 		assert(! goHandles.empty() && "Trigger::Sequence has no handles!");
 	
-		mSubLane->connectV(ID::TE_CHECK_LOCATION, this, &Trigger::onCheckLocation);
-		mSubLane->connectV(ID::TE_RESET, this &Trigger::onReset);
+		mSubLane->connectV(ID::TE_CHECK_LOCATION, this, &This::onCheckLocation);
+		mSubLane->connectV(ID::TE_RESET, this, &This::onReset);
 	}
 	                
 	~Sequence()
