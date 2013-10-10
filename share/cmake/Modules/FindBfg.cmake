@@ -8,7 +8,8 @@
 #  BFG_INCLUDE_DIR
 #  BFG_LIBRARIES
 #
-# You should link to BFG_LIBRARIES.
+# You should link to BFG_LIBRARIES (they're already marked as 'debug' or
+# 'optimized' variant.)
 #
 # BFG_ROOT - Can be set to Bfg install path or Windows build path.
 
