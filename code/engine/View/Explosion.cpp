@@ -335,6 +335,18 @@ mHandle(generateHandle())
 		"Explosion_01_shockwave"
 	);
 
+	mParticles["Smoke"] = sceneMgr->createParticleSystem
+	(
+		stringify(mHandle) + "smoke",
+		"Explosion_01_smoke"
+	);
+
+	mParticles["Debris"] = sceneMgr->createParticleSystem
+	(
+		stringify(mHandle) + "debris",
+		"Explosion_01_debris"
+	);
+
 	mStartWidth  = mParticles["Shockwave"]->getDefaultWidth();
 	mStartHeight = mParticles["Shockwave"]->getDefaultHeight();
 }
@@ -364,23 +376,27 @@ bool Explosion2::frameStarted(const Ogre::FrameEvent& evt)
 
 	mElapsedTime += evt.timeSinceLastFrame;
 
-	fireParticles(mParticles["Flash"], mNode, 0.0f, 1.5f, mElapsedTime);
-	fireParticles(mParticles["Fire"], mNode, 0.0f, 1.5f, mElapsedTime);
-	fireParticles(mParticles["Sparcles"], mNode, 0.0f, 1.5f, mElapsedTime);
-	fireParticles(mParticles["Smoketrail"], mNode, 0.0f, 1.5f, mElapsedTime);
+	fireParticles(mParticles["Flash"], mNode, 0.0f, 4.0f, mElapsedTime);
+	fireParticles(mParticles["Fire"], mNode, 0.0f, 4.0f, mElapsedTime);
+	fireParticles(mParticles["Sparcles"], mNode, 0.0f, 4.0f, mElapsedTime);
+	fireParticles(mParticles["Smoketrail"], mNode, 0.0f, 4.0f, mElapsedTime);
+	fireParticles(mParticles["Smoke"], mNode, 0.0f, 4.0f, mElapsedTime);
+	fireParticles(mParticles["Debris"], mNode, 0.0f, 4.0f, mElapsedTime);
+	fireParticles(mParticles["Shockwave"], mNode, 0.0f, 4.0f, mElapsedTime);
 
-	fireScaledParticles
-	(
-		mParticles["Shockwave"],
-		mNode,
-		mStartWidth,
-		mStartHeight,
-		4.0f,
-		2.0f,
-		0.0f,
-		1.5f,
-		mElapsedTime
-	);
+
+// 	fireScaledParticles
+// 	(
+// 		mParticles["Shockwave"],
+// 		mNode,
+// 		mStartWidth,
+// 		mStartHeight,
+// 		4.0f,
+// 		2.0f,
+// 		0.0f,
+// 		4.0f,
+// 		mElapsedTime
+// 	);
 
 	if (mElapsedTime > 4.0f)
 		finished();
