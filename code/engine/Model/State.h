@@ -64,6 +64,8 @@ public:
 	
 private:
 	void onLoop(Event::TickData tickData);
+
+	Event::Lane& mLane;
 };
 
 } // namespace BFG

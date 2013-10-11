@@ -28,11 +28,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace BFG {
 
-State::State(Event::Lane& lane)
+State::State(Event::Lane& lane) :
+mLane(lane)
 {
-	// Setting up callbacks for the game loop, only those which must be
-	// updated regularily by a LoopEvent
-	lane.connectLoop(this, &State::onLoop);	
+	mLane.connectLoop(this, &State::onLoop);	
 }
 
 State::~State()
@@ -47,10 +46,7 @@ void State::onLoop(Event::TickData tickData)
 
 void State::stopUpdates()
 {
-	//! todo: lane has no stopping mechanism yet.
-// 	loop()->setExitFlag();
-// 	loop()->unregisterLoopEventListener(this);
-	infolog << "STUB: State: lane has no stopping mechanism yet";
+	mLane.emit(ID::EA_FINISH, Event::Void());
 }
 
 } // namespace BFG
