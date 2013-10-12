@@ -39,14 +39,15 @@ AudioState::AudioState(Event::SubLanePtr subLane) :
 	program.push_back(p.Get(ID::P_SOUND_MUSIC)+"02_Deimos - Flottenkommando.ogg");
 	program.push_back(p.Get(ID::P_SOUND_MUSIC)+"01_Deimos - Faint Sun.ogg");
 
-	mPlaylist.reset(new Audio::Playlist(program, true));
+//	mPlaylist.reset(new Audio::Playlist(program, true));
 	
 	mSubLane->connect(ID::AE_SOUND_EMITTER_PROCESS_SOUND, this, &AudioState::onSoundEmitterProcessSound);
 	mSubLane->connect(ID::AE_SOUND_EFFECT, this, &AudioState::onSoundEffect);
 	
-	mSoundEffectMap["Explosion_big"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.wav";
-	mSoundEffectMap["Explosion_small"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.wav";
-	mSoundEffectMap["Explosion_medium"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.wav";
+	mSoundEffectMap["Explosion_big"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.ogg";
+	//mSoundEffectMap["Explosion_small"] = p.Get(ID::P_SOUND_EFFECTS)+"Laser_008.wav";
+	mSoundEffectMap["Explosion_small"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.ogg";
+	mSoundEffectMap["Explosion_medium"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.ogg";
 }
 
 AudioState::~AudioState()

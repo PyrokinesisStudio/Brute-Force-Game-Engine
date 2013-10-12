@@ -44,7 +44,7 @@ Cannon::Cannon(GameObject& Owner, BFG::PluginId pid) :
 
 	// TODO having a path here is not beautiful.
 	Path path;
-	mLaserSound = path.Get(ID::P_SOUND_EFFECTS)+"Laser_003.wav";
+	mLaserSound = path.Get(ID::P_SOUND_EFFECTS)+"Laser_003.ogg";
 
 	requiredPvInitialized(ID_PROJECTILE_SPEED);
 	requiredPvInitialized(ID_PROJECTILE_SPAWN_DISTANCE);
