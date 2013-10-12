@@ -61,7 +61,7 @@ OpenALAudioObject::OpenALAudioObject(std::string audioName,
 		ALint sourceState;
 		alGetSourcei(mSourceId, AL_SOURCE_STATE, &sourceState);
 		alErrorHandler("OpenALAudioObject::play", "Error occured calling alGetSourcei");
-		
+
 		switch (sourceState)
 		{
 			case AL_PLAYING:
