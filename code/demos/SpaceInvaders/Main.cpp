@@ -45,8 +45,8 @@ struct Main : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 {
 	virtual void main(BFG::Event::Lane* lane)
 	{
-		mAudioState.reset(new AudioState(lane->createSubLane()));
 		mGameState.reset(new MainState(gStateHandle, *lane));
+		mAudioState.reset(new AudioState(lane->createSubLane()));
 	}
 
 	boost::scoped_ptr<MainState> mGameState;
@@ -74,7 +74,7 @@ using namespace BFG;
 int main( int argc, const char* argv[] ) try
 {
 	Init::Configuration cfg("SpaceInvaders");
-	cfg.controllerFrequency = 1000;
+	cfg.controllerFrequency = 100;
 	
 	//! \todo Move this somewhere else ...
 	srand(time(NULL));
@@ -89,7 +89,7 @@ int main( int argc, const char* argv[] ) try
 	
 	// Custom States
 	Init::gViewLane->addEntry<ViewMain>();
-	Event::Lane gameLane(Init::gSynchronizer, 1000, "Game", Event::RL3);
+	Event::Lane gameLane(Init::gSynchronizer, 300, "Game", Event::RL3);
 	gameLane.addEntry<Main>();
 
 	Init::startEngine(cfg);
