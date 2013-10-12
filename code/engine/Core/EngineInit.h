@@ -75,7 +75,7 @@ struct Configuration
 	appName(appName),
 	runMode(rm),
 	logLevel(Base::Logger::SL_WARNING),
-	controllerFrequency(1000)
+	controllerFrequency(300)
 	{
 		if (appName.empty())
 			throw std::logic_error
@@ -117,7 +117,7 @@ Event::Synchronizer gSynchronizer;
 
 // AUDIO ################################################
 #ifdef BFG_USE_AUDIO
-	const u32 AUDIO_FREQ = 100;
+	const u32 AUDIO_FREQ = 300;
 	boost::scoped_ptr<Event::Lane> gAudioLane;
 #endif
 
@@ -145,7 +145,7 @@ void initController(const Configuration& cfg)
 
 // PHYSICS ################################################
 #ifdef BFG_USE_PHYSICS
-	const u32 PHYSICS_FREQ = 100;
+	const u32 PHYSICS_FREQ = 300;
 	boost::scoped_ptr<Event::Lane> gPhysicsLane;
 #endif
 
@@ -159,7 +159,7 @@ void initPhysics(const Configuration& cfg)
 
 // VIEW ################################################
 #ifdef BFG_USE_VIEW
-	const u32 VIEW_FREQ = 100;
+	const u32 VIEW_FREQ = 300;
 	boost::scoped_ptr<Event::Lane> gViewLane;
 #endif
 
