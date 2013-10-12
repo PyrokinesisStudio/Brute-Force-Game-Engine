@@ -39,7 +39,7 @@ AudioState::AudioState(Event::SubLanePtr subLane) :
 	program.push_back(p.Get(ID::P_SOUND_MUSIC)+"02_Deimos - Flottenkommando.ogg");
 	program.push_back(p.Get(ID::P_SOUND_MUSIC)+"01_Deimos - Faint Sun.ogg");
 
-//	mPlaylist.reset(new Audio::Playlist(program, true));
+	mPlaylist.reset(new Audio::Playlist(program, true));
 	
 	mSubLane->connect(ID::AE_SOUND_EMITTER_PROCESS_SOUND, this, &AudioState::onSoundEmitterProcessSound);
 	mSubLane->connect(ID::AE_SOUND_EFFECT, this, &AudioState::onSoundEffect);
