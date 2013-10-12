@@ -106,7 +106,7 @@ struct Interpolator
 			const f32 STEP = timeSinceLastFrame / DURATION;
 
 			mPositionParameter += STEP;
-			v3 mInterpolatedPosition = BFG::interpolate
+			mInterpolatedPosition = BFG::interpolate
 			(
 				mStartPosition,
 				mEndPosition,
@@ -136,15 +136,12 @@ struct Interpolator
 
 			mOrientationParameter += STEP;
 
- 			qv4 mInterpolatedOrientation
- 			(
-				lerp
-				(
-					mStartOrientation, 
- 					mEndOrientation,
-					mOrientationParameter
-				)
- 			);
+ 			mInterpolatedOrientation = lerp 
+			(
+				mStartOrientation, 
+ 				mEndOrientation,
+				mOrientationParameter
+			);
 
 			if (mOrientationParameter >= SCALE)
 				mInterpolateOrientation = false;
