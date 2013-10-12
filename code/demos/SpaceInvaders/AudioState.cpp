@@ -30,7 +30,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Audio/Audio.h>
 
-AudioState::AudioState(Event::SubLanePtr subLane)
+AudioState::AudioState(Event::SubLanePtr subLane) :
+	mSubLane(subLane)
 {
 	Path p;
 	std::vector<std::string> program;
@@ -39,9 +40,9 @@ AudioState::AudioState(Event::SubLanePtr subLane)
 	program.push_back(p.Get(ID::P_SOUND_MUSIC)+"01_Deimos - Faint Sun.ogg");
 
 	mPlaylist.reset(new Audio::Playlist(program, true));
-
-	subLane->connect(ID::AE_SOUND_EMITTER_PROCESS_SOUND, this, &AudioState::onSoundEmitterProcessSound);
-	subLane->connect(ID::AE_SOUND_EFFECT, this, &AudioState::onSoundEffect);
+	
+	mSubLane->connect(ID::AE_SOUND_EMITTER_PROCESS_SOUND, this, &AudioState::onSoundEmitterProcessSound);
+	mSubLane->connect(ID::AE_SOUND_EFFECT, this, &AudioState::onSoundEffect);
 	
 	mSoundEffectMap["Explosion_big"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.wav";
 	mSoundEffectMap["Explosion_small"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.wav";
@@ -49,7 +50,9 @@ AudioState::AudioState(Event::SubLanePtr subLane)
 }
 
 AudioState::~AudioState()
-{}
+{
+
+}
 
 void AudioState::onSoundEmitterProcessSound(const std::string& effect)
 {

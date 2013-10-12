@@ -109,8 +109,6 @@ void Cannon::fireRocket(bool autoRocket)
 	op.mLocation = spawnLocation;
 	op.mLinearVelocity = v3(projectileSpeed) * ownOrientation.zAxis();
 
-	op.mStorage.emit(ID::AE_SOUND_EMITTER_PROCESS_SOUND, mLaserSound);
-	
 	if (autoRocket)
 	{
 		u32 target = rand() % targets.size();
@@ -124,5 +122,6 @@ void Cannon::fireRocket(bool autoRocket)
 	}
 
 	mSubLane->emit(ID::S_CREATE_GO, op);
+	mSubLane->emit(ID::AE_SOUND_EMITTER_PROCESS_SOUND, mLaserSound);
 }
 

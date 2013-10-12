@@ -45,8 +45,8 @@ struct Main : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 {
 	virtual void main(BFG::Event::Lane* lane)
 	{
-		mGameState.reset(new MainState(gStateHandle, *lane));
 		mAudioState.reset(new AudioState(lane->createSubLane()));
+		mGameState.reset(new MainState(gStateHandle, *lane));
 	}
 
 	boost::scoped_ptr<MainState> mGameState;
@@ -89,7 +89,7 @@ int main( int argc, const char* argv[] ) try
 	
 	// Custom States
 	Init::gViewLane->addEntry<ViewMain>();
-	Event::Lane gameLane(Init::gSynchronizer, 100, "Game", Event::RL3);
+	Event::Lane gameLane(Init::gSynchronizer, 1000, "Game", Event::RL3);
 	gameLane.addEntry<Main>();
 
 	Init::startEngine(cfg);

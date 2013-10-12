@@ -52,6 +52,7 @@ private:
 	
 	typedef std::map<std::string, std::string> SoundEffectMapT;
 	SoundEffectMapT mSoundEffectMap;
+	Event::SubLanePtr mSubLane;
 };
 
 #endif
