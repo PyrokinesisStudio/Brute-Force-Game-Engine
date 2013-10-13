@@ -31,7 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreTechnique.h>
 #include <OgreTextureUnitState.h>
 
-#include <View/Event.h>
+#include <View/Enums.hh>
 #include <View/SkyCreation.h>
 
 namespace Tool
@@ -129,7 +129,7 @@ void SkyBoxSelect::onSkySelected(MyGUI::ListBox* list, size_t index)
 	const std::string& skyName = list->getItemNameAt(index);
 
 	BFG::View::SkyCreation sc(skyName);
-	emit<BFG::View::Event>(BFG::ID::VE_SET_SKY, sc, mData->mState);
+	mSubLane->emit(BFG::ID::VE_SET_SKY, sc, mData->mState);
 
 	Ogre::TextureUnitState* skyTexUnit = findAliasInMaterial("sky", skyName);
 

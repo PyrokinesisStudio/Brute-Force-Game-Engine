@@ -33,10 +33,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <al.h>
 #include <alc.h>
 
-#include <EventSystem/Core/EventLoop.h>
+#include <Core/v3.h>
+
+#include <Event/Event.h>
 
 #include <Audio/Defines.h>
-#include <Audio/AudioEvent.h>
 
 
 namespace BFG {
@@ -50,22 +51,23 @@ struct Level;
 class BFG_AUDIO_API Listener
 {
 public:
-	Listener() {}
+	Listener(Event::Lane& lane): mLane(lane) {}
 	~Listener() {}
 
-private:
-	virtual void eventHandler(AudioEvent* AE) = 0;
+protected:
+	Event::Lane& mLane;
 
-	virtual void onEventMasterGain(const AudioPayloadT& payload) = 0;
+private:
+
+	virtual void onEventMasterGain(const f32& gain) = 0;
 	
-	virtual void onVelocityPlayer(const AudioPayloadT& payload) = 0;
-	virtual void onOrientationPlayer(const AudioPayloadT& payload) = 0;
-	virtual void onEventPositionPlayer(const AudioPayloadT& payload) = 0;
+	virtual void onEventPositionPlayer(const v3& position) = 0;
+	virtual void onOrientationPlayer(const v3& orientation) = 0;
+	virtual void onVelocityPlayer(const v3& velocity) = 0;
 };
 
 //! Abstract creation method for Listener instance.
-boost::shared_ptr<Listener> createListener();
-
+boost::shared_ptr<Listener> createListener(Event::Lane& lane);
 
 } // namespace Audio
 } // namespace BFG

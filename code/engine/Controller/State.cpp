@@ -29,7 +29,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/bind.hpp>
 
 #include <Core/Path.h>
-#include <Controller/VIPXmlInitializer.h>
+
+#include <Controller/Vip/XmlInitializer.h>
 
 namespace BFG {
 namespace Controller_ {
@@ -38,7 +39,7 @@ void debugOut(VipPtrT vip, const ActionMapT& actions)
 {
 	const std::string deviceStr = ID::asStr(vip->mDevice);
 	
-	EventIdT action = vip->getAction();
+	BFG::Event::IdT action = vip->getAction();
 	ActionMapT::const_iterator it = actions.find(action);
 	const std::string actionStr = it == actions.end()?"Unserializable":it->second;
 	
@@ -47,8 +48,8 @@ void debugOut(VipPtrT vip, const ActionMapT& actions)
 	       << " (" << actionStr << ")";
 }
 	
-State::State(EventLoop* loop) :
-mEventLoop(loop)
+State::State(Event::Lane& eventLane) :
+mEventSubLane(eventLane.createSubLane())
 {}
 
 State::~State()
@@ -107,7 +108,7 @@ void State::init(const std::string& state,
 	Path p;
 	std::string fullConfigPath = p.Expand(configFilename);
 
-	VIP::XmlInitializer initializer(this, actions);
+	Vip::XmlInitializer initializer(this, actions);
 
 	std::vector<VipPtrT> allVips;
 	initializer.traverse(fullConfigPath, allVips);
@@ -139,19 +140,19 @@ void State::capture()
 		mJoystick.capture();
 }
 
-void State::sendFeedback(long microseconds_passed)
+void State::sendFeedback(TimeT timeSinceLastTick)
 {
 	for_each
 	(
-	    mFeedbacks.begin(),
-	    mFeedbacks.end(),
-	    boost::bind(&VIP::CommonBase::FeedTime, _1, microseconds_passed)
+		mFeedbacks.begin(),
+		mFeedbacks.end(),
+		boost::bind(&Vip::CommonBase::FeedTime, _1, timeSinceLastTick)
 	);
 }
 
-EventLoop* State::eventLoop() const
+Event::SubLanePtr State::eventSubLane() const
 {
-	return mEventLoop;
+	return mEventSubLane;
 }
 
 const std::string& State::getStateID() const

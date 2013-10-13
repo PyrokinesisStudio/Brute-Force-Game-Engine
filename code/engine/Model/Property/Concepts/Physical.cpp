@@ -30,94 +30,37 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/Math.h>
 #include <Model/Environment.h>
-#include <Physics/Event.h>
-#include <View/Event.h>
+#include <Physics/Physics.h>
+#include <View/Enums.hh>
 
 namespace BFG {
 
 Physical::Physical(GameObject& owner, PluginId pid) :
-Property::Concept(owner, "Physical", pid),
-mFirstFullSync(true)
+Property::Concept(owner, "Physical", pid)
 {
-	mPhysicsActions.push_back(ID::PE_FULL_SYNC);
-	mPhysicsActions.push_back(ID::PE_POSITION);
-	mPhysicsActions.push_back(ID::PE_ORIENTATION);
-	mPhysicsActions.push_back(ID::PE_VELOCITY);
-	mPhysicsActions.push_back(ID::PE_ROTATION_VELOCITY);
-	mPhysicsActions.push_back(ID::PE_TOTAL_MASS);
-	mPhysicsActions.push_back(ID::PE_TOTAL_INERTIA);
-
-	BOOST_FOREACH(ID::PhysicsAction action, mPhysicsActions)
-	{
-		loop()->connect(action, this, &Physical::onPhysicsEvent, ownerHandle());
-	}
+	subLane()->connect(ID::PE_FULL_SYNC, this, &Physical::onFullSync, ownerHandle());
+	subLane()->connect(ID::PE_POSITION, this, &Physical::onPosition, ownerHandle());
+	subLane()->connect(ID::PE_ORIENTATION, this, &Physical::onOrientation, ownerHandle());
+	subLane()->connect(ID::PE_VELOCITY, this, &Physical::onVelocity, ownerHandle());
+	subLane()->connect(ID::PE_ROTATION_VELOCITY, this, &Physical::onRotationVelocity, ownerHandle());
+	subLane()->connect(ID::PE_TOTAL_MASS, this, &Physical::onTotalMass, ownerHandle());
+	subLane()->connect(ID::PE_TOTAL_INERTIA, this, &Physical::onTotalInertia, ownerHandle());
 }
 
 Physical::~Physical()
-{
-	BOOST_FOREACH(ID::PhysicsAction action, mPhysicsActions)
-	{
-		loop()->disconnect(action, this);
-	}
-
-}
+{}
 
 void Physical::internalSynchronize()
 {
 	assert(ownerHandle() != NULL_HANDLE);
 	
 	synchronizeView();
-
-	if (mFirstFullSync)
-	{
-		emit<View::Event>(ID::VE_SET_VISIBLE, true, ownerHandle());
-		mFirstFullSync = false;
-	}
-}
-
-void Physical::onPhysicsEvent(Physics::Event* e)
-{
-	switch(e->id())
-	{
-	case ID::PE_FULL_SYNC:
-		onFullSync(boost::get<Physics::FullSyncData>(e->data()));
-		break;
-
-	case ID::PE_VELOCITY:
-		onVelocity(boost::get<Physics::VelocityComposite>(e->data()));
-		break;
-
-	case ID::PE_ROTATION_VELOCITY:
-		onRotationVelocity(boost::get<Physics::VelocityComposite>(e->data()));
-		break;
-
-	case ID::PE_POSITION:
-		onPosition(boost::get<v3>(e->data()));
-		break;
-
-	case ID::PE_ORIENTATION:
-		onOrientation(boost::get<qv4>(e->data()));
-		break;
-
-	case ID::PE_TOTAL_MASS:
-		onTotalMass(boost::get<f32>(e->data()));
-		break;
-
-	case ID::PE_TOTAL_INERTIA:
-		onInertia(boost::get<m3x3>(e->data()));
-		break;
-
-	default:
-		warnlog << "Physical: Can't handle event with ID: "
-		        << e->id();
-		break;
-	}
 }
 
 void Physical::onFullSync(const Physics::FullSyncData& fsd)
 {
-	Location location(fsd.get<0>(), fsd.get<1>());
-	setGoValue(ID::PV_Location, pluginId(), location);
+	setGoValue(ID::PV_Position, pluginId(), fsd.get<0>());
+	setGoValue(ID::PV_Orientation, pluginId(), fsd.get<1>());
 
 	setGoValue(ID::PV_Velocity, pluginId(), fsd.get<2>());
 	setGoValue(ID::PV_RelativeVelocity, pluginId(), fsd.get<3>());
@@ -133,16 +76,12 @@ void Physical::onFullSync(const Physics::FullSyncData& fsd)
 
 void Physical::onPosition(const v3& newPosition)
 {
-	Location go = getGoValue<Location>(ID::PV_Location, pluginId());
-	go.position = newPosition;
-	setGoValue(ID::PV_Location, pluginId(), go);
+	setGoValue(ID::PV_Position, pluginId(), newPosition);
 }
 
 void Physical::onOrientation(const qv4& newOrientation)
 {
-	Location go = getGoValue<Location>(ID::PV_Location, pluginId());
-	go.orientation = newOrientation;
-	setGoValue(ID::PV_Location, pluginId(), go);
+	setGoValue(ID::PV_Orientation, pluginId(), newOrientation);
 }
 
 void Physical::onVelocity(const Physics::VelocityComposite& vel)
@@ -162,7 +101,7 @@ void Physical::onTotalMass(const f32 totalMass)
 	setGoValue(ID::PV_Mass, pluginId(), totalMass);
 }
 
-void Physical::onInertia(const m3x3& inertia)
+void Physical::onTotalInertia(const m3x3& inertia)
 {
 	setGoValue(ID::PV_Inertia, pluginId(), inertia);
 }
@@ -172,22 +111,24 @@ void Physical::synchronizeView() const
 	if (owner().docked())
 		return;
 
-	const Location& go = getGoValue<Location>(ID::PV_Location, pluginId());
-	
+	const v3& ownPosition = getGoValue<v3>(ID::PV_Position, pluginId());
+	const qv4& ownOrientation = getGoValue<qv4>(ID::PV_Orientation, pluginId());
+
+	subLane()->emit(ID::VE_UPDATE_POSITION, ownPosition, ownerHandle());
+	subLane()->emit(ID::VE_UPDATE_ORIENTATION, ownOrientation, ownerHandle());
+
 #if defined(_DEBUG) || defined (NDEBUG)
-	if (length(go.position) > 1.0e15)
+	if (length(ownPosition) > 1.0e15)
 	{
 		std::stringstream ss;
 		ss << "GameObject:" << ownerHandle()
 		   << " just entered hyperspace! Position: "
-		   << go.position;
+		   << ownPosition;
 
 		throw std::logic_error(ss.str());
 	}
 #endif
 
-	emit<View::Event>(ID::VE_UPDATE_POSITION, go.position, ownerHandle());
-	emit<View::Event>(ID::VE_UPDATE_ORIENTATION, go.orientation, ownerHandle());
 }
 
 } // namespace BFG

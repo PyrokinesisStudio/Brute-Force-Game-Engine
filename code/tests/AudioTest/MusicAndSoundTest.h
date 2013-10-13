@@ -30,8 +30,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/Logger.h>
 #include <Core/Types.h>
 
-#include <EventSystem/EventFactory.h>
-
 #include <tests/AudioTest/functions.h>
 
 #include <Audio/Playlist.h>

@@ -30,28 +30,26 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreRoot.h>
 #include <OgreSceneNode.h>
 
-#include <Core/GameHandle.h>
-
-#include <EventSystem/Core/EventLoop.h>
-
 #include <View/Convert.h>
-#include <View/Defs.h>
-#include <View/Event.h>
-#include <View/Main.h>
+#include <View/Enums.hh>
 
 
 namespace BFG {
 namespace View {
 
-RenderObject::RenderObject(GameHandle parent, 
+RenderObject::RenderObject(Event::Lane& lane,
+                           GameHandle parent, 
                            GameHandle handle,
                            const std::string& meshName,
                            const v3& position,
-                           const qv4& orientation) :
+                           const qv4& orientation,
+						   bool visible) :
+mSubLane(lane.createSubLane()),
 mHandle(handle),
 mSceneNode(NULL),
 mEntity(NULL)
 {
+
 	using namespace Ogre;
 	
 	Root* root = Root::getSingletonPtr();
@@ -64,8 +62,6 @@ mEntity(NULL)
 	else		
 		parentNode = sceneMgr->getSceneNode(stringify(parent));	
 
-	mEntity = sceneMgr->createEntity(stringify(handle), meshName);
-	
 	mSceneNode = parentNode->createChildSceneNode
 	(
 		stringify(handle),
@@ -73,57 +69,22 @@ mEntity(NULL)
 		toOgre(orientation)
 	);
 
-	mSceneNode->attachObject(mEntity);
-	mSceneNode->setVisible(false);
-	
-	Main::eventLoop()->connect
-	(
-		ID::VE_UPDATE_POSITION,
-		this,
-		&RenderObject::viewEventHandler,
-		mHandle
-	);
-	
-	Main::eventLoop()->connect
-	(
-		ID::VE_UPDATE_ORIENTATION,
-		this,
-		&RenderObject::viewEventHandler,
-		mHandle
-	);
-	
-	Main::eventLoop()->connect
-	(
-		ID::VE_ATTACH_OBJECT,
-		this,
-		&RenderObject::viewEventHandler,
-		mHandle
-	);
+	mSubLane->connect(ID::VE_SET_VISIBLE, this, &RenderObject::onSetVisible, mHandle);
+	mSubLane->connect(ID::VE_UPDATE_POSITION, this,	&RenderObject::updatePosition, mHandle);
+	mSubLane->connect(ID::VE_UPDATE_ORIENTATION, this, &RenderObject::updateOrientation, mHandle);
+	mSubLane->connect(ID::VE_ATTACH_OBJECT, this, &RenderObject::onAttachObject, mHandle);
+	mSubLane->connectV(ID::VE_DETACH_OBJECT, this, &RenderObject::onDetachObject, mHandle);
 
-	Main::eventLoop()->connect
-	(
-		ID::VE_DETACH_OBJECT,
-		this,
-		&RenderObject::viewEventHandler,
-		mHandle
-	);
-	
-	Main::eventLoop()->connect
-	(
-		ID::VE_SET_VISIBLE,
-		this,
-		&RenderObject::viewEventHandler,
-		mHandle
-	);
+	mEntity = sceneMgr->createEntity(stringify(handle), meshName);
+
+	mSceneNode->attachObject(mEntity);
+
+	mSceneNode->setVisible(visible);
 }
 
 RenderObject::~RenderObject()
 {
-	Main::eventLoop()->disconnect(ID::VE_UPDATE_POSITION, this);
-	Main::eventLoop()->disconnect(ID::VE_UPDATE_ORIENTATION, this);
-	Main::eventLoop()->disconnect(ID::VE_ATTACH_OBJECT, this);
-	Main::eventLoop()->disconnect(ID::VE_DETACH_OBJECT, this);
-	Main::eventLoop()->disconnect(ID::VE_SET_VISIBLE, this);
+	mSubLane.reset();
 
 	Ogre::Root* root = Ogre::Root::getSingletonPtr();
 	Ogre::SceneManager* sceneMgr = root->getSceneManager(BFG_SCENEMANAGER);
@@ -134,17 +95,20 @@ RenderObject::~RenderObject()
 
 void RenderObject::updatePosition(const v3& position)
 {
+	mSceneNode->setVisible(true);
 	mSceneNode->setPosition(toOgre(position));
 }
 
 void RenderObject::updateOrientation(const qv4& orientation)
 {
+	mSceneNode->setVisible(true);
 	mSceneNode->setOrientation(toOgre(orientation));
 }
 
 void RenderObject::onSetVisible(bool visibility)
 {
 	mSceneNode->setVisible(visibility);
+	dbglog << "Received VE_SET_VISIBLE for #" << mHandle;
 }
 
 void RenderObject::attachOgreObject(Ogre::MovableObject* aObject)
@@ -161,6 +125,9 @@ void RenderObject::onAttachObject(GameHandle child)
 {
 	Ogre::Root& root = Ogre::Root::getSingleton();
 	Ogre::SceneManager* sceneMgr = root.getSceneManager(BFG_SCENEMANAGER);
+
+	if(!sceneMgr->hasSceneNode(stringify(child)))
+		throw std::runtime_error("RenderObject::onAttachObject: Child " + stringify(child) + " does not exist!");
 
 	Ogre::SceneNode* childNode = sceneMgr->getSceneNode(stringify(child));
 
@@ -188,30 +155,6 @@ void RenderObject::onDetachObject()
 void RenderObject::removeChildNode(const std::string& name)
 {
 	mSceneNode->removeChild(name);
-}
-
-void RenderObject::viewEventHandler(Event* e)
-{
-	switch (e->id())
-	{
-	case ID::VE_UPDATE_POSITION:
-		updatePosition(boost::get<v3>(e->data()));
-		break;
-	case ID::VE_UPDATE_ORIENTATION:
-		updateOrientation(boost::get<qv4>(e->data()));
-		break;
-	case ID::VE_ATTACH_OBJECT:
-		onAttachObject(boost::get<GameHandle>(e->data()));
-		break;
-	case ID::VE_DETACH_OBJECT:
-		onDetachObject();
-		break;
-	case ID::VE_SET_VISIBLE:
-		onSetVisible(boost::get<bool>(e->data()));
-		break;
-	default:
-		throw std::logic_error("RenderObject::eventHandler: received unhandled event!");
-	}
 }
 
 } // namespace View

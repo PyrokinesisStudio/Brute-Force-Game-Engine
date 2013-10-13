@@ -32,9 +32,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/Logger.h>
 #include <Core/Math.h>
 
-#include <EventSystem/Emitter.h>
-
-#include <Model/Events/TriggerEvent.h>
 #include <Model/Managed.h>
 #include <Model/Environment.h>
 
@@ -44,82 +41,46 @@ typedef std::vector<GameHandle> HandleVector;
 
 namespace Trigger {
 
-template <typename EventT>
-struct DefaultFilter
-{
-	typedef std::set<GameHandle> ContainerT;
-	
-	static bool Applies(const ContainerT& filter, EventT* te)
-	{
-		assert(! "TODO: This is broken, adapt for new event here");
-		//return filter.find(te->getData().mGOhandle) == filter.end();
-		return true;
-	}
-};
-
-template <typename FilterPolicy = DefaultFilter<Trigger::Event> >
+template <typename Unused = int>
 class Sequence : public Managed,
-                 boost::noncopyable,
-                 Emitter
+                 boost::noncopyable
 {
 public:
-	typedef typename FilterPolicy::ContainerT FilterContainerT;
-	
-	Sequence(EventLoop* loop,
+	typedef Sequence<Unused> This;
+
+	Sequence(Event::Lane& lane,
 	         GameHandle handle,
 	         const HandleVector& goHandles,
 	         const Environment& environment,
-	         const FilterContainerT& filter,
 	         f32 radius,
 	         bool activated = true) :
 	Managed(handle, "Trigger::Sequence", ID::OT_Trigger),
-	Emitter(loop),
+	mSubLane(lane.createSubLane()),
 	mGoHandles(goHandles),
 	mEnvironment(environment),
-	mFilter(filter),
 	mRadius(radius),
 	mActivated(activated),
 	mCurrentWP(0)
 	{
 		assert(! goHandles.empty() && "Trigger::Sequence has no handles!");
 	
-		for (int i=ID::TE_CHECK_LOCATION; i<ID::TE_ENDTRIGGEREVENTS; ++i)
-		{
-			loop->connect(i, this, &Sequence::EventHandler);
-		}
+		mSubLane->connectV(ID::TE_CHECK_LOCATION, this, &This::onCheckLocation);
+		mSubLane->connectV(ID::TE_RESET, this, &This::onReset);
 	}
 	                
 	~Sequence()
 	{
-		for (int i=ID::TE_CHECK_LOCATION; i<ID::TE_ENDTRIGGEREVENTS; ++i)
-		{
-			loop()->disconnect(i, this);
-		}
+		mSubLane.reset();
 	}
 	
-	void EventHandler(Trigger::Event* e)
+	void onCheckLocation()
 	{
-		if (FilterPolicy::Applies(mFilter, e))
+		if (! mActivated)
 			return;
-		
-		switch(e->id())
-		{
-		case ID::TE_CHECK_LOCATION:
-			if (! mActivated)
-				return;
-			assert(! "TODO: This is broken, adapt for new event here");
-//			onCheckLocation(te->getData().mGOhandle, boost::get<v3>(te->getData().mValue));
-			break;
-
-		case ID::TE_RESET:
-			onReset();
-			break;
-
-		default:
-			break;
-		}
+		assert(! "TODO: This is broken, adapt for new event here");
+		//			onCheckLocation(te->getData().mGOhandle, boost::get<v3>(te->getData().mValue));
 	}
-	
+
 private:
 	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 	{}
@@ -127,6 +88,7 @@ private:
 	virtual void internalSynchronize()
 	{}
 
+#if 0
 	void onCheckLocation(GameHandle handle, const v3& position)
 	{
 		// Note: This can't be done in internalUpdate as we would be bothered
@@ -151,6 +113,7 @@ private:
 			}
 		}
 	}
+#endif
 	
 	void onReset()
 	{
@@ -162,7 +125,7 @@ private:
 	{
 		assert(! "TODO: Emit a new event here!");
 #if 0
-		emit<Trigger::Event>
+		mSubLane->emit
 		(
 			triggerEvent,
 			handle,
@@ -177,10 +140,9 @@ private:
 		        << ") by " << handle;
 	}
 
-
+	Event::SubLanePtr           mSubLane;
 	HandleVector                mGoHandles;
 	const Environment&          mEnvironment;
-	FilterContainerT            mFilter;
 	f32                         mRadius;
 	bool                        mActivated;
 	s32                         mCurrentWP;

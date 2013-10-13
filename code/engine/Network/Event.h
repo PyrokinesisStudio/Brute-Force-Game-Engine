@@ -27,7 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_NETWORK_EVENT_H
 #define BFG_NETWORK_EVENT_H
 
-#include <EventSystem/Event.h>
+//#include <EventSystem/Event.h>
 #include <Network/Event_fwd.h>
 
 namespace BFG {

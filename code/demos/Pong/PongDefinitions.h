@@ -32,8 +32,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #define PV_DESIRED_SPEED 200
 
-#define A_UPPER_BAR_WIN 10001
-#define A_LOWER_BAR_WIN 10002
+#define A_UPPER_BAR_WIN 11001
+#define A_LOWER_BAR_WIN 11002
 
 const BFG::s32 A_SHIP_AXIS_Y = 10000;
 const BFG::s32 A_SHIP_FIRE   = 10001;

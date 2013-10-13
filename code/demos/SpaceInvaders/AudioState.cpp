@@ -26,12 +26,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include "AudioState.h"
 #include <Core/Path.h>
+#include <Event/Event.h>
 
-#include <EventSystem/Core/EventLoop.h>
-#include <Audio/Main.h>
+#include <Audio/Audio.h>
 
-
-AudioState::AudioState()
+AudioState::AudioState(Event::SubLanePtr subLane) :
+	mSubLane(subLane)
 {
 	Path p;
 	std::vector<std::string> program;
@@ -40,48 +40,29 @@ AudioState::AudioState()
 	program.push_back(p.Get(ID::P_SOUND_MUSIC)+"01_Deimos - Faint Sun.ogg");
 
 	mPlaylist.reset(new Audio::Playlist(program, true));
-
-	Audio::Main::eventLoop()->connect(ID::AE_SOUND_EMITTER_PROCESS_SOUND,
-	                                  this,
-	                                  &AudioState::audioStateEventHandler);
-	Audio::Main::eventLoop()->connect(ID::AE_SOUND_EFFECT,
-	                                  this,
-	                                  &AudioState::audioStateEventHandler);
-
-	mSoundEffectMap[stringToArray<128>("Explosion_big")] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.wav";
-	mSoundEffectMap[stringToArray<128>("Explosion_small")] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.wav";
-	mSoundEffectMap[stringToArray<128>("Explosion_medium")] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.wav";
+	
+	mSubLane->connect(ID::AE_SOUND_EMITTER_PROCESS_SOUND, this, &AudioState::onSoundEmitterProcessSound);
+	mSubLane->connect(ID::AE_SOUND_EFFECT, this, &AudioState::onSoundEffect);
+	
+	mSoundEffectMap["Explosion_big"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.ogg";
+	//mSoundEffectMap["Explosion_small"] = p.Get(ID::P_SOUND_EFFECTS)+"Laser_008.wav";
+	mSoundEffectMap["Explosion_small"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.ogg";
+	mSoundEffectMap["Explosion_medium"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.ogg";
 }
 
 AudioState::~AudioState()
 {
-	Audio::Main::eventLoop()->disconnect(ID::AE_SOUND_EMITTER_PROCESS_SOUND, this);
-	Audio::Main::eventLoop()->disconnect(ID::AE_SOUND_EFFECT, this);
+
 }
 
-void AudioState::audioStateEventHandler(Audio::AudioEvent* e)
+void AudioState::onSoundEmitterProcessSound(const std::string& effect)
 {
-	switch(e->id())
-	{
-		case ID::AE_SOUND_EMITTER_PROCESS_SOUND:
-			mSoundEmitter.processSound(boost::get<std::string>(e->data()));
-			break;
-		case ID::AE_SOUND_EFFECT:
-			onSoundEffect(e->data());			
-			break;
-		default:
-			throw std::logic_error("AudioState::eventHandler: received unhandled event!");
-	}
+	mSoundEmitter.processSound(effect);
 }
 
-void AudioState::onSoundEffect(const Audio::AudioPayloadT& payload)
+void AudioState::onSoundEffect(const std::string& effect)
 {
-	CharArray128T effect = boost::get<CharArray128T>(payload);
-
-	SoundEffectMapT::iterator it;
-	
-	it = mSoundEffectMap.find(effect);
-
+	SoundEffectMapT::iterator it = mSoundEffectMap.find(effect);
 	mSoundEmitter.processSound(it->second);
 }
 

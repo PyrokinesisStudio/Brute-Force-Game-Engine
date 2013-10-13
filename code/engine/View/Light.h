@@ -27,9 +27,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_VIEW_LIGHT_H
 #define BFG_VIEW_LIGHT_H
 
+#include <Core/GameHandle.h>
 #include <Core/Types.h>
 
-#include <View/Event_fwd.h>
+#include <View/Defs.h>
 
 namespace Ogre
 {

@@ -29,8 +29,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <MyGUI.h>
 
 #include <Base/Logger.h>
-#include <EventSystem/Core/EventLoop.h>
-#include <EventSystem/Get.h>
 #include <View/Main.h>
 
 #include <Pong/PongDefinitions.h>
@@ -38,60 +36,39 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace View {
 
-Score::Score() :
+Score::Score(Event::SubLanePtr subLane) :
 HudElement("PongScore.layout", "Score"),
+mSubLane(subLane),
 mUpperScore(0),
 mLowerScore(0)
 {
-	Main::eventLoop()->connect
-	(
-		A_UPPER_BAR_WIN,
-		this,
-		&Score::viewEventHandler
-	);
+	mSubLane->connectV(A_UPPER_BAR_WIN, this, &Score::onUpperBarWin);
+	mSubLane->connectV(A_LOWER_BAR_WIN, this, &Score::onLowerBarWin);
 
-	Main::eventLoop()->connect
-	(
-		A_LOWER_BAR_WIN,
-		this,
-		&Score::viewEventHandler
-	);
-
-	MyGUI::Gui& gui = MyGUI::Gui::getInstance();
-	gui.setVisiblePointer(false);
+	MyGUI::PointerManager& pm = MyGUI::PointerManager::getInstance();
+	pm.setVisible(false);
 	setVisible(true);
 }
 
 Score::~Score()
 {
 	setVisible(false);
-	Main::eventLoop()->disconnect(A_UPPER_BAR_WIN, this);
-	Main::eventLoop()->disconnect(A_LOWER_BAR_WIN, this);
 }
 
 void Score::internalUpdate(f32 time)
 {
 }
 
-void Score::viewEventHandler(Event* e)
+void Score::onUpperBarWin()
 {
-	switch(e->id())
-	{
-	case A_UPPER_BAR_WIN:
-	{
-		++mUpperScore;
-		onScoreUpdate();
-		break;
-	}
-	case A_LOWER_BAR_WIN:
-	{
-		++mLowerScore;
-		onScoreUpdate();
-		break;
-	}
-	default:
-		DEFAULT_HANDLE_EVENT(e);
-	}
+	++mUpperScore;
+	onScoreUpdate();
+}
+
+void Score::onLowerBarWin()
+{
+	++mLowerScore;
+	onScoreUpdate();
 }
 
 void Score::onScoreUpdate()

@@ -9,47 +9,108 @@
 
             <value set = "3000">A_FIRST_VIEWACTION</value>
 
-            <!-- State Events -->
-            <value>VE_PAUSE_STATE</value>
-            <value>VE_RESUME_STATE</value>
+					<!-- TODO: not used in View -->
+					<value>VE_EFFECT</value>
 
-            <!-- View Events -->
-            <value>VE_SHUTDOWN</value>
-            <value>VE_DEBUG_FPS</value>
-            <value>VE_CONSOLE</value>
-            <value>VE_CONSOLE_COMMAND</value>
-            <value>VE_WEAPON_AMMO</value>
-            <value>VE_UPDATE_POSITION</value>
-            <value>VE_UPDATE_ORIENTATION</value>
-            <value>VE_CREATE_OBJECT</value>
-            <value>VE_DESTROY_OBJECT</value>
-            <value>VE_CREATE_CAMERA</value>
-            <value>VE_CREATE_LIGHT</value>
-            <value>VE_SCREENSHOT</value>
-            <value>VE_EFFECT</value>
-            <value>VE_SET_AMBIENT</value>
-            <value>VE_SET_SKY</value>
-            <value>VE_SET_VISIBLE</value>
-            <value>VE_ATTACH_OBJECT</value>
-            <value>VE_DETACH_OBJECT</value>
-            <value>VE_CREATE_PLANE</value>
-            <value>VE_SET_MATERIAL</value>
+					<!-- These are connected in View -->
 
-            <!-- HUD events -->
-            <value>VE_HUD_CREATE_FLIGHTMAP</value>
-            <value>VE_HUD_CREATE_CROSSHAIR</value>
-            <value>VE_HUD_CREATE_WEAPONS</value>
-            <value>VE_HUD_DESTROY_FLIGHTMAP</value>
-            <value>VE_HUD_DESTROY_CROSSHAIR</value>
-            <value>VE_HUD_DESTROY_WEAPONS</value>
+					<!-- \condition None.
+		           \consequence Creates a new RenderObject
+		           \payload View::ObjectCreation -->
+					<value>VE_CREATE_OBJECT</value>
 
-            <!-- Menu events -->
-            <value>VE_NEXT_MENU_ENTRY</value>
-            <value>VE_PREV_MENU_ENTRY</value>
-            <value>VE_CONFIRM_MENU_ENTRY</value>
-            <value>VE_LEVEL_CHOSEN</value>
-            <value>VE_EXIT</value>
-        </enum>
+					<!-- \condition None.
+		           \consequence Destroys an existing RenderObject.
+		           \payload GameHandle -->
+					<value>VE_DESTROY_OBJECT</value>
+
+					<!-- \condition Child object must exist.
+		           \consequence Attaches a RenderObject to the destined RenderObject.
+		           \payload GameHandle -->
+					<value>VE_ATTACH_OBJECT</value>
+
+					<!-- \condition None.
+		           \consequence Detaches the destined RenderObject.
+		           \payload Event::Void -->
+					<value>VE_DETACH_OBJECT</value>
+
+					<!-- \condition None.
+		           \consequence Updates the position of an object.
+		           \payload v3 -->
+					<value>VE_UPDATE_POSITION</value>
+
+					<!-- \condition None.
+		           \consequence Updates the orientation of an object.
+		           \payload qv4 -->
+					<value>VE_UPDATE_ORIENTATION</value>
+
+					<!-- \condition None.
+		           \consequence Shows or hides an existing RenderObject.
+		           \payload bool -->
+					<value>VE_SET_VISIBLE</value>
+
+					<!-- \condition None.
+		           \consequence Creates a new Camera.
+							              Deletes an allready existing one with the same handle.
+		           \payload View::CameraCreation -->
+					<value>VE_CREATE_CAMERA</value>
+
+					<!-- \condition None.
+		           \consequence Creates a new Light.
+							              Deletes an allready existing one with the same handle.
+		           \payload View::LightParameters -->
+					<value>VE_CREATE_LIGHT</value>
+
+					<!-- \condition None.
+		           \consequence Sets the ambient light to a specific color.
+		           \payload cv4 -->
+					<value>VE_SET_AMBIENT</value>
+
+					<!-- TODO SkyCreation is a struct with just a string member -->
+					<!-- \condition None.
+		           \consequence Deletes an existing SkyBox and Creates a new one.
+		           \payload View::SkyCreation -->
+					<value>VE_SET_SKY</value>
+
+					<!-- \condition None.
+		           \consequence Discontinues the View loop. Sends EA_FINISH.
+		           \payload Event::Void -->
+					<value>VE_SHUTDOWN</value>
+
+					<!-- \condition None.
+		           \consequence Creates or destroys the FPS display.
+		           \payload bool -->
+					<value>VE_DEBUG_FPS</value>
+					
+					<!-- \condition None.
+		           \consequence Shows or hides the console.
+		           \payload bool -->
+					<value>VE_CONSOLE</value>
+					
+					<!-- \condition None.
+		           \consequence Takes a screenshot of the scene and saves it as .jpg 
+							              in the screenshot folder.
+		           \payload Event::Void -->
+					<value>VE_SCREENSHOT</value>
+					
+					<!-- \condition None.
+		           \consequence Loads a requested Mesh. Sends VE_DELIVER_MESH.
+		           \payload std::string -->
+					<value>VE_REQUEST_MESH</value>
+
+					<!-- These are emitted in View -->
+
+					<!-- \condition On VE_REQUEST_MESH
+		           \consequence 
+		           \payload NamedMesh -->
+					<value>VE_DELIVER_MESH</value>
+
+					<!-- \condition On pressing Return in Console
+		           \consequence
+		           \payload std::string -->
+					<value>VE_CONSOLE_COMMAND</value>
+
+				</enum>
 
         <enum name = "EffectType" export = "VIEW_API">
             <!-- For VIEW_API definition -->

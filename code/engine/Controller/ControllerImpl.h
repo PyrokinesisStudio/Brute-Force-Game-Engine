@@ -29,16 +29,20 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/units/quantity.hpp>
 
 #include <Core/Types.h>
 
 #include <Controller/Action.h>
 #include <Controller/ControllerEvents_fwd.h>
 
-class LoopEvent;
-class EventLoop; // Confused?
+#include <Event/Event.h>
 
 namespace BFG {
+
+//! \todo Define this in Core Time.h
+typedef boost::units::quantity<boost::units::si::time, f32> TimeT;
+typedef boost::units::quantity<boost::units::si::frequency, f32> FrequencyT;
 
 namespace Clock {
 	class SleepFrequently;
@@ -51,23 +55,19 @@ class State;
 class CONTROLLER_API Controller
 {
 public:
-	Controller(EventLoop* loop);
+	Controller(Event::Lane& eventLane);
 	~Controller();
 
-	void init(int maxFrameratePerSec);
-
-	void nextTick();
+	void nextTick(TimeT timeSinceLastTick);
 
 	void resetInternalClock();
 
-	void loopHandler(LoopEvent*);
-
-	void controlHandler(ControlEvent* iLE);
+	void loopHandler(const Event::TickData td);
 
 private:
 	void capture();
 	
-	void sendFeedback(long microseconds_passed);
+	void sendFeedback(TimeT timeSinceLastTick);
 
 	void insertState(const StateInsertion& si);
 	void removeState(GameHandle state);
@@ -88,9 +88,7 @@ private:
 	StateContainerT                           mStates;
 	ActionMapT                                mActions;
 
-	boost::scoped_ptr<Clock::SleepFrequently> mClock;
-
-	EventLoop*                                mEventLoop;
+	Event::Lane&                              mEventLane;
 };
 
 } // namespace Controller_

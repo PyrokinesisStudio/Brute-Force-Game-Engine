@@ -29,21 +29,26 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/Path.h>
 
+#include <Event/Event.h>
+
 #include <Model/Property/SpacePlugin.h>
 #include <Model/Data/GameObjectFactory.h>
-#include <Physics/Event.h>
+
+#include <Controller/Controller.h>
+
+#include <View/SkyCreation.h>
 
 #include "SiPropertyPlugin.h"
 
 
-MainState::MainState(GameHandle handle, EventLoop* loop) :
-State(loop),
+MainState::MainState(GameHandle handle, Event::Lane& lane) :
+State(lane),
 mPlayer(NULL_HANDLE),
 mEnvironment(new Environment),
-mInvaderGeneral(loop, mEnvironment),
-mHumanGeneral(loop, mEnvironment)
+mLane(lane)
 {
 	Path p;
+
 	std::string level = p.Get(ID::P_SCRIPTS_LEVELS) + "spaceinvaders/";
 	std::string def = p.Get(ID::P_SCRIPTS_LEVELS) + "default/";
 
@@ -71,52 +76,78 @@ mHumanGeneral(loop, mEnvironment)
 	mPluginMap.insert(sip);
 
 	boost::shared_ptr<GameObjectFactory> gof;
-	gof.reset(new GameObjectFactory(loop, lc, mPluginMap, mEnvironment, handle));
+	gof.reset(new GameObjectFactory(mLane, lc, mPluginMap, mEnvironment, handle));
 
-	mSector.reset(new Sector(loop, 1, "Blah", gof));
+	mSector.reset(new Sector(mLane, 1, "SpaceInvaderSector", gof));
 
-	View::SkyCreation sc("sky01");
-	emit<View::Event>(ID::VE_SET_SKY, sc);
+	// Init Controller
+
+	BFG::Controller_::ActionMapT actions;
+	actions[A_SHIP_AXIS_Y] = "A_SHIP_AXIS_Y";
+	actions[A_SHIP_FIRE]   = "A_SHIP_FIRE";
+	actions[A_QUIT]        = "A_QUIT";
+	actions[A_FPS]         = "A_FPS";
+	BFG::Controller_::sendActionsToController(mLane, actions);
+
+	const std::string config_path = p.Expand("SpaceInvaders.xml");
+	const std::string state_name = "SpaceInvaders";
+
+	BFG::View::WindowAttributes wa;
+	BFG::View::queryWindowAttributes(wa);
+
+	//! \todo Verify usage of generateHandle() here.
+	Controller_::StateInsertion si(config_path, state_name, generateHandle(), true, wa);
+
+	mLane.emit(ID::CE_LOAD_STATE, si);
+
+	// ---
+
+	View::SkyCreation sc("sky02");
+	mLane.emit(ID::VE_SET_SKY, sc, handle);
 
 	ObjectParameter op;
-	op.mHandle = generateHandle();
+	mPlayer = generateHandle();
+	op.mHandle = mPlayer;
 	op.mName = "The Hero's Mighty Ship";
 	op.mType = "Ship";
 	op.mLocation = v3(0.0f, -NEGATIVE_SHIP_Y_POSITION, OBJECT_Z_POSITION); // - 5.0f); // + SPECIAL_PACKER_MESH_OFFSET);
-	fromAngleAxis(op.mLocation.orientation, -90 * DEG2RAD, v3::UNIT_X);
-	boost::shared_ptr<GameObject> playerShip = gof->createGameObject(op);
-	mSector->addObject(playerShip);
+	fromAngleAxis(op.mLocation.orientation, -90.0f * (float) DEG2RAD, v3::UNIT_X);
+	
+	boost::shared_ptr<GameObject> player = gof->createGameObject(op);
+	mSector->addObject(player);
 
-	mPlayer = playerShip->getHandle();
+	mInvaderGeneral.reset(new InvaderGeneral(lane.createSubLane(), mEnvironment));
+	mHumanGeneral.reset(new HumanGeneral(lane.createSubLane(), mEnvironment));
+
+	mLane.connect(A_SHIP_AXIS_Y, this, &MainState::onAxisY);
+	mLane.connect(A_FPS, this, &MainState::onFps);
+	mLane.connectV(A_SHIP_FIRE, this, &MainState::onShipFire);
+	mLane.connect(A_QUIT, this, &MainState::onQuit);
 }
 
-void MainState::ControllerEventHandler(Controller_::VipEvent* e)
+void MainState::onAxisY(f32 factor)
 {
-	switch(e->id())
-	{
-		case A_SHIP_AXIS_Y:
-			emit<GameObjectEvent>(ID::GOE_CONTROL_YAW, boost::get<float>(e->data()), mPlayer);
-			break;
-
-		case A_SHIP_FIRE:
-			emit<GameObjectEvent>(ID::GOE_FIRE_ROCKET, 0, mPlayer);
-			break;
-
-		case A_QUIT:
-			loop()->stop();
-			break;
-
-		case A_FPS:
-			emit<BFG::View::Event>(BFG::ID::VE_DEBUG_FPS, boost::get<bool>(e->data()));
-			break;
-	}
+	mLane.emit(ID::GOE_CONTROL_YAW, factor, mPlayer);
 }
 
-void MainState::onTick(const quantity<si::time, f32> TSLF)
+void MainState::onFps(bool on)
 {
-	mSector->update(TSLF);
-	mInvaderGeneral.update(TSLF);
-	mHumanGeneral.update(TSLF);
+	mLane.emit(BFG::ID::VE_DEBUG_FPS, on);
+}
 
-	emit<Physics::Event>(ID::PE_STEP, TSLF.value());
+void MainState::onShipFire()
+{
+	mLane.emit(ID::GOE_FIRE_ROCKET, Event::Void(), mPlayer);
+}
+
+void MainState::onQuit(BFG::s32)
+{
+	mLane.emit(ID::EA_FINISH, Event::Void());
+}
+
+void MainState::onTick(const TimeT timeSinceLastTick)
+{
+	mSector->update(timeSinceLastTick);
+	mInvaderGeneral->update(timeSinceLastTick);
+	mHumanGeneral->update(timeSinceLastTick);
 }

@@ -33,7 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace View {
 
-VIEW_API Mesh loadMesh(const std::string& meshName);
+Mesh VIEW_API loadMesh(const std::string& meshName);
 
 } // namespace View
 } // namespace BFG

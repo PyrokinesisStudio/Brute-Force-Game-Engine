@@ -30,29 +30,33 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 
-#include <EventSystem/Event_fwd.h>
-#include <View/Enums.hh>
-#include <View/Event_fwd.h>
-#include <View/Light.h>
+#include <Core/ExternalTypes_fwd.h>
+#include <Core/GameHandle.h>
 
-class EventLoop;
+#include <Event/Event.h>
+
+#include <View/Enums.hh>
 
 namespace BFG {
 namespace View {
 
-class RenderObject;
 class Camera;
+class Light;
+class RenderObject;
 class Skybox;
+
+struct CameraCreation;
+struct ObjectCreation;
+struct LightParameters;
+struct SkyCreation;
 
 class VIEW_API Owner
 {
 public:
-	Owner(GameHandle stateHandle, EventLoop* loop);
+	Owner(GameHandle stateHandle, Event::Lane& lane);
 	virtual ~Owner();
 
 protected:
-	void eventHandler(Event* VE);
-
 	void createObject(const ObjectCreation& OC);
 	void destroyObject(GameHandle handle);
 	void createCamera(const CameraCreation& CC);
@@ -63,13 +67,13 @@ protected:
 	typedef std::map<GameHandle, boost::shared_ptr<RenderObject> > ObjectMapT;
 	typedef std::map<BFG::GameHandle, boost::shared_ptr<Light> > LightMapT;
 
+	Event::Lane& mLane;
+	Event::SubLanePtr mSubLane;
+
 	ObjectMapT                              mObjects;
 	std::vector<boost::shared_ptr<Camera> > mCameras;
 	boost::scoped_ptr<Skybox>               mSky;
 	LightMapT                               mLights;
-	
-	EventLoop*                  mLoop;
-	std::vector<ID::ViewAction> mViewEvents;
 };
 
 

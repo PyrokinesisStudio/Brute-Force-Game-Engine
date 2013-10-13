@@ -27,7 +27,6 @@ TARGET_LINK_LIBRARIES(bfgComposer
 	bfgBase
 	bfgController
 	bfgCore
-	bfgEventCore
 	bfgModel
 	bfgView
 	${BoostLog_LIBRARIES}

@@ -31,7 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace BFG {
 
-class SelfDestruction : public Property::Concept
+class MODEL_API SelfDestruction : public Property::Concept
 {
 public:
 	SelfDestruction(GameObject& owner, PluginId pid);

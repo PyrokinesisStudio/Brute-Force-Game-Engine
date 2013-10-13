@@ -29,19 +29,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Controller/ControllerImpl.h>
 #include <Controller/OISUtils.h>
 
-class EventLoop;
-
 namespace BFG {
 namespace Controller_ {
 
-Main::Main(size_t frequency) :
-mFrequency(frequency)
-{}
-
-void Main::main(EventLoop* loop)
+void Main::main(Event::Lane* eventLane)
 {
-	mController.reset(new Controller(loop));
-	mController->init(mFrequency);
+	mController.reset(new Controller(*eventLane));
 }
 
 } // namespace Controller_

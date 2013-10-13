@@ -40,8 +40,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/ShowException.h>
 #include <Core/Types.h>
 #include <Core/GameHandle.h>
-#include <EventSystem/Emitter.h>
 #include <View/View.h>
+
+#include <Model/State.h>
 
 #include <Actions.h>
 #include <BaseFeature.h>
@@ -52,61 +53,61 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 using namespace BFG;
 using namespace boost::units;
 
-struct LevelerModelState : Emitter
+GameHandle gLevelerHandle = generateHandle();
+
+struct LevelerModelState : State
 {
-	LevelerModelState(GameHandle handle, EventLoop* loop) :
-	Emitter(loop),
-	mClock(new Clock::StopWatch(Clock::milliSecond)),
-	mExitNextTick(false)
+	LevelerModelState(GameHandle handle, Event::Lane& lane) :
+	State(lane),
+	mLane(lane)
 	{
-		mClock->start();
+		// Init Controller
+		BFG::Controller_::ActionMapT actions;
+		actions[A_QUIT] = "A_QUIT";
+		actions[A_SCREENSHOT] = "A_SCREENSHOT";
+		actions[A_UPDATE_FEATURES] = "A_UPDATE_FEATURES";
+
+		BFG::Controller_::fillWithDefaultActions(actions);	
+		BFG::Controller_::sendActionsToController(mLane, actions);
+
+		Path path;
+		const std::string config_path = path.Expand("Leveler.xml");
+		const std::string state_name = "Leveler: He levels everything!";
+
+		BFG::View::WindowAttributes wa;
+		BFG::View::queryWindowAttributes(wa);
+		Controller_::StateInsertion si(config_path, state_name, generateHandle(), true, wa);
+
+		mLane.emit(ID::CE_LOAD_STATE, si);
+		
+		mLane.connect(A_QUIT, this, &LevelerModelState::shutDown);
+		mLane.connect(A_SCREENSHOT, this, &LevelerModelState::screenshot);
+		mLane.connectLoop(this, &LevelerModelState::onLoop);
 	}
 
-	void ControllerEventHandler(Controller_::VipEvent* e)
+	void shutDown(BFG::s32)
 	{
-		switch(e->id())
-		{
-			case A_QUIT:
-			{
-				mExitNextTick = true;
-				emit<BFG::View::Event>(BFG::ID::VE_SHUTDOWN, 0);
-				break;
-			}
-			case A_SCREENSHOT:
-			{
-				emit<BFG::View::Event>(BFG::ID::VE_SCREENSHOT, 0);
-				break;
-			}
-		}
+		mLane.emit(BFG::ID::VE_SHUTDOWN, Event::Void());
+		mLane.emit(ID::EA_FINISH, Event::Void());
 	}
 
-	void LoopEventHandler(LoopEvent* iLE)
+	void screenshot(BFG::s32)
 	{
-		if (mExitNextTick)
-		{
-			// Error happened, while doing stuff
-			iLE->data().getLoop()->setExitFlag();
-		}
+		mLane.emit(BFG::ID::VE_SCREENSHOT, Event::Void());
+	}
 
-		long timeSinceLastFrame = mClock->stop();
-		if (timeSinceLastFrame)
-			mClock->start();
-
-		f32 timeInSeconds = static_cast<f32>(timeSinceLastFrame) / Clock::milliSecond;
-		tick(timeInSeconds);
+	void onLoop(Event::TickData tickData)
+	{
+		onTick(tickData.timeSinceLastTick());
 	}
 		
-	void tick(const f32 timeSinceLastFrame)
+	void onTick(const TimeT timeSinceLastFrame)
 	{
-		if (timeSinceLastFrame < EPSILON_F)
+		if (timeSinceLastFrame.value() < EPSILON_F)
 			return;
-
-		quantity<si::time, f32> TSLF = timeSinceLastFrame * si::seconds;
 	}
 
-	boost::scoped_ptr<Clock::StopWatch> mClock;
-	
-	bool mExitNextTick;
+	Event::Lane& mLane;
 };
 
 struct LevelerViewState : public View::State
@@ -114,9 +115,9 @@ struct LevelerViewState : public View::State
 public:
 	typedef std::vector<Tool::BaseFeature*> FeatureListT;
 
-	LevelerViewState(GameHandle handle, EventLoop* loop) :
-	State(handle, loop),
-	mControllerAdapter(handle, loop)
+	LevelerViewState(GameHandle handle, Event::Lane& lane) :
+	State(handle, lane),
+	mControllerAdapter(handle, lane)
 	{
 		createGui();
 
@@ -124,11 +125,13 @@ public:
 		mData->mState = handle;
 		mData->mCamera = generateHandle();
 
-		Tool::BaseFeature* feature = new Tool::CameraControl(loop, mData);
+		Tool::BaseFeature* feature = new Tool::CameraControl(lane, mData);
 		mLoadedFeatures.push_back(feature);
 		feature->activate();
 
-		mLoadedFeatures.push_back(new Tool::MeshControl(mData));
+		mLoadedFeatures.push_back(new Tool::MeshControl(mData, mLane));
+
+		mLane.connectV(A_UPDATE_FEATURES, this, &LevelerViewState::onUpdateFeatures);
 
 		onUpdateFeatures();
 	}
@@ -175,28 +178,6 @@ public:
 		back->setSize(size);
 	}
 
-	void controllerEventHandler(Controller_::VipEvent* ve)
-	{
-		FeatureListT::iterator it = mActiveFeatures.begin();
-		for (; it != mActiveFeatures.end(); ++it)
-		{
-			(*it)->eventHandler(ve);
-		}
-	}
-
-	void toolEventHandler(Tool::Event* e)
-	{
-		switch(e->id())
-		{
-		case A_UPDATE_FEATURES:
-			onUpdateFeatures();
-			break;
-		default:
-			throw std::logic_error("Unknown ToolEvent!");
-			break;
-		}
-	}
-
 	void onUpdateFeatures()
 	{
 		mActiveFeatures.clear();
@@ -238,72 +219,52 @@ private:
 	MyGUI::VectorWidgetPtr mContainer;
 };
 
-// This is the Ex-'GameStateManager::SingleThreadEntryPoint(void*)' function
-void* SingleThreadEntryPoint(void *iPointer)
+struct Main : Base::LibraryMainBase<Event::Lane>
 {
-	EventLoop* loop = static_cast<EventLoop*>(iPointer);
-	
-	assert(loop);
+	Main() {}
 
-	GameHandle levelerHandle = BFG::generateHandle();
-	
-	// Hack: Using leaking pointers, because vars would go out of scope
-	LevelerModelState* lms = new LevelerModelState(levelerHandle, loop);
-	LevelerViewState* lvs = new LevelerViewState(levelerHandle, loop);
+	virtual void main(Event::Lane* lane)
+	{
+		mMain.reset(new LevelerModelState(gLevelerHandle, *lane));
+	}
 
-	// Init Controller
-	GameHandle handle = generateHandle();
+	boost::scoped_ptr<LevelerModelState> mMain;
+};
 
-	BFG::Controller_::ActionMapT actions;
-	actions[A_QUIT] = "A_QUIT";
-	actions[A_SCREENSHOT] = "A_SCREENSHOT";
-	actions[A_UPDATE_FEATURES] = "A_UPDATE_FEATURES";
+struct ViewMain : Base::LibraryMainBase<Event::Lane>
+{
+	ViewMain ()
+	{}
 
-	BFG::Controller_::fillWithDefaultActions(actions);	
-	BFG::Controller_::sendActionsToController(loop, actions);
+	virtual void main(Event::Lane* lane)
+	{
+		mViewState.reset(new LevelerViewState(gLevelerHandle, *lane));
+	}
 
-	Path path;
-	const std::string config_path = path.Expand("Leveler.xml");
-	const std::string state_name = "Leveler";
-
-	BFG::View::WindowAttributes wa;
-	BFG::View::queryWindowAttributes(wa);
-	Controller_::StateInsertion si(config_path, state_name, handle, true, wa);
-
-	EventFactory::Create<Controller_::ControlEvent>
-	(
-		loop,
-		ID::CE_LOAD_STATE,
-		si
-	);
-
-	loop->connect(A_QUIT, lms, &LevelerModelState::ControllerEventHandler);
-	loop->connect(A_SCREENSHOT, lms, &LevelerModelState::ControllerEventHandler);
-	loop->connect(A_UPDATE_FEATURES, lvs, &LevelerViewState::toolEventHandler);
-
-	loop->registerLoopEventListener(lms, &LevelerModelState::LoopEventHandler);
-
-	return 0;
-}
+	boost::scoped_ptr<LevelerViewState> mViewState;
+};
 
 int main( int argc, const char* argv[] ) try
 {
 	Base::Logger::Init(Base::Logger::SL_DEBUG, "Logs/Leveler.log");
 
-	EventLoop iLoop(true);
+	const u32 EVENT_LOOP_FREQUENCY = 100;
 
-	size_t controllerFrequency = 1000;
+	Event::Synchronizer synchronizer;
 
-	const std::string caption = "Leveler: He levels everything!";
+	Event::Lane viewLane(synchronizer, EVENT_LOOP_FREQUENCY, "View");
+	const std::string caption = "Leveler";
+	viewLane.addEntry<View::Main>(caption);
+	viewLane.addEntry<ViewMain>();
 
-	BFG::Controller_::Main controllerMain(controllerFrequency);
-	BFG::View::Main viewMain(caption);
+	Event::Lane controllerLane(synchronizer, EVENT_LOOP_FREQUENCY, "Controller");
+	controllerLane.addEntry<BFG::Controller_::Main>();
 
-	iLoop.addEntryPoint(viewMain.entryPoint());
-	iLoop.addEntryPoint(controllerMain.entryPoint());
-	iLoop.addEntryPoint(new Base::CEntryPoint(SingleThreadEntryPoint));
+	BFG::Event::Lane gameLane(synchronizer, 100, "Game", BFG::Event::RL3);
+	gameLane.addEntry<Main>();
 
-	iLoop.run();
+	synchronizer.start();
+	synchronizer.finish(true);
 }
 catch (Ogre::Exception& e)
 {

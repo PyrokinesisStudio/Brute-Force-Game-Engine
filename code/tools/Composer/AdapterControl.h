@@ -32,21 +32,20 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <MyGUI.h>
 
 #include <Core/Path.h>
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 
-#include <Event_fwd.h>
 #include <OpenSaveDialog.h>
 #include <SharedData.h>
 
 namespace Tool
 {
 
-class AdapterControl : public BaseFeature, public BFG::Emitter
+class AdapterControl : public BaseFeature
 {
 public:
-	AdapterControl(EventLoop* loop, boost::shared_ptr<SharedData> data) :
+	AdapterControl(BFG::Event::SubLanePtr sublane, boost::shared_ptr<SharedData> data) :
 	BaseFeature("Adapter", true),
-	Emitter(loop),
+	mSubLane(sublane),
 	mData(data)
 	{
 		BFG::Path p;
@@ -64,10 +63,6 @@ public:
 
 	virtual void activate();
 	virtual void deactivate();
-
-	virtual void eventHandler(BFG::Controller_::VipEvent* ve)
-	{
-	}
 
 private:
 
@@ -109,6 +104,9 @@ private:
 		const Ogre::Vector3& position = Ogre::Vector3::ZERO,
 		const Ogre::Quaternion& orientation = Ogre::Quaternion::IDENTITY
 	);
+
+
+	BFG::Event::SubLanePtr mSubLane;
 
 	boost::shared_ptr<SharedData> mData;
 

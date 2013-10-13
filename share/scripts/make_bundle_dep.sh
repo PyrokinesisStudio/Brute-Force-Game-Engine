@@ -18,7 +18,7 @@ PACKAGE=package
 PREFIX=$PACKAGE/usr
 CPUS=`grep -c processor /proc/cpuinfo`
 JOBS=`echo print $CPUS + 1 | perl`
-VERSION="0.6.0"
+VERSION="0.7.0"
 DEBIAN_ARCH="`dpkg --print-architecture`"
 
 USER_AGENT='Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.16) Gecko/20120421 Firefox/11.0'

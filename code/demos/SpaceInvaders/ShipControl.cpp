@@ -25,65 +25,58 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "ShipControl.h"
-#include <Physics/Event.h>
+
+#include <Physics/Enums.hh>
+
 #include "Globals.h"
+
 
 ShipControl::ShipControl(GameObject& Owner, BFG::PluginId pid) :
 	Property::Concept(Owner, "ShipControl", pid)
 {
 	require("Physical");
-	requestEvent(ID::GOE_CONTROL_YAW);
+	
+	subLane()->connect(ID::GOE_CONTROL_YAW, this, &ShipControl::onGoeControlYaw, ownerHandle());
 }
 
 void ShipControl::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 {
-	Location go = getGoValue<Location>(ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
+	v3 ownPosition = getGoValue<v3>(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
 
 	bool setPos = false;
 
 	// Simulate a wall
-	if (std::abs(go.position.x) > DISTANCE_TO_WALL)
+	if (std::abs(ownPosition.x) > DISTANCE_TO_WALL)
 	{
-		emit<Physics::Event>(ID::PE_UPDATE_VELOCITY, v3::ZERO, ownerHandle());
-		go.position.x = sign(go.position.x) * (DISTANCE_TO_WALL - 0.1f);
+		subLane()->emit(ID::PE_UPDATE_VELOCITY, v3::ZERO, ownerHandle());
+		ownPosition.x = sign(ownPosition.x) * (DISTANCE_TO_WALL - 0.1f);
 		setPos = true;
 	}
 
 	// Make sure it doesn't move too much on the z axis
-	if (std::abs(go.position.z) - OBJECT_Z_POSITION > EPSILON_F)
+	if (std::abs(ownPosition.z) - OBJECT_Z_POSITION > EPSILON_F)
 	{
-		go.position.z = OBJECT_Z_POSITION;
+		ownPosition.z = OBJECT_Z_POSITION;
 		setPos = true;
 	}
 
 	if (setPos)
-		emit<Physics::Event>(ID::PE_UPDATE_POSITION, go.position, ownerHandle());
+		subLane()->emit(ID::PE_UPDATE_POSITION, ownPosition, ownerHandle());
 }
 
-
-void ShipControl::internalOnEvent(EventIdT action,
-								  Property::Value payload,
-								  GameHandle module,
-								  GameHandle sender)
+void ShipControl::onGoeControlYaw(f32 factor)
 {
-	switch(action)
-	{
-		case ID::GOE_CONTROL_YAW:
-		{
-			// Make the ship tilt a bit when moving
-			qv4 tilt;
-			qv4 turn;
-			fromAngleAxis(turn, -90.0f * DEG2RAD, v3::UNIT_X);
-			fromAngleAxis(tilt, payload * -45.0f * DEG2RAD, v3::UNIT_Z);
+	// Make the ship tilt a bit when moving
+	qv4 tilt;
+	qv4 turn;
+	fromAngleAxis(turn, -90.0f * DEG2RAD, v3::UNIT_X);
+	fromAngleAxis(tilt, factor * -45.0f * DEG2RAD, v3::UNIT_Z);
 
-			qv4 newOrientation = turn * tilt;
+	qv4 newOrientation = turn * tilt;
 
-			// Move it left or right
-			v3 newVelocity = v3(payload * SHIP_SPEED_MULTIPLIER,0,0);
+	// Move it left or right
+	v3 newVelocity = v3(factor * SHIP_SPEED_MULTIPLIER,0,0);
 
-			emit<Physics::Event>(ID::PE_UPDATE_ORIENTATION, newOrientation, ownerHandle());
-			emit<Physics::Event>(ID::PE_UPDATE_VELOCITY, newVelocity, ownerHandle());
-			break;
-		}
-	}
+	subLane()->emit(ID::PE_UPDATE_ORIENTATION, newOrientation, ownerHandle());
+	subLane()->emit(ID::PE_UPDATE_VELOCITY, newVelocity, ownerHandle());
 }

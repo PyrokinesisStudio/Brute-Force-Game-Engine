@@ -33,7 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Types.h>
 #include <Core/GameHandle.h>
 
-#include <EventSystem/EventFactory.h>
+#include <Event/Event.h>
 
 #include <Model/GameObject.h>
 #include <Model/Property/Concept.h>
@@ -46,11 +46,7 @@ public:
 	ShipControl(GameObject& Owner, BFG::PluginId pid);
 
 	void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
-
-	void internalOnEvent(EventIdT action,
-						 Property::Value payload,
-						 GameHandle module,
-						 GameHandle sender);
+	void onGoeControlYaw(f32 factor);
 };
 
 #endif

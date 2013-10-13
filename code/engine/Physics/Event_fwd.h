@@ -28,15 +28,13 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define PHYSICS_EVENT_FWD_H
 
 #include <boost/tuple/tuple.hpp>
-#include <boost/variant.hpp>
 #include <boost/units/quantity.hpp>
 #include <boost/units/systems/si/mass.hpp>
 
 #include <Core/ExternalTypes.h>
 #include <Core/GameHandle.h>
 #include <Core/Location.h>
-#include <EventSystem/Core/EventDefs.h>
-#include <EventSystem/Event_fwd.h>
+
 #include <Physics/Enums.hh>
 
 namespace BFG {
@@ -82,16 +80,47 @@ typedef boost::tuple
 	Location
 > ObjectCreationParams;
 
-typedef boost::tuple
-<
-	GameHandle,          // Handle of PhysicsObject
-	GameHandle,          // Module Handle
-	std::string,         // Mesh Name (e.g. "Cube.mesh")
-	ID::CollisionMode,
-	v3,                  // Module Position
-	qv4,                 // Module Orientation
-	f32                  // Density
-> ModuleCreationParams;
+struct ModuleCreationParams
+{
+	ModuleCreationParams() :
+	mGoHandle(NULL_HANDLE),
+	mModuleHandle(NULL_HANDLE),
+	mDensity(1.0f),
+	mCollisionMode(ID::CM_Disabled)
+	{}
+
+	ModuleCreationParams(
+		GameHandle gameObjectHandle,
+		GameHandle moduleHandle,
+		const std::string& meshName,
+		f32 density,
+		ID::CollisionMode collisionMode = ID::CM_Standard,
+		v3 position = v3::ZERO,
+		qv4 orientation = qv4::IDENTITY,
+		v3 velocity = v3::ZERO,
+		v3 rotationVelocity = v3::ZERO) :
+	mGoHandle(gameObjectHandle),
+	mModuleHandle(moduleHandle),
+	mMeshName(meshName),
+	mDensity(density),
+	mCollisionMode(collisionMode),
+	mPosition(position),
+	mOrientation(orientation),
+	mVelocity(velocity),
+	mRotationVelocity(rotationVelocity)
+	{}
+
+
+	GameHandle mGoHandle;             // Handle of PhysicsObject
+	GameHandle mModuleHandle;         // Module Handle
+	std::string mMeshName;            // Mesh Name (e.g. "Cube.mesh")
+	f32 mDensity;                     // Density
+	ID::CollisionMode mCollisionMode;
+	v3 mPosition;                     // Module Position
+	qv4 mOrientation;                 // Module Orientation
+	v3 mVelocity;                     // Start Velocity
+	v3 mRotationVelocity;             // Start Rotation Velocity
+};
 
 typedef boost::tuple
 <
@@ -107,33 +136,13 @@ typedef boost::tuple
 	qv4                  // Offset Orientation
 > ObjectAttachmentParams;
 
-typedef boost::variant
+typedef boost::tuple
 <
-	bool,
-	s32,
-	f32,
-	v3,
-	qv4,
-	m3x3,
-	GameHandle,
-	FullSyncData,
-	VelocityComposite,
-	ObjectCreationParams,
-	ModuleCreationParams,
-	ModuleRemovalParams,
-	ObjectAttachmentParams,
-	InterpolationDataV3,
-	InterpolationDataQv4
-> PayloadT;
+	GameHandle,          // Own Module
+	GameHandle,          // Other Module
+	f32                  // Penetration Depth
+> ModulePenetration;
 
-typedef Event
-<
-	EventIdT,
-	PayloadT,
-	GameHandle,
-	GameHandle
->
-Event;
 } // namespace Physics
 } // namespace BFG
 

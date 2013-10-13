@@ -59,10 +59,6 @@ public:
 	virtual void activate();
 	virtual void deactivate();
 
-	virtual void eventHandler(BFG::Controller_::VipEvent* ve)
-	{
-	}
-
 private:
 
 	void onCloseClicked(MyGUI::Window*, const std::string& button);

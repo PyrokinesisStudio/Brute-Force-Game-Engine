@@ -34,7 +34,7 @@ using namespace boost::units;
 
 namespace BFG {
 
-class Physical : public Property::Concept
+class MODEL_API Physical : public Property::Concept
 {
 public:
 	Physical(GameObject& owner, PluginId pid);
@@ -43,8 +43,6 @@ public:
 private:
 	virtual void internalSynchronize();
 
-	virtual void onPhysicsEvent(Physics::Event*);
-
 	void onFullSync(const Physics::FullSyncData& fsd);
 
 	void onPosition(const v3& newPosition);
@@ -52,12 +50,9 @@ private:
 	void onVelocity(const Physics::VelocityComposite& vel);
 	void onRotationVelocity(const Physics::VelocityComposite& vel);
 	void onTotalMass(const f32 totalMass);
-	void onInertia(const m3x3& inertia);
+	void onTotalInertia(const m3x3& inertia);
 	
 	void synchronizeView() const;
-
-	std::vector<ID::PhysicsAction> mPhysicsActions;
-	bool mFirstFullSync;
 };
 
 } // namespace BFG

@@ -40,7 +40,7 @@ class UdpReadModule : public NetworkModule<Udp>
 public:
 	typedef boost::function<PeerIdT(const boost::shared_ptr<Udp::EndpointT>)> EndpointIdentificatorT;
 	
-	UdpReadModule(EventLoop* loop_,
+	UdpReadModule(Event::Lane& lane,
 	              boost::asio::io_service& service,
 	              boost::shared_ptr<Clock::StopWatch> localTime,
 	              boost::shared_ptr<Udp::SocketT> socket,

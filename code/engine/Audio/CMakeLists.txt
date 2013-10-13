@@ -41,7 +41,6 @@ TARGET_LINK_LIBRARIES(bfgAudio
 	${OGG_LIBRARIES}
 	${OPENAL_LIBRARY}
 	bfgCore
-	bfgEventCore
 )
 
 ADD_DEPENDENCIES(bfgAudio AudioEnums)

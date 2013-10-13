@@ -29,12 +29,13 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/variant.hpp>
+
 #include <Core/CharArray.h>
 #include <Core/GameHandle.h>
 #include <Core/Types.h>
-#include <EventSystem/Core/EventDefs.h>
-#include <EventSystem/Event_fwd.h>
 #include <Controller/Enums.hh>
+
+#include <Event/Event.h>
 
 namespace BFG {
 namespace Controller_ {
@@ -43,37 +44,9 @@ struct StateInsertion;
 
 //! Example: 2013 = "A_FIRE_PRIMARY_WEAPON"
 typedef boost::tuple <
-	EventIdT,
+	Event::IdT,
 	CharArray128T
 > ActionDefinition;
-
-typedef boost::variant <
-	bool,
-	s32,
-	f32
-> VipPayloadT;
-
-typedef boost::variant <
-	GameHandle,
-	StateInsertion,
-	ActionDefinition
-> ControlPayloadT;
-
-//! This will be sent by the Controller
-typedef Event <
-	EventIdT,
-	VipPayloadT,
-	EmptyType,
-	EmptyType
-> VipEvent;
-
-//! This must be sent to the Controller
-typedef Event <
-	ID::ControllerAction,
-	ControlPayloadT,
-	EmptyType,
-	EmptyType
-> ControlEvent;
 
 } // namespace Controller_
 } // namespace BFG

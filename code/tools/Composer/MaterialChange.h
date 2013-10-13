@@ -31,6 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <OgreMaterialManager.h>
 #include <OgreSceneManager.h>
+#include <OgreEntity.h>
 
 #include <SharedData.h>
 
@@ -43,9 +44,7 @@ public:
 	MaterialChange(boost::shared_ptr<SharedData> data) :
 	BaseFeature("Material", true),
 	mData(data)
-	{
-
-	}
+	{}
 
 	virtual void load()
 	{
@@ -122,11 +121,6 @@ public:
 		mActive = false;
 	}
 
-	virtual void eventHandler(BFG::Controller_::VipEvent* ve)
-	{
-
-	}
-
 private:
 
 	void onMatSelected(MyGUI::List* list, size_t index)
@@ -142,7 +136,6 @@ private:
 		else if (sceneMgr->hasEntity(stringify(mData->mActiveMesh)))
 		{
 			Ogre::Entity* ent = sceneMgr->getEntity(stringify(mData->mActiveMesh));
-
 			ent->setMaterialName(matName);
 		}
 

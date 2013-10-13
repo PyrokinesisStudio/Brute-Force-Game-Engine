@@ -31,6 +31,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <tinyxml.h>
 
+#include <Base/Logger.h>
+
 namespace BFG {
 
 namespace detail {
@@ -106,7 +108,14 @@ struct PathLoader
 
 Path::Path()
 {
-	load<detail::PathLoader>();
+	try
+	{
+		load<detail::PathLoader>();
+	}
+	catch (std::runtime_error& ex)
+	{
+		warnlog << ex.what();
+	}
 }
 
 std::string Path::Expand(const std::string& Filename) const

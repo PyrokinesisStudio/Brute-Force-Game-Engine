@@ -25,29 +25,18 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <Audio/Main.h>
-
 #include <cassert>
-#include <stdexcept>
+
+#include <Audio/Init.h>
+#include <Audio/Listener.h>
 
 namespace BFG {
 namespace Audio {
 
-EventLoop* Main::mLoop = NULL;
-
-EventLoop* Main::eventLoop()
+void Main::main(Event::Lane* lane)
 {
-	return Main::mLoop;
-}
-
-void Main::main(EventLoop* loop)
-{
-	if (Main::mLoop)
-		throw std::logic_error("Audio::Main gets initialized twice!");
-
-	Main::mLoop = loop;
-	
 	mInit = createInit();
-	mListener = createListener();
+	mListener = createListener(*lane);
 }
 
 } // namespace Audio

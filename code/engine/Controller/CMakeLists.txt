@@ -2,9 +2,17 @@ cmake_minimum_required(VERSION 2.6)
 
 BFG_INIT_PACKAGE(Controller)
 
-FILE(GLOB Controller_SOURCES *.cpp)
 FILE(GLOB Controller_HEADERS *.h *.hh)
+FILE(GLOB Controller_SOURCES *.cpp)
+FILE(GLOB Controller_HEADERS_VIP Vip/*.h)
+FILE(GLOB Controller_SOURCES_VIP Vip/*.cpp)
+FILE(GLOB Controller_HEADERS_VIP_COMPONENT Vip/Component/*.h)
+FILE(GLOB Controller_SOURCES_VIP_COMPONENT Vip/Component/*.cpp)
 FILE(GLOB Controller_SCRIPTS *.xml)
+
+SOURCE_GROUP("." FILES ${Controller_SOURCES} ${Controller_HEADERS})
+SOURCE_GROUP("Vip" FILES ${Controller_SOURCES_VIP} ${Controller_HEADERS_VIP})
+SOURCE_GROUP("Vip\\Component" FILES ${Controller_SOURCES_VIP_COMPONENT} ${Controller_HEADERS_VIP_COMPONENT})
 
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${BoostLog_INCLUDE_DIR})
@@ -27,15 +35,18 @@ ADD_DEFINITIONS(-DTIXML_USE_STL)
 #ADD_DEFINITIONS(-DCONTROLLER_DEBUG)
 
 ADD_LIBRARY(bfgController SHARED
-	${Controller_SOURCES}
 	${Controller_HEADERS}
+	${Controller_HEADERS_VIP}
+	${Controller_HEADERS_VIP_COMPONENT}
+	${Controller_SOURCES}
+	${Controller_SOURCES_VIP}
+	${Controller_SOURCES_VIP_COMPONENT}
 	${Controller_SCRIPTS}
 )
 
 SET_TARGET_PROPERTIES(bfgController PROPERTIES OUTPUT_NAME_DEBUG "bfgController_d")
 
 TARGET_LINK_LIBRARIES(bfgController
-	bfgEventCore
 	bfgCore
 	${OIS_LIBRARIES}
 	${Boost_LIBRARIES}

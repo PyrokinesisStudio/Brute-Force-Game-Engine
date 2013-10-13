@@ -28,7 +28,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_VIEW_SKYCREATION_H
 
 #include <string>
-#include <Core/CharArray.h>
 
 #include <View/Defs.h>
 
@@ -39,7 +38,7 @@ struct VIEW_API SkyCreation
 {
 	SkyCreation(const std::string& materialName);
 
-	CharArray128T mMatName;
+	std::string mMatName;
 };
 
 } // namespace View

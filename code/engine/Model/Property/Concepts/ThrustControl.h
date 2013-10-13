@@ -46,7 +46,7 @@ using namespace boost::units;
 
 namespace BFG {
 
-class ThrustControl : public Property::Concept
+class MODEL_API ThrustControl : public Property::Concept
 {
 public:
 	ThrustControl(GameObject& owner, PluginId pid);
@@ -55,7 +55,13 @@ private:
 
 	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
 	virtual void internalSynchronize();
-	virtual void internalOnEvent(EventIdT action, Property::Value payload, GameHandle module, GameHandle sender);
+	
+	void onControlPitch(f32 factor);
+	void onControlYaw(f32 factor);
+	void onControlRoll(f32 factor);
+	void onControlThrust(f32 factor);
+	void onControlMagicStop();
+	void onValueUpdated(Property::ValueId valueId);
 	
 	v3 calculateForce(const v3& targetSpeed,
 	                  const v3& currentSpeed,

@@ -42,6 +42,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Connection.h>
 #include <Module.h>
 
+namespace Tool {
+
 struct SharedData
 {
 	struct TextureUnitChange
@@ -96,4 +98,6 @@ struct SharedData
 		mEnvironment.reset(new BFG::Environment);
 	}
 };
+
+} // namespace Tool
 #endif

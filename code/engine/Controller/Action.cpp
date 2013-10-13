@@ -26,32 +26,31 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Controller/Action.h>
 
-#include <EventSystem/Emitter.h>
-#include <Controller/ControllerEvents.h>
 #include <Controller/Enums.hh>
+#include <Controller/ControllerEvents_fwd.h>
 
 namespace BFG {
 namespace Controller_ {
 
 void fillWithDefaultActions(ActionMapT& actions)
 {
-	EventIdT first = ID::A_FIRST_CONTROLLER_ACTION + 1;
-	EventIdT last = ID::A_LAST_CONTROLLER_ACTION;
-	for (EventIdT i=first; i < last; ++i)
+	Event::IdT first = ID::A_FIRST_CONTROLLER_ACTION + 1;
+	Event::IdT last = ID::A_LAST_CONTROLLER_ACTION;
+	for (Event::IdT i=first; i < last; ++i)
 	{
 		ID::ControllerAction ca = static_cast<ID::ControllerAction>(i);
 		actions[i] = ID::asStr(ca);
 	}
 }
 
-void sendActionsToController(EventLoop* loop, const ActionMapT& actions)
+//! \todo Send ActionMap directly as a whole.
+void sendActionsToController(Event::Lane& eventLane, const ActionMapT& actions)
 {
-	Emitter emitter(loop);
 	ActionMapT::const_iterator it = actions.begin();
 	for (; it != actions.end(); ++it)
 	{
 		ActionDefinition ad(it->first, stringToArray<128>(it->second));
-		emitter.emit<ControlEvent>(ID::CE_ADD_ACTION, ad);
+		eventLane.emit(ID::CE_ADD_ACTION, ad);
 	}
 }
 

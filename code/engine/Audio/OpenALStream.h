@@ -68,6 +68,7 @@ private:
 	const s32 mNUM_BUFFER;
 	ALuint mSourceId;
 	bool mFinished;
+	ALfloat mGain;
 
 	boost::scoped_array<ALuint> mBufferIds;
 };

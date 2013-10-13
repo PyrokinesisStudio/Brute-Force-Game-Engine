@@ -27,17 +27,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include "HumanGeneral.h"
 
 #include <Core/GameHandle.h>
-
-#include <Model/Events/SectorEvent.h>
 #include <Model/Data/GameObjectFactory.h>
 
 #include "Globals.h"
 
-HumanGeneral::HumanGeneral(EventLoop* loop,
-						   boost::shared_ptr<BFG::Environment> environment) :
-	Emitter(loop),
-	mEnvironment(environment),
-	mLastPowerupSpawned(0 * si::seconds)
+HumanGeneral::HumanGeneral(Event::SubLanePtr sublane,
+                           boost::shared_ptr<BFG::Environment> environment) :
+mEnvironment(environment),
+mLastPowerupSpawned(0 * si::seconds),
+mSubLane(sublane)
 {
 }
 
@@ -62,13 +60,14 @@ void HumanGeneral::spawnPowerupAtRandomPosition() const
 	op.mAngularVelocity = v3(0.0f, 5.0f, 0.0f);
 
 	int spawnRange = static_cast<int>(DISTANCE_TO_WALL) * 2;
-	int spawnPos = rand()%spawnRange - DISTANCE_TO_WALL;
+	int spawnPos = rand() % spawnRange - DISTANCE_TO_WALL;
 
 	op.mLocation = v3
 	(
 		static_cast<f32>(spawnPos),
-		-NEGATIVE_SHIP_Y_POSITION,
+		- NEGATIVE_SHIP_Y_POSITION,
 		OBJECT_Z_POSITION
 	);
-	emit<SectorEvent>(ID::S_CREATE_GO, op);
+	
+	mSubLane->emit(ID::S_CREATE_GO, op);
 }

@@ -107,7 +107,7 @@ void SubEntitySelect::activate()
 
 	mActive = true;
 
-	emit<Tool::Event>(A_UPDATE_FEATURES, 0);
+	mSubLane->emit(A_UPDATE_FEATURES, BFG::Event::Void());
 }
 
 void SubEntitySelect::deactivate()
@@ -122,7 +122,7 @@ void SubEntitySelect::deactivate()
 
 	mActive = false;
 
-	emit<Tool::Event>(A_UPDATE_FEATURES, 0, mData->mState);
+	mSubLane->emit(A_UPDATE_FEATURES, BFG::Event::Void(), mData->mState);
 }
 
 void SubEntitySelect::update(const Ogre::FrameEvent& evt)

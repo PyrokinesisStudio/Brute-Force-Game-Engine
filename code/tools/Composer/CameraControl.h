@@ -30,25 +30,24 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreSceneNode.h>
 
 #include <Core/Math.h>
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 #include <Model/GameObject.h>
 #include <Model/Environment.h>
 #include <View/Owner.h>
 
 #include <Actions.h>
 #include <BaseFeature.h>
-#include <Event_fwd.h>
 #include <SharedData.h>
 
 namespace Tool
 {
 
-class CameraControl : public BaseFeature, public Emitter
+class CameraControl : public BaseFeature
 {
 public:
-	CameraControl(EventLoop* loop, boost::shared_ptr<SharedData> data) :
+	CameraControl(BFG::Event::SubLanePtr sublane, boost::shared_ptr<SharedData> data) :
 	BaseFeature("CameraControl", false),
-	Emitter(loop),
+	mSubLane(sublane),
 	mData(data),
 	mCameraPosition(NULL),
 	mCameraRotation(NULL),
@@ -62,12 +61,24 @@ public:
 	mIsZooming(false)
 	{
 		createDefaultCamera();
+		
+		mSubLane->connect(A_CAMERA_AXIS_X, this, &CameraControl::onCamX);
+		mSubLane->connect(A_CAMERA_AXIS_Y, this, &CameraControl::onCamY);
+		mSubLane->connect(A_CAMERA_AXIS_Z, this, &CameraControl::onCamZ);
+		mSubLane->connect(A_CAMERA_MOUSE_X, this, &CameraControl::onCamMouseX);
+		mSubLane->connect(A_CAMERA_MOUSE_Y, this, &CameraControl::onCamMouseY);
+		mSubLane->connect(A_CAMERA_MOUSE_Z, this, &CameraControl::onCamMouseZ);
+		mSubLane->connect(A_CAMERA_MOUSE_MOVE, this, &CameraControl::onCamMouseMove);
+		
+		mSubLane->connect(A_CAMERA_MOVE, this, &CameraControl::onCamMove);
+		mSubLane->connectV(A_CAMERA_RESET, this, &CameraControl::onReset);
+		mSubLane->connect(A_CAMERA_ORBIT, this, &CameraControl::onCamOrbit);
+
+		mSubLane->connect(BFG::ID::A_MOUSE_MIDDLE_PRESSED, this, &CameraControl::onMouseRight);
+		mSubLane->connect(BFG::ID::A_MOUSE_RIGHT_PRESSED, this, &CameraControl::onMouseMiddle);
 	}
 
-	virtual ~CameraControl()
-	{
-
-	}
+	virtual ~CameraControl() {}
 
 	virtual void load(){mLoaded = true;}
 	virtual void unload(){mLoaded = false;}
@@ -75,27 +86,42 @@ public:
 	virtual void activate()
 	{
 		mActive = true;
-		emit<Tool::Event>(A_UPDATE_FEATURES, 0);
+		mSubLane->emit(A_UPDATE_FEATURES, BFG::Event::Void());
 	}
+	
 	virtual void deactivate()
 	{
 		mActive = false;
-		emit<Tool::Event>(A_UPDATE_FEATURES, 0);
+		mSubLane->emit(A_UPDATE_FEATURES, BFG::Event::Void());
 	}
 
 	void createDefaultCamera();
 
-	void eventHandler(BFG::Controller_::VipEvent* ve);
-
 	virtual void update(const Ogre::FrameEvent& evt);
-
-protected:
 
 private:
 
 	void onCamX(f32 x)
 	{
 		mDeltaRot.x = (f32)M_PI * x;
+	}
+
+	void onCamMouseX(f32 x)
+	{
+		if (mMouseCamPitchYaw)
+			onCamX(x);
+	}
+
+	void onCamMouseY(f32 y)
+	{
+		if (mMouseCamPitchYaw)
+			onCamY(y);
+	}
+
+	void onCamMouseZ(f32 z)
+	{
+		if (mMouseCamRoll)
+			onCamZ(z);
 	}
 
 	void onCamY(f32 y)
@@ -112,6 +138,43 @@ private:
 	{
 		mCameraRotation->setOrientation(Ogre::Quaternion::IDENTITY);
 	}
+
+	void onCamMove(f32 value)
+	{
+		if (value > EPSILON_F || value < -EPSILON_F)
+		{
+			mIsZooming = true;
+			mDeltaDis += value;
+		}
+		else
+		{
+			mIsZooming = false;
+			mDeltaDis = 0.0f;
+		}
+	}
+
+	void onCamMouseMove(f32 deltaDis)
+	{
+		mIsZooming = false;
+		mDeltaDis = deltaDis;
+	}
+
+	void onCamOrbit(bool camOrbit)
+	{
+		mCamOrbit = camOrbit;
+	}
+
+	void onMouseRight(bool mouseCamRoll)
+	{
+		mMouseCamRoll = mouseCamRoll;
+	}
+
+	void onMouseMiddle(bool pitchYaw)
+	{
+		mMouseCamPitchYaw = pitchYaw;
+	}
+
+	BFG::Event::SubLanePtr mSubLane;
 
 	boost::shared_ptr<SharedData> mData;
 

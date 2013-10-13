@@ -29,7 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/noncopyable.hpp>
 
-#include <Controller/VIPBase.h>
+#include <Controller/Vip/Base.h>
 
 namespace BFG {
 namespace Controller_ {

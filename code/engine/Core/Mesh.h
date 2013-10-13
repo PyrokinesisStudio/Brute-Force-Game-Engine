@@ -28,6 +28,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_MESH_H
 
 #include <boost/scoped_array.hpp>
+#include <boost/tuple/tuple.hpp>
+
 #include <Core/Types.h>
 #include <Core/v3.h>
 #include <Core/Defs.h>
@@ -72,6 +74,8 @@ private:
 	               u32* indices,
 	               u32 indexCount);
 };
+
+typedef boost::tuple<std::string, Mesh> NamedMesh;
 
 } // namespace BFG
 

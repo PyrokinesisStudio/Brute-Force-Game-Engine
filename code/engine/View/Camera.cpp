@@ -37,22 +37,24 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/GameHandle.h>
 #include <Core/Math.h>
 
-#include <EventSystem/Core/EventLoop.h>
-
 #include <View/Convert.h>
 #include <View/Defs.h>
-#include <View/Event.h>
+#include <View/Enums.hh>
 #include <View/Main.h>
 
 
 namespace BFG {
 namespace View {
 
-Camera::Camera(GameHandle cameraHandle, 
+Camera::Camera(Event::Lane& lane,
+               GameHandle cameraHandle, 
                Ogre::SceneNode* camNode, 
                Ogre::RenderTarget* renderTarget, 
                s32 width, 
-               s32 height) :
+               s32 height,
+               const v3& position,
+               const qv4& orientation) :
+mSubLane(lane.createSubLane()),
 mCameraNode(camNode),
 mRenderTarget(renderTarget),
 mHandle(cameraHandle),
@@ -72,8 +74,8 @@ mRenderTargetCreated(false)
 			mNodeCreated = true;
 		}
 	}
-	mCameraNode->resetOrientation();
-	mCameraNode->setPosition(toOgre(v3::ZERO));
+	mCameraNode->setOrientation(toOgre(orientation));
+	mCameraNode->setPosition(toOgre(position));
 
 	v3 target = toBFG(mCameraNode->getOrientation().zAxis());
 	norm(target);
@@ -84,7 +86,7 @@ mRenderTargetCreated(false)
 	cam->setFOVy(Ogre::Degree(60.0f));
 	cam->setNearClipDistance(0.1f);
 	cam->setFarClipDistance(250000.0f);
-	cam->lookAt(toOgre(target) * 10);
+	cam->lookAt(toOgre(target)*10);
 	mCameraNode->attachObject(cam);
 
 	infolog << "Camera: " << stringify(mHandle) << " created.";
@@ -142,9 +144,9 @@ mRenderTargetCreated(false)
 		}
 		pass->setLightingEnabled(false);
 
-		Ogre::TextureUnitState* txState = NULL;
 		if (pass->getNumTextureUnitStates() > 0)
 		{
+			Ogre::TextureUnitState* txState = NULL;
 			txState = pass->getTextureUnitState(0);
 			txState->setTextureName(stringify(mHandle));
 		}
@@ -168,22 +170,8 @@ mRenderTargetCreated(false)
 		mRenderTarget->addViewport(cam);
 	}
 	
-	Main::eventLoop()->connect
-	(
-		ID::VE_UPDATE_POSITION,
-		this,
-		&Camera::viewEventHandler,
-		mHandle
-	);
-	
-	Main::eventLoop()->connect
-	(
-		ID::VE_UPDATE_ORIENTATION,
-		this,
-		&Camera::viewEventHandler,
-		mHandle
-	);
-
+	mSubLane->connect(ID::VE_UPDATE_POSITION, this, &Camera::updatePosition, mHandle);
+	mSubLane->connect(ID::VE_UPDATE_ORIENTATION, this, &Camera::updateOrientation, mHandle);
 }
 
 void Camera::prepareRenderTarget()
@@ -199,8 +187,7 @@ Camera::~Camera()
 	Ogre::Root& root = Ogre::Root::getSingleton();
 	Ogre::SceneManager* sceneMgr = root.getSceneManager(BFG_SCENEMANAGER);
 	
-	Main::eventLoop()->disconnect(ID::VE_UPDATE_POSITION, this);
-	Main::eventLoop()->disconnect(ID::VE_UPDATE_ORIENTATION, this);
+	mSubLane.reset();
 
 	if (mRenderTargetCreated)
 	{
@@ -241,20 +228,5 @@ void Camera::toggleWireframe()
 	}
 }
 
-void Camera::viewEventHandler(Event* e)
-{
-	switch (e->id())
-	{
-	case ID::VE_UPDATE_POSITION:
-		updatePosition(boost::get<v3>(e->data()));
-		break;
-	case ID::VE_UPDATE_ORIENTATION:
-		updateOrientation(boost::get<qv4>(e->data()));
-		break;
-	default:
-		throw std::logic_error("Camera::eventHandler: received unhandled event!");
-	}
-
-}
 } // namespcae View
 } // namespace BFG

@@ -37,8 +37,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Network{
 
-Client::Client(EventLoop* loop_) :
-Emitter(loop_),
+Client::Client(Event::Lane& lane) :
+mLane(lane),
 mLocalTime(new Clock::StopWatch(Clock::milliSecond))
 {
 	dbglog << "Client::Client()";
@@ -48,23 +48,18 @@ mLocalTime(new Clock::StopWatch(Clock::milliSecond))
 	
 	mTimeSyncTimer.reset(new boost::asio::deadline_timer(mService));
 
-	loop()->connect(ID::NE_CONNECT, this, &Client::controlEventHandler);
-	loop()->connect(ID::NE_DISCONNECT, this, &Client::controlEventHandler);
-	loop()->connect(ID::NE_SHUTDOWN, this, &Client::controlEventHandler);
+	mLane.connect(ID::NE_CONNECT, this, &Client::onConnect);
+	mLane.connect(ID::NE_DISCONNECT, this, &Client::onDisconnect);
+	mLane.connect(ID::NE_SHUTDOWN, this, &Client::onDisconnect);
 
 	dbglog << "Client: Creating TcpModule";
-	mTcpModule.reset(new TcpModule(loop(), mService, UNIQUE_PEER, mLocalTime));
+	mTcpModule.reset(new TcpModule(mLane, mService, UNIQUE_PEER, mLocalTime));
 }
 
 Client::~Client()
 {
 	dbglog << "Client::~Client()";
 	stop();
-
-	loop()->disconnect(ID::NE_CONNECT, this);
-	loop()->disconnect(ID::NE_DISCONNECT, this);
-	loop()->disconnect(ID::NE_SHUTDOWN, this);
-	loop()->disconnect(ID::NE_RECEIVED, this);
 
 	if (mResolver)
 		mResolver->cancel();
@@ -184,7 +179,7 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 	
 	dbglog << "Client: Creating UdpReadModule";
 	mUdpReadModule.reset(new UdpReadModule(
-		loop(),
+		mLane,
 		mService,
 		mLocalTime,
 		socket,
@@ -194,7 +189,7 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 
 	dbglog << "Client: Creating UdpWriteModule";
 	mUdpWriteModule.reset(new UdpWriteModule(
-		loop(),
+		mLane,
 		mService,
 		UNIQUE_PEER,
 		mLocalTime,
@@ -204,28 +199,10 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 	mUdpWriteModule->startSending();
 	mUdpWriteModule->pingRemote();
 	
-	emit<ControlEvent>(ID::NE_CONNECTED, mPeerId);
+	mLane.emit(ID::NE_CONNECTED, mPeerId);
 
 	mTcpModule->sendTimesyncRequest();
 	setTimeSyncTimer(TIME_SYNC_WAIT_TIME);
-}
-
-void Client::controlEventHandler(ControlEvent* e)
-{
-	switch(e->id())
-	{
-	case ID::NE_CONNECT:
-		onConnect(boost::get<EndpointT>(e->data()));
-		break;
-	case ID::NE_DISCONNECT:
-	case ID::NE_SHUTDOWN:
-		onDisconnect(UNIQUE_PEER);
-		break;
-	default:
-		warnlog << "Client: Can't handle event with ID: "
-			<< e->id();
-		break;
-	}
 }
 
 void Client::onConnect(const EndpointT& endpoint)
@@ -237,7 +214,7 @@ void Client::onConnect(const EndpointT& endpoint)
 void Client::onDisconnect(const PeerIdT& peerId)
 {
 	stop();
-	emit<ControlEvent>(ID::NE_DISCONNECTED, peerId);
+	mLane.emit(ID::NE_DISCONNECTED, peerId);
 }
 
 void Client::setTimeSyncTimer(const long& waitTime_ms)

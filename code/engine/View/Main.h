@@ -28,27 +28,22 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_VIEW_MAIN_H
 
 #include <Base/LibraryMainBase.h>
+#include <Event/Event.h>
 #include <View/Defs.h>
-
-class EventLoop;
 
 namespace BFG {
 namespace View { 
 
 class OgreInit;
 
-class VIEW_API Main : public Base::LibraryMainBase<EventLoop>
+class VIEW_API Main : public Base::LibraryMainBase<Event::Lane>
 {
 public:
 	Main(const std::string& windowTitle);
 	
-	//! \brief Access to the static EventLoop.
-	static EventLoop* eventLoop();
-
 private:
-	void main(EventLoop*);
+	void main(Event::Lane* lane);
 	
-	static EventLoop* mLoop;
 	boost::shared_ptr<OgreInit> mMain;
 	const std::string mWindowTitle;
 };

@@ -32,7 +32,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Module.h>
 #include <Model/GameObject.h>
 
-#include <Physics/Event.h>
+#include <Physics/Physics.h>
 
 namespace BFG {
 
@@ -66,8 +66,9 @@ mInterpol(0.0f, parameter.mMaxDistance.value())
 	requestEvent(ID::GOE_CONTROL_MAGIC_STOP);
 	requestEvent(ID::GOE_TOGGLE_WIREFRAME);
 #endif
-	requestEvent(ID::GOE_SET_CAMERA_TARGET);
-	initvar(ID::PV_CameraMode);
+	subLane()->connect(ID::GOE_SET_CAMERA_TARGET, this, &Camera::onSetCameraTarget, ownerHandle());
+
+	requiredPvInitialized(ID::PV_CameraMode);
 	require("Physical");
 
 	assert(ownerHandle() == rootModule() &&
@@ -75,31 +76,12 @@ mInterpol(0.0f, parameter.mMaxDistance.value())
 }
 
 Camera::~Camera()
-{
-	//! \todo This needs to be done when this module is actually "switched off".
-#if 0
-	stopDelivery(ID::GOE_CONTROL_PITCH);
-	stopDelivery(ID::GOE_CONTROL_YAW);
-	stopDelivery(ID::GOE_CONTROL_ROLL);
-	stopDelivery(ID::GOE_CONTROL_THRUST);
-	stopDelivery(ID::GOE_CONTROL_MAGIC_STOP);
-	stopDelivery(ID::GOE_TOGGLE_WIREFRAME);
-#endif
-	stopDelivery(ID::GOE_SET_CAMERA_TARGET);
-}
+{}
 
-void Camera::internalOnEvent(EventIdT action,
-                             Property::Value payload,
-                             GameHandle module,
-                             GameHandle sender)
+void Camera::onSetCameraTarget(GameHandle target)
 {
-	switch(action)
-	{
-	case ID::GOE_SET_CAMERA_TARGET:
-	{
-		mTarget = payload;
-		break;
-	}
+	mTarget = target;
+}
 
 #if 0
 	case ID::GOE_CONTROL_PITCH:
@@ -155,12 +137,6 @@ void Camera::internalOnEvent(EventIdT action,
 		break;
 #endif
 
-	default:
-		warnlog << "Camera: Can't handle event with ID: "
-		        << action;
-	}
-}
-
 void Camera::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 {
 	assert(mModules.begin()->first == rootModule() &&
@@ -168,13 +144,14 @@ void Camera::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 
 	(this->*specificUpdate)(timeSinceLastFrame);
 
-	setGoValue(ID::PV_Location, pluginId(), mNewLocation);
+	setGoValue(ID::PV_Position, pluginId(), mNewPosition);
+	setGoValue(ID::PV_Orientation, pluginId(), mNewOrientation);
 }
 
 void Camera::internalSynchronize()
 {
-	emit<Physics::Event>(ID::PE_UPDATE_ORIENTATION, mNewLocation.orientation, ownerHandle());
-	emit<Physics::Event>(ID::PE_UPDATE_POSITION, mNewLocation.position, ownerHandle());
+	subLane()->emit(ID::PE_UPDATE_POSITION, mNewPosition, ownerHandle());
+	subLane()->emit(ID::PE_UPDATE_ORIENTATION, mNewOrientation, ownerHandle());
 }
 
 void Camera::internalOnModuleAttached(GameHandle module)
@@ -182,14 +159,14 @@ void Camera::internalOnModuleAttached(GameHandle module)
 	assert(mModules.size() == 1 && 
 		"Camera: only one Camera allowed at the moment!");
 
-	mMode = static_cast<ID::CameraMode>(value<s32>(ID::PV_CameraMode, module));
+	mMode = value<ID::CameraMode>(ID::PV_CameraMode, module);
 
 	setMode(mMode);
 	
 	mOffset = value<v3>(ID::PV_CameraOffset, module);
 }
 
-void Camera::updateOwnLocation(quantity<si::time, f32> timeSinceLastFrame)
+void Camera::updateOwnLocation(quantity<si::time, f32> /*timeSinceLastFrame*/)
 {
 #if 0
 	mRotationInput *= timeSinceLastFrame.value();
@@ -273,21 +250,43 @@ void Camera::updateFree(quantity<si::time, f32> timeSinceLastFrame)
 
 void Camera::updateFixed(quantity<si::time, f32> timeSinceLastFrame)
 {
-	Location target;
-
 	if (! environment()->exists(mTarget))
 		return;
 
 	if (mTarget != NULL_HANDLE)
-		target = environment()->getGoValue<Location>(mTarget, ID::PV_Location, pluginId());
+	{
+		//! \todo find a better solution to not-found property values
+		v3 targetPosition;
+		qv4 targetOrientation;
+		try
+		{
+			targetPosition = environment()->getGoValue<v3>(mTarget, ID::PV_Position, pluginId());
+			targetOrientation = environment()->getGoValue<qv4>(mTarget, ID::PV_Orientation, pluginId());
+		}
+		catch (const std::runtime_error& e)
+		{
+			return;
+		}
+		
+		updateOwnLocation(timeSinceLastFrame);
 
-	updateOwnLocation(timeSinceLastFrame);
+		mNewOrientation = targetOrientation * mOwnLocation.orientation;
+		mNewPosition = targetPosition + (mNewOrientation * mOffset);
 
-	mNewLocation.orientation = target.orientation * mOwnLocation.orientation;
-	mNewLocation.position = target.position + (mNewLocation.orientation * mOffset);
 #if 0
-	v3 newPos = target.position + (newOri * (mOffset * mOffsetFactor));
+		v3 newPos = target.position + (newOri * (mOffset * mOffsetFactor));
 #endif
+	}
+	else
+	{
+		updateOwnLocation(timeSinceLastFrame);
+
+		mNewOrientation = mOwnLocation.orientation;
+		mNewPosition = (mNewOrientation * mOffset);
+#if 0
+		v3 newPos = (newOri * (mOffset * mOffsetFactor));
+#endif
+	}
 }
 
 #if 0

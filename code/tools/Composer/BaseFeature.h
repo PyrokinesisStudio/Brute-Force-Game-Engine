@@ -65,8 +65,6 @@ public:
 	virtual void deactivate() = 0;
 	virtual bool isActive() {return mActive;}
 
-	virtual void eventHandler(BFG::Controller_::VipEvent* ve) = 0;
-
 	virtual void update(const Ogre::FrameEvent& evt){}
 
 protected:

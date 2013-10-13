@@ -119,11 +119,15 @@ protected:
 		catch (std::out_of_range) {}
 	
 		// is bool
-		if (strToBool(input, result))
+		bool b; // calling strToBool with result as param yields bad_anycast
+		if (strToBool(input, b))
+		{
+			result = b;
 			return result;
+		}
 	
 		// is string
-		result = stringToArray<128>(input);
+		result = input;
 		return result;
 	}
 };

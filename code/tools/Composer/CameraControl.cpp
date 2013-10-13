@@ -30,15 +30,14 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/GameHandle.h>
 #include <View/CameraCreation.h>
-#include <View/Event.h>
+
 
 namespace Tool
 {
 
 void CameraControl::createDefaultCamera()
 {
-	Ogre::SceneManager* sceneMgr = 
-		Ogre::Root::getSingleton().getSceneManager(BFG_SCENEMANAGER);
+	Ogre::SceneManager* sceneMgr = Ogre::Root::getSingleton().getSceneManager(BFG_SCENEMANAGER);
 
 	mCameraPosition = sceneMgr->getRootSceneNode()->createChildSceneNode();
 	mCameraPosition->setPosition(0, 0, 0);
@@ -56,104 +55,10 @@ void CameraControl::createDefaultCamera()
 		0
 	);
 	
-	emit<View::Event>(BFG::ID::VE_CREATE_CAMERA, cc, mData->mState);
+	mSubLane->emit(BFG::ID::VE_CREATE_CAMERA, cc, mData->mState);
 
 	Ogre::Vector3 pos(0.0f, 0.0f, -mCamDistance);
 	mCameraDistance->setPosition(pos);
-}
-
-void CameraControl::eventHandler(BFG::Controller_::VipEvent* ve)
-{
-	switch(ve->id())
-	{
-	case A_CAMERA_AXIS_X:
-	{
-		onCamX(boost::get<f32>(ve->data()));
-		break;
-	}
-	case A_CAMERA_MOUSE_X:
-	{
-		if (mMouseCamPitchYaw)
-		{
-			onCamX(boost::get<f32>(ve->data()));
-		}
-		break;
-	}
-	case A_CAMERA_AXIS_Y:
-	{
-		onCamY(boost::get<f32>(ve->data()));
-		break;
-	}
-	case A_CAMERA_MOUSE_Y:
-	{
-		if (mMouseCamPitchYaw)
-		{
-			onCamY(boost::get<f32>(ve->data()));
-		}
-		break;
-	}
-	case A_CAMERA_AXIS_Z:
-	{
-		onCamZ(boost::get<f32>(ve->data()));
-		break;
-	}
-	case A_CAMERA_MOUSE_Z:
-	{
-		if (mMouseCamRoll)
-		{
-			onCamZ(boost::get<f32>(ve->data()));
-		}
-		break;
-	}
-	case A_CAMERA_MOVE:
-	{
-		f32 value = boost::get<f32>(ve->data());
-		if (value > EPSILON_F || value < -EPSILON_F)
-		{
-			mIsZooming = true;
-			mDeltaDis += value;
-		}
-		else
-		{
-			mIsZooming = false;
-			mDeltaDis = 0.0f;
-		}
-		break;
-	}
-	case A_CAMERA_MOUSE_MOVE:
-	{
-		mIsZooming = false;
-		mDeltaDis = boost::get<f32>(ve->data());
-		break;
-	}
-	case A_CAMERA_RESET:
-	{
-		onReset();
-		break;
-	}
-	case A_CAMERA_ORBIT:
-	{
-		mCamOrbit = boost::get<bool>(ve->data());
-		break;
-	}
-	case BFG::ID::A_MOUSE_MIDDLE_PRESSED:
-	{
-		if ( boost::get<bool>(ve->data()) )
-			mMouseCamPitchYaw = true;
-		else
-			mMouseCamPitchYaw = false;
-		
-		break;
-	}
-	case BFG::ID::A_MOUSE_RIGHT_PRESSED:
-	{
-		if ( boost::get<bool>(ve->data()) )
-			mMouseCamRoll = true;
-		else
-			mMouseCamRoll = false;
-		break;
-	}
-	}
 }
 
 void CameraControl::update(const Ogre::FrameEvent& evt)
@@ -182,6 +87,7 @@ void CameraControl::update(const Ogre::FrameEvent& evt)
 	}
 
 	mCamDistance += mDeltaDis * evt.timeSinceLastFrame;
+	
 	if (mCamDistance <= 1.0f)
 		mCamDistance = 1.0f;
 
@@ -193,7 +99,6 @@ void CameraControl::update(const Ogre::FrameEvent& evt)
 	{
 		mDeltaDis = 0.0f;
 	}
-
 }
 
 } // namespace Tool

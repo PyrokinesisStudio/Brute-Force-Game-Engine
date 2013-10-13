@@ -33,7 +33,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/GameHandle.h>
 
 #include <Actions.h>
-#include <Event_fwd.h>
 
 namespace Tool
 {
@@ -135,7 +134,7 @@ void AnimationControl::activate()
 	}
 
 	mActive = true;
-	emit<Tool::Event>(A_UPDATE_FEATURES, 0);
+	mSubLane->emit(A_UPDATE_FEATURES, Event::Void());
 }
 
 void AnimationControl::deactivate()
@@ -155,7 +154,7 @@ void AnimationControl::deactivate()
 	}
 
 	mActive = false;
-	emit<Tool::Event>(A_UPDATE_FEATURES, 0);
+	mSubLane->emit(A_UPDATE_FEATURES, Event::Void());
 }
 
 void AnimationControl::update(const Ogre::FrameEvent& evt)

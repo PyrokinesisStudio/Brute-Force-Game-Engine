@@ -31,16 +31,15 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/thread.hpp>
 
-#include <Base/EntryPoint.h>
 #include <Core/CharArray.h>
 #include <Core/ClockUtils.h>
 #include <Core/Types.h>
-#include <EventSystem/Emitter.h>
+
+#include <Event/Event.h>
+
 #include <Network/Defs.h>
 #include <Network/Event_fwd.h>
 #include <Network/Handshake.h>
-
-class EventLoop;
 
 namespace BFG {
 namespace Network{
@@ -54,13 +53,16 @@ class UdpWriteModule;
 
 //! This class represents a network server. It starts accepting connections from clients 
 //! using several NetworkModules
-class NETWORK_API Server : Emitter
+class NETWORK_API Server
 {
 public:
 	//! \brief Constructor
 	//! \param[in] loop EventLoop of the EventSystem
-	Server(EventLoop* loop);
+	Server(Event::Lane& lane);
 	~Server();
+
+protected:
+	Event::Lane& mLane;
 
 private:
 	typedef std::map<PeerIdT, boost::shared_ptr<TcpModule> > TcpModulesMap;
@@ -87,10 +89,6 @@ private:
 	//! \param[in] bytesTransferred size of the data written
 	//! \param[in] peerId NetworkHandle of the client
 	void writeHandshakeHandler(const error_code &ec, std::size_t bytesTransferred, PeerIdT peerId);
-
-	//! \brief Handler to distribute ControlEvents
-	//! \param[in] e Received ControlEvent
-	void controlEventHandler(ControlEvent* ne);
 
 	//! \brief Starts listening to a network port
 	//! \param[in] port Network port the server is listening to

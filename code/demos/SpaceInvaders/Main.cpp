@@ -26,101 +26,73 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <OgreException.h>
 
-#include <EventSystem/Core/EventLoop.h>
+#include <Base/ShowException.h>
+#include <Base/Logger.h>
 
 #include <Core/GameHandle.h>
-#include <Core/Path.h>
-#include <Base/ShowException.h>
 
-#include <Audio/Audio.h>
-#include <Controller/Controller.h>
-#include <Physics/Physics.h>
-#include <View/View.h>
+#include <Event/Event.h>
 
 #include "MainState.h"
 #include "AudioState.h"
 #include "Globals.h"
 
-GameHandle stateHandle = BFG::generateHandle();
+GameHandle gStateHandle = BFG::generateHandle();
 
-boost::scoped_ptr<ViewMainState> gViewState;
-boost::scoped_ptr<MainState> gGameState;
-boost::scoped_ptr<AudioState> gAudioState;
+static const int EVENT_FREQU = 100;
 
-void* createStates(void* p)
+struct Main : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 {
-	EventLoop* loop = static_cast<EventLoop*>(p);
-
-	gViewState.reset(new ViewMainState(stateHandle, loop));
-	gGameState.reset(new MainState(stateHandle, loop));
-	gAudioState.reset(new AudioState);
-
-	// Init Controller
-	GameHandle handle = generateHandle();
-
+	virtual void main(BFG::Event::Lane* lane)
 	{
-		BFG::Controller_::ActionMapT actions;
-		actions[A_SHIP_AXIS_Y] = "A_SHIP_AXIS_Y";
-		actions[A_SHIP_FIRE]   = "A_SHIP_FIRE";
-		actions[A_QUIT]        = "A_QUIT";
-		actions[A_FPS]         = "A_FPS";
-		BFG::Controller_::sendActionsToController(loop, actions);
-
-		Path path;
-		const std::string config_path = path.Expand("SpaceInvaders.xml");
-		const std::string state_name = "SpaceInvaders";
-
-		BFG::View::WindowAttributes wa;
-		BFG::View::queryWindowAttributes(wa);
-
-		Controller_::StateInsertion si(config_path, state_name, handle, true, wa);
-
-		EventFactory::Create<Controller_::ControlEvent>
-		(
-			loop,
-			ID::CE_LOAD_STATE,
-			si
-		);
-
-		loop->connect(A_SHIP_AXIS_Y, gGameState.get(), &MainState::ControllerEventHandler);
-		loop->connect(A_SHIP_FIRE, gGameState.get(), &MainState::ControllerEventHandler);
-		loop->connect(A_QUIT, gGameState.get(), &MainState::ControllerEventHandler);
-		loop->connect(A_FPS, gGameState.get(), &MainState::ControllerEventHandler);
+		mGameState.reset(new MainState(gStateHandle, *lane));
+		mAudioState.reset(new AudioState(lane->createSubLane()));
 	}
-	return 0;
-}
+
+	boost::scoped_ptr<MainState> mGameState;
+	boost::scoped_ptr<AudioState> mAudioState;
+};
+
+struct ViewMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
+{
+	virtual void main(BFG::Event::Lane* lane)
+	{
+		mViewState.reset(new ViewMainState(gStateHandle, *lane));
+	}
+
+	boost::scoped_ptr<ViewMainState> mViewState;
+};
+
+#define BFG_USE_CONTROLLER
+#define BFG_USE_PHYSICS
+#define BFG_USE_VIEW
+#define BFG_USE_AUDIO
+#include <Core/EngineInit.h>
+
+using namespace BFG;
 
 int main( int argc, const char* argv[] ) try
 {
+	Init::Configuration cfg("SpaceInvaders");
+	cfg.controllerFrequency = 100;
+	
+	//! \todo Move this somewhere else ...
 	srand(time(NULL));
-
+	
 #if defined(_DEBUG) || !defined(NDEBUG)
-	Base::Logger::Init(Base::Logger::SL_DEBUG, "Logs/Si.log");
+	cfg.logLevel = Base::Logger::SL_DEBUG;
 #else
-	Base::Logger::Init(Base::Logger::SL_INFORMATION, "Logs/Si.log");
+	cfg.logLevel = Base::Logger::SL_INFORMATION;
 #endif
 
-	EventLoop iLoop(true);
-
-	size_t controllerFrequency = 1000;
-	const std::string caption = "Engine Test 02: Space Invaders";
-
-	BFG::Audio::Main audioMain;
-	BFG::Controller_::Main controllerMain(controllerFrequency);
-	BFG::Physics::Main physicsMain;
-	BFG::View::Main viewMain(caption);
+	Init::engine(cfg);
 	
-	iLoop.addEntryPoint(viewMain.entryPoint());
-	iLoop.addEntryPoint(controllerMain.entryPoint());
-	iLoop.addEntryPoint(physicsMain.entryPoint());
-	iLoop.addEntryPoint(audioMain.entryPoint());
-	iLoop.addEntryPoint(new Base::CEntryPoint(createStates));
+	// Custom States
+	Init::gViewLane->addEntry<ViewMain>();
+	Event::Lane gameLane(Init::gSynchronizer, 300, "Game", Event::RL3);
+	gameLane.addEntry<Main>();
 
-	iLoop.run();
-	
-	gViewState.reset();
-	gGameState.reset();
-	gAudioState.reset();
+	Init::startEngine(cfg);
 }
 catch (Ogre::Exception& e)
 {

@@ -31,7 +31,7 @@ PROJECT_NAME           = BFG-Engine
 # This could be handy for archiving the generated documentation or 
 # if some version control system is used.
 
-PROJECT_NUMBER         = 0.6.0
+PROJECT_NUMBER         = 0.7.0
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) 
 # base path where the generated documentation will be put. 
@@ -189,7 +189,8 @@ TAB_SIZE               = 4
 # will result in a user-defined paragraph with heading "Side Effects:". 
 # You can put \n's in the value part of an alias to insert newlines.
 
-ALIASES                = 
+ALIASES                =
+ALIASES               += "datarace=\par \"Data Races:\n\" "
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C 
 # sources only. Doxygen will then generate output that is more tailored for C. 
@@ -585,15 +586,7 @@ WARN_LOGFILE           =
 # with spaces.
 
 INPUT                  = . \
-                         ../code/engine/Audio \
-                         ../code/engine/Base \
-                         ../code/engine/Controller \
-                         ../code/engine/Core \
-                         ../code/engine/EnumGen \
-                         ../code/engine/EventSystem \
-                         ../code/engine/Model \
-                         ../code/engine/Physics \
-                         ../code/engine/View
+                         ../code/engine
 
 # This tag can be used to specify the character encoding of the source files 
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is 

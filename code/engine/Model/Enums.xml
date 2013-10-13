@@ -10,6 +10,11 @@
 
             <value set = "4000">A_FIRST_MODELACTION</value>
 
+					<!-- \condition
+		           \consequence
+		           \payload -->
+					
+					
             <!-- GameObject Events -->
             <value>GOE_CONTROL_PITCH</value>
             <value>GOE_CONTROL_YAW</value>
@@ -110,6 +115,7 @@
 
         <enum name = "PropertyVar" export = "MODEL_API">
             <!-- PC_AutoNavigator -->
+            <value>PV_FirstTargets</value>
             <value>PV_TriggerRadius</value>
 
             <!-- PC_Camera -->
@@ -125,11 +131,12 @@
             <value>PV_Effect</value>
             <value>PV_SoundEffect</value>
 
-	    <!-- PC_Networked -->
-	    <value>PV_Remote</value>
-	    
+            <!-- PC_Networked -->
+            <value>PV_Remote</value>
+
             <!-- PC_Physical -->
-            <value>PV_Location</value>
+            <value>PV_Position</value>
+            <value>PV_Orientation</value>
 
             <value>PV_Velocity</value>
             <value>PV_RelativeVelocity</value>

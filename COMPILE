@@ -1,7 +1,15 @@
 This file describes how to compile the Brute-Force Game Engine.
 
-Dependencies
-============
+Supported Compilers
+===================
+
+MSVC 10.0 (Visual Studio 2010)
+MSVC 11.0 (Visual Studio 2012)
+gcc-4.6 and higher
+clang-3.1 and higher
+
+Pre-built Library Dependencies
+==============================
 
 -> Windows
    -------
@@ -51,11 +59,18 @@ Compiling
    -----
 
 	mkdir build && cd build
-	cmake .. && make
+	cmake ..
+	make
 
-Note:
+Notes:
 	* You might need the gcc compile flags `-m64' and `-fPIC' when
 	  compiling for AMD64.
+
+	* CC, CXX, CFLAGS, CXXFLAGS from the environment are used for
+	  compilation.
+
+	* Append -DRELEASE=1 to cmake for release builds (and use appropriate
+	  compile flags).
 
 -> Windows
    -------
@@ -63,7 +78,7 @@ Note:
 Best is to use the CMake-GUI. After configuration, point the CMake-Variable
 BFG_DEPENDENCY_BUNDLE_PATH to the \bundle directory of the dependency package
 mentioned above. Configurate again and if successful, generate the build. Then
-open it and compile with your preferred IDE.
+open and compile it with your preferred IDE.
 
 Installing
 ==========

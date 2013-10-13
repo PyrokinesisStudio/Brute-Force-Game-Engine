@@ -30,9 +30,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace View {
 
-State::State(GameHandle handle, EventLoop* loop) :
-Owner(handle, loop),
-Emitter(loop),
+State::State(GameHandle handle, Event::Lane& lane) :
+Owner(handle, lane),
 mHandle(handle)
 {
 	Ogre::Root::getSingleton().addFrameListener(this);

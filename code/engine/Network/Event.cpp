@@ -32,22 +32,22 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Network {
 	
-std::string NETWORK_API debug(const DataPacketEvent& e)
-{
-	std::stringstream ss;
-		
-	ss << "e.id: " << e.id() << "\n";
-	ss << "e.destination: " << e.destination() << "\n";
-	ss << "e.sender: " << e.sender() << "\n";
-
-	const DataPayload& payload = e.data();
-	ss << "payload.AppId: " << payload.mAppEventId << "\n";
-	ss << "payload.Destination: " << payload.mAppDestination << "\n";
-	ss << "payload.Sender: " << payload.mAppSender << "\n";
-	ss << "payload.PacketSize: " << payload.mAppDataLen;
-	
-	return ss.str();
-}
+//std::string NETWORK_API debug(const DataPacketEvent& e)
+//{
+//	std::stringstream ss;
+//		
+//	ss << "e.id: " << e.id() << "\n";
+//	ss << "e.destination: " << e.destination() << "\n";
+//	ss << "e.sender: " << e.sender() << "\n";
+//
+//	const DataPayload& payload = e.data();
+//	ss << "payload.AppId: " << payload.mAppEventId << "\n";
+//	ss << "payload.Destination: " << payload.mAppDestination << "\n";
+//	ss << "payload.Sender: " << payload.mAppSender << "\n";
+//	ss << "payload.PacketSize: " << payload.mAppDataLen;
+//	
+//	return ss.str();
+//}
 
 } // namespace Network
 } // namespace BFG

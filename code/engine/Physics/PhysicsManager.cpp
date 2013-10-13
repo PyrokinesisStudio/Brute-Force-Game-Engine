@@ -35,10 +35,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Base/Logger.h>
 #include <Base/Cpp.h>
 
-#include <Model/Events/GameObjectEvent.h>
-
+#include <Physics/Event_fwd.h>
 #include <Physics/OdeTriMesh.h>
 #include <Physics/PhysicsObject.h>
+
+#include <View/Enums.hh>
 
 namespace BFG {
 namespace Physics {
@@ -82,8 +83,8 @@ static void odeDebugHandling(int errnum, const char* msg, va_list ap)
 }
 
 
-PhysicsManager::PhysicsManager(EventLoop* loop, u32 maxContactsPerCollision) :
-Emitter(loop),
+PhysicsManager::PhysicsManager(Event::Lane& lane, u32 maxContactsPerCollision) :
+mLane(lane),
 mMaxContactsPerCollision(maxContactsPerCollision),
 mSimulationStepSize(0.001f * si::seconds),
 mWorldID(0),
@@ -119,8 +120,6 @@ mCollisionJointsID(0)
 
 PhysicsManager::~PhysicsManager()
 {
-	unregisterEvents();
-
 	// Ensure that this gets done before ODE is closed
 	mPhysicsObjects.clear();
 
@@ -147,18 +146,17 @@ void PhysicsManager::clear()
 	mPhysicsObjects.clear();
 }
 
-void PhysicsManager::move(quantity<si::time, f32> timeSinceLastFrame)
+void PhysicsManager::move(Event::TickData tickData)
 {
-	// Time left from the previous frame (always less than mSimulationStepSize)
-	static quantity<si::time, f32> timeLeft = timeSinceLastFrame;
-
-	int nrofsteps = int(ceil(timeSinceLastFrame / mSimulationStepSize));
+	quantity<si::time, f32> timeSinceLastTick = tickData.timeSinceLastTick();
+	
+	int steps = int(std::ceil(timeSinceLastTick / mSimulationStepSize));
 
 	/** \note
 		On low FPS, time may accumulate which leads to serious timing problems.
 
 		Example:
-		- ODE may take a long time, then the next timeSinceLastFrame is higher
+		- ODE may take a long time, then the next timeSinceLastTick is higher
 		- Due to the higher timeSinceLastFrame, Ode takes even longer, etc...
 		
 		Solutions:
@@ -171,19 +169,18 @@ void PhysicsManager::move(quantity<si::time, f32> timeSinceLastFrame)
 	// Equal to 5 FPS
 	const int maxSteps = 200;
 	
-	if (nrofsteps > maxSteps)
+	if (steps > maxSteps)
 	{
-		nrofsteps = maxSteps;
-		timeLeft = 0;
+		steps = maxSteps;
 	}
 
 	PhysicsObjectMap::iterator it = mPhysicsObjects.begin();
 	for (; it != mPhysicsObjects.end(); ++it)
 	{
-		it->second->performInterpolation(timeSinceLastFrame);
+		it->second->performInterpolation(timeSinceLastTick);
 	}
 	
-	for (int i=0; i<nrofsteps; i++)
+	for (int i=0; i<steps; i++)
 	{
 		PhysicsObjectMap::iterator it = mPhysicsObjects.begin();
 		for (; it != mPhysicsObjects.end(); ++it)
@@ -210,8 +207,6 @@ void PhysicsManager::move(quantity<si::time, f32> timeSinceLastFrame)
 
 		if (i % 3 == 0)
 			dJointGroupEmpty (mCollisionJointsID);
-		
-		timeLeft -= mSimulationStepSize;
 	}
 
 	it = mPhysicsObjects.begin();
@@ -221,8 +216,6 @@ void PhysicsManager::move(quantity<si::time, f32> timeSinceLastFrame)
 		it->second->sendDeltas();
 		//it->second->sendFullSync();
 	}
-	
-	
 }
 
 void PhysicsManager::addObject(GameHandle handle,
@@ -230,94 +223,6 @@ void PhysicsManager::addObject(GameHandle handle,
 {
 	mPhysicsObjects[handle] = object;
 }
-
-
-#if 0
-void PhysicsManager::createPhysicalObject(GameHandle handle,
-										  ID::CollisionGeometry geomType, 
-									      CollisionTypeData dat, 
-									      ID::CollisionType colType,
-									      bool collidable,
-									      bool simulated)
-{
-	// geometry will be created depending on geomType
-	dGeomID odeGeometry;
-
-	switch (geomType)
-	{
-	case ID::CG_Sphere:
-		{
-			float radius = boost::get<float>(dat);
-			odeGeometry = dCreateSphere(mHashSpaceID, radius);
-			break;
-		}
-	case ID::CG_Box:
-		{
-			v3 BoxSideLength = boost::get<v3>(dat);
-			odeGeometry = dCreateBox(mHashSpaceID, BoxSideLength.x, BoxSideLength.y, BoxSideLength.z);
-			break;
-		}
-	case ID::CG_CappedCylinder:
-		{
-			//radius and length of cylinder
-			std::pair<float, float> CylinderData = boost::get<std::pair<float, float> >(dat);
-			odeGeometry = dCreateCCylinder(mHashSpaceID, CylinderData.first, CylinderData.second);
-			break;
-		}
-	case ID::CG_Plane:
-		{
-			assert(! "createPhysicalObject(): Implement case for ID::CG_Plane");
-			break;
-		}
-	case ID::CG_TriMesh:
-		{
-			std::string meshName = boost::get<std::string>(dat);
-			boost::shared_ptr<OdeTriMesh> odeTriMesh = View::RenderInterface::Instance()->createOdeTriMesh(meshName);
-
-			if (!odeTriMesh)
-			{
-				std::stringstream stringstr;
-				stringstr << "Create odeTriMesh failed for " << meshName << "!";
-				throw std::logic_error(stringstr.str());
-			}
-
-			odeGeometry = dCreateTriMesh(
-				mHashSpaceID,
-				odeTriMesh->getTriMesh(),
-				NULL, 
-				NULL,
-				NULL
-			);
-			break;
-		}
-	}
-
-	if (!odeGeometry)
-	{
-		std::stringstream stringstr;
-		stringstr << "Create ode geometry failed for " << handle << "!";
-		throw std::logic_error(stringstr.str());
-	}
-
-	dBodyID odeBody = dBodyCreate(mWorldID);
-
-	if (!odeBody)
-	{
-		std::stringstream stringstr;
-		stringstr << "Create ode body failed for " << handle << "!";
-		throw std::logic_error(stringstr.str());
-	}
-
-	PhysicsObject* object = new PhysicsObject(handle, odeGeometry, odeBody, colType);
-	mPhysicsObjects.insert(handle, object);
-	
-	if (collidable) object->enableCollision();
-	else            object->disableCollision();
-		
-	if (simulated)  object->enableSimulation();
-	else            object->disableSimulation();
-}
-#endif
 
 void PhysicsManager::onNearCollision(dGeomID geo1, dGeomID geo2)
 {
@@ -366,35 +271,38 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 		geo1,
 		geo2,
 		mMaxContactsPerCollision,
-		&contact[0].geom,
-		sizeof(dContact)
+		&contact[0].geom,            // Array Ptr
+		sizeof(dContact)             // Skip length
 	);
 	
 	if (collisions == 0)
 		return;
 
-	dBodyID b1 = dGeomGetBody(geo1);
-	dBodyID b2 = dGeomGetBody(geo2);
+	dBodyID body1 = dGeomGetBody(geo1);
+	dBodyID body2 = dGeomGetBody(geo2);
 
 	GameHandle moduleHandle1 = *reinterpret_cast<GameHandle*>(dGeomGetData(geo1));
 	GameHandle moduleHandle2 = *reinterpret_cast<GameHandle*>(dGeomGetData(geo2));
 
-	boost::shared_ptr<PhysicsObject> po1 = searchMovObj(moduleHandle1);
-	boost::shared_ptr<PhysicsObject> po2 = searchMovObj(moduleHandle2);
+	assert(moduleHandle1 && moduleHandle2);
+	
+	boost::shared_ptr<PhysicsObject> po1 = findObject(moduleHandle1);
+	boost::shared_ptr<PhysicsObject> po2 = findObject(moduleHandle2);
 	
 	if (po1->getCollisionMode(moduleHandle1) == ID::CM_Ghost &&
 	    po2->getCollisionMode(moduleHandle2) == ID::CM_Standard)
 	{
 		// Causes contact joints to be ignored. No effect for body TWO.
-		b2 = NULL;
+		body2 = NULL;
 	}
 	else if (po2->getCollisionMode(moduleHandle2) == ID::CM_Ghost &&
 	         po1->getCollisionMode(moduleHandle1) == ID::CM_Standard)
 	{
 		// Causes contact joints to be ignored. No effect for body ONE.
-		b1 = NULL;
+		body1 = NULL;
 	}
 
+	// This will apply forces to both bodies at the next world step.
 	for (int i=0; i<collisions; ++i) 
 	{
 		dJointID c = dJointCreateContact
@@ -404,7 +312,7 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 			contact+i
 		);
 
-		dJointAttach (c,b1,b2);
+		dJointAttach(c, body1, body2);
 	}
 
 	float totalPenetrationDepth = 0;
@@ -412,90 +320,40 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 	for (int i=0; i<collisions; ++i)
 		totalPenetrationDepth += contact[i].geom.depth;
 
-	assert(moduleHandle1 && moduleHandle2);
-
 	// If these pointers are valid, then a contact joint was attached and
-	// an effect will be issued, therefore we can safely send a PE_CONTACT.
-	if (b1)
-	{
-		//! Hack: Abusing Sender-ID as additional payload!
-		emit<GameObjectEvent>
-		(
-			ID::PE_CONTACT,
-			totalPenetrationDepth,
-			moduleHandle1,
-			moduleHandle2
-		);
-	}
-	if (b2)
-	{
-		//! Hack: Abusing Sender-ID as additional payload!
-		emit<GameObjectEvent>
-		(
-			ID::PE_CONTACT,
-			totalPenetrationDepth,
-			moduleHandle2,
-			moduleHandle1
-		);
-	}
+	// an effect will be issued, therefore we can safely send a notification.
+	if (body1)
+		po1->notifyAboutCollision(moduleHandle1, moduleHandle2, totalPenetrationDepth);
+	
+	if (body2)
+		po2->notifyAboutCollision(moduleHandle2, moduleHandle1, totalPenetrationDepth);
 }
 
 void PhysicsManager::registerEvents()
 {
-	mPhysicsEvents.push_back(ID::PE_STEP);
-	mPhysicsEvents.push_back(ID::PE_CLEAR);
-	mPhysicsEvents.push_back(ID::PE_CREATE_OBJECT);
-	mPhysicsEvents.push_back(ID::PE_DELETE_OBJECT);
-	mPhysicsEvents.push_back(ID::PE_ATTACH_MODULE);
-	mPhysicsEvents.push_back(ID::PE_REMOVE_MODULE);
-
-	BOOST_FOREACH(ID::PhysicsAction action, mPhysicsEvents)
-	{
-		loop()->connect(action, this, &PhysicsManager::eventHandler);
-	}
+	mLane.connectLoop(this, &PhysicsManager::move);
+	mLane.connect(ID::PE_ATTACH_MODULE, this, &PhysicsManager::onAttachModule);
+	mLane.connectV(ID::PE_CLEAR, this, &PhysicsManager::clear);
+	mLane.connect(ID::PE_CREATE_OBJECT, this, &PhysicsManager::onCreateObject);
+	mLane.connect(ID::PE_DELETE_OBJECT, this, &PhysicsManager::onDeleteObject);
+	mLane.connect(ID::PE_REMOVE_MODULE, this, &PhysicsManager::onRemoveModule);
+	mLane.connect(ID::VE_DELIVER_MESH, this, &PhysicsManager::onMeshDelivery);
+	mLane.connect(ID::PE_ATTACH_OBJECT, this, &PhysicsManager::onAttachObject);
+    mLane.connect(ID::PE_DETACH_OBJECT, this, &PhysicsManager::onDetachObject);
 }
 
-void PhysicsManager::unregisterEvents()
+void PhysicsManager::onMeshDelivery(const NamedMesh& namedMesh)
 {
-	BOOST_FOREACH(ID::PhysicsAction action, mPhysicsEvents)
+	if (mPhysicsObjects.empty())
+		return;
+
+	PhysicsObjectMap::iterator it = mPhysicsObjects.begin();
+
+	it->second->onMeshDelivery(namedMesh);
+
+	for (; it != mPhysicsObjects.end(); ++it)
 	{
-		loop()->disconnect(action, this);
-	}
-
-	mPhysicsEvents.clear();
-}
-
-void PhysicsManager::eventHandler(Physics::Event* e)
-{
-	switch (e->id())
-	{
-	case ID::PE_STEP:
-		move(boost::get<f32>(e->data()) * si::seconds);
-		break;
-
-	case ID::PE_CLEAR:
-		clear();
-		break;
-		
-	case ID::PE_CREATE_OBJECT:
-		onCreateObject(boost::get<const ObjectCreationParams&>(e->data()));
-		break;
-
-	case ID::PE_DELETE_OBJECT:
-		onDeleteObject(boost::get<GameHandle>(e->data()));
-		break;
-
-	case ID::PE_ATTACH_MODULE:
-		onAttachModule(boost::get<const ModuleCreationParams&>(e->data()));
-		break;
-
-	case ID::PE_REMOVE_MODULE:
-		onRemoveModule(boost::get<const ModuleRemovalParams&>(e->data()));
-		break;
-
-	default:
-		throw std::logic_error
-			("PhysicsManager::eventHandler: Received unknown event!");
+		it->second->createPendingModules();
 	}
 }
 
@@ -508,7 +366,7 @@ void PhysicsManager::onCreateObject(const ObjectCreationParams& ocp)
 	(
 		new PhysicsObject
 		(
-			loop(),
+			mLane,
 			getWorldID(),
 			getSpaceID(),
 			location
@@ -527,56 +385,50 @@ void PhysicsManager::onDeleteObject(GameHandle handle)
 
 void PhysicsManager::onAttachModule(const ModuleCreationParams& mcp)
 {
-	GameHandle poHandle = mcp.get<0>();
-
-	PhysicsObjectMap::const_iterator it = mPhysicsObjects.find(poHandle);
+	PhysicsObjectMap::const_iterator it = mPhysicsObjects.find(mcp.mGoHandle);
 	if (it == mPhysicsObjects.end())
 	{
 		std::stringstream ss;
-		ss << "PhysicsObject " << poHandle << " not registered in Manager!";
+		ss << "PhysicsObject " << mcp.mGoHandle << " not registered in Manager!";
 		throw std::logic_error(ss.str());
 	}
 	
 	boost::shared_ptr<PhysicsObject> po = it->second;
-
-	po->addModule
-	(
-		mcp.get<1>(),
-		mcp.get<2>(),
-		mcp.get<3>(),
-		mcp.get<4>(),
-		mcp.get<5>(),
-		mcp.get<6>()
-	);
-	po->sendFullSync();
+	po->addModule(mcp);
 }
+
+void PhysicsManager::onAttachObject(const ObjectAttachmentParams& oap)
+{
+	boost::shared_ptr<PhysicsObject> parentObject(findObject(oap.get<0>()));
+	boost::shared_ptr<PhysicsObject> childObject(findObject(oap.get<1>()));
+	parentObject->attachObject(childObject, oap.get<2>(), oap.get<3>());
+}
+
+void PhysicsManager::onDetachObject(const ObjectAttachmentParams& oap)
+{
+	boost::shared_ptr<PhysicsObject> parentObject(findObject(oap.get<0>()));
+	boost::shared_ptr<PhysicsObject> childObject(findObject(oap.get<1>()));
+
+	parentObject->detachObject(childObject, oap.get<2>(), oap.get<3>());
+}
+
+boost::shared_ptr<PhysicsObject> PhysicsManager::findObject(GameHandle objectHandle) const
+{
+	PhysicsObjectMap::const_iterator it = mPhysicsObjects.find(objectHandle);
+	if (it == mPhysicsObjects.end())
+	{
+		std::stringstream ss;
+		ss << "PhysicsObject " << objectHandle << " not registered in Manager!";
+		throw std::logic_error(ss.str());
+	}
+
+	return it->second;
+}
+
 
 void PhysicsManager::onRemoveModule(const ModuleRemovalParams& mcp)
 {
 	warnlog << "STUB: PhysicsManager::onRemoveModule(const ModuleRemovalParams& mcp)";
-}
-
-boost::shared_ptr<PhysicsObject>
-PhysicsManager::searchMovObj(GameHandle handle) const
-{
-	boost::shared_ptr<PhysicsObject> result;
-	BOOST_FOREACH(const PhysicsObjectMap::value_type& vt, mPhysicsObjects)
-	{
-		if (vt.second->hasModule(handle))
-		{
-			result = vt.second;
-			break;
-		}
-	}
-
-	if (! result)
-	{
-		std::stringstream ss;
-		ss << "PhysicsObject " << handle << " not registered in Manager!";
-		throw std::logic_error(ss.str());
-	}
-
-	return result;
 }
 
 } // namespace Physics

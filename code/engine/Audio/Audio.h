@@ -27,6 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_AUDIO_AUDIO_H
 #define BFG_AUDIO_AUDIO_H
 
+#include <Audio/Enums.hh>
 #include <Audio/Main.h>
 
 #endif

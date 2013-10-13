@@ -36,7 +36,7 @@ namespace BFG {
 namespace Property {
 
 Concept::Concept(GameObject& Owner, ConceptId pc, PluginId pid) :
-Emitter(Owner.loop()),
+mSubLane(Owner.subLane()),
 mSelf(pc),
 mPluginId(pid),
 mOwner(Owner)
@@ -75,40 +75,11 @@ void Concept::synchronize()
 	this->internalSynchronize();
 }
 
-void Concept::onEvent(EventIdT action,
-                      Value payload,
-                      GameHandle module,
-                      GameHandle sender)
-{
-	this->internalOnEvent(action, payload, module, sender);
-}
-
 void Concept::internalUpdate(quantity<si::time, f32> /*timeSinceLastFrame*/)
-{
-}
+{}
 
 void Concept::internalSynchronize()
-{
-}
-
-void Concept::internalOnEvent(EventIdT,
-                              Value /*payload*/,
-                              GameHandle /*module*/,
-                              GameHandle /*sender*/)
-{
-}
-
-void Concept::requestEvent(EventIdT action)
-{
-	boost::shared_ptr<Concept> This(this, null_deleter());
-	mOwner.registerNeedForEvent(This, action);
-}
-
-void Concept::stopDelivery(EventIdT action)
-{
-	boost::shared_ptr<Concept> This(this, null_deleter());
-	mOwner.unregisterNeedForEvent(This, action);
-}
+{}
 
 void Concept::require(ConceptId pc) const
 {
@@ -120,7 +91,7 @@ void Concept::require(ConceptId pc) const
 	mOwner.setRequirement(mSelf, pc);
 }
 
-void Concept::initvar(ValueId::VarIdT id)
+void Concept::requiredPvInitialized(ValueId::VarIdT id)
 {
 	mRequiredInitvars.push_back(id);	
 }
@@ -140,6 +111,11 @@ GameHandle Concept::ownerHandle() const
 GameObject& Concept::owner() const
 {
 	return mOwner;
+}
+
+Event::SubLanePtr Concept::subLane() const
+{
+	return mSubLane;
 }
 
 const boost::shared_ptr<Environment> Concept::environment() const

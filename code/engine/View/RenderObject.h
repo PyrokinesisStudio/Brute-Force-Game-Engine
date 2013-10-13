@@ -26,7 +26,19 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef __RENDER_OBJECT__
 #define __RENDER_OBJECT__
 
-#include <View/Event_fwd.h>
+#include <Core/GameHandle.h>
+#include <Core/qv4.h>
+#include <Core/v3.h>
+
+#include <Event/Event.h>
+
+#include <View/Defs.h>
+
+namespace Ogre{
+	class MovableObject;
+	class SceneNode;
+	class Entity;
+}
 
 namespace BFG {
 namespace View {
@@ -34,17 +46,17 @@ namespace View {
 class VIEW_API RenderObject
 {
 public:
-	RenderObject(GameHandle parent,
+	RenderObject(Event::Lane& lane,
+	             GameHandle parent,
 	             GameHandle handle,
 	             const std::string& meshName,
 	             const v3& position = v3::ZERO,
-	             const qv4& orientation = qv4::IDENTITY);
+	             const qv4& orientation = qv4::IDENTITY,
+				 bool visible = true);
 
 	~RenderObject();
 
 private:
-	void viewEventHandler(Event* VE);
-
 	void updatePosition(const v3& position);
 	void updateOrientation(const qv4& orientation);
 
@@ -59,6 +71,7 @@ private:
 	void onDetachObject();
 	void removeChildNode(const std::string& name);
 
+	Event::SubLanePtr mSubLane;
 	// To identify object in the render-engine.
 	GameHandle mHandle;
 

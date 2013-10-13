@@ -35,10 +35,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/units/systems/si/time.hpp>
 #include <boost/units/quantity.hpp>
 
-#include <EventSystem/Emitter.h>
 #include <Core/Types.h>
 
-#include <Model/Events/SectorEvent_fwd.h>
+#include <Event/Event.h>
+
+#include <Model/Data/ObjectParameters.h>
 #include <Model/Managed.h>
 
 using namespace boost::units;
@@ -53,13 +54,12 @@ class GameObjectFactory;
 class GameObject;
 
 //! Dynamic creation and destruction observer
-class MODEL_API Sector : public Managed,
-                         Emitter
+class MODEL_API Sector : public Managed
 {
 public:
 	typedef std::map<GameHandle, boost::shared_ptr<Managed> > ObjectMapT;
 
-	Sector(EventLoop* loop,
+	Sector(Event::Lane& lane,
 	       GameHandle handle,
 	       const std::string& name,
 	       boost::shared_ptr<GameObjectFactory> gof);
@@ -80,9 +80,10 @@ private:
 
 	void deleteMarkedObjectsForRemoval();
 
-	void onCreateObject(SectorEvent* goe);
-	void onDestroyObject(SectorEvent* goe);
+	void onCreateObject(const ObjectParameter& op);
+	void onDestroyObject(GameHandle handle);
 
+	Event::SubLanePtr mSubLane;
 	ObjectMapT                                   mObjectMap;
 	std::vector<GameHandle>                      mToRemove;
 	boost::shared_ptr<GameObjectFactory> mGameObjectFactory;

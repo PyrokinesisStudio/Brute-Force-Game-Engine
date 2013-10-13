@@ -29,6 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/variant.hpp>
 
+#include <Base/LibraryMainBase.h>
 #include <Base/Logger.h>
 #include <Base/Cpp.h>
 #include <Base/Pause.h>
@@ -38,18 +39,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/GameHandle.h>
 #include <Core/Enums.hh>
 
-#include <EventSystem/Core/EventLoop.h>
-#include <EventSystem/Core/EventManager.h>
-#include <EventSystem/Emitter.h>
-#include <EventSystem/EventFactory.h>
-
-#include <Controller/ControllerImpl.h>
 #include <Controller/Controller.h>
-#include <Controller/Enums.hh>
-#include <Controller/EventDumper.h>
-#include <Controller/OISUtils.h>
+#include <Event/Event.h>
 
+#ifdef BFG_USE_NETWORK
 #include <Network/Network.h>
+#endif
 
 #include <View/WindowAttributes.h>
 
@@ -99,24 +94,19 @@ struct Config
 
 Config g_Config;
 
-struct EventNetter : BFG::Emitter
+#ifdef BFG_USE_NETWORK
+struct EventNetter
 {
-	EventNetter(EventLoop* loop) :
-	Emitter(loop)
+	EventNetter(Event::Lane& eventLane)
 	{
 		for (size_t i=ID::A_FIRST_CONTROLLER_ACTION + 1; i<ID::A_LAST_CONTROLLER_ACTION; ++i)
 		{
-			loop->connect(i, this, &EventNetter::eventHandler);
+			eventLane.connect(i, this, &EventNetter::eventHandler);
 		}
 	}
 
 	~EventNetter()
-	{
-		for (size_t i=ID::A_FIRST_CONTROLLER_ACTION + 1; i<ID::A_LAST_CONTROLLER_ACTION; ++i)
-		{
-			this->loop()->disconnect(i, this);
-		}
-	}
+	{}
 	
 	void eventHandler(Controller_::VipEvent* e)
 	{
@@ -130,18 +120,16 @@ struct EventNetter : BFG::Emitter
 	}
 };
 
-struct NetEventer : BFG::Emitter
+struct NetEventer
 {
-	NetEventer(EventLoop* loop) :
-	Emitter(loop)
+	NetEventer(Event::Lane& eventLane) :
+	Emitter(eventLane)
 	{
-		loop->connect(BFG::ID::NE_RECEIVED, this, &NetEventer::eventHandler);
+		eventLane.connect(BFG::ID::NE_RECEIVED, this, &NetEventer::eventHandler);
 	}
 
 	~NetEventer()
-	{
-		loop()->disconnect(BFG::ID::NE_RECEIVED, this);
-	}
+	{}
 
 	void eventHandler(BFG::Network::DataPacketEvent* npe)
 	{
@@ -157,149 +145,7 @@ struct NetEventer : BFG::Emitter
 		emit<Controller_::VipEvent>(payload.mAppEventId, vp);
 	}
 };
-
-template <typename TestProgramPolicy>
-static void startTestProgram(TestProgramPolicy& TPP)
-{
-	using namespace boost::posix_time;
-	using namespace Controller_;
-	
-	const Config& c = g_Config;
-
-	Emitter emitter(TPP.eventLoop());
-
-	try
-	{
-		boost::shared_ptr<EventNetter> en;
-		boost::shared_ptr<NetEventer> ne;
-		
-		if (c.NetworkTest)
-		{
-			if (c.IsServer)
-			{
-				dbglog << "Emitting ID::NE_LISTEN";
-				emitter.emit<BFG::Network::ControlEvent>(BFG::ID::NE_LISTEN, static_cast<u16>(c.Port));
-
-				ne.reset(new NetEventer(emitter.loop()));
-			}
-			else
-			{
-				std::stringstream ss;
-				ss << c.Port;
-				CharArray128T port = stringToArray<128>(ss.str());
-				CharArray128T ip = stringToArray<128>(c.Ip.c_str());
-				
-				dbglog << "Emitting ID::NE_CONNECT";
-				emitter.emit<Network::ControlEvent>(BFG::ID::NE_CONNECT, boost::make_tuple(ip, port));
-				
-				en.reset(new EventNetter(emitter.loop()));
-			}
-			
-		}
-		
-		
-		infolog << "Creating input window";
-
-#if defined(_WIN32)
-		g_win = createInputGrabbingWindow();
-		size_t win = reinterpret_cast<size_t>(g_win);
-#elif defined (linux) || defined (__linux)
-		createInputGrabbingWindow();
-		size_t win = static_cast<size_t>(w);
-#else
-#error Implement this platform.
 #endif
-
-		boost::shared_ptr<OIS::InputManager> IM
-		(
-			Utils::CreateInputManager(win, true),
-			&Utils::DestroyInputManager
-		);
-
-		Controller aController(TPP.eventLoop());
-		aController.init(c.Frequency);
-
-		ActionMapT actions;
-		fillWithDefaultActions(actions);
-		sendActionsToController(emitter.loop(), actions);
-
-		// Load all states
-		Path path;
-
-		std::vector<GameHandle> state_handles;
-
-		Config::StateContainer::const_iterator it = c.States.begin();
-		for (; it != c.States.end(); ++it)
-		{
-			GameHandle handle = generateHandle();
-			state_handles.push_back(handle);
-		
-			const std::string config_path = path.Expand(it->second);
-			const std::string state_name = it->first;
-			
-			BFG::View::WindowAttributes wa;
-			wa.mWidth = wa.mHeight = 50;
-			wa.mHandle = win;
-			StateInsertion si(config_path, state_name, handle, false, wa);
-
-			emitter.emit<ControlEvent>(ID::CE_LOAD_STATE, si);
-		}
-
-		infolog << "All states activated.";
-
-		ptime timestamp(microsec_clock::local_time());
-
-		const float TEST_TIME = 10;
-
-		size_t loopCounter  = 0;
-		size_t stateCounter = 0;
-
-		while (TPP.RunCondition())
-		{
-			updateInputGrabbingWindow();
-		
-			time_period aPeriod(timestamp, microsec_clock::local_time());
-			
-			++loopCounter;
-
-			aController.nextTick();
-
-			// When time is up, switch to next state and zero counters
-			if (aPeriod.length().total_microseconds() > 1000000 * TEST_TIME)
-			{
-				infolog << "\n--- Loops per second (average):    "
-				         << loopCounter / TEST_TIME << "\n\n\n";
-
-				infolog << "Loop is running for "
-				        << TEST_TIME << " sec...\n\n\n";
-
-				GameHandle previousState = state_handles[stateCounter];
-
-				++stateCounter;
-				if (stateCounter == c.States.size())
-					stateCounter = 0;				
-
-				GameHandle nextState = state_handles[stateCounter];
-
-				emitter.emit<ControlEvent>(ID::CE_DEACTIVATE_STATE, previousState);
-				emitter.emit<ControlEvent>(ID::CE_ACTIVATE_STATE, nextState);
-
-				std::string Name = boost::next(c.States.begin(), stateCounter)->first;
-				infolog << "Now active: " << Name;
-
-				loopCounter = 0;
-				timestamp = microsec_clock::local_time();
-			}
-
-			TPP.AtLoopEnd();
-		}
-		destroyInputGrabbingWindow();
-	}
-	catch (std::exception& ex)
-	{
-		errlog << "Exception: " << ex.what();
-	}
-}
 
 static bool falseIn30Seconds()
 {
@@ -309,85 +155,134 @@ static bool falseIn30Seconds()
 	return period.length().total_seconds() < 30;
 }
 
-class EventSystemTestPolicy
+struct Main : Base::LibraryMainBase<Event::Lane>
 {
-public:
-	EventSystemTestPolicy(EventLoop* Loop) :
-		m_Loop(Loop)
+	Main() :
+	mEventLane(NULL),
+	mStateCounter(0),
+	mLoopCounter(0)
 	{}
-
-	bool RunCondition()
+	
+	void main(Event::Lane* eventLane)
 	{
-		if (g_Config.ResourceDestructionTest)
-			return falseIn30Seconds();
-
-		return !m_Loop->shouldExit();
-	}
-
-	EventLoop* eventLoop() const
-	{
-		return m_Loop;
-	}
-
-	void AtLoopEnd()
-	{
-		m_Loop->doLoop();
+		std::cout << "Main::main" << std::endl;
+		mEventLane = eventLane;
+		eventLane->connectLoop(this, &Main::loopEventHandler);
+		eventLane->connect(ID::A_KEY_PRESSED, this, &Main::onButtonPress);
+		startTestProgram();
+		std::cout << "End Main" << std::endl;
 	}
 	
-private:
-	EventLoop* m_Loop;
-};
-
-static void * EventLoopEntryPoint(void * iPointer)
-{
-	EventLoop * iLoop = reinterpret_cast<EventLoop*> (iPointer);
-	if (iLoop)
+	void stop()
 	{
-		EventSystemTestPolicy estp(iLoop);
-		startTestProgram(estp);
-		iLoop->setExitFlag();
-		iLoop->doLoop();
+		destroyInputGrabbingWindow();
 	}
-	return 0;
-}
-
-static void * EventLoopOutputEP(void * iPointer)
-{
-	EventLoop * iLoop = reinterpret_cast<EventLoop*> (iPointer);
-	if (iLoop)
+	
+	void onButtonPress(s32 value)
 	{
-		dbglog << "Output Thread Running";
-		Controller_::EventDumper* iDump = new Controller_::EventDumper();
+		std::cout << "Main::onButtonPress(" << value << ")" << std::endl;
+	}
+	
+	void startTestProgram()
+	{
+		std::cout << "startTestProgram" << std::endl;
+		using namespace boost::posix_time;
+		using namespace Controller_;
 		
-		int first = ID::A_FIRST_CONTROLLER_ACTION + 1;
-		int last = ID::A_LAST_CONTROLLER_ACTION;
-		
-		for (int i = first; i < last; ++i)
+		try
 		{
-			iLoop->connect
-			(
-				i,
-				iDump,
-				static_cast
-				<
-					void(Controller_::EventDumper::*)(Controller_::VipEvent*)
-				>
-				(
-					&Controller_::EventDumper::Dump
-				)
-			);
+			infolog << "Creating input window";
+
+	#if defined(_WIN32)
+			g_win = createInputGrabbingWindow();
+			size_t win = reinterpret_cast<size_t>(g_win);
+	#elif defined (linux) || defined (__linux)
+			createInputGrabbingWindow();
+			size_t win = static_cast<size_t>(w);
+	#else
+	#error Implement this platform.
+	#endif
+
+			ActionMapT actions;
+			fillWithDefaultActions(actions);
+			sendActionsToController(*mEventLane, actions);
+
+			// Load all states
+			Path path;
+
+			Config::StateContainer::const_iterator it = g_Config.States.begin();
+			for (; it != g_Config.States.end(); ++it)
+			{
+				GameHandle handle = generateHandle();
+				mStateHandles.push_back(handle);
+			
+				const std::string config_path = path.Expand(it->second);
+				const std::string state_name = it->first;
+				
+				BFG::View::WindowAttributes wa;
+				wa.mWidth = wa.mHeight = 50;
+				wa.mHandle = win;
+				StateInsertion si(config_path, state_name, handle, false, wa);
+
+				mEventLane->emit(ID::CE_LOAD_STATE, si);
+			}
+
+			infolog << "All states activated.";
+
+		}
+		catch (std::exception& ex)
+		{
+			errlog << "Exception: " << ex.what();
 		}
 	}
-	return 0;
-}
 
-class EventLoopScheduler
-{
-public:
-	void DoTick(LoopEvent * /*event*/)
+	void loopEventHandler(Event::TickData)
 	{
-		boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+		using namespace boost::posix_time;
+		using namespace Controller_;
+		
+		static ptime timestamp(microsec_clock::local_time());
+
+		static const float TEST_TIME = 10;
+
+		updateInputGrabbingWindow();
+	
+		time_period aPeriod(timestamp, microsec_clock::local_time());
+		
+		++mLoopCounter;
+
+		// When time is up, switch to next state and zero counters
+		if (aPeriod.length().total_microseconds() > 1000000 * TEST_TIME)
+		{
+			infolog << "\n--- Loops per second (average):    "
+			         << mLoopCounter / TEST_TIME << "\n\n\n";
+
+			infolog << "Loop is running for "
+			        << TEST_TIME << " seconds ...\n\n\n";
+
+			GameHandle previousState = mStateHandles[mStateCounter];
+
+			++mStateCounter;
+			if (mStateCounter == mStateHandles.size())
+				mStateCounter = 0;
+
+			GameHandle nextState = mStateHandles[mStateCounter];
+
+			mEventLane->emit(ID::CE_DEACTIVATE_STATE, previousState);
+			mEventLane->emit(ID::CE_ACTIVATE_STATE, nextState);
+
+			std::string Name = boost::next(g_Config.States.begin(), mStateCounter)->first;
+			infolog << "Now active: " << Name;
+
+			mLoopCounter = 0;
+			timestamp = microsec_clock::local_time();
+		}
 	}
+	
+	std::vector<GameHandle> mStateHandles;
+	Event::Lane* mEventLane;
+	size_t mStateCounter;
+	size_t mLoopCounter;
 };
 
 bool isYes(char c)
@@ -477,45 +372,47 @@ void ConfigurateByQuestions(Config& c)
 	             "* Press <Enter> to use the default value in brackets.\n"
 	             "\n\n";
 
-	Ask("Controller frequency", c.Frequency, DEFAULT_FREQUENCY,
+	Ask("Controller frequency", g_Config.Frequency, DEFAULT_FREQUENCY,
 	    "Determines how often per second the Controller captures input"
 	    " from its devices.");
 
-	Ask("Do network test?", c.NetworkTest, 'n',
+#ifdef BFG_USE_NETWORK
+	Ask("Do network test?", g_Config.NetworkTest, 'n',
 		"TODO: Write description.");
 
-	if (c.NetworkTest)
+	if (g_Config.NetworkTest)
 	{
-		Ask("Server?", c.IsServer, 'n',
+		Ask("Server?", g_Config.IsServer, 'n',
 			"Saying \"yes\" here will start a server, \"no\" means client.");
 
-		if (! c.IsServer)
+		if (! g_Config.IsServer)
 		{
-			Ask("Ip?", c.Ip, "127.0.0.1",
+			Ask("Ip?", g_Config.Ip, "127.0.0.1",
 				"Destination IP.");
 		}
 
-		Ask("Port?", c.Port, 1337,
+		Ask("Port?", g_Config.Port, 1337,
 			"This is the port the client will connect to, "
 			"or the server will listening on.");
 	}
+#endif
 
-	Ask("Use multi-threading?", c.Multithreaded, 'n',
+	Ask("Use multi-threading?", g_Config.Multithreaded, 'n',
 	    "If the EventSystem will use multiple threads or not.");
 
-	Ask("Perform resource destruction test?", c.ResourceDestructionTest, 'n',
+	Ask("Perform resource destruction test?", g_Config.ResourceDestructionTest, 'n',
 	    "If you choose yes, the application will destroy itself after 30"
 	    " seconds. This can be used to check if resources allocated by the"
 	    " controller get free'd or not.");
 
 #if 0
-	Ask("Perform stress test? (not yet implemented)", c.StressTest, 'n',
+	Ask("Perform stress test? (not yet implemented)", g_Config.StressTest, 'n',
 		"If you choose yes, an automatic stress test will be run in order"
 		" to find memory leaks and performance issues. User input gets"
 	    " deactivated and random input will be thrown at the controller.");
 #endif
 
-	Ask("Use default state?", c.DefaultState, 'y',
+	Ask("Use default state?", g_Config.DefaultState, 'y',
 		"If you choose yes, the state \"Console\" will be used,"
 	    " assuming that it exists. If you decide otherwise (n), you'll be"
 	    " asked to type a list of states you'd like to use. As of this writing"
@@ -524,20 +421,20 @@ void ConfigurateByQuestions(Config& c)
 		" use non-existing states. Identifiers are case-sensitive. Confirm"
 		" with <ENTER> when your list is complete.");
 
-	if (! c.DefaultState)
-		AskStates(c.States);
+	if (! g_Config.DefaultState)
+		AskStates(g_Config.States);
 
-	if (c.States.empty())
-		c.States["Console"] = "Console.xml";	
+	if (g_Config.States.empty())
+		g_Config.States["Console"] = "Console.xml";	
 }
 
 void startSingleThreaded()
 {
-	Base::CEntryPoint ep1(EventLoopOutputEP);
-	Base::CEntryPoint ep2(EventLoopEntryPoint);
-
-	EventLoop testLoop(false);
+	Event::Synchronizer sync;
+	Event::Lane controllerLane(sync, 100);
 	
+	
+#ifdef BFG_USE_NETWORK
 	boost::scoped_ptr<BFG::Network::Main> networkMain;
 
 	if (g_Config.NetworkTest)
@@ -555,22 +452,24 @@ void startSingleThreaded()
 		
 		testLoop.addEntryPoint(networkMain->entryPoint());
 	}
-	
-	testLoop.addEntryPoint(&ep1);
-	testLoop.addEntryPoint(&ep2);
+#endif
 
-	testLoop.run();
+	sync.finish();
 }
 
 void startMultiThreaded()
 {
-	EventLoop testLoop
-	(
-		false,
-		new EventSystem::BoostThread<>("Test Function"),
-		new EventSystem::InterThreadCommunication()
-	);
+	u32 frequency = 100;
+	Event::Synchronizer sync;
+	Event::Lane controllerLane(sync, frequency);
 	
+	controllerLane.addEntry<Controller_::Main>();
+	controllerLane.addEntry<Main>();
+	sync.start();
+	
+	boost::this_thread::sleep(boost::posix_time::seconds(35));
+	
+#ifdef BFG_USE_NETWORK
 	boost::scoped_ptr<BFG::Network::Main> networkMain;
 
 	if (g_Config.NetworkTest)
@@ -588,29 +487,9 @@ void startMultiThreaded()
 	}
 	
 	testLoop.addEntryPoint(networkMain->entryPoint());
-	testLoop.addEntryPoint(new Base::CEntryPoint(EventLoopEntryPoint));
-	testLoop.run();
+#endif
 
-	boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-
-	EventLoopScheduler iSleeper;
-
-	EventLoop testLoop2
-	(
-		true,
-		new EventSystem::BoostThread<>("EventDumper"),
-		new EventSystem::InterThreadCommunication()
-	);
-	testLoop2.addEntryPoint(new Base::CEntryPoint(EventLoopOutputEP));
-	testLoop2.registerLoopEventListener(&iSleeper, &EventLoopScheduler::DoTick);
-	testLoop2.run();
-
-	boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-
-	BFG::Base::pause();
-	testLoop.setExitFlag();
-	testLoop2.setExitFlag();
-	boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+	sync.finish();
 }
 
 int main(int, char**) try

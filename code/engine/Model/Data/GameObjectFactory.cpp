@@ -28,6 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/foreach.hpp>
 
+#include <Base/Logger.h>
 #include <Core/GameHandle.h>
 
 #include <Model/Adapter.h>
@@ -36,17 +37,19 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Module.h>
 #include <Model/Property/Concepts/Camera.h> // struct CameraParameter
 
-#include <Physics/Event.h>
-#include <View/Event.h>
+#include <Physics/Event_fwd.h>
+#include <View/Enums.hh>
+#include <View/CameraCreation.h>
+#include <View/ObjectCreation.h>
 
 namespace BFG {
 
-GameObjectFactory::GameObjectFactory(EventLoop* loop,
+GameObjectFactory::GameObjectFactory(Event::Lane& lane,
                                      const LevelConfig& files,
                                      const Property::PluginMapT& propertyPlugins,
                                      boost::shared_ptr<Environment> environment,
                                      GameHandle stateHandle) :
-Emitter(loop),
+mLane(lane),
 mPropertyPlugins(propertyPlugins),
 mEnvironment(environment),
 mAdapterParameters(files.mAdapters),
@@ -76,13 +79,13 @@ GameObjectFactory::createGameObject(const ObjectParameter& parameter)
 
 	// Create the PhysicsObject
 	Physics::ObjectCreationParams ocp(goHandle, parameter.mLocation);
-	emit<Physics::Event>(ID::PE_CREATE_OBJECT, ocp);
+	mLane.emit(ID::PE_CREATE_OBJECT, ocp);
 
 	// First Module is always root
 	bool isRoot = true;
 
 	boost::shared_ptr<GameObject> gameObject =
-		createEmptyGameObject(parameter.mName, goHandle);
+		createEmptyGameObject(parameter.mName, goHandle, parameter.mGoValues);
 
 	ModuleConfigT modules = mModuleParameters.requestConfig(parameter.mType);
 	if (!modules)
@@ -110,18 +113,23 @@ GameObjectFactory::createGameObject(const ObjectParameter& parameter)
 	mGoModules[parameter.mName] = moduleNameHandleMap;
 	mGameObjects[parameter.mName] = gameObject;
 
+	parameter.mStorage.call(mLane.createSubLane());
+
 	return gameObject;
 }
 
 boost::shared_ptr<GameObject>
-GameObjectFactory::createEmptyGameObject(const std::string& name, GameHandle goHandle)
+GameObjectFactory::createEmptyGameObject(const std::string& name,
+                                         GameHandle goHandle,
+                                         const Module::ValueStorageT& goValues)
 {
 	boost::shared_ptr<BFG::GameObject> go(
 		new GameObject
 		(
-			loop(),
+			mLane,
 			goHandle,
 			name,
+			goValues,
 			mPropertyPlugins,
 			mEnvironment
 		)
@@ -134,53 +142,57 @@ GameObjectFactory::createEmptyGameObject(const std::string& name, GameHandle goH
 boost::shared_ptr<Module>
 GameObjectFactory::createModule(const BFG::ObjectParameter& parameter, BFG::ModuleParametersT moduleParameter, bool isRoot, GameHandle goHandle)
 {
-	GameHandle moduleHandle;
+	Physics::ModuleCreationParams mcp;
 
 	// The root module and its owner GameObject must share the same GameHandle.
 	if (isRoot)
-		moduleHandle = goHandle;
+	{
+		mcp = Physics::ModuleCreationParams
+		(
+			goHandle,
+			goHandle,
+			moduleParameter->mMesh,
+			moduleParameter->mDensity,
+			moduleParameter->mCollision,
+			parameter.mLocation.position,
+			parameter.mLocation.orientation,
+			parameter.mLinearVelocity,
+			parameter.mAngularVelocity
+		);
+	}
 	else
-		moduleHandle = generateHandle();
+	{
+		mcp = Physics::ModuleCreationParams
+		(
+			goHandle,
+			generateHandle(),
+			moduleParameter->mMesh,
+			moduleParameter->mDensity,
+			moduleParameter->mCollision
+		);
+	}
 
 	bool isVirtual = moduleParameter->mMesh.empty();
 
 	if (!isVirtual)
 	{
-		// Physical representation			
-		Physics::ModuleCreationParams mcp
-		(
-			goHandle,
-			moduleHandle,
-			moduleParameter->mMesh,
-			moduleParameter->mCollision,
-			v3::ZERO,
-			qv4::IDENTITY,
-			moduleParameter->mDensity
-		);
-
-		emit<Physics::Event>(ID::PE_ATTACH_MODULE, mcp);
+		mLane.emit(ID::PE_ATTACH_MODULE, mcp);
 
 		// Visual representation
 		View::ObjectCreation oc
 		(
 			NULL_HANDLE,
-			moduleHandle,
+			mcp.mModuleHandle,
 			moduleParameter->mMesh,
-			v3::ZERO,
-			qv4::IDENTITY
+			parameter.mLocation.position,
+			parameter.mLocation.orientation
 		);
 
-		emit<View::Event>(ID::VE_CREATE_OBJECT, oc, mStateHandle);
+		mLane.emit(ID::VE_CREATE_OBJECT, oc, mStateHandle);
 		
-		if (isRoot)
-		{
-			emit<Physics::Event>(ID::PE_UPDATE_VELOCITY, parameter.mLinearVelocity, goHandle);
-			emit<Physics::Event>(ID::PE_UPDATE_ROTATION_VELOCITY, parameter.mAngularVelocity, goHandle);
-		}
-
 		if (!isRoot)
 		{
-			emit<View::Event>(ID::VE_ATTACH_OBJECT, moduleHandle, goHandle);
+			mLane.emit(ID::VE_ATTACH_OBJECT, mcp.mModuleHandle, goHandle);
 		}
 	}
 
@@ -190,7 +202,7 @@ GameObjectFactory::createModule(const BFG::ObjectParameter& parameter, BFG::Modu
 		throw std::runtime_error
 			("GameObjectFactory::createGameObject(): Missing concept specification for object type \"" + parameter.mType + "\".");
 
-	boost::shared_ptr<Module> module(new Module(moduleHandle));
+	boost::shared_ptr<Module> module(new Module(mcp.mModuleHandle));
 	addConceptsTo(module, conceptParameter);
 
 	return module;
@@ -292,23 +304,21 @@ GameObjectFactory::createCamera(const CameraParameter& cameraParameter,
 	GameHandle camHandle = generateHandle();
 
 	Physics::ObjectCreationParams ocp(camHandle, Location());
-	emit<Physics::Event>(ID::PE_CREATE_OBJECT, ocp);
+	mLane.emit(ID::PE_CREATE_OBJECT, ocp);
 
 	Physics::ModuleCreationParams mcp
 	(
 		camHandle,
 		camHandle,
 		"Cube.mesh",
-		ID::CM_Disabled,
-		v3::ZERO,
-		qv4::IDENTITY,
-		50.0f
+		50.0f,
+		ID::CM_Disabled
 	);
 
-	emit<Physics::Event>(ID::PE_ATTACH_MODULE, mcp);
+	mLane.emit(ID::PE_ATTACH_MODULE, mcp);
 
 	boost::shared_ptr<GameObject> camera =
-		createEmptyGameObject("Camera", camHandle);
+		createEmptyGameObject("Camera", camHandle, Module::ValueStorageT());
 
 	// Create Root Module
 	boost::shared_ptr<Module> camModule(new Module(camHandle));
@@ -321,8 +331,8 @@ GameObjectFactory::createCamera(const CameraParameter& cameraParameter,
 	camera->attachModule(camModule);
 
 	View::CameraCreation cc(camHandle, NULL_HANDLE, cameraParameter.mFullscreen, 0, 0);
-	emit<View::Event>(ID::VE_CREATE_CAMERA, cc, mStateHandle);
-	emit<GameObjectEvent>(ID::GOE_SET_CAMERA_TARGET, parentHandle, camHandle);
+	mLane.emit(ID::VE_CREATE_CAMERA, cc, mStateHandle);
+	mLane.emit(ID::GOE_SET_CAMERA_TARGET, parentHandle, camHandle);
 
 	return camera;
 }

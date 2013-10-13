@@ -27,7 +27,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdexcept>
 
-#include <OgreDefaultHardwareBufferManager.h>
 #include <OgreMeshManager.h>
 #include <OgreResourceGroupManager.h>
 #include <OgreRoot.h>
@@ -39,18 +38,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace BFG {
 namespace View {
-
-void initOgreForMeshLoading()
-{
-	Path p;
-	const std::string meshPath = p.Get(ID::P_GRAPHICS_MESHES);
-
-	// \Todo: remove this memory leak.
-	Ogre::Root* root = new Ogre::Root("", "", p.Get(ID::P_LOGS) + "OgreMeshLoad.log");
-	new Ogre::DefaultHardwareBufferManager();
-	Ogre::ResourceGroupManager::getSingleton().addResourceLocation(meshPath, "FileSystem");
-	Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();	
-}
 
 Mesh loadMesh(const std::string& meshName)
 {
@@ -67,15 +54,9 @@ Mesh loadMesh(const std::string& meshName)
 	const qv4 orientation = qv4::IDENTITY;
 
 	Ogre::MeshManager* mm = Ogre::MeshManager::getSingletonPtr();
+	assert(mm && "Ogre must be initialized");
 
-	if (! mm)
-	{
-		initOgreForMeshLoading();
-		mm = Ogre::MeshManager::getSingletonPtr();
-	}
-
-	OGRE_LOCK_MUTEX(mm->mutex);
-
+	//! \todo check for mesh existance.
 	Ogre::MeshPtr mesh = mm->load(meshName, "General");
 
 	// Calculate how many result.mVertices and result.mIndices we're going to need

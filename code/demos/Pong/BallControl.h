@@ -30,8 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Math.h>
 #include <Model/GameObject.h>
 #include <Model/Property/Concept.h>
-#include <View/Event.h>
-#include <Physics/Event.h>
+#include <Physics/Enums.hh>
 
 #include "Pong/PongDefinitions.h"
 
@@ -51,7 +50,7 @@ public:
 		if (getGoValue<bool>(ID::PV_Remote, ValueId::ENGINE_PLUGIN_ID))
 			return;
 
-		Location go = getGoValue<Location>(ID::PV_Location, ValueId::ENGINE_PLUGIN_ID);
+		v3 position = getGoValue<v3>(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
 		v3 newVelocity = getGoValue<v3>(ID::PV_Velocity, ValueId::ENGINE_PLUGIN_ID);
 
 		bool updateVelocity = false;
@@ -60,16 +59,16 @@ public:
 			return;
 
 		// Simulate a wall
-		if (std::abs(go.position.x) > DISTANCE_TO_WALL)
+		if (std::abs(position.x) > DISTANCE_TO_WALL)
 		{
-			newVelocity.x = std::abs(newVelocity.x) * -BFG::sign(go.position.x);
+			newVelocity.x = std::abs(newVelocity.x) * -BFG::sign(position.x);
 			updateVelocity = true;
 		}
 
 		// Make sure it doesn't move on the z axis
-		if (std::abs(go.position.z - OBJECT_Z_POSITION) > BFG::EPSILON_F)
+		if (std::abs(position.z - OBJECT_Z_POSITION) > BFG::EPSILON_F)
 		{
-			go.position.z = OBJECT_Z_POSITION;
+			position.z = OBJECT_Z_POSITION;
 			newVelocity.z = 0.0;
 			updateVelocity = true;
 			updatePosition = true;
@@ -81,21 +80,21 @@ public:
 		bool lossDetected = false;
 
 		// Upper Bar Loss?
-		if (go.position.y > ball_reset_distance)
+		if (position.y > ball_reset_distance)
 		{
-			emit<BFG::View::Event>(static_cast<ID::ViewAction>(A_LOWER_BAR_WIN), 1);
+			subLane()->emit(A_LOWER_BAR_WIN, Event::Void());
 			lossDetected = true;
 		}
 		// Lower Bar Loss?
-		else if (go.position.y < -ball_reset_distance)
+		else if (position.y < -ball_reset_distance)
 		{
-			emit<BFG::View::Event>(static_cast<ID::ViewAction>(A_UPPER_BAR_WIN), 1);
+			subLane()->emit(A_UPPER_BAR_WIN, Event::Void());
 			lossDetected = true;
 		}
 
 		if (lossDetected)
 		{
-			go.position = v3(0.0f, 0.0f, OBJECT_Z_POSITION);
+			position = v3(0.0f, 0.0f, OBJECT_Z_POSITION);
 			newVelocity   = BALL_START_VELOCITY;
 			updatePosition = true;
 			updateVelocity = true;
@@ -117,10 +116,10 @@ public:
 		}
 
 		if (updatePosition)
-			emit<Physics::Event>(ID::PE_UPDATE_POSITION, go.position, ownerHandle());
+			subLane()->emit(ID::PE_UPDATE_POSITION, position, ownerHandle());
 
 		if (updateVelocity)
-			emit<Physics::Event>(ID::PE_UPDATE_VELOCITY, newVelocity, ownerHandle());
+			subLane()->emit(ID::PE_UPDATE_VELOCITY, newVelocity, ownerHandle());
 	}
 };
 

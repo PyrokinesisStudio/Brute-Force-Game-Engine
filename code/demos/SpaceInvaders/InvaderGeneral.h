@@ -27,29 +27,34 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef SI_INVADER_GENERAL
 #define SI_INVADER_GENERAL
 
+#include <set>
+
 #include <boost/units/systems/si/velocity.hpp>
 #include <boost/units/systems/si/length.hpp>
 
 #include <Core/Math.h>
 #include <Core/Types.h>
 
-#include <EventSystem/Emitter.h>
+#include <Event/Event.h>
 
 #include <Model/Environment.h>
 
 using namespace BFG;
 
-struct InvaderGeneral : Emitter
+struct InvaderGeneral
 {
-	InvaderGeneral(EventLoop* loop,
+	InvaderGeneral(Event::SubLanePtr lane,
 				   boost::shared_ptr<BFG::Environment> environment);
 
+	void onDestroy(GameHandle handle);
 	void spawnWave();
 	void update(quantity<si::time, f32> timeSinceLastFrame);
 
 	boost::shared_ptr<BFG::Environment> mEnvironment;
 	quantity<si::time, f32>             mLastShot;
 	size_t                              mWaveCount;
+	Event::SubLanePtr                   mLane;
+	std::set<GameHandle>                mInvader;
 };
 
 #endif

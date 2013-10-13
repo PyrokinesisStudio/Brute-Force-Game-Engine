@@ -28,8 +28,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_VIEW_VIEW_H
 
 #include <View/ControllerMyGuiAdapter.h>
-#include <View/Event.h>
 #include <View/Main.h>
+#include <View/MiniMain.h>
 #include <View/State.h>
 #include <View/WindowAttributes.h>
 
