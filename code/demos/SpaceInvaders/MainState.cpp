@@ -102,8 +102,8 @@ mLane(lane)
 
 	// ---
 
-	View::SkyCreation sc("sky01");
-	mLane.emit(ID::VE_SET_SKY, sc);
+	View::SkyCreation sc("sky02");
+	mLane.emit(ID::VE_SET_SKY, sc, handle);
 
 	ObjectParameter op;
 	mPlayer = generateHandle();

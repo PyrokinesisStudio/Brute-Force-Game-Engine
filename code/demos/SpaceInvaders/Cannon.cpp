@@ -44,7 +44,7 @@ Cannon::Cannon(GameObject& Owner, BFG::PluginId pid) :
 
 	// TODO having a path here is not beautiful.
 	Path path;
-	mLaserSound = path.Get(ID::P_SOUND_EFFECTS)+"Laser_003.wav";
+	mLaserSound = path.Get(ID::P_SOUND_EFFECTS)+"Laser_003.ogg";
 
 	requiredPvInitialized(ID_PROJECTILE_SPEED);
 	requiredPvInitialized(ID_PROJECTILE_SPAWN_DISTANCE);
@@ -109,8 +109,6 @@ void Cannon::fireRocket(bool autoRocket)
 	op.mLocation = spawnLocation;
 	op.mLinearVelocity = v3(projectileSpeed) * ownOrientation.zAxis();
 
-	op.mStorage.emit(ID::AE_SOUND_EMITTER_PROCESS_SOUND, mLaserSound);
-	
 	if (autoRocket)
 	{
 		u32 target = rand() % targets.size();
@@ -124,5 +122,6 @@ void Cannon::fireRocket(bool autoRocket)
 	}
 
 	mSubLane->emit(ID::S_CREATE_GO, op);
+	mSubLane->emit(ID::AE_SOUND_EMITTER_PROCESS_SOUND, mLaserSound);
 }
 

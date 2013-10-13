@@ -347,6 +347,12 @@ mHandle(generateHandle())
 		"Explosion_01_debris"
 	);
 
+	mParticles["Lightning"] = sceneMgr->createParticleSystem
+	(
+		stringify(mHandle) + "lightning",
+		"Explosion_01_lightning"
+	);
+
 	mStartWidth  = mParticles["Shockwave"]->getDefaultWidth();
 	mStartHeight = mParticles["Shockwave"]->getDefaultHeight();
 }
@@ -381,8 +387,9 @@ bool Explosion2::frameStarted(const Ogre::FrameEvent& evt)
 	fireParticles(mParticles["Sparcles"], mNode, 0.0f, 4.0f, mElapsedTime);
 	fireParticles(mParticles["Smoketrail"], mNode, 0.0f, 4.0f, mElapsedTime);
 	fireParticles(mParticles["Smoke"], mNode, 0.0f, 4.0f, mElapsedTime);
-	fireParticles(mParticles["Debris"], mNode, 0.0f, 4.0f, mElapsedTime);
+    fireParticles(mParticles["Debris"], mNode, 0.0f, 4.0f, mElapsedTime);
 	fireParticles(mParticles["Shockwave"], mNode, 0.0f, 4.0f, mElapsedTime);
+	fireParticles(mParticles["Lightning"], mNode, 0.0f, 4.0f, mElapsedTime);
 
 
 // 	fireScaledParticles
