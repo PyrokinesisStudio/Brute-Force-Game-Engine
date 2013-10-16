@@ -116,7 +116,8 @@ void Owner::createCamera(const CameraCreation& CC)
 		CC.mWidth,
 		CC.mHeight,
 		CC.mPosition,
-		CC.mOrientation
+		CC.mOrientation,
+		CC.mParentHandle
 	));
 	mCameras.push_back(cam);
 }

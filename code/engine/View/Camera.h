@@ -56,7 +56,8 @@ public:
 	       s32 width = 0,
 	       s32 height = 0,
 	       const v3& position = v3::ZERO,
-	       const qv4& orientation = qv4::IDENTITY);
+	       const qv4& orientation = qv4::IDENTITY,
+		   GameHandle parent = NULL_HANDLE);
 
 	virtual ~Camera();
 
@@ -67,6 +68,7 @@ public:
 
 private:
 	void prepareRenderTarget();
+	void onSetTarget(const GameHandle& target);
 
 	Event::SubLanePtr mSubLane;
 	Ogre::SceneNode* mCameraNode;

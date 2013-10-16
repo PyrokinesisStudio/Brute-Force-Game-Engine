@@ -29,6 +29,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/Types.h>
 
+#include <View/Defs.h>
+
 namespace BFG {
 namespace View {
 
@@ -39,10 +41,12 @@ struct VIEW_API CameraCreation
 	               bool fullscreen,
 	               s32 width,
 	               s32 height,
+				   const GameHandle& parent = NULL_HANDLE,
 	               const v3& position = v3::ZERO,
 	               const qv4& orientation = qv4::IDENTITY) :
 	mHandle(handle),
 	mNodeHandle(nodeHandle),
+	mParentHandle(parent),
 	mFullscreen(fullscreen),
 	mWidth(width),
 	mHeight(height),
@@ -51,6 +55,7 @@ struct VIEW_API CameraCreation
 	
 	GameHandle mHandle;
 	GameHandle mNodeHandle;
+	GameHandle mParentHandle;
 	bool mFullscreen;
 	s32 mWidth;
 	s32 mHeight;

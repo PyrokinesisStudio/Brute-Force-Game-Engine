@@ -125,6 +125,7 @@ void CameraControl::createCam(BFG::GameHandle camHandle, Ogre::SceneNode** node,
 		false,
 		mFullSize.width / 2,
 		mFullSize.height / 2,
+		NULL_HANDLE,
 		position,
 		orientation
 	);

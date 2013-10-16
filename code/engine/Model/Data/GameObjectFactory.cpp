@@ -330,7 +330,7 @@ GameObjectFactory::createCamera(const CameraParameter& cameraParameter,
 
 	camera->attachModule(camModule);
 
-	View::CameraCreation cc(camHandle, NULL_HANDLE, cameraParameter.mFullscreen, 0, 0);
+	View::CameraCreation cc(camHandle, NULL_HANDLE, cameraParameter.mFullscreen, 0, 0, parentHandle);
 	mLane.emit(ID::VE_CREATE_CAMERA, cc, mStateHandle);
 	mLane.emit(ID::GOE_SET_CAMERA_TARGET, parentHandle, camHandle);
 
