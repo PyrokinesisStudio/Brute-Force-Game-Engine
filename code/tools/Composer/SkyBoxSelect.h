@@ -59,11 +59,10 @@ private:
 	Ogre::TextureUnitState* findAliasInMaterial(const std::string alias,
 	                                            const std::string matName);
 
+	BFG::Event::SubLanePtr mSubLane;
 	boost::shared_ptr<SharedData> mData;
 
 	MyGUI::ListBox* mList;
-
-	BFG::Event::SubLanePtr mSubLane;
 
 }; // class SkyBoxSelect
 

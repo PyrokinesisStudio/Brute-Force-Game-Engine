@@ -57,12 +57,11 @@ private:
 
 	void onEntitySelected(MyGUI::ListBox* list, size_t index);
 
+	BFG::Event::SubLanePtr mSubLane;
 	boost::shared_ptr<SharedData> mData;
 
 	MyGUI::ListBox* mList;
 	std::string mMeshName;
-
-	BFG::Event::SubLanePtr mSubLane;
 
 }; // class SubEntitySelect
 
