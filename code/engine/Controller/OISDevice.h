@@ -483,7 +483,7 @@ public:
 
 	bool good() const
 	{
-		return mDevice;
+		return static_cast<bool>(mDevice);
 	}
 
 	void capture()

@@ -70,7 +70,7 @@ void UdpWriteModule::write(asio::const_buffer packet, std::size_t size)
 		bind
 		(
 			&UdpWriteModule::writeHandler,
-			boost::shared_static_cast<UdpWriteModule>(shared_from_this()),
+			boost::static_pointer_cast<UdpWriteModule>(shared_from_this()),
 			_1,
 			_2,
 			packet
