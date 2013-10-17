@@ -78,10 +78,10 @@ typedef boost::log::sources::severity_logger_mt
 void Init(SeverityLevel Min_Log_Level, const std::string& Filename = "");
 
 // Convenience macros (example of use can be found in the base test app)
-#define dbglog BOOST_LOG_SEV(BFG::usp_log::get(), BFG::Base::Logger::SL_DEBUG)
-#define infolog BOOST_LOG_SEV(BFG::usp_log::get(), BFG::Base::Logger::SL_INFORMATION)
-#define warnlog BOOST_LOG_SEV(BFG::usp_log::get(), BFG::Base::Logger::SL_WARNING)
-#define errlog BOOST_LOG_SEV(BFG::usp_log::get(), BFG::Base::Logger::SL_ERROR)
+#define dbglog std::cout
+#define infolog std::cout
+#define warnlog std::cout
+#define errlog std::cout
 
 } // namespace Logger
 } // namespace Base

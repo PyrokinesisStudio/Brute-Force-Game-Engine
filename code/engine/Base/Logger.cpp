@@ -33,6 +33,19 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <fstream>
 
+namespace BFG {
+namespace Base {
+namespace Logger {
+
+void Init(SeverityLevel Min_Log_Level, const std::string& Filename)
+{}
+
+} // Logger
+} // Base
+} // namespace BFG
+
+#if 0
+
 #include <boost/log/filters.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/formatters/stream.hpp>
@@ -168,3 +181,5 @@ void setupCore(SeverityLevel Min_Log_Level)
 BOOST_LOG_GLOBAL_LOGGER_DEFAULT(usp_log, BFG::Base::Logger::SourceT)
 
 } // namespace BFG
+
+#endif
