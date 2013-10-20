@@ -33,66 +33,45 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <fstream>
 
-namespace BFG {
-namespace Base {
-namespace Logger {
+#include <boost/date_time/posix_time/posix_time.hpp>
 
-void Init(SeverityLevel Min_Log_Level, const std::string& Filename)
-{}
-
-} // Logger
-} // Base
-} // namespace BFG
-
-#if 0
-
-#include <boost/log/filters.hpp>
-#include <boost/log/sinks.hpp>
-#include <boost/log/formatters/stream.hpp>
-#include <boost/log/formatters/message.hpp>
 #include <boost/log/attributes/clock.hpp>
-#include <boost/log/utility/init/to_file.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/expressions/formatters/stream.hpp>
+#include <boost/log/sinks/basic_sink_frontend.hpp>
+#include <boost/log/sinks/sync_frontend.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
-#include <boost/log/formatters/date_time.hpp>
-
-
-namespace BFG {
-namespace Base {
-namespace Logger {
+#include <boost/log/utility/setup/common_attributes.hpp>
 
 namespace logging = boost::log;
 namespace sinks = boost::log::sinks;
-namespace fmt = boost::log::formatters;
-namespace flt = boost::log::filters;
+namespace src = boost::log::sources;
+namespace expr = boost::log::expressions;
 namespace attrs = boost::log::attributes;
 namespace keywords = boost::log::keywords;
 
+namespace BFG {
+namespace Base {
+namespace Logger {
+
 void setupFileSink(const std::string& Filename);
 void setupCoutSink();
-void setupCore(SeverityLevel Min_Log_Level);
+void setupCore(SeverityLevel minLogLevel);
 
 std::ostream& operator<< (std::ostream& strm, const SeverityLevel& svl)
 {
-	std::string val = "";
-
 	switch (svl)
 	{
 		case SL_DEBUG:
-			val = "debug>\t";
-		break;
+			return strm << "debug";
 		case SL_INFORMATION:
-			val = "information>";
-		break;
+			return strm << "info";
 		case SL_WARNING:
-			val = "warning>\t";
-		break;
+			return strm << "warn";
 		case SL_ERROR:
-			val = "error>\t";
-		break;
+			return strm << "error";
 	}
-
-	return strm << "< " << val;
 }
 
 void Init(SeverityLevel Min_Log_Level, const std::string& Filename)
@@ -126,13 +105,13 @@ void setupFileSink(const std::string& Filename)
 
 	logging::add_common_attributes();
 
-	sink->locked_backend()->set_formatter
+	sink->set_formatter
 	(
-	fmt::stream 
-	<< fmt::attr<unsigned int>("LineID")
-	<< ". " << fmt::time("TimeStamp") 
-	<< " " <<fmt::attr<SeverityLevel>("Severity") 
-	<< ":\t " << fmt::message()
+		expr::format("%1% %2% %3%\t%4%")
+			% expr::attr<unsigned int>("LineID")
+			% expr::attr<boost::posix_time::ptime>("TimeStamp")
+			% expr::attr<SeverityLevel>("Severity")
+			% expr::smessage
 	);
 	
 	sink->locked_backend()->auto_flush(true);
@@ -155,31 +134,27 @@ void setupCoutSink()
 	logging::core::get()->add_sink(pSink);
 }
 
-void setupCore(SeverityLevel Min_Log_Level)
+void setupCore(SeverityLevel minLogLevel)
 {
-	boost::shared_ptr< logging::core > pCore = logging::core::get();
+	boost::shared_ptr<logging::core> pCore = logging::core::get();
 
 	pCore->add_global_attribute
 	(
 		"TimeStamp",
 		attrs::local_clock()
 	);
-	
+
 	pCore->set_filter
 	(
-		flt::attr
-		<
-			SeverityLevel
-		>("Severity") >= Min_Log_Level
+		expr::attr<SeverityLevel>("Severity") >= minLogLevel
 	);
 }
 
 } // Logger
 } // Base
 
-//BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(usp_log, BFG::Base::Logger::SourceT);
-BOOST_LOG_GLOBAL_LOGGER_DEFAULT(usp_log, BFG::Base::Logger::SourceT)
+//BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(bfg_log, BFG::Base::Logger::SourceT);
+BOOST_LOG_GLOBAL_LOGGER_DEFAULT(bfg_log, BFG::Base::Logger::SourceT)
 
 } // namespace BFG
 
-#endif
