@@ -29,12 +29,23 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <OgreRoot.h>
 
+#include <Base/Cpp.h>
 #include <Base/Logger.h>
 #include <Core/Mesh.h>
 #include <Core/Path.h>
+#include <Core/qv4.h>
 #include <Event/Event.h>
-#include <View/MiniMain.h>
+#include <View/Effect.h>
+#include <View/EffectCreation.h>
 #include <View/Enums.hh>
+#include <view/Explosion.h>
+#include <View/Main.h>
+#include <View/MiniMain.h>
+#include <View/ObjectCreation.h>
+#include <View/State.h>
+#include <View/SkyCreation.h>
+
+const BFG::GameHandle gViewState = 43;
 
 // ---------------------------------------------------------------------------
 void shutdownCountdown(BFG::u32 countdown)
@@ -83,6 +94,38 @@ struct ModuleDeliveryTest : public BFG::Event::EntryPoint<BFG::Event::Lane>
 	}
 };
 
+struct ExplosionState : public BFG::View::State
+{
+	ExplosionState(BFG::Event::Lane* lane) :
+	BFG::View::State(gViewState, *lane)
+	{}
+
+	virtual void pause(){}
+	virtual void resume(){}
+};
+
+struct ModuleExplosionTest : public BFG::Event::EntryPoint<BFG::Event::Lane>
+{
+	void run(BFG::Event::Lane* lane)
+	{
+		std::cout << "ModuleExplosionTest-Run" << std::endl;
+		
+		s.reset(new ExplosionState(lane));
+		lane->connect(BFG::ID::VE_EFFECT, this, &ModuleExplosionTest::onEffect);
+	}
+
+	void onEffect(const BFG::View::EffectCreation& ec)
+	{
+		if (ec.get<0>() == "Explosion_1")
+			e.reset(new BFG::View::Explosion(ec.get<1>(), ec.get<2>()));
+		else if (ec.get<0>() == "Explosion_2")
+			e.reset(new BFG::View::Explosion2(ec.get<1>(), ec.get<2>()));
+	}
+	
+	boost::shared_ptr<BFG::View::Effect> e;
+	boost::shared_ptr<BFG::View::State> s;
+};
+
 
 BOOST_AUTO_TEST_SUITE(ViewTestSuite)
 
@@ -113,6 +156,7 @@ BOOST_AUTO_TEST_CASE (OgreTest)
 	delete ogreRoot;
 }
 #endif
+
 BOOST_AUTO_TEST_CASE (testLibraryInit)
 {
 	BFG::Base::Logger::Init(BFG::Base::Logger::SL_DEBUG, "Logs/testLibraryInit.log");
@@ -148,5 +192,42 @@ BOOST_AUTO_TEST_CASE (meshTest)
 
 	sync.finish();
 }
+
+BOOST_AUTO_TEST_CASE (explosionTest)
+{
+// 	BFG::Path p;
+// 	BFG::Base::Logger::Init(BFG::Base::Logger::SL_DEBUG, p.Get(BFG::ID::P_LOGS) + "/bfgViewTest.log");
+
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane viewLane(sync, 100, "View");
+
+	viewLane.addEntry<BFG::View::Main>("explostionTest");
+	viewLane.addEntry<ModuleExplosionTest>();
+	sync.start();
+	
+	BFG::View::SkyCreation sc("sky02");
+	viewLane.emit(BFG::ID::VE_SET_SKY, sc, gViewState);
+
+	BFG::v3 position(0.0f, 0.0f, 40.0f);
+	BFG::View::ObjectCreation oc(BFG::NULL_HANDLE, BFG::generateHandle(), "Cube.mesh", position, BFG::qv4::IDENTITY);
+
+	viewLane.emit(BFG::ID::VE_CREATE_OBJECT, oc, gViewState);
+
+	for (int i = 0; i < 4; ++i)
+	{
+		viewLane.emit(BFG::ID::VE_EFFECT, BFG::View::EffectCreation("Explosion_1", BFG::v3(0.0f, 0.0f, 40.0f), 1.0f));
+		boost::this_thread::sleep(boost::posix_time::milliseconds(9000));
+	}
+	for (int i = 0; i < 4; ++i)
+	{
+		viewLane.emit(BFG::ID::VE_EFFECT, BFG::View::EffectCreation("Explosion_2", BFG::v3(0.0f, 0.0f, 40.0f), 1.0f));
+		boost::this_thread::sleep(boost::posix_time::milliseconds(4000));
+	}
+
+	shutdownCountdown(2);
+
+	sync.finish();
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
