@@ -65,7 +65,10 @@ void SoundEmitter::pause()
 
 void SoundEmitter::processSound(const std::string &name)
 {
-    boost::mutex::scoped_lock lock(mMutex);
+    if (mState != PLAYING)
+		return;
+	
+	boost::mutex::scoped_lock lock(mMutex);
 
     ++mIdCounter;
 
