@@ -145,7 +145,6 @@ void fireScaledParticles(Ogre::ParticleSystem* particleSystem,
 	}
 }
 
-
 Explosion::Explosion(const v3& position, f32) :
 mPosition(position),
 mBillboardSet(NULL),
@@ -157,8 +156,8 @@ mParticleSystem(NULL)
 	Ogre::SceneManager* sceneMgr =
 		Ogre::Root::getSingletonPtr()->getSceneManager(BFG_SCENEMANAGER);
 
-	Ogre::SceneNode* myNode = 
-		static_cast<Ogre::SceneNode*>(sceneMgr->getRootSceneNode()->createChild());
+	Ogre::SceneNode* myNode = static_cast<Ogre::SceneNode*>
+		(sceneMgr->getRootSceneNode()->createChild(stringify(mHandle)));
 		
 	if (!myNode)
 		throw std::runtime_error("Explosion: creating myNode failed!");
@@ -173,7 +172,7 @@ mParticleSystem(NULL)
 
 	Ogre::Billboard* b1 = mBillboardSet->createBillboard
 	(
-		Ogre::Vector3(mPosition.ptr()),
+		Ogre::Vector3::ZERO,
         Ogre::ColourValue(1.0f, 0.9f, 0.0f)
 	);
 		
@@ -184,7 +183,7 @@ mParticleSystem(NULL)
 
 	Ogre::Billboard* b2 = mBillboardSet->createBillboard
 	(
-		Ogre::Vector3((mPosition - bias).ptr()),
+		Ogre::Vector3((-bias).ptr()),
 		Ogre::ColourValue(1.0f, 1.0f, 0.66f)
 	);
 		
@@ -195,7 +194,7 @@ mParticleSystem(NULL)
 
 	Ogre::Billboard* b3 = mBillboardSet->createBillboard
 	(
-		Ogre::Vector3((mPosition - bias*3).ptr()),
+		Ogre::Vector3((-bias*3).ptr()),
 		Ogre::ColourValue(1.0f, 1.0f, 0.0f, 0.0f)
 	);
 		
@@ -206,7 +205,7 @@ mParticleSystem(NULL)
 
 	Ogre::Billboard* b4 = mBillboardSet->createBillboard
 	(
-		Ogre::Vector3((mPosition - bias*2).ptr()),
+		Ogre::Vector3((-bias*2).ptr()),
 		Ogre::ColourValue(1.0f, 0.66f, 0.0f, 0.0f)
 	);
 		
@@ -227,7 +226,6 @@ mParticleSystem(NULL)
 	
 	if (!mParticleSystem)
 		throw std::runtime_error("Explosion: creating mParticleSystem failed!");
-
 }
 
 Explosion::~Explosion()
@@ -279,7 +277,7 @@ bool Explosion::frameStarted( const Ogre::FrameEvent& evt )
 
 	shrink(mBillboardSet->getBillboard(3), 4.0f, 6.5f, mElapsedTime, 60.0f);
 	fade(mBillboardSet->getBillboard(3), 4.0f, 6.5f, mElapsedTime, true);
-	
+
 	if (mElapsedTime > 9.0f)
 		finished();
 	
