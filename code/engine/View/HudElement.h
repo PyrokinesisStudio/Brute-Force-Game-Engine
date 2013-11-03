@@ -37,12 +37,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace View {
 
-
 class VIEW_API HudElement
 {
 public:
 	HudElement(const std::string& layoutName,
-	           const std::string& resizePanel);
+	           const std::string& resizePanel,
+	           const std::string& rootWidget = std::string(""));
 
 	virtual ~HudElement();
 
@@ -50,11 +50,19 @@ public:
 
 protected:
 	void setVisible(bool visibility);
+	MyGUI::WidgetPtr root(){return mRootWidget;}
+	
+	template <typename WidgetT>
+	void bind(WidgetT** widget, const std::string& widgetName)
+	{
+		*widget = root()->findWidget(widgetName)->castType<WidgetT>();
+	}
 
 private:
 	virtual void internalUpdate(f32 time) = 0;
 
 	MyGUI::VectorWidgetPtr mContent;
+	MyGUI::WidgetPtr mRootWidget;
 };
 
 

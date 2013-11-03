@@ -24,46 +24,82 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <View/Fps.h>
+#ifndef BFG_VIEW_MYGUIBINDING_H
+#define BFG_VIEW_MYGUIBINDING_H
 
-#include <OgreRoot.h>
-#include <OgreRenderWindow.h>
+#include <string>
 
-#include <View/MyGuiBinding.h>
+#include <MyGUI_Gui.h>
+#include <MyGUI_TextBox.h>
+#include <Core/Types.h>
+
 
 namespace BFG {
 namespace View {
 
-Fps::Fps() :
-HudElement("FPS.layout", "FPS")
+template <typename T>
+struct TextBound
 {
-}
+	TextBound() :
+	mTextBox(NULL)
+	{}
 
-Fps::~Fps()
-{
-}
+	TextBound(MyGUI::TextBox* _textBox) :
+	mTextBox(_textBox)
+	{}
 
-void Fps::internalUpdate(f32 /*time*/)
-{
-	Ogre::RenderWindow* rw = Ogre::Root::getSingleton().getAutoCreatedWindow();
+	TextBound(const std::string& textBoxName)
+	{
+		MyGUI::Gui* gui = MyGUI::Gui::getInstancePtr();
+		mTextBox = gui->findWidget<MyGUI::TextBox>(textBoxName);
+	}
 
-	const Ogre::RenderTarget::FrameStats& stats = rw->getStatistics();
+	operator T() {return value;}
 
-	TextBound<float> lastFPS("FPSValue");
-	TextBound<float> avgFPS("AvFPSValue");
-	TextBound<float> worstFPS("WorstFPSValue");
-	TextBound<float> bestFPS("BestFPSValue");
-	TextBound<size_t> triangleCount("TriCountValue");
-	TextBound<size_t> batchCount("BatchCountValue");
+	TextBound<T>& operator= (const T& _rhs)
+	{
+		value = _rhs;
+		synchronizeTextBox();
 
-	lastFPS = stats.lastFPS;
-	avgFPS = stats.avgFPS;
-	worstFPS = stats.worstFPS;
-	bestFPS = stats.bestFPS;
-	triangleCount = stats.triangleCount;
-	batchCount = stats.batchCount;
-}
+		return *this;
+	}
 
+	TextBound<T>& operator++()
+	{
+		++value;
+		synchronizeTextBox();
+		return *this;
+	}
+
+	TextBound<T>& operator--()
+	{
+		--value;
+		synchronizeTextBox();
+		return *this;
+	}
+
+	MyGUI::TextBox* textBox()
+	{
+		return mTextBox;
+	}
+
+private:
+
+	void synchronizeTextBox()
+	{
+		if (!mTextBox)
+			throw std::runtime_error("TextBox in TextBound was not set!");
+
+		std::stringstream ss;
+		ss << value;
+		mTextBox->setCaption(ss.str());
+	}
+
+	T value;
+	MyGUI::TextBox* mTextBox;
+};
 
 } // namespace View
 } // namespace BFG
+
+#endif

@@ -39,8 +39,8 @@ namespace View {
 Score::Score(Event::SubLanePtr subLane) :
 HudElement("PongScore.layout", "Score"),
 mSubLane(subLane),
-mUpperScore(0),
-mLowerScore(0)
+mUpperScore("UpperScore"),
+mLowerScore("LowerScore")
 {
 	mSubLane->connectV(A_UPPER_BAR_WIN, this, &Score::onUpperBarWin);
 	mSubLane->connectV(A_LOWER_BAR_WIN, this, &Score::onLowerBarWin);
@@ -62,31 +62,11 @@ void Score::internalUpdate(f32 time)
 void Score::onUpperBarWin()
 {
 	++mUpperScore;
-	onScoreUpdate();
 }
 
 void Score::onLowerBarWin()
 {
 	++mLowerScore;
-	onScoreUpdate();
-}
-
-void Score::onScoreUpdate()
-{
-	MyGUI::Gui& gui = MyGUI::Gui::getInstance();
-
-	MyGUI::StaticText* upper = gui.findWidget<MyGUI::StaticText>("UpperScore");
-	MyGUI::StaticText* lower = gui.findWidget<MyGUI::StaticText>("LowerScore");
-
-	std::stringstream ss;
-	ss << mUpperScore;
-	upper->setCaption(ss.str());
-
-	ss.clear();
-	ss.str("");
-
-	ss << mLowerScore;
-	lower->setCaption(ss.str());
 }
 
 } // namespace View

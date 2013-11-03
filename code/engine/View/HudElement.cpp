@@ -36,7 +36,8 @@ namespace View {
 
 using namespace MyGUI;
 HudElement::HudElement(const std::string& layoutName,
-                       const std::string& resizePanel)
+                       const std::string& resizePanel,
+                       const std::string& rootWidget)
 {
 	Path path;
 
@@ -51,7 +52,12 @@ HudElement::HudElement(const std::string& layoutName,
 	IntSize size = renderMgr.getViewSize();
 	panel->setSize(size);
 
-	gui.eventFrameStart += MyGUI::newDelegate(this, &HudElement::FrameStarted); 
+	gui.eventFrameStart += MyGUI::newDelegate(this, &HudElement::FrameStarted);
+
+	if (rootWidget.empty())
+		mRootWidget = panel;
+	else
+		mRootWidget = gui.findWidgetT(rootWidget);
 }
 
 HudElement::~HudElement()
