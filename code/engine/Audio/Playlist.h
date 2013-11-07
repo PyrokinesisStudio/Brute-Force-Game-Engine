@@ -53,6 +53,8 @@ public:
 	//! A call while stated PLAYING is active will be ingored.
 	void play();
 
+	void volume(f32 gain);
+
 protected:
 	
 	//! Will be called if a track is finished.

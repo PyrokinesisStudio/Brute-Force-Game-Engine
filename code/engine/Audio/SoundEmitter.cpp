@@ -99,5 +99,15 @@ void SoundEmitter::soundFinished(int id)
     mSoundHandles.erase(itHandles);
 }
 
+void SoundEmitter::volume(f32 gain)
+{
+	SoundQueueT::iterator ao = mSoundQueue.begin();
+
+	for (; ao != mSoundQueue.end(); ++ao)
+	{
+		ao->second->volume(gain);
+	}
+}
+
 } // namespace Audio
 } // namespace BFG

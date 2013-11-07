@@ -41,11 +41,13 @@ class BFG_AUDIO_API AudioObject
 public:
 	AudioObject(std::string audioName, 
 		        boost::shared_ptr<StreamLoop> streamLoop,
-                boost::function<void (void)> onFinishedForward = 0): 
+                boost::function<void (void)> onFinishedForward = 0,
+				f32 initalGain = 1.0f): 
 		mAudioName(audioName),
 		mStreamLoop(streamLoop),
 		mStreamHandle(0),
-        mForwardCallback(onFinishedForward)
+        mForwardCallback(onFinishedForward),
+		mGain(initalGain)
 	{}
 	
 	~AudioObject() {}
@@ -53,6 +55,8 @@ public:
 	virtual void play() = 0;
 	virtual void pause() = 0;
 	virtual void stop() = 0;
+	
+	virtual void volume(f32 gain) = 0;
 
 protected:
 	virtual void onStreamFinished() = 0;
@@ -61,6 +65,7 @@ protected:
 	boost::shared_ptr<StreamLoop> mStreamLoop;
 	StreamLoop::StreamHandleT mStreamHandle;
 	boost::function<void (void)> mForwardCallback;
+	f32 mGain;
 };
 
 boost::shared_ptr<AudioObject>	BFG_AUDIO_API createAudioObject(std::string audioName, 
