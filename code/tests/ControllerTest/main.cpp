@@ -147,14 +147,6 @@ struct NetEventer
 };
 #endif
 
-static bool falseIn30Seconds()
-{
-	using namespace boost::posix_time;
-	static ptime start(microsec_clock::local_time());
-	time_period period(start, microsec_clock::local_time());
-	return period.length().total_seconds() < 30;
-}
-
 struct Main : Base::LibraryMainBase<Event::Lane>
 {
 	Main() :

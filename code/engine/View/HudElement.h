@@ -29,10 +29,10 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-#include <MyGUI_WidgetDefines.h>
+#include <MyGUI.h>
+
 #include <Core/Types.h>
 #include <View/Defs.h>
-
 
 namespace BFG {
 namespace View {

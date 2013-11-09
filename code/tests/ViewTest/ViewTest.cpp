@@ -38,7 +38,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <View/Effect.h>
 #include <View/EffectCreation.h>
 #include <View/Enums.hh>
-#include <view/Explosion.h>
+#include <View/Explosion.h>
 #include <View/Main.h>
 #include <View/MiniMain.h>
 #include <View/ObjectCreation.h>
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE (explosionTest)
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane viewLane(sync, 100, "View");
 
-	viewLane.addEntry<BFG::View::Main>("explostionTest");
+	viewLane.addEntry<BFG::View::Main>("explosionTest");
 	viewLane.addEntry<ModuleExplosionTest>();
 	sync.start();
 	
