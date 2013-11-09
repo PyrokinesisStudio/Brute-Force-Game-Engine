@@ -38,7 +38,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <View/Effect.h>
 #include <View/EffectCreation.h>
 #include <View/Enums.hh>
-#include <view/Explosion.h>
+#include <View/Explosion.h>
 #include <View/Main.h>
 #include <View/MiniMain.h>
 #include <View/ObjectCreation.h>
