@@ -48,7 +48,6 @@ BOOST_AUTO_TEST_CASE (CreateObjectTest)
 	
 	// XML setup
 	Path p;
-	std::string level = p.Get(ID::P_SCRIPTS_LEVELS) + "spaceinvaders/";
 	std::string def = p.Get(ID::P_SCRIPTS_LEVELS) + "default/";
 
 	LevelConfig lc;
@@ -70,7 +69,7 @@ BOOST_AUTO_TEST_CASE (CreateObjectTest)
 	gof.reset(new GameObjectFactory(lane, lc, pluginMap, environment, generateHandle()));
 
 	boost::shared_ptr<Sector> sector;
-	sector.reset(new Sector(lane, 1, "SpaceInvaderSector", gof));
+	sector.reset(new Sector(lane, 1, "TestSector", gof));
 	
 	// Create an object (with some 'damage' as goValue)
 	const BFG::s32 damage = 50;
