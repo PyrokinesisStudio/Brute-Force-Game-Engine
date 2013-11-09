@@ -111,7 +111,19 @@ void WeaponRack::onFireLaser()
 	ss << "Laser " << LaserCount;
 
 	ObjectParameter op;
-	op.mHandle = generateHandle();
+	
+	try
+	{
+		if(!getGoValue<bool>(ID::PV_Remote, pluginId()))
+			op.mHandle = generateNetworkHandle();
+		else
+			op.mHandle = generateHandle();
+	}
+	catch(std::runtime_error&)
+	{
+		op.mHandle = generateHandle();
+	}
+
 	op.mName = ss.str();
 	op.mType = "Laser";
 	op.mLocation = spawnLocation;

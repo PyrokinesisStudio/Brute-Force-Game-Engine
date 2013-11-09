@@ -65,4 +65,3 @@ void AudioState::onSoundEffect(const std::string& effect)
 	SoundEffectMapT::iterator it = mSoundEffectMap.find(effect);
 	mSoundEmitter.processSound(it->second);
 }
-

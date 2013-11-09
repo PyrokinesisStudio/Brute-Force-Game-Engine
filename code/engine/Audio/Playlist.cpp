@@ -92,5 +92,13 @@ void Playlist::pause()
 	mState = PAUSE;
 }
 
+void Playlist::volume(f32 gain)
+{
+	BOOST_FOREACH(boost::shared_ptr<AudioObject> object, mProgram)
+	{
+		object->volume(gain);
+	}
+}
+
 } // namespace Audio
 } // namespace BFG

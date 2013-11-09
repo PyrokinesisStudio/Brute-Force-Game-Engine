@@ -41,13 +41,11 @@ namespace Audio {
 		Stream(file, onStreamFinished),
 		mNUM_BUFFER(6),
 		mSourceId(sourceId),
-		mFinished(false),
-		mGain(0.8f)
+		mFinished(false)
     {
 		mBufferIds.reset(new ALuint[mNUM_BUFFER]);
 		alGenBuffers(mNUM_BUFFER, mBufferIds.get());
 		alErrorHandler("OpenALStream::OpenALStream", "Error occured calling alGenBuffers.");
-		alSourcef(mSourceId, AL_GAIN, mGain);
 	
 		preload();
     }
@@ -80,11 +78,6 @@ namespace Audio {
 		// Get the numbers of buffers that are already processed.
 		alGetSourcei(mSourceId, AL_BUFFERS_PROCESSED, &processedBuffers);
 		alErrorHandler("OpenALStream::nextStreamStep", "Error occured calling alGetSourcei.");
-
-//		if (mGain < 1.0f)
-//			mGain += 0.01f;
-		
-		alSourcef(mSourceId, AL_GAIN, mGain);
 
 		// If all buffers are processed the stream is finished.
 		if (processedBuffers >= mNUM_BUFFER)

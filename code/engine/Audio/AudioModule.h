@@ -43,6 +43,8 @@ class BFG_AUDIO_API AudioModule
 public:
 	AudioModule() { mStreamLoop.reset(new StreamLoop()); }
 
+	virtual void volume(f32 gain) = 0;
+
 protected:
 	virtual void onStreamFinishedForwarded() = 0;
 	

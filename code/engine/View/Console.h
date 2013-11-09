@@ -27,8 +27,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-#include <View/HudElement.h>
-
 #include <Base/Logger.h>      // Included to fix an operator problem with clang
 #include <Event/Event.h>
 #include <iostream>

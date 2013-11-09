@@ -27,9 +27,13 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef __SCORE_H_
 #define __SCORE_H_
 
-#include <Event/Event.h>
-#include <View/HudElement.h>
 #include <Core/Types.h>
+
+#include <Event/Event.h>
+
+#include <View/HudElement.h>
+#include <View/MyGuiBinding.h>
+
 
 namespace BFG {
 namespace View {
@@ -45,11 +49,10 @@ private:
 
 	void onUpperBarWin();
 	void onLowerBarWin();
-	void onScoreUpdate();
 
 	Event::SubLanePtr mSubLane;
-	s32 mUpperScore;
-	s32 mLowerScore;
+	TextBound<s32> mUpperScore;
+	TextBound<s32> mLowerScore;
 };
 
 } // namespace View

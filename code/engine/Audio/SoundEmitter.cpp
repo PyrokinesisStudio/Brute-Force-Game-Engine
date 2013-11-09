@@ -65,7 +65,10 @@ void SoundEmitter::pause()
 
 void SoundEmitter::processSound(const std::string &name)
 {
-    boost::mutex::scoped_lock lock(mMutex);
+    if (mState != PLAYING)
+		return;
+	
+	boost::mutex::scoped_lock lock(mMutex);
 
     ++mIdCounter;
 
@@ -94,6 +97,16 @@ void SoundEmitter::soundFinished(int id)
 
     HandlesT::iterator itHandles = mSoundHandles.find(id);
     mSoundHandles.erase(itHandles);
+}
+
+void SoundEmitter::volume(f32 gain)
+{
+	SoundQueueT::iterator ao = mSoundQueue.begin();
+
+	for (; ao != mSoundQueue.end(); ++ao)
+	{
+		ao->second->volume(gain);
+	}
 }
 
 } // namespace Audio

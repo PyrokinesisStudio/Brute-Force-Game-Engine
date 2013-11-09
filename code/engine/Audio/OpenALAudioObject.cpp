@@ -40,8 +40,9 @@ namespace Audio {
 
 OpenALAudioObject::OpenALAudioObject(std::string audioName, 
 	                                 boost::shared_ptr<StreamLoop> streamLoop,
-									 boost::function<void (void)> onFinishedForward): 
-	AudioObject(audioName, streamLoop, onFinishedForward),
+									 boost::function<void (void)> onFinishedForward,
+									 f32 initalGain): 
+	AudioObject(audioName, streamLoop, onFinishedForward, initalGain),
 	mSourceId(0)
 	{
 	}
@@ -97,6 +98,9 @@ OpenALAudioObject::OpenALAudioObject(std::string audioName,
 				return;
 		}
 		
+		alSourcef(mSourceId, AL_GAIN, mGain);
+		alErrorHandler("OpenALAudioObject::play", "Error occured setting gain");
+
 		alSourcePlay(mSourceId);
 		alErrorHandler("OpenALAudioObject::play", "Error occured calling alSourcePlay.");
 	}
@@ -126,6 +130,15 @@ OpenALAudioObject::OpenALAudioObject(std::string audioName,
 			mSourceId = 0;
 		}
 	}
+
+	void OpenALAudioObject::volume(f32 gain)
+	{
+		mGain = gain;
+		
+		if (mSourceId)
+			alSourcef(mSourceId, AL_GAIN, mGain);
+	}
+
 
 	void OpenALAudioObject::careOfSource()
 	{

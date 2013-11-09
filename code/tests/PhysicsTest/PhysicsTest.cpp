@@ -25,8 +25,18 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #define BOOST_TEST_MODULE PhysicsTest
+
+#ifndef dSINGLE
+#define dSINGLE
+#endif
+
+
+#include <boost/array.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <ode/ode.h>
+
+#include <Base/Logger.h>
 #include <Base/Pause.h>
 #include <Base/PeriodicWaitForEqual.h>
 
@@ -37,9 +47,42 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Physics/Event_fwd.h>
 #include <Physics/Main.h>
+#include <Physics/PhysicsObject.h>
 
 #include <View/MiniMain.h>
 
+namespace BFG {
+namespace Test {
+
+static void odeErrorHandling(int errnum, const char* msg, va_list ap)
+{
+	boost::array<char, 512> formatted_msg;
+
+	vsnprintf(formatted_msg.data(), formatted_msg.size(), msg, ap);
+
+	errlog << "ODE [errnum: " << errnum << "]: " << formatted_msg.data();
+}
+
+static void odeMessageHandling(int errnum, const char* msg, va_list ap)
+{
+	boost::array<char, 512> formatted_msg;
+
+	vsnprintf(formatted_msg.data(), formatted_msg.size(), msg, ap);
+
+	infolog << "ODE [errnum: " << errnum << "]: " << formatted_msg.data();
+}
+
+static void odeDebugHandling(int errnum, const char* msg, va_list ap)
+{
+	boost::array<char, 512> formatted_msg;
+
+	vsnprintf(formatted_msg.data(), formatted_msg.size(), msg, ap);
+
+	dbglog << "ODE [errnum: " << errnum << "]: " << formatted_msg.data();
+}
+
+}
+}
 typedef BFG::Event::Catcher<BFG::Physics::FullSyncData> FullSyncDataCatcherT;
 
 // ---------------------------------------------------------------------------
@@ -249,4 +292,44 @@ BOOST_AUTO_TEST_CASE (testCreateOneObjectWithTwoModulesAndSetValues)
 	BOOST_CHECK(BFG::equals(receivedOri, newOri));
 }
 
+BOOST_AUTO_TEST_CASE (interpolatorTest)
+{
+	BFG::Physics::Interpolator interpolator;
+
+	BFG::u32 timeStamp = 0; // not used
+	BFG::u16 age = 500; // ms old
+	BFG::v3 lastPosition(0.0f, 0.0f, 0.0f); // last recorded position
+
+	BFG::v3 velocity(10.0f, 0.0f, 0.0f); // current velocity
+	BFG::v3 currentPosition(4.0f, 0.0f, 0.0f);
+
+	BFG::Physics::InterpolationDataV3 interpolationDataV3(timeStamp, age, lastPosition);
+
+	interpolator.preparePosition(interpolationDataV3, currentPosition, velocity);
+
+	BOOST_CHECK(BFG::nearEnough(interpolator.mEndPosition, v3(5.0f, 0.0f, 0.0f), BFG::EPSILON_F));
+
+	bool interpolated = interpolator.interpolatePosition(0.1f);
+
+	BOOST_CHECK_EQUAL(interpolated, true);
+	BOOST_CHECK_CLOSE(interpolator.mPositionParameter, 0.1f, BFG::EPSILON_F);
+	BOOST_CHECK(BFG::nearEnough(interpolator.mInterpolatedPosition, v3(4.1f, 0.0f, 0.0f), BFG::EPSILON_F));
+
+	// check orientation interpolation
+// 	BFG::qv4 lastOrientation(BFG::qv4::IDENTITY);
+// 
+// 	BFG::Physics::InterpolationDataQv4 interpolationDataQv4(timeStamp, age, lastOrientation);
+// 
+// 	BFG::v3 rotVelocity(45.0f * DEG2RAD, 0.0f, 0.0f);
+// 	BFG::qv4 currentOrientation(BFG::eulerToQuaternion(BFG::v3(15.0f * DEG2RAD, 0.0f, 0.0f)));
+// 
+// 	interpolator.prepareOrientation(interpolationDataQv4, currentOrientation, rotVelocity);
+// 
+// 	BOOST_CHECK_EQUAL(BFG::equals(interpolator.mEndOrientation, BFG::eulerToQuaternion(BFG::v3(22.5f * DEG2RAD, 0.0f, 0.0f)), BFG::EPSILON_F), true);
+// 
+// 	interpolated = interpolator.interpolateOrientation(0.1f);
+// 	BOOST_CHECK_EQUAL(interpolated, true);
+// 	BOOST_CHECK_CLOSE(interpolator.mOrientationParameter, 0.1f, BFG::EPSILON_F);
+// 	BOOST_CHECK_EQUAL(BFG::equals(interpolator.mInterpolatedOrientation, BFG::eulerToQuaternion(BFG::v3(18.75f * DEG2RAD, 0.0f, 0.0f)), BFG::EPSILON_F), true);
+}
 BOOST_AUTO_TEST_SUITE_END()

@@ -58,7 +58,7 @@ mDamageMultiplier(100.0f)
 	requiredPvInitialized(ID::PV_Effect);
 
 	subLane()->connect(ID::PE_CONTACT, this, &Destroyable::onContact, ownerHandle());
-	subLane()->connectV(ID::GOE_REINITIALIZE, this, &Destroyable::onReinitialize, ownerHandle());
+	//subLane()->connectV(ID::GOE_REINITIALIZE, this, &Destroyable::onReinitialize, ownerHandle());
 	
 	require("Physical");
 }
@@ -79,6 +79,7 @@ void Destroyable::onContact(const Physics::ModulePenetration& mp)
 	value<f32>(ID::PV_Damage, ownModule) += newDamage;
 }
 
+// Not used atm.
 void Destroyable::onReinitialize()
 {
 	BOOST_FOREACH(ModuleMapT::value_type pair, mModules)
@@ -185,15 +186,16 @@ void Destroyable::respawn(GameHandle module)
 
 	mSubLane->emit(ID::GOE_CONTROL_MAGIC_STOP, Event::Void(), ownerHandle());
 
-	setGoValue(ID::PV_Position, pluginId(), modulePosition);
-	setGoValue(ID::PV_Orientation, pluginId(), moduleOrientation);
+	subLane()->emit(ID::PE_UPDATE_POSITION, modulePosition, module);
+	subLane()->emit(ID::PE_UPDATE_ORIENTATION, moduleOrientation, module);
 	
 	subLane()->emit(ID::PE_UPDATE_COLLISION_MODE, ID::CM_Standard, module);
 	subLane()->emit(ID::PE_UPDATE_SIMULATION_FLAG, true, module);
 
 	subLane()->emit(ID::VE_SET_VISIBLE, true, module);
 	
-	mTimeSinceDestruction[module]         = 0.0f;
+	mTimeSinceDestruction[module] = 0.0f;
+	value<f32>(ID::PV_Damage, module) = 0.0f;
 	value<bool>(ID::PV_Destroyed, module) = false;
 }
 

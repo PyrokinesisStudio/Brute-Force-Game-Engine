@@ -82,6 +82,8 @@ public:
 	void play();
 	void pause();
 
+	void volume(f32 gain);
+
 protected:
 	
 	void onStreamFinishedForwarded() { /*NOT USED FOR THIS MODULE*/ }
