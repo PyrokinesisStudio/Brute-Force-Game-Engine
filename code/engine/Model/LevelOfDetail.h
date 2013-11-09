@@ -28,6 +28,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_LEVEL_OF_DETAIL_H_
 
 #include <vector>
+#include <stdexcept>
+
 #include <Core/Types.h>
 #include <Core/v3.h>
 #include <Core/qv4.h>
@@ -98,11 +100,18 @@ struct Ranges
 	u32 dtC(f32 dtC) const       { return range(mDtC, dtC); }
 	u32 soO(f32 soO) const       { return range(mSoO, soO); }
 
+	//! DistanceToCamera
 	RangeTableT mDtC;
+	//! SizeOfObject
 	RangeTableT mSoO;
 	
+	//! Velocity
 	RangeTableT mVel;
+
+	//! Direction (Orientation)
 	RangeTableT mDirec;
+	
+	//! AbilityToAccelerate
 	RangeTableT mAtA;
 
 private:
