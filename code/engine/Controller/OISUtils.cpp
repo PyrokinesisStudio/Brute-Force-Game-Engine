@@ -247,7 +247,6 @@ void DestroyInputManager(OIS::InputManager* im)
 	if (im)
 	{
 		OIS::InputManager::destroyInputSystem(im);
-		im = NULL;
 	}
 }
 

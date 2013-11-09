@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE (explosionTest)
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane viewLane(sync, 100, "View");
 
-	viewLane.addEntry<BFG::View::Main>("explostionTest");
+	viewLane.addEntry<BFG::View::Main>("explosionTest");
 	viewLane.addEntry<ModuleExplosionTest>();
 	sync.start();
 	
