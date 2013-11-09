@@ -56,7 +56,8 @@ struct Interpolator
 	{
 		mInterpolatePosition = true;
 
-		u32 timeStamp = interpData.get<0>(); // TODO: Unused parameter
+		//! \todo: use timeStamp
+		//u32 timeStamp = interpData.get<0>(); 
 		u16 age = interpData.get<1>();
 		const v3& pos = interpData.get<2>();
 
@@ -79,7 +80,8 @@ struct Interpolator
 	{
 		mInterpolateOrientation = true;
 
-		u32 timeStamp = interpData.get<0>();
+		//! \todo: use timeStamp
+		//u32 timeStamp = interpData.get<0>(); 
 		u16 age = interpData.get<1>();
 		const qv4& ori = interpData.get<2>();
 

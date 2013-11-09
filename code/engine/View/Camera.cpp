@@ -53,7 +53,8 @@ Camera::Camera(Event::Lane& lane,
                s32 width, 
                s32 height,
                const v3& position,
-               const qv4& orientation) :
+               const qv4& orientation,
+               GameHandle parent) :
 mSubLane(lane.createSubLane()),
 mCameraNode(camNode),
 mRenderTarget(renderTarget),
@@ -170,8 +171,14 @@ mRenderTargetCreated(false)
 		mRenderTarget->addViewport(cam);
 	}
 	
-	mSubLane->connect(ID::VE_UPDATE_POSITION, this, &Camera::updatePosition, mHandle);
-	mSubLane->connect(ID::VE_UPDATE_ORIENTATION, this, &Camera::updateOrientation, mHandle);
+// 	mSubLane->connect(ID::VE_UPDATE_POSITION, this, &Camera::updatePosition, mHandle);
+// 	mSubLane->connect(ID::VE_UPDATE_ORIENTATION, this, &Camera::updateOrientation, mHandle);
+	mSubLane->connect(ID::VE_SET_CAMERA_TARGET, this, &Camera::onSetTarget, mHandle);
+
+	if (parent != NULL_HANDLE)
+	{
+		onSetTarget(parent);
+	}
 }
 
 void Camera::prepareRenderTarget()
@@ -226,6 +233,27 @@ void Camera::toggleWireframe()
 	{
 		cam->setPolygonMode(Ogre::PM_WIREFRAME);
 	}
+}
+
+void Camera::onSetTarget(const GameHandle& target)
+{
+	//! \hack const offset for camera
+	v3 offset(0.0f, 3.0f, -14);
+
+	Ogre::SceneManager* sceneMgr = Ogre::Root::getSingleton().getSceneManager(BFG_SCENEMANAGER);
+
+	if (!sceneMgr->hasSceneNode(stringify(target)))
+	{
+		errlog << "Target (" << stringify(target) << ") for camera (" << mHandle << ") does not exist!";
+		return;
+	}
+
+	Ogre::SceneNode* newParent = sceneMgr->getSceneNode(stringify(target));
+	Ogre::SceneNode* oldParent = mCameraNode->getParentSceneNode();
+	oldParent->removeChild(mCameraNode);
+	newParent->addChild(mCameraNode);
+
+	mCameraNode->setPosition(toOgre(offset));
 }
 
 } // namespcae View

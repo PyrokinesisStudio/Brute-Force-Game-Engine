@@ -183,8 +183,6 @@ private:
 
 	mutable FullSyncData mDeltaStorage;
 
-	ID::CollisionMode mCollisionMode;
-	
 	static MeshCacheT mMeshCache;
 	
 	std::deque<ModuleCreationParams> mAsyncAddModuleRequests;

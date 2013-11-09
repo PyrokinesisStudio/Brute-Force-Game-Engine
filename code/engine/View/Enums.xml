@@ -50,6 +50,12 @@
 					<value>VE_SET_VISIBLE</value>
 
 					<!-- \condition None.
+		           \consequence Sets the target of a camera.
+							              Detaches from an allready existing target.
+		           \payload GameHandle -->
+					<value>VE_SET_CAMERA_TARGET</value>
+
+					<!-- \condition None.
 		           \consequence Creates a new Camera.
 							              Deletes an allready existing one with the same handle.
 		           \payload View::CameraCreation -->

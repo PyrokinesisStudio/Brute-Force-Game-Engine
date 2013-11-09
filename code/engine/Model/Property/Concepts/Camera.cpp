@@ -34,6 +34,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Physics/Physics.h>
 
+#include <View/Enums.hh>
+
 namespace BFG {
 
 Camera::Camera(GameObject& owner, PluginId pid) :
@@ -81,6 +83,7 @@ Camera::~Camera()
 void Camera::onSetCameraTarget(GameHandle target)
 {
 	mTarget = target;
+	subLane()->emit(ID::VE_SET_CAMERA_TARGET, mTarget, ownerHandle());
 }
 
 #if 0
@@ -150,8 +153,8 @@ void Camera::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 
 void Camera::internalSynchronize()
 {
-	subLane()->emit(ID::PE_UPDATE_POSITION, mNewPosition, ownerHandle());
-	subLane()->emit(ID::PE_UPDATE_ORIENTATION, mNewOrientation, ownerHandle());
+// 	subLane()->emit(ID::PE_UPDATE_POSITION, mNewPosition, ownerHandle());
+// 	subLane()->emit(ID::PE_UPDATE_ORIENTATION, mNewOrientation, ownerHandle());
 }
 
 void Camera::internalOnModuleAttached(GameHandle module)
