@@ -53,6 +53,7 @@ u16 calculateHandshakeChecksum(const Handshake& hs)
 {
 	boost::crc_16_type result;
 	result.process_bytes(&hs.mPeerId, sizeof(PeerIdT));
+	result.process_bytes(&hs.mUdpConnectionToken.data, hs.mUdpConnectionToken.static_size());
 	return result.checksum();
 }
 

@@ -44,7 +44,8 @@ using namespace boost::system;
 
 Server::Server(Event::Lane& lane) :
 	mLane(lane),
-	mLocalTime(new Clock::StopWatch(Clock::milliSecond))
+	mLocalTime(new Clock::StopWatch(Clock::milliSecond)),
+	mTokenIdentificator(new TokenIdentificator)
 {
 	dbglog << "Server::Server()";
 
@@ -88,12 +89,15 @@ void Server::startAccepting()
 
 void Server::sendHandshake(PeerIdT peerId)
 {
-	dbglog << "Server::sendHandshake peer ID: " << peerId;
+	auto token = mTokenIdentificator->generateToken(peerId);
+	
 	Handshake hs;
 	hs.mPeerId = peerId;
+	hs.mUdpConnectionToken = token;
 	hs.mChecksum = calculateHandshakeChecksum(hs);
 	hs.serialize(mHandshakeBuffer);
 	
+	dbglog << "Server::sendHandshake peerID: " << peerId << " with token: " << token;
 	boost::asio::async_write
 	(
 		mTcpModules[peerId]->socket(),
@@ -148,7 +152,7 @@ void Server::onListen(const u16 port)
 		// UDP
 		auto udpServerEp = boost::make_shared<Udp::EndpointT>(tcpServerEp.address(), tcpServerEp.port());
 		auto udpServerSocket = boost::make_shared<Udp::SocketT>(mService, *udpServerEp);
-		UdpReadModule::EndpointIdentificatorT identificator = boost::bind(&Server::identifyUdpEndpoint, this, _1);
+		auto writeModuleCreator = boost::bind(&Server::createUdpWriteModule, this, _1, _2);
 		
 		dbglog << "Server: Creating UdpModule as listener.";
 		mUdpReadModule = boost::make_shared<UdpReadModule>(
@@ -156,7 +160,8 @@ void Server::onListen(const u16 port)
 			mService,
 			mLocalTime,
 			udpServerSocket,
-			identificator
+			mTokenIdentificator,
+			writeModuleCreator
 		);
 		mUdpReadModule->startReading();
 
@@ -182,62 +187,19 @@ void Server::onDisconnect(const PeerIdT& peerId)
 	}
 }
 
-PeerIdT Server::identifyUdpEndpoint(const boost::shared_ptr<Udp::EndpointT> remoteEndpoint)
+void Server::createUdpWriteModule(PeerIdT clientId, const Udp::EndpointPtrT remoteEndpoint)
 {
-	// Might exist yet
-	UdpEndpointMap::const_iterator it = mUdpEndpoints.find(*remoteEndpoint);
-	if (it != mUdpEndpoints.end())
-		return it->second;
-	
-	const boost::asio::ip::address address = remoteEndpoint->address();
-	BOOST_FOREACH(TcpModulesMap::value_type pair, mTcpModules)
-	{
-		boost::system::error_code ec;
-		boost::asio::ip::tcp::endpoint tcpRemoteEndpoint = pair.second->socket().remote_endpoint(ec);
-		if (ec)
-			continue; // Probably not connected yet -> skip this module.
-
-		dbglog << "Test " << tcpRemoteEndpoint.address() << " == " << address;
-		
-		bool ipEqual = (tcpRemoteEndpoint.address() == address);
-		bool bound = (mUdpWriteModules.find(pair.first) != mUdpWriteModules.end());
-		dbglog << "Bound? " << (bound?"Yes":"No");
-		
-		if (ipEqual && !bound)
-		{
-			dbglog << "Server: Creating UdpModule #" << pair.first << " as remote connection.";
-			boost::shared_ptr<UdpWriteModule> udpModule(new UdpWriteModule(
-				mLane,
-				mService,
-				pair.first,
-				mLocalTime,
-				mUdpReadModule->socket(),
-				remoteEndpoint
-			));
-			udpModule->startSending();
-			mUdpWriteModules[pair.first] = udpModule;
-			mUdpEndpoints[*remoteEndpoint] = pair.first;
-			return pair.first;
-		}
-	}
-
-	dbglog << "Unable to identify remote endpoint: " << *remoteEndpoint;
-	BOOST_FOREACH(TcpModulesMap::value_type pair, mTcpModules)
-	{
-		boost::system::error_code ec;
-		boost::asio::ip::tcp::endpoint tcpRemoteEndpoint = pair.second->socket().remote_endpoint(ec);
-		if (ec)
-			continue; // Probably not connected yet -> skip this module.
-		dbglog << "\tPeerID: " << pair.first << " TCP Address: " << tcpRemoteEndpoint;
-	}
-	dbglog << "Bound UDP modules:";
-	BOOST_FOREACH(UdpWriteModulesMap::value_type pair, mUdpWriteModules)
-	{
-		dbglog << "\tPeerID: " << pair.first;
-	}
-	
-	assert(! "TODO: What to do with unknown peer ids?");
-	return 0xCDCDCDCD;
+	dbglog << "Server: Creating UdpWriteModule #" << clientId << " as remote connection.";
+	boost::shared_ptr<UdpWriteModule> udpModule(new UdpWriteModule(
+		mLane,
+		mService,
+		clientId,
+		mLocalTime,
+		mUdpReadModule->socket(),
+		remoteEndpoint
+	));
+	udpModule->startSending();
+	mUdpWriteModules[clientId] = udpModule;
 }
 
 } // namespace Network

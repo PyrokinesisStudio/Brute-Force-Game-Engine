@@ -130,12 +130,9 @@ void Client::connectHandler(const error_code &ec)
 	}
 }
 
-//! \brief Helper function for UDP endpoint identification on client-side.
-//! \return Always UNIQUE_PEER
-static PeerIdT uniquePeer(const boost::shared_ptr<Udp::EndpointT>&)
-{
-	return UNIQUE_PEER;
-}
+//! \brief Dummy function for UdpWriteModule creation on Client side.
+void idle(PeerIdT clientId, const Udp::EndpointPtrT remoteEndpoint)
+{}
 
 void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 {
@@ -178,6 +175,7 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 	auto udpLocalEp  = Udp::EndpointT(udp::v4(), RANDOM_PORT);
 	auto udpServerEp = make_shared<Udp::EndpointT>(tcpServerEp.address(), tcpServerEp.port());
 	auto udpSocket   = make_shared<Udp::SocketT>(mService, udpLocalEp);
+	auto peerIdentificator = make_shared<OneToOneIdentificator>();
 	
 	dbglog << "Client: Creating UdpReadModule";
 	mUdpReadModule = make_shared<UdpReadModule>
@@ -185,8 +183,9 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 		mLane,
 		mService,
 		mLocalTime,
-		socket,
-		uniquePeer
+		udpSocket,
+		peerIdentificator,
+		idle
 	);
 	mUdpReadModule->startReading();
 
@@ -197,11 +196,11 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 		mService,
 		UNIQUE_PEER,
 		mLocalTime,
-		socket,
+		udpSocket,
 		udpServerEp
 	);
+	mUdpWriteModule->pingRemote(hs.mUdpConnectionToken);
 	mUdpWriteModule->startSending();
-	mUdpWriteModule->pingRemote();
 	
 	mLane.emit(ID::NE_CONNECTED, mPeerId);
 

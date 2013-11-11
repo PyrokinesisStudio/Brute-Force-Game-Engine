@@ -30,6 +30,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/function.hpp>
 
 #include <Network/NetworkModule.h>
+#include <Network/PeerIdentificator.h>
 #include <Network/Udp.h>
 
 namespace BFG {
@@ -38,14 +39,15 @@ namespace Network {
 class UdpReadModule : public NetworkModule<Udp>
 {
 public:
-	typedef boost::function<PeerIdT(const boost::shared_ptr<Udp::EndpointT>)> EndpointIdentificatorT;
+	typedef boost::function<void(PeerIdT, Udp::EndpointPtrT)> UdpWriteModuleCreatorT;
 	
 	UdpReadModule(Event::Lane& lane,
 	              boost::asio::io_service& service,
 	              boost::shared_ptr<Clock::StopWatch> localTime,
 	              boost::shared_ptr<Udp::SocketT> socket,
-	              EndpointIdentificatorT endpointIdentificator);
-	
+	              boost::shared_ptr<PeerIdentificator> peerIdentificator,
+	              UdpWriteModuleCreatorT udpWriteModuleCreator);
+
 	virtual ~UdpReadModule();
 
 	//! \brief Returns the socket of the connection
@@ -71,18 +73,40 @@ private:
 	void readHandler(const boost::system::error_code& ec,
 	                 std::size_t bytesTransferred,
 	                 Udp::EndpointPtrT remoteEndpoint);
-	
+
 	//! \brief Received data from the net is packed as a corresponding event 
 	//! \param[in] data data array received from the network
 	//! \param[in] size size of the data received
-	virtual void onReceive(OPacket<Udp>& oPacket, PeerIdT peerId);
+	//! \todo NetworkModule should be refactored / renamed. We've got no
+	//!       use for onReceive
+	virtual void onReceive(OPacket<Udp>&, PeerIdT)
+	{}
+
+	//! \brief Docs
+	template <typename BufferT>
+	Udp::HeaderT parseHeader(BufferT readData) const
+	{
+		Udp::HeaderT header;
+		Udp::HeaderT::SerializationT headerBuffer;
+		std::copy
+		(
+			mReadBuffer.begin(),
+			mReadBuffer.begin() + Udp::headerSize(),
+			headerBuffer.data()
+		);
+		header.deserialize(headerBuffer);
+		return header;
+	}
+
+	bool isOldPacket(Udp::HeaderT header, PeerIdT senderId);
 	
 	boost::shared_ptr<Udp::SocketT> mSocket;
 
 	// TODO: Use CreateBuffer
 	boost::array<char, Udp::MAX_BYTE_RATE> mReadBuffer;
 	
-	EndpointIdentificatorT mEndpointIdentificator;
+	boost::shared_ptr<PeerIdentificator> mPeerIdentificator;
+	UdpWriteModuleCreatorT mUdpWriteModuleCreator;
 	
 	// TODO: Do this in own class
 	std::map<PeerIdT, BFG::u32> mLastSequenceNumbers;
