@@ -37,6 +37,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Network{
 
+using boost::make_shared;
+
 Client::Client(Event::Lane& lane) :
 mLane(lane),
 mLocalTime(new Clock::StopWatch(Clock::milliSecond))
