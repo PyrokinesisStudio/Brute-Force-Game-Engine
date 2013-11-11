@@ -185,7 +185,7 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 		mLocalTime,
 		socket,
 		uniquePeer
-	));
+	);
 	mUdpReadModule->startReading();
 
 	dbglog << "Client: Creating UdpWriteModule";

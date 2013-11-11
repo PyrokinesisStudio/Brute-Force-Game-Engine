@@ -157,7 +157,7 @@ void Server::onListen(const u16 port)
 			mLocalTime,
 			udpServerSocket,
 			identificator
-		));
+		);
 		mUdpReadModule->startReading();
 
 		// Asio Loop
