@@ -199,7 +199,7 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 		mLocalTime,
 		socket,
 		udpServerEp
-	));
+	);
 	mUdpWriteModule->startSending();
 	mUdpWriteModule->pingRemote();
 	
