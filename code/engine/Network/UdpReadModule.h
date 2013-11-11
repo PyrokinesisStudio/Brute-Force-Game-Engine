@@ -67,8 +67,10 @@ private:
 	}
 	
 	virtual void read();
-
-	void readHandler(const boost::system::error_code &ec, std::size_t bytesTransferred, boost::shared_ptr<Udp::EndpointT> remoteEndpoint);
+	
+	void readHandler(const boost::system::error_code& ec,
+	                 std::size_t bytesTransferred,
+	                 Udp::EndpointPtrT remoteEndpoint);
 	
 	//! \brief Received data from the net is packed as a corresponding event 
 	//! \param[in] data data array received from the network

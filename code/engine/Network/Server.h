@@ -44,6 +44,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Network{
 
+// TODO: Remove
 using namespace boost::asio::ip;
 using namespace boost::system;
 

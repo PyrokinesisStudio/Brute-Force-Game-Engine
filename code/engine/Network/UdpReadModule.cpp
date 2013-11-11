@@ -57,10 +57,11 @@ UdpReadModule::~UdpReadModule()
 
 void UdpReadModule::read()
 {
-	dbglog << "UdpReadModule::read()";
+	dbglog << "UdpReadModule::read() #" << mPeerId;
 
-	boost::shared_ptr<Udp::EndpointT> remoteEndpoint(new Udp::EndpointT);
-	
+	auto remoteEndpoint = boost::make_shared<Udp::EndpointT>();
+	dbglog << "UdpReadModule reading on " << *remoteEndpoint;
+
 	socket()->async_receive_from
 	(
 		asio::buffer(mReadBuffer),
@@ -74,12 +75,12 @@ void UdpReadModule::read()
 			remoteEndpoint
 		)
 	);
-	dbglog << "UdpReadModule::read()";
+	dbglog << "UdpReadModule::~read() #" << mPeerId;
 }
 
 void UdpReadModule::readHandler(const boost::system::error_code& ec,
                                 std::size_t bytesTransferred,
-                                boost::shared_ptr<Udp::EndpointT> remoteEndpoint)
+                                Udp::EndpointPtrT remoteEndpoint)
 {
 	if (ec)
 	{

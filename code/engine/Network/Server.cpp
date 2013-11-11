@@ -141,17 +141,17 @@ void Server::onListen(const u16 port)
 		dbglog << "Server: Starting to listen on port " << port;
 
 		// TCP
-		boost::asio::ip::tcp::endpoint tcpServerEp = tcp::endpoint(tcp::v4(), port);
+		auto tcpServerEp = tcp::endpoint(tcp::v4(), port);
 		mAcceptor.reset(new tcp::acceptor(mService, tcpServerEp));
 		startAccepting();
 		
 		// UDP
-		boost::shared_ptr<Udp::EndpointT> udpServerEp(new Udp::EndpointT(tcpServerEp.address(), tcpServerEp.port()));
-		boost::shared_ptr<Udp::SocketT> udpServerSocket(new Udp::SocketT(mService, *udpServerEp));
+		auto udpServerEp = boost::make_shared<Udp::EndpointT>(tcpServerEp.address(), tcpServerEp.port());
+		auto udpServerSocket = boost::make_shared<Udp::SocketT>(mService, *udpServerEp);
 		UdpReadModule::EndpointIdentificatorT identificator = boost::bind(&Server::identifyUdpEndpoint, this, _1);
 		
 		dbglog << "Server: Creating UdpModule as listener.";
-		mUdpReadModule.reset(new UdpReadModule(
+		mUdpReadModule = boost::make_shared<UdpReadModule>(
 			mLane,
 			mService,
 			mLocalTime,

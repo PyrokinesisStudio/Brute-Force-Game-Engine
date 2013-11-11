@@ -59,10 +59,9 @@ struct Handshake
 		memcpy(&mChecksum, p, sizeof(u16));
 	}
 	
-	// TODO: replace PeerIdT with simpler type
 	PeerIdT mPeerId;
 
-	u16 mProtocolVersion;
+	u16 mProtocolVersion;       //! \todo Use
 	u16 mChecksum;
 };
 
