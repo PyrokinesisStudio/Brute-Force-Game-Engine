@@ -26,8 +26,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Network/Client.h>
 
-#include <boost/crc.hpp>
 #include <Base/Logger.h>
+#include <Network/Checksum.h>
 #include <Network/Event.h>
 #include <Network/PrintErrorCode.h>
 #include <Network/TcpModule.h>
@@ -236,13 +236,6 @@ void Client::syncTimerHandler(const error_code &ec)
 
 	mTcpModule->sendTimesyncRequest();
 	setTimeSyncTimer(TIME_SYNC_WAIT_TIME);
-}
-
-u16 Client::calculateHandshakeChecksum(const Handshake& hs)
-{
-	boost::crc_16_type result;
-	result.process_bytes(&(hs.mPeerId), sizeof(PeerIdT));
-	return result.checksum();
 }
 
 } // namespace Network
