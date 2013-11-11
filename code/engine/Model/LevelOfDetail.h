@@ -42,10 +42,10 @@ struct Quantifier
 {
 	Quantifier(f32 dtC,
 	           f32 foM,
-			   f32 soO,
-			   f32 vel,
-			   f32 direc,
-			   f32 atA):
+	           f32 soO,
+	           f32 vel,
+	           f32 direc,
+	           f32 atA):
 	mDtC(dtC),
 	mFoM(foM),
 	mSoO(soO),
@@ -167,10 +167,10 @@ public:
 
 		f32 get(v3 position, 
 		        qv4 orientation, 
-				v3 cameraPosition, 
-				f32 velocitiy, 
-				f32 abilityToAccelerate, 
-				f32 sizeOfObject)
+		        v3 cameraPosition, 
+		        f32 velocitiy, 
+		        f32 abilityToAccelerate, 
+		        f32 sizeOfObject)
 		{
 			v3 directionCam = position - cameraPosition;
 			norm(directionCam);
@@ -178,8 +178,8 @@ public:
 			f32 angle = angleBetween(orientation, eulerToQuaternion(directionCam)) * RAD2DEG;
 			
 			mFoM = mRanges.velocity(velocitiy) * mQ.mVelocity + 
-				   mRanges.direction(angle) * mQ.mDirection + 
-				   mRanges.atA(abilityToAccelerate) * mQ.mAtA;
+			       mRanges.direction(angle) * mQ.mDirection + 
+			       mRanges.atA(abilityToAccelerate) * mQ.mAtA;
 
 			mSoO = mRanges.soO(sizeOfObject);
 			mDtC = mRanges.dtC(distance(position, cameraPosition));
