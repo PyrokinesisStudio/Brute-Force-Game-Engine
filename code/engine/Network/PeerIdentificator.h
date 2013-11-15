@@ -24,55 +24,54 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_NETWORK_HANDSHAKE_H
-#define BFG_NETWORK_HANDSHAKE_H
+#ifndef BFG_NETWORK_IDENTIFICATOR_H
+#define BFG_NETWORK_IDENTIFICATOR_H
 
-#include <cstring>
-#include <boost/array.hpp>
-#include <Core/Types.h>
 #include <Network/Defs.h>
+#include <Network/Packet.h>
+#include <Network/Udp.h>
 
 namespace BFG {
 namespace Network { 
 
-struct Handshake
+class PeerIdentificator
 {
-	typedef boost::array<char,2+2+4+16> SerializationT;
-	
-	void serialize(SerializationT& output) const
+public:
+	PeerIdT operator()(Udp::EndpointPtrT ep, OPacket<Udp>& firstPacket)
 	{
-		char* p = output.data();
-		memcpy(p, &mPeerId, sizeof(PeerIdT));
-		p += sizeof(PeerIdT);
-		memcpy(p, &mProtocolVersion, sizeof(u16));
-		p += sizeof(u16);
-		memcpy(p, &mChecksum, sizeof(u16));
-		p += sizeof(u16);
-		std::copy(mUdpConnectionToken.begin(), mUdpConnectionToken.end(), p);
-		//p += mUdpConnectionToken.static_size();
-	}
-
-	void deserialize(const SerializationT& input)
-	{
-		const char* p = input.data();
-		memcpy(&mPeerId, p, sizeof(PeerIdT));
-		p += sizeof(PeerIdT);
-		memcpy(&mProtocolVersion, p, sizeof(u16));
-		p += sizeof(u16);
-		memcpy(&mChecksum, p, sizeof(u16));
-		p += sizeof(u16);
-		std::copy(p, p + mUdpConnectionToken.static_size(), mUdpConnectionToken.begin());
-		//p += mUdpConnectionToken.static_size();
+		//dbglog << "PeerIdentificator identifying: " << *ep;
+		return identify(ep, firstPacket);
 	}
 	
-	PeerIdT mPeerId;
-
-	u16 mProtocolVersion;       //! \todo Use
-	u16 mChecksum;
-
-	TokenT mUdpConnectionToken;
+protected:
+	virtual PeerIdT identify(Udp::EndpointPtrT, OPacket<Udp>& firstPacket) = 0;
 };
 
+class TokenIdentificator : public PeerIdentificator
+{
+public:
+	virtual PeerIdT identify(Udp::EndpointPtrT, OPacket<Udp>& firstPacket);
+
+	TokenT generateToken(PeerIdT);
+	
+private:
+	PeerIdT identifyByEndpoint(Udp::EndpointPtrT remoteEndpoint) const;
+	PeerIdT identifyByToken(OPacket<Udp>& firstPacket) const;
+
+	void cacheEndpoint(PeerIdT, Udp::EndpointPtrT);
+	
+	std::map<TokenT, PeerIdT> mGeneratedTokens;
+	std::map<Udp::EndpointT, PeerIdT> mEndpointCache;
+};
+
+class OneToOneIdentificator : public PeerIdentificator
+{
+public:
+	virtual PeerIdT identify(Udp::EndpointPtrT, OPacket<Udp>& firstPacket)
+	{
+		return UNIQUE_PEER;
+	}
+};
 
 } // namespace Network
 } // namespace BFG

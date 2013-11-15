@@ -79,8 +79,8 @@ struct EventStatus
 template <typename ApplicationT, BFG::u8 mode, BFG::GameHandle appHandle>
 struct NetworkContext
 {
-	NetworkContext(const char*const Threadname, const std::string& testMsg) :
-	lane(synchronizer, 100)
+	NetworkContext(const char*const threadname, const std::string& testMsg) :
+	lane(synchronizer, 100, threadname)
 	{
 		lane.addEntry<BFG::Network::Main>(mode);
 		

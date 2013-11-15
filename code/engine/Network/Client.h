@@ -105,12 +105,6 @@ private:
 	//! \param[in] ec Error code of boost::asio
 	void syncTimerHandler(const error_code &ec);
 
-	// TODO: Move to Checksum.h and remove crc include
-	//! \brief Calculates the checksum of a Handshake
-	//! \param[in] hs The Handshake to calculate the checksum for
-	//! \return Calculated checksum
-	u16 calculateHandshakeChecksum(const Handshake& hs);
-
 	boost::asio::io_service mService;
 	boost::shared_ptr<tcp::resolver> mResolver;
 	boost::thread mThread;

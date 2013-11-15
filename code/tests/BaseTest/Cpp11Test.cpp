@@ -1,3 +1,4 @@
+#include <array>
 #include <iostream>
 #include <vector>
 #include <boost/test/unit_test.hpp>
@@ -89,6 +90,13 @@ BOOST_AUTO_TEST_CASE (testUniquePtr)
 	
 	// New pointer contains value
 	BOOST_CHECK_EQUAL(*j, 1337);
+}
+
+BOOST_AUTO_TEST_CASE (testArrayAndDecltype)
+{
+	std::vector<int> v;
+	std::array<int, 5> a = { 1, 3, 5, 7, 9 };
+	std::copy(a.begin(), a.end(), std::back_insert_iterator<decltype(v)>(v));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

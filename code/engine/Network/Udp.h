@@ -76,6 +76,8 @@ struct Udp
 
 	typedef boost::asio::ip::udp::endpoint EndpointT;
 	typedef boost::asio::ip::udp::socket SocketT;
+
+	typedef boost::shared_ptr<boost::asio::ip::udp::endpoint> EndpointPtrT;
 	
 	static std::size_t headerSize()
 	{
