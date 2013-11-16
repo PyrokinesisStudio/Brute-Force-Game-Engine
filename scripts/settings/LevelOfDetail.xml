@@ -1,0 +1,119 @@
+<Settings>
+	<LevelOfDetail>
+		
+		<Quantifier>
+			<DistanceToCamera>0.4</DistanceToCamera>
+			<FactorOfMobility>0.3</FactorOfMobility>
+			<SizeOfObject>0.3</SizeOfObject>
+			<Velocity>0.5</Velocity>
+			<Direction>0.35</Direction>
+			<AbilityToAccelerate>0.15</AbilityToAccelerate>
+		</Quantifier>
+	
+		<RangeTables>
+			
+			<!-- values in meter -->
+			<DistanceToCamera>
+				<RangeDescriptor>
+					<rating>1</rating>
+					<value>0.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>2</rating>
+					<value>10.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>4</rating>
+					<value>50.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>10</rating>
+					<value>200.0</value>
+				</RangeDescriptor>				
+			</DistanceToCamera>
+			
+			<!-- values in meter -->
+			<SizeOfObject>
+				<RangeDescriptor>
+					<rating>1</rating>
+					<value>100.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>2</rating>
+					<value>50.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>7</rating>
+					<value>10.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>10</rating>
+					<value>0.0</value>
+				</RangeDescriptor>
+			</SizeOfObject>
+			
+			<!-- values meter per sec -->
+			<Velocity>
+				<RangeDescriptor>
+					<rating>1</rating>
+					<value>300.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>3</rating>
+					<value>100.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>8</rating>
+					<value>30.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>10</rating>
+					<value>0.0</value>
+				</RangeDescriptor>
+			</Velocity>
+	
+			<!-- values in degree -->
+			<Direction>
+				<RangeDescriptor>
+					<rating>1</rating>
+					<value>0.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>2</rating>
+					<value>10.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>3</rating>
+					<value>30.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>6</rating>
+					<value>90.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>10</rating>
+					<value>180.0</value>
+				</RangeDescriptor>
+			</Direction>
+		
+			<!-- values not specified yet -->
+			<AbilityToAccelerate>
+				<RangeDescriptor>
+					<rating>1</rating>
+					<value>50.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>2</rating>
+					<value>20.0</value>
+				</RangeDescriptor>
+				<RangeDescriptor>
+					<rating>10</rating>
+					<value>0.0</value>
+				</RangeDescriptor>
+			</AbilityToAccelerate>
+	
+		</RangeTables>
+
+	</LevelOfDetail>
+</Settings>
+	

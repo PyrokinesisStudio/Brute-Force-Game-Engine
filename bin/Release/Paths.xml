@@ -11,6 +11,7 @@
 	<path type = "P_SCREENSHOTS" location = "./Screenshots" autocreate = "true" />
 	<path type = "P_SCRIPTS" location = "../../scripts" />
 	<path type = "P_SCRIPTS_CONTROL" location = "../../scripts/control" />
+	<path type = "P_SCRIPTS_SETTINGS" location = "../../scripts/settings" />
 	<path type = "P_SCRIPTS_LEVELS" location = "../../scripts/levels" />
 	<path type = "P_SCRIPTS_GUI" location = "../../scripts/gui" />
 	<path type = "P_SCRIPTS_GUI_HUD" location = "../../scripts/gui/hud" />

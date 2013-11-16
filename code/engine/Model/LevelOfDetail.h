@@ -29,17 +29,32 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 #include <stdexcept>
+#include <string>
+
+#include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <Core/Types.h>
 #include <Core/v3.h>
 #include <Core/qv4.h>
 #include <Core/Math.h>
+#include <Core/Path.h>
+#include <Core/XmlFileHandleFactory.h>
 
 
 namespace BFG {
 
 struct Quantifier
 {
+	Quantifier()
+	{
+		Path p;
+		mLoDFileName = p.Get(ID::P_SCRIPTS_SETTINGS) + "/LevelOfDetail.xml";
+		
+		load();
+		validate();
+	}
+	
 	Quantifier(f32 dtC,
 	           f32 foM,
 	           f32 soO,
@@ -53,9 +68,14 @@ struct Quantifier
 	mDirection(direc),
 	mAtA(atA)
 	{
-		if ((dtC + foM + soO) != 1.0f || (vel + direc + atA) != 1.0f)
-			throw std::logic_error("Invalid LoD quantifier. DtC + FoM + SoO must be 1.0f and vel + direct + AtA must be 1.0f, too.");
+		validate();
 	}
+
+	void reload()
+	{
+		load();
+	}
+
 
 	//! quantifier DistanceToCamera
 	f32 mDtC;
@@ -70,6 +90,35 @@ struct Quantifier
 	f32 mVelocity;
 	f32 mDirection;
 	f32 mAtA;
+
+private:
+
+	void load()
+	{
+		XmlFileHandleT levelOfDetailXml = createXmlFileHandle(mLoDFileName);
+		XmlTreeT quantifier = levelOfDetailXml->root()->child("Settings")->child("LevelOfDetail")->child("Quantifier");
+
+		loadQuantifier(quantifier, "DistanceToCamera", mDtC);
+		loadQuantifier(quantifier, "FactorOfMobility", mFoM);
+		loadQuantifier(quantifier, "SizeOfObject", mSoO);
+		loadQuantifier(quantifier, "Velocity", mVelocity);
+		loadQuantifier(quantifier, "Direction", mDirection);
+		loadQuantifier(quantifier, "AbilityToAccelerate", mAtA);
+	}
+
+	void loadQuantifier(XmlTreeT quantifier, const std::string& name, f32& out)
+	{
+		std::string value =  quantifier->child(name)->elementData();
+		out = boost::lexical_cast<f32>(value);
+	}
+
+	void validate()
+	{
+		if ((mDtC + mFoM + mSoO) != 1.0f || (mVelocity + mDirection + mAtA) != 1.0f)
+			throw std::logic_error("Invalid LoD quantifier. DtC + FoM + SoO must be 1.0f and vel + direct + AtA must be 1.0f, too.");
+	}
+
+	std::string mLoDFileName;
 };
 
 //! For calculating the LoD value there are several values we consider. Each of these values
@@ -79,6 +128,13 @@ struct Ranges
 {
 	typedef std::pair<u32, f32> RangeDescriptorT;
 	typedef std::vector<RangeDescriptorT> RangeTableT;
+
+	Ranges()
+	{
+		Path p;
+		mLoDFileName = p.Get(ID::P_SCRIPTS_SETTINGS) + "/LevelOfDetail.xml";
+		load();
+	}
 
 	Ranges(RangeTableT dtC,
 	       RangeTableT soO,
@@ -100,22 +156,41 @@ struct Ranges
 	u32 dtC(f32 dtC) const       { return range(mDtC, dtC); }
 	u32 soO(f32 soO) const       { return range(mSoO, soO); }
 
-	//! DistanceToCamera
-	RangeTableT mDtC;
-	//! SizeOfObject
-	RangeTableT mSoO;
-	
-	//! Velocity
-	RangeTableT mVel;
-
-	//! Direction (Orientation)
-	RangeTableT mDirec;
-	
-	//! AbilityToAccelerate
-	RangeTableT mAtA;
+	void reload()
+	{
+		load();
+	}
 
 private:
 	
+	void load()
+	{
+		XmlFileHandleT levelOfDetailXml = createXmlFileHandle(mLoDFileName);
+		XmlTreeT rangeTables = levelOfDetailXml->root()->child("Settings")->child("LevelOfDetail")->child("RangeTables");
+
+		loadRangeTable(rangeTables, "DistanceToCamera", mDtC);
+		loadRangeTable(rangeTables, "SizeOfObject", mSoO);
+		loadRangeTable(rangeTables, "Velocity", mVel);
+		loadRangeTable(rangeTables, "Direction", mDirec);
+		loadRangeTable(rangeTables, "AbilityToAccelerate", mAtA);
+	}
+
+	void loadRangeTable(XmlTreeT rangeTables, const std::string& tableName, RangeTableT& out)
+	{
+		XmlTreeListT rangeDescriptors = rangeTables->child(tableName)->childList("RangeDescriptor");
+		
+		std::string rating;
+		std::string value;
+
+		BOOST_FOREACH(XmlTreeT tree, rangeDescriptors)
+		{
+			rating = tree->child("rating")->elementData();
+			value = tree->child("value")->elementData();
+			RangeDescriptorT descr(boost::lexical_cast<u32>(rating), boost::lexical_cast<f32>(value));
+			out.push_back(descr);
+		}
+	}
+
 	//! returns the range number.
 	u32 range(const RangeTableT& rangeTable, f32 value) const
 	{
@@ -152,6 +227,22 @@ private:
 		else
 			return rangeTable.begin()->first;	
 	}
+
+	//! DistanceToCamera
+	RangeTableT mDtC;
+	//! SizeOfObject
+	RangeTableT mSoO;
+	
+	//! Velocity
+	RangeTableT mVel;
+
+	//! Direction (Orientation)
+	RangeTableT mDirec;
+	
+	//! AbilityToAccelerate
+	RangeTableT mAtA;
+
+	std::string mLoDFileName;
 };
 	
 	

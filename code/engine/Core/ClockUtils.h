@@ -60,7 +60,7 @@ public:
 	bpt::time_duration tillNow(bpt::ptime from) const;
 	
 	//! \return A duration in a given resolution (s, ms, mics)
-	s32 total(bpt::time_duration, Resolution resolution) const;
+	u32 total(bpt::time_duration, Resolution resolution) const;
 };
 
 //! This class works like a stop watch, with one exception: stop() could be
@@ -79,10 +79,10 @@ public:
 
 	//! Returns the measured value in defined resolution.
 	//! You can call stop() many times but not before calling start initial!
-	s32 stop() const;
+	u32 stop() const;
 
 	//! Returns the measured time and restarts the clock.
-	s32 restart();
+	u32 restart();
 	
 	//! Call this at the end of your clock operations to avoid wrong results
 	//! by calling stop before start.
@@ -102,20 +102,20 @@ class BFG_CORE_API SleepFrequently
 {
 public:
 	SleepFrequently(Resolution resolution,
-	                s32 frequency);
+	                u32 frequency);
 
 	//! Measures the time between two ticks and sleeps the threat for the time
 	//! that is left. It slows down the speed of a thread to a defined frequency.
-	s32 measure();
+	u32 measure();
 	void reset();
 
 private:
 
 	//! Sleep this thread for a given duration in defined resolution.
-	void  sleep(s32 duration) const;
+	void  sleep(u32 duration) const;
 
-	s32  mFrequency;
-	s32  mTickCount;
+	u32  mFrequency;
+	u32  mTickCount;
 
 	Resolution mResolution;
 

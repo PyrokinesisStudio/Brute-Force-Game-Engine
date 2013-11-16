@@ -8,9 +8,10 @@
 	<path type = "P_SOUND_EFFECTS" location = "../../resources/sound/effects" />
 	<path type = "P_SOUND_MUSIC" location = "../../resources/sound/music" />
 	<path type = "P_SOUND_VOICE" location = "../../resources/sound/voice" />
-  <path type = "P_SCREENSHOTS" location = "./Screenshots" autocreate = "true" />
+	<path type = "P_SCREENSHOTS" location = "./Screenshots" autocreate = "true" />
 	<path type = "P_SCRIPTS" location = "../../scripts" />
 	<path type = "P_SCRIPTS_CONTROL" location = "../../scripts/control" />
+	<path type = "P_SCRIPTS_SETTINGS" location = "../../scripts/settings" />
 	<path type = "P_SCRIPTS_LEVELS" location = "../../scripts/levels" />
 	<path type = "P_SCRIPTS_GUI" location = "../../scripts/gui" />
 	<path type = "P_SCRIPTS_GUI_HUD" location = "../../scripts/gui/hud" />

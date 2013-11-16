@@ -117,4 +117,19 @@ BOOST_AUTO_TEST_CASE (LevelOfDetailTest)
 	BOOST_CHECK_EQUAL(ranges.atA(30.0f), 1);
 }
 
+BOOST_AUTO_TEST_CASE (LoDLoadFromXmlTest)
+{
+	using namespace BFG;
+
+	BOOST_CHECK_NO_THROW(Ranges ranges);
+	BOOST_CHECK_NO_THROW(Quantifier quantifier);
+
+	Ranges ranges;
+	Quantifier quantifier;
+
+	BOOST_CHECK_NO_THROW(ranges.reload());
+	BOOST_CHECK_NO_THROW(quantifier.reload());
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
