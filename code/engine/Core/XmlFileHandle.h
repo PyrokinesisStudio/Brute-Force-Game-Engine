@@ -46,6 +46,8 @@ public:
 	XmlFileHandle(const std::string& path): mPath(path) {}
 
 	virtual void save(const std::string& path = "") = 0;
+	
+	//! Root is not(!) the first element in the XML file. To get the first element call root()->child("FirstElementName") .
 	XmlTreeT root() { return mRoot; }
 	std::string path() { return mPath; }
 
