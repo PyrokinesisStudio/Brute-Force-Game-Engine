@@ -71,11 +71,13 @@ struct null_deleter
     }
 };
 
-// C++14
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args)
+#ifndef _WIN32
+// c++14
+template<typename t, typename... args>
+std::unique_ptr<t> make_unique(args&&... args)
 {
-	return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+	return std::unique_ptr<t>(new t(std::forward<args>(args)...));
 }
+#endif
 
 #endif
