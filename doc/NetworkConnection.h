@@ -12,28 +12,28 @@
 	Client <- Client [label="connectHandler()", URL="\ref BFG::Network::Client::connectHandler()"];
 	Client abox Client [label="TCP connect", textbgcolour="#C1DAD6"];
 	
-	Server <= Client [label="sendHandshake()"];
-	Server <- Server [label="writeHandshakeHandler()"];
-	Server => TcpModule [label="startReading()"];
-	Server => TcpModule [label="startSending()"];
+	Server <= Server [label="sendHandshake()", URL="\ref BFG::Network::Server::sendHandshake()"];
+	Server <- Server [label="writeHandshakeHandler()", URL="\ref BFG::Network::Server::writeHandshakeHandler()"];
+	Server => TcpModule [label="startReading()", URL="\ref BFG::Network::TcpModule::startReading()"];
+	Server => TcpModule [label="startSending()", URL="\ref BFG::Network::TcpModule::startSending()"];
 	Server -> User [label="NE_CONNECTED"];
 	
-	Client <= Client [label="readHandshake()"];
-	Client <- Client [label="readHandshakeHandler()"];
-	Client => TcpModule [label="startReading()"];
-	Client => TcpModule [label="startSending()"];
+	Client <= Client [label="readHandshake()", URL="\ref BFG::Network::Client::readHandshake()"];
+	Client <- Client [label="readHandshakeHandler()", URL="\ref BFG::Network::Client::readHandshakeHandler()"];
+	Client => TcpModule [label="startReading()", URL="\ref BFG::Network::TcpModule::startReading()"];
+	Client => TcpModule [label="startSending()", URL="\ref BFG::Network::TcpModule::startSending()"];
 	
 	Client abox Client [label="UDP connect", textbgcolour="#C1DAD6"];
-	Client => UdpReadModule [label="startReading()"];
-	Client => UdpWriteModule [label="pingRemote()"];
-	Client => UdpWriteModule [label="startSending()"];
+	Client => UdpReadModule [label="startReading()", URL="\ref BFG::Network::UdpReadModule::startReading()"];
+	Client => UdpWriteModule [label="pingRemote()", URL="\ref BFG::Network::UdpWriteModule::pingRemote()"];
+	Client => UdpWriteModule [label="startSending()", URL="\ref BFG::Network::UdpWriteModule::startSending()"];
 	Client -> User [label="NE_CONNECTED"];
-	Client => TcpModule [label="sendTimesyncRequest()"];
+	Client => TcpModule [label="sendTimesyncRequest()", URL="\ref BFG::Network::TcpModule::sendTimesyncRequest()"];
 
-	UdpReadModule <- UdpReadModule [label="readHandler()"];
+	UdpReadModule <- UdpReadModule [label="readHandler()", URL="\ref BFG::Network::UdpReadModule::readHandler()"];
 	UdpReadModule => PeerIdentificator [label="identify()"];
 	UdpReadModule << PeerIdentificator [label="senderId"];
-	UdpReadModule => UdpWriteModule [label="startSending()"];
+	UdpReadModule => UdpWriteModule [label="startSending()", URL="\ref BFG::Network::UdpWriteModule::startSending()"];
 \endmsc
 
 \note
