@@ -64,14 +64,15 @@ std::ostream& operator<< (std::ostream& strm, const SeverityLevel& svl)
 	switch (svl)
 	{
 		case SL_DEBUG:
-			return strm << "debug";
+			strm << "debug";
 		case SL_INFORMATION:
-			return strm << "info";
+			strm << "info";
 		case SL_WARNING:
-			return strm << "warn";
+			strm << "warn";
 		case SL_ERROR:
-			return strm << "error";
+			strm << "error";
 	}
+	return strm;
 }
 
 void Init(SeverityLevel Min_Log_Level, const std::string& Filename)
