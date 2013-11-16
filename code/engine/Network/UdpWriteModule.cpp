@@ -26,6 +26,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Network/UdpWriteModule.h>
 
+#include <boost/uuid/uuid_io.hpp>
+
 #include <Base/Logger.h>
 #include <Network/Defs.h>
 
@@ -52,10 +54,16 @@ UdpWriteModule::~UdpWriteModule()
 	dbglog << "Destroying UdpWriteModule #" << mPeerId << " aka " << *mRemoteEndpoint;
 }
 
-void UdpWriteModule::pingRemote()
+void UdpWriteModule::pingRemote(TokenT udpToken)
 {
-	dbglog << "UdpWriteModule #" << mPeerId << " pinging remote " << *mRemoteEndpoint << " aka #" << mPeerId;
-	DataPayload payload(ID::NE_PING_UDP, 0, 0, 0, CharArray512T());
+	dbglog << "UdpWriteModule #" << mPeerId
+	       << " pinging remote " << *mRemoteEndpoint
+	       << " aka #" << mPeerId
+	       << " with token: " << udpToken;
+	
+	CharArray512T ca512;
+	std::copy(udpToken.begin(), udpToken.end(), ca512.begin());
+	DataPayload payload(ID::NE_PING_UDP, 0, 0, udpToken.size(), ca512);
 	onSend(payload);
 }
 

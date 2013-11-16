@@ -26,8 +26,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Network/UdpReadModule.h>
 
+#include <boost/uuid/uuid_io.hpp>
+
 #include <Base/Logger.h>
+
 #include <Network/Defs.h>
+#include <Network/Exception.h>
 
 namespace BFG {
 namespace Network { 
@@ -35,17 +39,18 @@ namespace Network {
 namespace asio = boost::asio;
 
 UdpReadModule::UdpReadModule(Event::Lane& lane,
-                             asio::io_service& service,
+                             boost::asio::io_service& service,
                              boost::shared_ptr<Clock::StopWatch> localTime,
                              boost::shared_ptr<Udp::SocketT> socket,
-                             EndpointIdentificatorT endpointIdentificator) :
+                             boost::shared_ptr<PeerIdentificator> peerIdentificator,
+                             UdpWriteModuleCreatorT udpWriteModuleCreator
+) :
 NetworkModule<Udp>(lane, service, UNIQUE_PEER, localTime),
 mSocket(socket),
-mEndpointIdentificator(endpointIdentificator)
+mPeerIdentificator(peerIdentificator),
+mUdpWriteModuleCreator(udpWriteModuleCreator)
 {
 	dbglog << "Creating UdpReadModule";
-
-	assert(endpointIdentificator);
 }
 
 UdpReadModule::~UdpReadModule()
@@ -54,13 +59,13 @@ UdpReadModule::~UdpReadModule()
 	dbglog << "Destroying UdpReadModule";
 }
 
-
 void UdpReadModule::read()
 {
-	dbglog << "UdpReadModule::read()";
+	dbglog << "UdpReadModule::read() #" << mPeerId;
 
-	boost::shared_ptr<Udp::EndpointT> remoteEndpoint(new Udp::EndpointT);
-	
+	auto remoteEndpoint = boost::make_shared<Udp::EndpointT>();
+	dbglog << "UdpReadModule reading on " << *remoteEndpoint;
+
 	socket()->async_receive_from
 	(
 		asio::buffer(mReadBuffer),
@@ -74,86 +79,92 @@ void UdpReadModule::read()
 			remoteEndpoint
 		)
 	);
-	dbglog << "UdpReadModule::read()";
+	dbglog << "UdpReadModule::~read() #" << mPeerId;
 }
 
 void UdpReadModule::readHandler(const boost::system::error_code& ec,
                                 std::size_t bytesTransferred,
-                                boost::shared_ptr<Udp::EndpointT> remoteEndpoint)
+                                Udp::EndpointPtrT remoteEndpoint)
 {
 	if (ec)
 	{
 		printErrorCode(ec, "UdpReadModule::readHandler", UNIQUE_PEER);
 		mLane.emit(ID::NE_DISCONNECT, mPeerId);
+		read();
 		return;
 	}
-	
-	dbglog << "UdpReadModule got " << bytesTransferred << " bytes: "
-	       << std::string(mReadBuffer.data(), bytesTransferred);
 
-	Udp::HeaderT header;
-	Udp::HeaderT::SerializationT headerBuffer;
-	std::copy(mReadBuffer.begin(), mReadBuffer.begin() + Udp::headerSize(), headerBuffer.data());
-	header.deserialize(headerBuffer);
-	
-	PeerIdT sender = mEndpointIdentificator(remoteEndpoint);
-	dbglog << "\tSender " << *remoteEndpoint << " was identified as " << sender;
+	dbglog << "UdpReadModule got " << bytesTransferred << " bytes: ";
+	       //<< std::string(mReadBuffer.data(), bytesTransferred);
 
-	// Add a zero sequence number for new peer
-	if (mLastSequenceNumbers.find(sender) == mLastSequenceNumbers.end())
-		mLastSequenceNumbers.insert(std::make_pair(sender, 0));
-	
-	
-	dbglog << "\tSequence Number: " << header.mSequenceNumber;
-	if (header.mSequenceNumber > mLastSequenceNumbers[sender])
-	{
-		mLastSequenceNumbers[sender] = header.mSequenceNumber;
-		
-		// TODO: Use timestamp
-		dbglog << "\tTimestamp: " << header.mTimestamp;
+	Udp::HeaderT header = parseHeader(mReadBuffer);
 
-		asio::const_buffer dataBuffer = asio::buffer(mReadBuffer, bytesTransferred) + Udp::headerSize();
-		OPacket<Udp> oPacket(dataBuffer);
-		onReceive(oPacket, sender);
-	}
-	else
-	{
-		warnlog << "Discarding old or duplicated UDP packet:" << header.mSequenceNumber << " from " << sender;
-	}
-	
-	read();
-}
-
-void UdpReadModule::onReceive(OPacket<Udp>& oPacket, PeerIdT peerId)
-{
-	dbglog << "UdpReadModule::onReceive";
-
+	// ---------------------------------
 	// TODO: Implement these
 	s32 mTimestampOffset = 0;
 	Rtt<s32, 10> mRtt;
-	
 	PayloadFactory payloadFactory(mTimestampOffset, mLocalTime, mRtt);
-	
-	while (oPacket.hasNextPayload())
+
+	try
 	{
-		DataPayload payload = oPacket.nextPayload(payloadFactory);
-		
-		if (payload.mAppEventId == ID::NE_PING_UDP)
+		auto dataBuffer = boost::asio::buffer(mReadBuffer, bytesTransferred) + Udp::headerSize();
+		OPacket<Udp> oPacket(dataBuffer);
+
+		// Empty packet?
+		if (!oPacket.hasNextPayload())
 		{
-			dbglog << "UdpReadModule::onReceive: Got UDP Ping from #" << peerId;
+			warnlog << "Received packet without data from " << *remoteEndpoint;
+			read();
 			return;
 		}
-		
-		try
+
+		// Identify Peer
+		PeerIdT senderId = (*mPeerIdentificator)(remoteEndpoint, oPacket);
+
+		// Create UdpWriteModule and sequence number if it doesn't exist yet.
+		if (mLastSequenceNumbers.find(senderId) == mLastSequenceNumbers.end())
 		{
-			dbglog << "UdpReadModule::onReceive: Emitting NE_RECEIVED to: " << payload.mAppDestination << " from: " << peerId;
-			mLane.emit(ID::NE_RECEIVED, payload, payload.mAppDestination, peerId);
+			dbglog << "UdpReadModule: Creating UdpWriteModule and sequence number";
+			mUdpWriteModuleCreator(senderId, remoteEndpoint);
+			mLastSequenceNumbers.insert(std::make_pair(senderId, 0));
 		}
-		catch (std::exception& ex)
+
+		dbglog << "\tGot UDP packet from #" << senderId;
+
+		if (isOldPacket(header, senderId))
 		{
-			warnlog << ex.what();
+			warnlog << "Discarding old or duplicated UDP packet:" << header.mSequenceNumber << " from " << senderId;
+			read();
+			return;
+		}
+
+		while (oPacket.hasNextPayload())
+		{
+			DataPayload payload = oPacket.nextPayload(payloadFactory);
+			dbglog << "UdpReadModule::onReceive: Emitting NE_RECEIVED to: " << payload.mAppDestination << " from: " << senderId;
+			mLane.emit(ID::NE_RECEIVED, payload, payload.mAppDestination, senderId);
 		}
 	}
+	catch (UnknownPeerException& ex)
+	{
+		//! \todo Implement
+		dbglog << "STUB: UnknownPeerException";
+	}
+
+	read();
+}
+
+bool UdpReadModule::isOldPacket(Udp::HeaderT header, PeerIdT senderId)
+{
+	if (header.mSequenceNumber > mLastSequenceNumbers[senderId])
+	{
+		mLastSequenceNumbers[senderId] = header.mSequenceNumber;
+		//! \todo Use timestamp
+		dbglog << "\tSequence Number: " << header.mSequenceNumber;
+		dbglog << "\tTimestamp: " << header.mTimestamp;
+		return false;
+	}
+	return true;
 }
 
 } // namespace Network

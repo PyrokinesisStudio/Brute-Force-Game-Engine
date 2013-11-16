@@ -52,7 +52,7 @@ public:
 		return mSocket;
 	}
 	
-	void pingRemote();
+	void pingRemote(TokenT);
 	
 	virtual void startSending()
 	{

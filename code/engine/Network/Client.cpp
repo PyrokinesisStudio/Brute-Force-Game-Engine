@@ -26,8 +26,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Network/Client.h>
 
-#include <boost/crc.hpp>
 #include <Base/Logger.h>
+#include <Network/Checksum.h>
 #include <Network/Event.h>
 #include <Network/PrintErrorCode.h>
 #include <Network/TcpModule.h>
@@ -36,6 +36,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace BFG {
 namespace Network{
+
+using boost::make_shared;
 
 Client::Client(Event::Lane& lane) :
 mLane(lane),
@@ -128,12 +130,9 @@ void Client::connectHandler(const error_code &ec)
 	}
 }
 
-//! \brief Helper function for UDP endpoint identification on client-side.
-//! \return Always UNIQUE_PEER
-static PeerIdT uniquePeer(const boost::shared_ptr<Udp::EndpointT>&)
-{
-	return UNIQUE_PEER;
-}
+//! \brief Dummy function for UdpWriteModule creation on Client side.
+void idle(PeerIdT clientId, const Udp::EndpointPtrT remoteEndpoint)
+{}
 
 void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 {
@@ -172,32 +171,36 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 	mTcpModule->startReading();
 	mTcpModule->startSending();
 
-	boost::asio::ip::tcp::endpoint tcpServerEp = mTcpModule->socket().remote_endpoint();
-	boost::shared_ptr<boost::asio::ip::udp::endpoint> udpServerEp(new boost::asio::ip::udp::endpoint(tcpServerEp.address(), tcpServerEp.port()));
-	boost::asio::ip::udp::endpoint udpLocalEp(udp::endpoint(udp::v4(), RANDOM_PORT));
-	boost::shared_ptr<Udp::SocketT> socket(new Udp::SocketT(mService, udpLocalEp));
+	auto tcpServerEp = mTcpModule->socket().remote_endpoint();
+	auto udpLocalEp  = Udp::EndpointT(udp::v4(), RANDOM_PORT);
+	auto udpServerEp = make_shared<Udp::EndpointT>(tcpServerEp.address(), tcpServerEp.port());
+	auto udpSocket   = make_shared<Udp::SocketT>(mService, udpLocalEp);
+	auto peerIdentificator = make_shared<OneToOneIdentificator>();
 	
 	dbglog << "Client: Creating UdpReadModule";
-	mUdpReadModule.reset(new UdpReadModule(
+	mUdpReadModule = make_shared<UdpReadModule>
+	(
 		mLane,
 		mService,
 		mLocalTime,
-		socket,
-		uniquePeer
-	));
+		udpSocket,
+		peerIdentificator,
+		idle
+	);
 	mUdpReadModule->startReading();
 
 	dbglog << "Client: Creating UdpWriteModule";
-	mUdpWriteModule.reset(new UdpWriteModule(
+	mUdpWriteModule = make_shared<UdpWriteModule>
+	(
 		mLane,
 		mService,
 		UNIQUE_PEER,
 		mLocalTime,
-		socket,
+		udpSocket,
 		udpServerEp
-	));
+	);
+	mUdpWriteModule->pingRemote(hs.mUdpConnectionToken);
 	mUdpWriteModule->startSending();
-	mUdpWriteModule->pingRemote();
 	
 	mLane.emit(ID::NE_CONNECTED, mPeerId);
 
@@ -236,13 +239,6 @@ void Client::syncTimerHandler(const error_code &ec)
 
 	mTcpModule->sendTimesyncRequest();
 	setTimeSyncTimer(TIME_SYNC_WAIT_TIME);
-}
-
-u16 Client::calculateHandshakeChecksum(const Handshake& hs)
-{
-	boost::crc_16_type result;
-	result.process_bytes(&(hs.mPeerId), sizeof(PeerIdT));
-	return result.checksum();
 }
 
 } // namespace Network

@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,50 +24,51 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_NETWORKDEFS_H
-#define BFG_NETWORKDEFS_H
+#ifndef BFG_NETWORK_EXCEPTION_H
+#define BFG_NETWORK_EXCEPTION_H
 
+#include <stdexcept>
 #include <boost/uuid/uuid.hpp>
 
-#include <Core/GameHandle.h>
-#include <Core/Types.h>
-
-#define BFG_SERVER 0
-#define BFG_CLIENT 1
-
-#ifdef _WIN32
-	#ifndef NETWORK_EXPORTS
-		#define NETWORK_API __declspec(dllimport)
-	#else
-		#define NETWORK_API __declspec(dllexport)
-	#endif //NETWORK_EXPORTS
-#else // UNIX
-    #define NETWORK_API
-#endif// UNIX
-
 namespace BFG {
-namespace Network{
+namespace Network {
 
-typedef GameHandle         PeerIdT;
-typedef u32                TimestampT;
-typedef boost::uuids::uuid TokenT;
+//! \todo These exceptions aren't done yet.
 
-//! ms before automatic flush (Q3: 1000/cl_update_rate), "natural flush time" depends on bandwidth
-const u32 FLUSH_WAIT_TIME(20);
+//! \brief A token couldn't be identified.
+struct UnknownTokenException : std::runtime_error
+{
+	UnknownTokenException(boost::uuids::uuid token) :
+	std::runtime_error("Unknown token")
+	{}
+};
 
-//! ms between time synchronization
-const u32 TIME_SYNC_WAIT_TIME(10000);
+//! \brief An endpoint couldn't be identified.
+template <typename ProtocolT>
+struct UnknownEndpointException : std::runtime_error
+{
+	UnknownEndpointException(typename ProtocolT::EndpointPtrT endpoint) :
+	std::runtime_error("Unknown endpoint")
+	{}
+};
 
-//! passed to Boost.Asio as port number in order to open a random port
-const u32 RANDOM_PORT(0);
+//! \brief A peer couldn't be identified.
+struct UnknownPeerException : std::runtime_error
+{
+	UnknownPeerException() :
+	std::runtime_error("Unknown peer")
+	{}
+};
 
-//! maximum size for UDP datagrams
-const u16 UDP_PAYLOAD_SIZE(1400);
+//! \brief A token was expected within a packet, but not found.
+struct NoTokenFoundException : std::runtime_error
+{
+	NoTokenFoundException() :
+	std::runtime_error("No token found")
+	{}
+};
 
-//! A client doesn't need to differentiate between multiple peers.
-const PeerIdT UNIQUE_PEER(0);
-
-}// namespace BFG
-}// namespace Network
+} // namespace Network
+} // namespace BFG
 
 #endif

@@ -28,6 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BFG_BASE_CPP_H_
 
 #include <algorithm>
+#include <memory>
 
 //! Erase elements fulfilling condition
 template<class C, class P>
@@ -69,5 +70,12 @@ struct null_deleter
     {
     }
 };
+
+// C++14
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args)
+{
+	return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
 
 #endif
