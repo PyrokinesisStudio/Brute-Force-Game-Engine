@@ -40,10 +40,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Network/Defs.h>
 #include <Network/Event_fwd.h>
 #include <Network/Handshake.h>
+#include <Network/PeerIdentificator.h>
 
 namespace BFG {
 namespace Network{
 
+// TODO: Remove
 using namespace boost::asio::ip;
 using namespace boost::system;
 
@@ -67,7 +69,6 @@ protected:
 private:
 	typedef std::map<PeerIdT, boost::shared_ptr<TcpModule> > TcpModulesMap;
 	typedef std::map<PeerIdT, boost::shared_ptr<UdpWriteModule> > UdpWriteModulesMap;
-	typedef std::map<boost::asio::ip::udp::endpoint, PeerIdT> UdpEndpointMap;
 	
 	//! \brief Stops all communication to and from all clients
 	void stop();
@@ -97,9 +98,9 @@ private:
 	//! \brief Stops the communication
 	//! \param[in] peerId ID of the NetworkModule to stop communicating
 	void onDisconnect(const PeerIdT& peerId);
-	
-	PeerIdT identifyUdpEndpoint(const boost::shared_ptr<boost::asio::ip::udp::endpoint>);
-	
+
+	void createUdpWriteModule(PeerIdT peerId, const Udp::EndpointPtrT);
+
 	boost::asio::io_service mService;
 	boost::shared_ptr<tcp::acceptor> mAcceptor;
 	boost::thread mThread;
@@ -114,8 +115,8 @@ private:
 	TcpModulesMap mTcpModules;
 	UdpWriteModulesMap mUdpWriteModules;
 	boost::shared_ptr<UdpReadModule> mUdpReadModule;
-	
-	UdpEndpointMap mUdpEndpoints;
+
+	boost::shared_ptr<TokenIdentificator> mTokenIdentificator;
 };
 
 } // namespace Network
