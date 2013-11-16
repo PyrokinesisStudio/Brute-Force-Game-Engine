@@ -114,8 +114,11 @@ private:
 
 	void validate()
 	{
-		if ((mDtC + mFoM + mSoO) != 1.0f || (mVelocity + mDirection + mAtA) != 1.0f)
+		if (!nearEnough(mDtC + mFoM + mSoO, 1.0f, EPSILON_F) || 
+		    !nearEnough(mVelocity + mDirection + mAtA, 1.0f, EPSILON_F))
+		{
 			throw std::logic_error("Invalid LoD quantifier. DtC + FoM + SoO must be 1.0f and vel + direct + AtA must be 1.0f, too.");
+		}
 	}
 
 	std::string mLoDFileName;
