@@ -124,8 +124,8 @@ void assign(T& target,
 template <typename T>
 static void uglyBoostUnitsWorkaroundForFrequency(FrequencyT& target,
                                                  const VipData& vipData,
-                                                 const std::string& attributeName,
-                                                 const T& defaultValue)
+                                                 const std::string& /*attributeName*/,
+                                                 const T& /*defaultValue*/)
 {
 	T freq = Def::frequency;
 	assign(freq, vipData, Attr::frequency, Def::frequency);
