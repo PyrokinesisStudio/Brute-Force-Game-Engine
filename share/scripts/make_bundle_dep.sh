@@ -130,25 +130,6 @@ function buildBoost
 	cd ..
  }
 
-function buildBoostLog
-{
-	$SVN export -r $BOOST_LOG_REV https://svn.code.sf.net/p/boost-log/code/trunk/boost-log boost-log
-
-	/bin/cp -r boost-log/* $BOOST_DIR
-
-	cd $BOOST_DIR
-	./b2                               \
-		--with-log                 \
-		define=BOOST_LOG_USE_CHAR  \
-		variant=release            \
-		threading=multi            \
-		link=shared                \
-		-j$JOBS                    \
-		--prefix=../$PREFIX        \
-		install
-	cd ..
-}
-
 # Build OpenAL (requires libasound-dev)
 ########################################
 
@@ -287,7 +268,6 @@ Description: Developer package (dependencies) for the Brute Force Game Engine" >
 
 prelude
 buildBoost
-#buildBoostLog  (unnecessary: in boost since 1.54)
 #buildOpenAL  (unnecessary: debian package is fine)
 buildOgre
 buildMyGUI
