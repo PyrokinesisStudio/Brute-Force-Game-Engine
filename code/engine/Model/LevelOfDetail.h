@@ -29,11 +29,17 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 #include <stdexcept>
+#include <string>
+
+#include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <Core/Types.h>
 #include <Core/v3.h>
 #include <Core/qv4.h>
 #include <Core/Math.h>
+#include <Core/Path.h>
+#include <Core/XmlFileHandleFactory.h>
 
 
 namespace BFG {
@@ -80,6 +86,12 @@ struct Ranges
 	typedef std::pair<u32, f32> RangeDescriptorT;
 	typedef std::vector<RangeDescriptorT> RangeTableT;
 
+	Ranges()
+	{
+		Path p;
+		mLoDFileName = p.Get(ID::P_SCRIPTS_SETTINGS) + "/LevelOfDetail.xml";
+	}
+
 	Ranges(RangeTableT dtC,
 	       RangeTableT soO,
 	       RangeTableT vel,
@@ -100,22 +112,42 @@ struct Ranges
 	u32 dtC(f32 dtC) const       { return range(mDtC, dtC); }
 	u32 soO(f32 soO) const       { return range(mSoO, soO); }
 
-	//! DistanceToCamera
-	RangeTableT mDtC;
-	//! SizeOfObject
-	RangeTableT mSoO;
-	
-	//! Velocity
-	RangeTableT mVel;
-
-	//! Direction (Orientation)
-	RangeTableT mDirec;
-	
-	//! AbilityToAccelerate
-	RangeTableT mAtA;
+	void reload()
+	{
+		load();
+	}
 
 private:
 	
+	void load()
+	{
+		XmlFileHandleT levelOfDetailXml = createXmlFileHandle(mLoDFileName);
+		XmlTreeT rangeTables = levelOfDetailXml->root()->child("LevelOfDetail")->child("RangeTables");
+
+		loadRangeTable(rangeTables, "DistanceToCamera", mDtC);
+		loadRangeTable(rangeTables, "SizeOfObject", mSoO);
+		loadRangeTable(rangeTables, "Velocity", mVel);
+		loadRangeTable(rangeTables, "Direction", mDirec);
+		loadRangeTable(rangeTables, "AbilityToAccelerate", mAtA);
+	}
+
+	void loadRangeTable(XmlTreeT rangeTables, const std::string& tableName, RangeTableT& out)
+	{
+		XmlTreeListT rangeDescriptors = rangeTables->child(tableName)->childList("RangeDescriptor");
+		
+		std::string rating;
+		std::string value;
+
+		BOOST_FOREACH(XmlTreeT tree, rangeDescriptors)
+		{
+			rating = tree->child("rating")->elementData();
+			value = tree->child("value")->elementData();
+
+			RangeDescriptorT descr(boost::lexical_cast<u32>(rating), boost::lexical_cast<f32>(value));
+			out.push_back(descr);
+		}
+	}
+
 	//! returns the range number.
 	u32 range(const RangeTableT& rangeTable, f32 value) const
 	{
@@ -152,6 +184,22 @@ private:
 		else
 			return rangeTable.begin()->first;	
 	}
+
+	//! DistanceToCamera
+	RangeTableT mDtC;
+	//! SizeOfObject
+	RangeTableT mSoO;
+	
+	//! Velocity
+	RangeTableT mVel;
+
+	//! Direction (Orientation)
+	RangeTableT mDirec;
+	
+	//! AbilityToAccelerate
+	RangeTableT mAtA;
+
+	std::string mLoDFileName;
 };
 	
 	
