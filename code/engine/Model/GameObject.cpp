@@ -169,7 +169,7 @@ void GameObject::attachModule(GameObject::ChildT managed,
 
 	if (managed->getObjectType() == ID::OT_Module)
 	{
-		boost::shared_ptr<Module> mod = boost::shared_static_cast<Module>(managed);
+		boost::shared_ptr<Module> mod = boost::static_pointer_cast<Module>(managed);
 
 		Property::ValueId positionId(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
 		Property::ValueId orientationId(ID::PV_Orientation, ValueId::ENGINE_PLUGIN_ID);
@@ -187,11 +187,11 @@ void GameObject::attachModule(GameObject::ChildT managed,
 		// Add to hasModuleWithHandle()-Cache
 		mModuleHandles.push_back(managed->getHandle());
 		
-		notifyPropertyConcepts(boost::shared_static_cast<Module>(managed));
+		notifyPropertyConcepts(boost::static_pointer_cast<Module>(managed));
 	}
 	else if (managed->getObjectType() == ID::OT_GameObject)
 	{
-		boost::shared_ptr<GameObject> go = boost::shared_static_cast<GameObject>(managed);
+		boost::shared_ptr<GameObject> go = boost::static_pointer_cast<GameObject>(managed);
 		
 		connectOtherGameObject(go, fromRootToNewOne, finalOrientation);
 	}
@@ -251,7 +251,7 @@ void GameObject::detachModule(GameHandle handle)
 		qv4 newOri(ownOrientation * finalOrientation);
 		
 		boost::shared_ptr<GameObject> go =
-			boost::shared_static_cast<GameObject>(mModules[vd]);
+			boost::static_pointer_cast<GameObject>(mModules[vd]);
 
 		disconnectOtherGameObject(go, newPos, newOri);
 	}

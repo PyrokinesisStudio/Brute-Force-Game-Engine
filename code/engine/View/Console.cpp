@@ -26,12 +26,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <View/Console.h>
 
-#include <boost/log/common.hpp>
-#include <boost/log/formatters/message.hpp>
-#include <boost/log/formatters/stream.hpp>
-#include <boost/log/formatters/attr.hpp>
-#include <boost/log/attributes/value_extraction.hpp>
-
 #include <OgreFrameListener.h>
 #include <Ogre.h>
 
@@ -42,7 +36,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <View/Enums.hh>
 
 namespace logging = boost::log;
-namespace fmt = boost::log::formatters;
 
 namespace BFG {
 namespace View {

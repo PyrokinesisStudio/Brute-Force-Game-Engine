@@ -65,7 +65,7 @@ void TcpModule::read()
 		socket(),
 		asio::buffer(mReadHeaderBuffer),
 		asio::transfer_exactly(HeaderSerializationT::size()),
-		bind(&TcpModule::readHeaderHandler, shared_static_cast<TcpModule>(shared_from_this()), _1, _2)
+		bind(&TcpModule::readHeaderHandler, static_pointer_cast<TcpModule>(shared_from_this()), _1, _2)
 	);
 	dbglog << "TcpModule::~read";
 }
@@ -118,7 +118,7 @@ void TcpModule::readHeaderHandler(const system::error_code &ec, std::size_t byte
 		socket(),
 		asio::buffer(mReadBuffer),
 		asio::transfer_exactly(header.mDataLength),
-		bind(&TcpModule::readDataHandler, shared_static_cast<TcpModule>(shared_from_this()), _1, _2, header.mDataChecksum)
+		bind(&TcpModule::readDataHandler, static_pointer_cast<TcpModule>(shared_from_this()), _1, _2, header.mDataChecksum)
 	);
 }
 
@@ -201,7 +201,7 @@ void TcpModule::write(asio::const_buffer packet, std::size_t size)
 		bind
 		(
 			&TcpModule::writeHandler,
-			shared_static_cast<TcpModule>(shared_from_this()),
+			static_pointer_cast<TcpModule>(shared_from_this()),
 			_1, _2,
 			packet
 		)

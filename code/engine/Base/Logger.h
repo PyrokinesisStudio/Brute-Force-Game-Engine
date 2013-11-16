@@ -24,8 +24,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined(LOGGER_H__)
-#define LOGGER_H__
+#ifndef BASE_LOGGER_H
+#define BASE_LOGGER_H
 
 #ifdef _MSC_VER	// only for MSVC
   #pragma warning( disable: 4714 ) // force inline not inline
@@ -38,9 +38,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define BOOST_LOG_NO_UNSPECIFIED_BOOL
 
 #include <string>
-#include <boost/log/sources/severity_logger.hpp>
+
+#include <boost/log/trivial.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
-#include <boost/log/sources/record_ostream.hpp>
 
 namespace BFG {
 namespace Base {
@@ -49,16 +49,14 @@ namespace Logger {
 //! There's really no need for EnumGen here. ;-)
 enum SeverityLevel
 {
-	SL_DEBUG,
-	SL_INFORMATION,
-	SL_WARNING,
-	SL_ERROR
+	SL_DEBUG       = boost::log::trivial::debug,
+	SL_INFORMATION = boost::log::trivial::info,
+	SL_WARNING     = boost::log::trivial::warning,
+	SL_ERROR       = boost::log::trivial::error
 };
 
 //! To make sererity levels human readable.
 std::ostream& operator<< (std::ostream& strm, const SeverityLevel& svl);
-
-
 
 typedef boost::log::sources::severity_logger_mt
 <
@@ -69,24 +67,24 @@ typedef boost::log::sources::severity_logger_mt
     You'd better call this only once. An assertion will warn you.
     Could work when called twice, but not recommended.
     
-    \param Min_Log_Level This is the minimum logging level. See enum
-                         Logger::SeverityLevel for your choice.
+    \param minLogLevel This is the minimum logging level. See enum
+                       Logger::SeverityLevel for your choice.
                          
     \param Filename The file the log records will be written into.
                     If omitted or empty, no file will be created.
 */
-void Init(SeverityLevel Min_Log_Level, const std::string& Filename = "");
+void Init(SeverityLevel minLogLevel, const std::string& Filename = "");
 
 // Convenience macros (example of use can be found in the base test app)
-#define dbglog BOOST_LOG_SEV(BFG::usp_log::get(), BFG::Base::Logger::SL_DEBUG)
-#define infolog BOOST_LOG_SEV(BFG::usp_log::get(), BFG::Base::Logger::SL_INFORMATION)
-#define warnlog BOOST_LOG_SEV(BFG::usp_log::get(), BFG::Base::Logger::SL_WARNING)
-#define errlog BOOST_LOG_SEV(BFG::usp_log::get(), BFG::Base::Logger::SL_ERROR)
+#define dbglog  BOOST_LOG_SEV(BFG::bfg_log::get(), BFG::Base::Logger::SL_DEBUG)
+#define infolog BOOST_LOG_SEV(BFG::bfg_log::get(), BFG::Base::Logger::SL_INFORMATION)
+#define warnlog BOOST_LOG_SEV(BFG::bfg_log::get(), BFG::Base::Logger::SL_WARNING)
+#define errlog  BOOST_LOG_SEV(BFG::bfg_log::get(), BFG::Base::Logger::SL_ERROR)
 
 } // namespace Logger
 } // namespace Base
 
-BOOST_LOG_GLOBAL_LOGGER(usp_log, BFG::Base::Logger::SourceT)
+BOOST_LOG_GLOBAL_LOGGER(bfg_log, BFG::Base::Logger::SourceT)
 
 } // namespace BFG
 

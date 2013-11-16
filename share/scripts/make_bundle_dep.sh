@@ -4,6 +4,7 @@ CMAKE=`which cmake`
 SVN=`which svn`
 TAR=`which tar`
 WGET=`which wget`
+PATCH=`which patch`
 
 if [ ! -x $CMAKE ]; then echo "Please install CMake" && exit; fi
 if [ ! -x $SVN ]; then echo "Please install Subversion" && exit; fi
@@ -14,6 +15,7 @@ if [ ! -x $WGET ]; then echo "Please install wget" && exit; fi
 # 1. apt-get install git wget subversion vim cmake ssh automake libtool
 # 2. check compile flags (use -mtune=generic)
 
+CACHE=cache
 PACKAGE=package
 PREFIX=$PACKAGE/usr
 CPUS=`grep -c processor /proc/cpuinfo`
@@ -23,7 +25,7 @@ DEBIAN_ARCH="`dpkg --print-architecture`"
 
 USER_AGENT='Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.16) Gecko/20120421 Firefox/11.0'
 
-BOOST_VERSION_DOTS='1.49.0'
+BOOST_VERSION_DOTS='1.54.0'
 BOOST_VERSION_SCORES=`echo $BOOST_VERSION_DOTS | tr . _`
 
 BOOST_URL="http://netcologne.dl.sourceforge.net/project/boost/boost/$BOOST_VERSION_DOTS/boost_$BOOST_VERSION_SCORES.tar.bz2"
@@ -37,10 +39,10 @@ PUGIXML_FILENAME="pugixml-1.2.tar.gz"
 BOOST_DIR="boost_$BOOST_VERSION_SCORES"
 PUGIXML_DIR='pugixml-1.2'
 
-BOOST_LOG_REV='607'
+#BOOST_LOG_REV='607'
 BOOST_GEOMETRY_EXTENSIONS_REV='77008'
 MYGUI_REV='4431'
-ODE_REV='1727'
+ODE_REV='1942'
 
 # Make sure only root can run our script
 if [ "$(id -u)" != "0" ]; then
@@ -53,8 +55,10 @@ fi
 
 function prelude
 {
+	mkdir -p $CACHE
+
 	# Create and enter temporary build directory
-	mkdir MAKE_BUNDLE_DEP
+	mkdir -p MAKE_BUNDLE_DEP
 	cd MAKE_BUNDLE_DEP
 
 	# Libs
@@ -84,15 +88,17 @@ function postlude
 
 function buildBoost
 {
-	$WGET -U "$USER_AGENT" -c $BOOST_URL -O $BOOST_FILENAME
+	$WGET -U "$USER_AGENT" -c $BOOST_URL -O ../$CACHE/$BOOST_FILENAME
 
 	echo "Unpacking $BOOST_FILENAME ..."
-	$TAR -xjf $BOOST_FILENAME
+	$TAR xjf ../$CACHE/$BOOST_FILENAME
 
 	echo "Adding Boost.Geometry arithmetic extension ..."
 	$SVN export -r $BOOST_GEOMETRY_EXTENSIONS_REV http://svn.boost.org/svn/boost/trunk/boost/geometry/extensions $BOOST_DIR/boost/geometry/extensions
 
 	cd $BOOST_DIR
+
+	$PATCH -p1 < '../../../../thirdparty/boost_1_54_0_variant.patch'
 
 	./bootstrap.sh
 
@@ -101,6 +107,7 @@ function buildBoost
 		--with-filesystem          \
 		--with-graph               \
 		--with-iostreams           \
+		--with-log                 \
 		--with-program_options     \
 		--with-random              \
 		--with-regex               \
@@ -110,6 +117,10 @@ function buildBoost
 		--with-thread              \
 		define=BOOST_TEST_DYN_LINK \
 		define=BOOST_TEST_MAIN     \
+		define=BOOST_LOG_WITHOUT_SETTINGS_PARSERS \
+		define=BOOST_LOG_WITHOUT_SYSLOG           \
+		define=BOOST_LOG_WITHOUT_DEBUG_OUTPUT     \
+		define=BOOST_LOG_WITHOUT_EVENT_LOG        \
 		variant=release            \
 		threading=multi            \
 		link=shared                \
@@ -121,7 +132,7 @@ function buildBoost
 
 function buildBoostLog
 {
-	$SVN export -r $BOOST_LOG_REV https://boost-log.svn.sourceforge.net/svnroot/boost-log/trunk/boost-log boost-log
+	$SVN export -r $BOOST_LOG_REV https://svn.code.sf.net/p/boost-log/code/trunk/boost-log boost-log
 
 	/bin/cp -r boost-log/* $BOOST_DIR
 
@@ -157,10 +168,10 @@ function buildOpenAL
 
 function buildOgre
 {
-	$WGET -U "$USER_AGENT" -c $OGRE_URL -O $OGRE_FILENAME
+	$WGET -U "$USER_AGENT" -c $OGRE_URL -O ../$CACHE/$OGRE_FILENAME
 
 	echo "Unpacking $OGRE_FILENAME ..."
-	$TAR -xjf $OGRE_FILENAME
+	$TAR -xjf ../$CACHE/$OGRE_FILENAME
 
 	mkdir ogre-build
 	cd ogre-build
@@ -181,7 +192,7 @@ function buildOgre
 
 function buildMyGUI
 {
-	$SVN export -r $MYGUI_REV https://my-gui.svn.sourceforge.net/svnroot/my-gui/trunk my-gui
+	$SVN export -r $MYGUI_REV https://svn.code.sf.net/p/my-gui/code/trunk my-gui
 
 	# HACK: Fool MyGUI! It's too stupid to find Boost.
 	ln -s ../../../../../$BOOST_DIR/boost my-gui/Platforms/Ogre/OgrePlatform/include
@@ -209,11 +220,11 @@ function buildMyGUI
 
 function buildPugiXml
 {
-	$WGET -U "$USER_AGENT" -c $PUGIXML_URL -O $PUGIXML_FILENAME
+	$WGET -U "$USER_AGENT" -c $PUGIXML_URL -O ../$CACHE/$PUGIXML_FILENAME
 
 	echo "Unpacking $PUGIXML_FILENAME ..."
 	/bin/mkdir $PUGIXML_DIR
-	$TAR -C $PUGIXML_DIR -xzf $PUGIXML_FILENAME
+	$TAR -C $PUGIXML_DIR -xzf ../$CACHE/$PUGIXML_FILENAME
 
 	mkdir pugixml-build
 	cd pugixml-build
@@ -230,11 +241,11 @@ function buildOde
 	$SVN export -r $ODE_REV svn://svn.code.sf.net/p/opende/code/trunk ode
 
 	echo "Applying local-transform.patch to ODE"
-	(cd ode && exec patch -p0 < ../../../../thirdparty/local-transform.patch)
+	(cd ode && exec $PATCH -p0 < "../../../../thirdparty/local-transform-2.patch")
 
 	# Out-of-source build is not possible
 	cd ode
-	./autogen.sh
+	./bootstrap
 	./configure --prefix="`pwd`/../$PREFIX"
 	make -j$JOBS install
 	cd ..
@@ -276,7 +287,7 @@ Description: Developer package (dependencies) for the Brute Force Game Engine" >
 
 prelude
 buildBoost
-buildBoostLog
+#buildBoostLog  (unnecessary: in boost since 1.54)
 #buildOpenAL  (unnecessary: debian package is fine)
 buildOgre
 buildMyGUI
