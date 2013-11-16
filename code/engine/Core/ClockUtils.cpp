@@ -47,16 +47,16 @@ time_duration Base::tillNow(ptime from) const
 	return time_period(from, now()).length();
 }
 
-s32 Base::total(time_duration duration, Resolution resolution) const
+u32 Base::total(time_duration duration, Resolution resolution) const
 {
 	switch (resolution)
 	{
 		case microSecond:
-			return static_cast<s32>(duration.total_microseconds());
+			return static_cast<u32>(duration.total_microseconds());
 		case milliSecond:
-			return static_cast<s32>(duration.total_milliseconds());
+			return static_cast<u32>(duration.total_milliseconds());
 		case second:
-			return static_cast<s32>(duration.total_seconds());
+			return static_cast<u32>(duration.total_seconds());
 		default:
 			throw std::logic_error
 				("Clock::Base::Total: Unknown time resolution used");
@@ -69,7 +69,7 @@ void StopWatch::start()
 	mRunning = true;
 }
 
-s32 StopWatch::stop() const
+u32 StopWatch::stop() const
 {
 	if (!mRunning)
 		throw std::logic_error("Don't call stop before start has been called!");
@@ -77,15 +77,15 @@ s32 StopWatch::stop() const
 	return total(tillNow(mStartTime), mResolution);
 }
 
-s32 StopWatch::restart()
+u32 StopWatch::restart()
 {
-	s32 timeSinceStart = stop();
+	u32 timeSinceStart = stop();
 	start();
 	return timeSinceStart;
 }
 
 SleepFrequently::SleepFrequently(Resolution resolution,
-                                 s32 frequency) :
+                                 u32 frequency) :
 mFrequency(frequency),
 mResolution(resolution),
 mOverall(resolution),
@@ -102,25 +102,25 @@ void SleepFrequently::reset()
 	mOneCycle.start();
 }
 
-s32 SleepFrequently::measure()
+u32 SleepFrequently::measure()
 {
 	++mTickCount;
 
-	s32 totalTimePassed = mOverall.stop();
-	s32 timeOffset = (mFrequency * mTickCount) - totalTimePassed;
+	u32 totalTimePassed = mOverall.stop();
+	u32 timeOffset = (mFrequency * mTickCount) - totalTimePassed;
 
 	if (timeOffset > mFrequency)
 	{
 		sleep(timeOffset);
 	}
 
-	s32 diffTimePassed = mOneCycle.stop();
+	u32 diffTimePassed = mOneCycle.stop();
 	mOneCycle.start();
 
 	return diffTimePassed;
 }
 
-void SleepFrequently::sleep(s32 offset) const
+void SleepFrequently::sleep(u32 offset) const
 {
 	switch (mResolution)
 	{
