@@ -193,6 +193,9 @@ BOOST_AUTO_TEST_CASE (meshTest)
 	sync.finish();
 }
 
+//! \todo Relocate to manual view test. This file is for exclusively for
+//!       automatic tests
+#if 0
 BOOST_AUTO_TEST_CASE (explosionTest)
 {
 // 	BFG::Path p;
@@ -228,6 +231,6 @@ BOOST_AUTO_TEST_CASE (explosionTest)
 
 	sync.finish();
 }
-
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
