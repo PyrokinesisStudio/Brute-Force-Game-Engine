@@ -26,6 +26,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include "AudioState.h"
 #include <Core/Path.h>
+#include <Core/XmlFileHandleFactory.h>
 #include <Event/Event.h>
 
 #include <Audio/Audio.h>
@@ -34,18 +35,17 @@ AudioState::AudioState(Event::SubLanePtr subLane) :
 	mSubLane(subLane)
 {
 	Path p;
-	std::vector<std::string> program;
-	program.push_back(p.Get(ID::P_SOUND_MUSIC)+"6 Fleet's Arrival.ogg");
-	program.push_back(p.Get(ID::P_SOUND_MUSIC)+"02_Deimos - Flottenkommando.ogg");
-	program.push_back(p.Get(ID::P_SOUND_MUSIC)+"01_Deimos - Faint Sun.ogg");
 
-	mPlaylist.reset(new Audio::Playlist(program, true));
+	std::string playlistFile = p.Expand("/default/Music.xml");
+	std::string musicPath = p.Get(ID::P_SOUND_MUSIC);
+	XmlFileHandleT titles = createXmlFileHandle(playlistFile);
+
+	mPlaylist.reset(new Audio::Playlist(titles->root()->child("PlayList"), musicPath));
 	
 	mSubLane->connect(ID::AE_SOUND_EMITTER_PROCESS_SOUND, this, &AudioState::onSoundEmitterProcessSound);
 	mSubLane->connect(ID::AE_SOUND_EFFECT, this, &AudioState::onSoundEffect);
 	
 	mSoundEffectMap["Explosion_big"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.ogg";
-	//mSoundEffectMap["Explosion_small"] = p.Get(ID::P_SOUND_EFFECTS)+"Laser_008.wav";
 	mSoundEffectMap["Explosion_small"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.ogg";
 	mSoundEffectMap["Explosion_medium"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.ogg";
 }
