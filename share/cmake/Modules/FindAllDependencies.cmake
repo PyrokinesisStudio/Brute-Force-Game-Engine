@@ -10,22 +10,16 @@ MACRO(FIND_ALL_DEPENDENCIES)
 
 	# Default value for systems that do not use DependencyBundle.cmake
 	IF("${BOOST_MINOR_VERSION_NR}" STREQUAL "")
-		SET(BOOST_MINOR_VERSION_NR "49")
+		SET(BOOST_MINOR_VERSION_NR "54")
 	ENDIF()
 
-	FIND_PACKAGE(Boost 1.${BOOST_MINOR_VERSION_NR} REQUIRED date_time filesystem program_options regex serialization system thread unit_test_framework)
+	FIND_PACKAGE(Boost 1.${BOOST_MINOR_VERSION_NR} REQUIRED date_time filesystem program_options regex serialization system thread unit_test_framework log chrono)
 
 	IF(Boost_FOUND)
 		LOG("Found boost ${Boost_VERSION} in ${Boost_LIBRARY_DIRS} and ${Boost_INCLUDE_DIR}")
 	ELSE(Boost_FOUND)
 		LOG_FATAL("You need boost in order to build this project")
 	ENDIF(Boost_FOUND)
-
-	# --------- #
-	# Boost.Log #
-	# --------- #
-
-	FIND_PACKAGE(BoostLog REQUIRED)
 
 	# -------#
 	# OpenAL #

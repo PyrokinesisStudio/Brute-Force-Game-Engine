@@ -12,13 +12,13 @@ MACRO(SETUP_BUNDLE_PATHS _BUNDLE_PATH)
 	# CMake <=> Bjam Mapping for Visual Studio versions
 	IF(${MSVC_VERSION} EQUAL "1500")
 		SET(BJAM_MS_INTERFIX "vc90")
-		SET(BOOST_MINOR_VERSION_NR "47")
+		SET(BOOST_MINOR_VERSION_NR "54")
 	ELSEIF(${MSVC_VERSION} EQUAL "1600")
 		SET(BJAM_MS_INTERFIX "vc100")
-		SET(BOOST_MINOR_VERSION_NR "47")
+		SET(BOOST_MINOR_VERSION_NR "54")
 	ELSEIF(${MSVC_VERSION} EQUAL "1700")
 		SET(BJAM_MS_INTERFIX "vc110")
-		SET(BOOST_MINOR_VERSION_NR "49")
+		SET(BOOST_MINOR_VERSION_NR "54")
 	ELSE()
 		SET(BJAM_MS_INTERFIX "" STRING)
 			LOG_WARNING("Unknown Microsoft compiler detected, so you'll have"
@@ -29,34 +29,6 @@ MACRO(SETUP_BUNDLE_PATHS _BUNDLE_PATH)
 	SET(BOOST_ROOT "${_BUNDLE_PATH}/boost_1_${BOOST_MINOR_VERSION_NR}_0")
 	SET(Boost_USE_MULTITHREADED TRUE)
 	SET(Boost_USE_STATIC_LIBS   FALSE)
-
-	# --------- #
-	# Boost.Log #
-	# --------- #
-
-	SET(BoostLog_INCLUDE_DIR "${_BUNDLE_PATH}/boost-log")
-	SET(BoostLog_LIBRARY_DIR "${_BUNDLE_PATH}/boost-log/lib")
-
-	IF(CMAKE_CONFIGURATION_TYPES)
-		SET(BoostLog_LIBRARIES
-			debug ${BoostLog_LIBRARY_DIR}/boost_log_setup-${BJAM_MS_INTERFIX}-mt-gd-1_${BOOST_MINOR_VERSION_NR}.lib
-			debug ${BoostLog_LIBRARY_DIR}/boost_log-${BJAM_MS_INTERFIX}-mt-gd-1_${BOOST_MINOR_VERSION_NR}.lib
-			optimized ${BoostLog_LIBRARY_DIR}/boost_log_setup-${BJAM_MS_INTERFIX}-mt-1_${BOOST_MINOR_VERSION_NR}.lib
-			optimized ${BoostLog_LIBRARY_DIR}/boost_log-${BJAM_MS_INTERFIX}-mt-1_${BOOST_MINOR_VERSION_NR}.lib
-		)
-	ELSE()
-		IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-			SET(BoostLog_LIBRARIES
-				${BoostLog_LIBRARY_DIR}/boost_log_setup-${BJAM_MS_INTERFIX}-mt-gd-1_${BOOST_MINOR_VERSION_NR}.lib
-				${BoostLog_LIBRARY_DIR}/boost_log-${BJAM_MS_INTERFIX}-mt-gd-1_${BOOST_MINOR_VERSION_NR}.lib
-			)
-		ELSE() # Release!
-			SET(BoostLog_LIBRARIES
-				${BoostLog_LIBRARY_DIR}/boost_log_setup-${BJAM_MS_INTERFIX}-mt-1_${BOOST_MINOR_VERSION_NR}.lib
-				${BoostLog_LIBRARY_DIR}/boost_log-${BJAM_MS_INTERFIX}-mt-1_${BOOST_MINOR_VERSION_NR}.lib
-			)
-		ENDIF()
-	ENDIF()
 
 	# -------#
 	# OpenAL #

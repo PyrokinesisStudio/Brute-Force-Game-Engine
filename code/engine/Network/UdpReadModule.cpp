@@ -73,7 +73,7 @@ void UdpReadModule::read()
 		bind
 		(
 			&UdpReadModule::readHandler,
-			boost::shared_static_cast<UdpReadModule>(shared_from_this()),
+			boost::static_pointer_cast<UdpReadModule>(shared_from_this()),
 			_1,
 			_2,
 			remoteEndpoint

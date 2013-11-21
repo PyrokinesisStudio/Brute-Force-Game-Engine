@@ -1,14 +1,12 @@
 Dependencies
 ============
 
-Boost      : 1.49.0 (+ Geometry Extensions from Boost r77008)
-Boost.Log  : r607 (Linux)
-Boost.Log  : r616 (Windows)
+Boost      : 1.54.0 (+ Geometry Extensions from Boost r77008)
 libogg     : 1.2.2
 libsndfile : 1.0.24
 libvorbis  : 1.3.2
 MyGUI      : r4431
-ODE        : r1727
+ODE        : r1942
 OGRE       : 1.7.3
 OIS        : 1.3.0
 OpenAL     : r2921
