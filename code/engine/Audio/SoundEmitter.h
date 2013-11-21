@@ -40,43 +40,43 @@ namespace Audio {
 //! It queues the audioObjects until they are finished.
 class BFG_AUDIO_API SoundEmitter : public AudioModule
 {
-	enum State
-	{
-		PLAYING,
-        PAUSE
-    };
+enum State
+{
+	PLAYING,
+	PAUSE
+};
 
 
-	//! The soundhandle provides an ID and a callback.
-	//! If the sound is finished the callback removes the audioObject out of the queue.
-    class BFG_AUDIO_API SoundHandle
-    {
-
-    public:
-
-        SoundHandle(SoundEmitter& soundEmitter,
-                    u32 id) :
-            mSoundEmitter(soundEmitter),
-            mId(id)
-        {}
-
-        void onStreamFinishedForwarded()
-        {
-			mSoundEmitter.soundFinished(mId);
-        }
-
-    private:
-
-        SoundEmitter& mSoundEmitter;
-        u32 mId;
-    };
+//! The soundhandle provides an ID and a callback.
+//! If the sound is finished the callback removes the audioObject out of the queue.
+class BFG_AUDIO_API SoundHandle
+{
 
 public:
 
-    SoundEmitter();
+	SoundHandle(SoundEmitter& soundEmitter,
+				u32 id) :
+		mSoundEmitter(soundEmitter),
+		mId(id)
+	{}
 
-    void processSound(const std::string& name);
-    void soundFinished(int id);
+	void onStreamFinishedForwarded()
+	{
+		mSoundEmitter.soundFinished(mId);
+	}
+
+private:
+
+	SoundEmitter& mSoundEmitter;
+	u32 mId;
+};
+
+public:
+
+	SoundEmitter();
+
+	void processSound(const std::string& name);
+	void soundFinished(int id);
 	
 	//! Just to resume from PAUSE.
 	void play();
@@ -90,15 +90,15 @@ protected:
 
 private:
 
-    typedef std::map<u32, boost::shared_ptr<AudioObject> > SoundQueueT;
-    typedef std::map<u32, boost::shared_ptr<SoundHandle> > HandlesT;
+	typedef std::map<u32, boost::shared_ptr<AudioObject> > SoundQueueT;
+	typedef std::map<u32, boost::shared_ptr<SoundHandle> > HandlesT;
 	SoundQueueT mSoundQueue;
-    HandlesT mSoundHandles;
+	HandlesT mSoundHandles;
 
-    State mState;
-    u32 mIdCounter;
+	State mState;
+	u32 mIdCounter;
 
-    boost::mutex mMutex;
+	boost::mutex mMutex;
 };
 
 } // namespace Audio

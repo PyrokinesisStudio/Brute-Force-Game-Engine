@@ -44,9 +44,9 @@ class BFG_AUDIO_API OpenALAudioObject : public AudioObject
 
 public:
 	OpenALAudioObject(std::string audioName, 
-		              boost::shared_ptr<StreamLoop> streamLoop,
-					  boost::function<void (void)> onFinishedForward = 0,
-					  f32 initalGain = 1.0f);
+	                  boost::shared_ptr<StreamLoop> streamLoop,
+	                  boost::function<void (void)> onFinishedForward = 0,
+	                  f32 initalGain = 1.0f);
 	
 	~OpenALAudioObject();
 
@@ -66,7 +66,7 @@ private:
 
 boost::shared_ptr<AudioObject> createAudioObject(std::string audioName, 
 	                                             boost::shared_ptr<StreamLoop> streamLoop,
-												 boost::function<void (void)> onFinishedForward)
+	                                             boost::function<void (void)> onFinishedForward)
 {
 	return boost::shared_ptr<AudioObject>(new OpenALAudioObject(audioName, streamLoop, onFinishedForward));
 }

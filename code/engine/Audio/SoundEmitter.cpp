@@ -41,62 +41,58 @@ void SoundEmitter::play()
 	if (mState == PLAYING)
 		return;
 
-    SoundQueueT::iterator it = mSoundQueue.begin();
+	SoundQueueT::iterator it = mSoundQueue.begin();
 
-    for (; it != mSoundQueue.end(); ++it)
-    {
-        it->second->play();
-    }
+	for (; it != mSoundQueue.end(); ++it)
+		it->second->play();
 
-    mState = PLAYING;
+	mState = PLAYING;
 }
 
 void SoundEmitter::pause()
 {
-    SoundQueueT::iterator it = mSoundQueue.begin();
+	SoundQueueT::iterator it = mSoundQueue.begin();
 
-    for (; it != mSoundQueue.end(); ++it)
-    {
-        it->second->pause();
-    }
+	for (; it != mSoundQueue.end(); ++it)
+		it->second->pause();
 
-    mState = PAUSE;
+	mState = PAUSE;
 }
 
 void SoundEmitter::processSound(const std::string &name)
 {
-    if (mState != PLAYING)
+	if (mState != PLAYING)
 		return;
 	
 	boost::mutex::scoped_lock lock(mMutex);
 
-    ++mIdCounter;
+	++mIdCounter;
 
-    boost::shared_ptr<SoundHandle> handle;
-    handle.reset(new SoundHandle(*this, mIdCounter));
+	boost::shared_ptr<SoundHandle> handle;
+	handle.reset(new SoundHandle(*this, mIdCounter));
 
-    mSoundHandles[mIdCounter] = handle;
+	mSoundHandles[mIdCounter] = handle;
 
-    boost::function<void(void)> onFinishedCallback = boost::bind
-    (
-        &SoundHandle::onStreamFinishedForwarded,
-        &(*handle)
-    );
+	boost::function<void(void)> onFinishedCallback = boost::bind
+	(
+		&SoundHandle::onStreamFinishedForwarded,
+		&(*handle)
+	);
 
-    boost::shared_ptr<AudioObject> audioObject = createAudioObject(name, mStreamLoop, onFinishedCallback);
-    mSoundQueue[mIdCounter] = audioObject;
-    audioObject->play();
+	boost::shared_ptr<AudioObject> audioObject = createAudioObject(name, mStreamLoop, onFinishedCallback);
+	mSoundQueue[mIdCounter] = audioObject;
+	audioObject->play();
 }
 
 void SoundEmitter::soundFinished(int id)
 {
-    boost::mutex::scoped_lock lock(mMutex);
+	boost::mutex::scoped_lock lock(mMutex);
 
-    SoundQueueT::iterator itSounds = mSoundQueue.find(id);
-    mSoundQueue.erase(itSounds);
+	SoundQueueT::iterator itSounds = mSoundQueue.find(id);
+	mSoundQueue.erase(itSounds);
 
-    HandlesT::iterator itHandles = mSoundHandles.find(id);
-    mSoundHandles.erase(itHandles);
+	HandlesT::iterator itHandles = mSoundHandles.find(id);
+	mSoundHandles.erase(itHandles);
 }
 
 void SoundEmitter::volume(f32 gain)
@@ -104,9 +100,7 @@ void SoundEmitter::volume(f32 gain)
 	SoundQueueT::iterator ao = mSoundQueue.begin();
 
 	for (; ao != mSoundQueue.end(); ++ao)
-	{
 		ao->second->volume(gain);
-	}
 }
 
 } // namespace Audio

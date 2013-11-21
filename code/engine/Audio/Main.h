@@ -36,7 +36,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Audio {
 
-class Init;
+class SoundDevice;
 class Listener;
 
 class BFG_AUDIO_API Main : public Base::LibraryMainBase<Event::Lane>
@@ -44,7 +44,7 @@ class BFG_AUDIO_API Main : public Base::LibraryMainBase<Event::Lane>
 private:
 	void main(Event::Lane* lane);
 	
-	boost::shared_ptr<Init> mInit;
+	boost::shared_ptr<SoundDevice> mSoundDevice;
 	boost::shared_ptr<Listener> mListener;
 };
 

@@ -36,21 +36,19 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Audio {
 
-boost::shared_ptr<AudioFile> createFile(const std::string& filename)
+boost::shared_ptr<AudioFileReader> createFile(const std::string& filename)
 {
-	std::string suffix =
-		boost::filesystem::path(filename).extension().string().substr(1);
+	std::string suffix = boost::filesystem::path(filename).extension().string().substr(1);
 
 	boost::algorithm::to_lower(suffix);
 
 	if (suffix == "ogg")
-		return boost::shared_ptr<AudioFile>(new OggFile(filename));
+		return boost::shared_ptr<AudioFileReader>(new OggFileReader(filename));
 	else
 	if (suffix == "wav")
-		return boost::shared_ptr<AudioFile>(new WaveFile(filename));
+		return boost::shared_ptr<AudioFileReader>(new WaveFileReader(filename));
 	else
-		throw std::logic_error
-			("Audio: Unknown file format (" + suffix + ").");
+		throw std::logic_error("Audio: Unknown file format (" + suffix + ").");
 }
 
 } // namespace Audio

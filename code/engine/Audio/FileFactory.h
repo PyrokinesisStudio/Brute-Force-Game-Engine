@@ -34,7 +34,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Audio {
 
-boost::shared_ptr<AudioFile> createFile(const std::string& filename);
+boost::shared_ptr<AudioFileReader> createFile(const std::string& filename);
 
 } // namespace Audio
 } // namespace BFG

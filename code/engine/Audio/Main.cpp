@@ -35,7 +35,7 @@ namespace Audio {
 
 void Main::main(Event::Lane* lane)
 {
-	mInit = createInit();
+	mSoundDevice = createSoundDevice();
 	mListener = createListener(*lane);
 }
 

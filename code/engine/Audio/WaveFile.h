@@ -39,12 +39,12 @@ namespace BFG {
 namespace Audio {
 
 //! This class reads audio data from a wave file.
-class BFG_AUDIO_API WaveFile : public AudioFile
+class BFG_AUDIO_API WaveFileReader : public AudioFileReader
 {
 
 public:
-	WaveFile(const std::string& filename);
-	~WaveFile();
+	WaveFileReader(const std::string& filename);
+	~WaveFileReader();
 
 	void read(ALuint bufferID);
 	std::string toString() { return mFileName; }

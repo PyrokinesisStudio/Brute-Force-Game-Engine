@@ -35,8 +35,8 @@ namespace BFG {
 namespace Audio {
 
 //! Abstract class for higher level audio modules.
-//! Every AudioModule owns a StreamLoop. This way scaling due
-//! multiprocessing is provided.
+//! Every higher level audio feature should derive from this class.
+//! Every instance of AudioModule owns it own StreamLoop and every StreamLoop has its own working thread.
 class BFG_AUDIO_API AudioModule
 {
 
@@ -46,8 +46,11 @@ public:
 	virtual void volume(f32 gain) = 0;
 
 protected:
+	//! Callback forwarder to recognize the end of a stream. This is nice if something should happen after
+	//! the sound is finished.
 	virtual void onStreamFinishedForwarded() = 0;
 	
+	//! Own streaming thread.
 	boost::shared_ptr<StreamLoop> mStreamLoop;
 };
 

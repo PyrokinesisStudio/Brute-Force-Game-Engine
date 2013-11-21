@@ -34,7 +34,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Audio {
 
-class AudioFile;
+class AudioFileReader;
 
 //! Abstract class for stream processing.
 class BFG_AUDIO_API Stream
@@ -42,10 +42,10 @@ class BFG_AUDIO_API Stream
 
 public:
 
-	Stream(boost::shared_ptr<AudioFile> file, 
-		   boost::function<void (void)> onStreamFinished) : 
+	Stream(boost::shared_ptr<AudioFileReader> file, 
+	       boost::function<void (void)> onStreamFinished) : 
 	mOnStreamFinished(onStreamFinished),
-	mAudioFile(file)
+	mAudioFileReader(file)
 	{}
 
 	//! Will be called from StreamLoop to refill processed buffers
@@ -55,7 +55,7 @@ public:
 protected:
 
 	boost::function<void (void)> mOnStreamFinished;
-	boost::shared_ptr<AudioFile> mAudioFile;
+	boost::shared_ptr<AudioFileReader> mAudioFileReader;
 };
 
 } // namespace Audio

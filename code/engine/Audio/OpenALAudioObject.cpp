@@ -40,8 +40,8 @@ namespace Audio {
 
 OpenALAudioObject::OpenALAudioObject(std::string audioName, 
 	                                 boost::shared_ptr<StreamLoop> streamLoop,
-									 boost::function<void (void)> onFinishedForward,
-									 f32 initalGain): 
+	                                 boost::function<void (void)> onFinishedForward,
+	                                 f32 initalGain): 
 	AudioObject(audioName, streamLoop, onFinishedForward, initalGain),
 	mSourceId(0)
 	{
@@ -50,9 +50,7 @@ OpenALAudioObject::OpenALAudioObject(std::string audioName,
 	OpenALAudioObject::~OpenALAudioObject() 
 	{
 		if (mSourceId)
-		{
 			stop();
-		}
 	}
 
 	void OpenALAudioObject::play()

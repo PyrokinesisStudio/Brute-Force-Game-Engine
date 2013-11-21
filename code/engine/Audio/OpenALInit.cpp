@@ -34,12 +34,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Audio {
 
-OpenALInit::OpenALInit()
+OpenALSoundDevice::OpenALSoundDevice()
 {
 	init();
 }
 
-OpenALInit::~OpenALInit()
+OpenALSoundDevice::~OpenALSoundDevice()
 {
 	alcDestroyContext(mContext);
 	alcCloseDevice(mDevice);
@@ -48,7 +48,7 @@ OpenALInit::~OpenALInit()
 	mDevice = NULL;
 }
 
-void OpenALInit::init()
+void OpenALSoundDevice::init()
 {
 	mDevice = alcOpenDevice(0); // 0 is default device.
 

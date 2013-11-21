@@ -44,7 +44,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Audio {
 
-class AudioFile;
+class AudioFileReader;
 
 //! Provides the streaming of audio data with OpenAL
 class BFG_AUDIO_API OpenALStream : public Stream
@@ -52,8 +52,8 @@ class BFG_AUDIO_API OpenALStream : public Stream
 
 public:
 
-	OpenALStream(boost::shared_ptr<AudioFile> file,
-		         boost::function<void (void)> onStreamFinished,
+	OpenALStream(boost::shared_ptr<AudioFileReader> file,
+	             boost::function<void (void)> onStreamFinished,
 	             ALuint sourceId);
 
 	~OpenALStream();
@@ -69,7 +69,8 @@ private:
 	ALuint mSourceId;
 	bool mFinished;
 
-	boost::scoped_array<ALuint> mBufferIds;
+	//! 
+	boost::scoped_array<ALuint> mBufferHandles;
 };
 
 } // namespace Audio

@@ -43,21 +43,22 @@ namespace BFG {
 namespace Audio {
 
 //! Initialize OpenAL
-class BFG_AUDIO_API OpenALInit : public Init
+class BFG_AUDIO_API OpenALSoundDevice : public SoundDevice
 {
 public:
-	OpenALInit();
-	~OpenALInit();
+	OpenALSoundDevice();
+	~OpenALSoundDevice();
 
 private:
 	void init();
 
+	//! SoundCardInterface
 	ALCdevice* mDevice;
 	ALCcontext* mContext;
 };
 
 //! Contrete creation method for a OpenAL instance.
-boost::shared_ptr<Init> createInit() { return boost::shared_ptr<Init>(new OpenALInit()); }
+boost::shared_ptr<SoundDevice> createSoundDevice() { return boost::shared_ptr<SoundDevice>(new OpenALSoundDevice()); }
 
 } // namespace Audio
 } // namespace BFG

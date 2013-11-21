@@ -35,16 +35,16 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Audio {
 
-	OpenALStream::OpenALStream(boost::shared_ptr<AudioFile> file,
-		                       boost::function<void (void)> onStreamFinished,
+	OpenALStream::OpenALStream(boost::shared_ptr<AudioFileReader> file,
+	                           boost::function<void (void)> onStreamFinished,
 	                           ALuint sourceId):
 		Stream(file, onStreamFinished),
 		mNUM_BUFFER(6),
 		mSourceId(sourceId),
 		mFinished(false)
     {
-		mBufferIds.reset(new ALuint[mNUM_BUFFER]);
-		alGenBuffers(mNUM_BUFFER, mBufferIds.get());
+		mBufferHandles.reset(new ALuint[mNUM_BUFFER]);
+		alGenBuffers(mNUM_BUFFER, mBufferHandles.get());
 		alErrorHandler("OpenALStream::OpenALStream", "Error occured calling alGenBuffers.");
 	
 		preload();
@@ -52,7 +52,7 @@ namespace Audio {
 
 	OpenALStream::~OpenALStream()
 	{
-		alDeleteBuffers(mNUM_BUFFER, mBufferIds.get());
+		alDeleteBuffers(mNUM_BUFFER, mBufferHandles.get());
 		alErrorHandler("OpenALStream::~OpenALStream", "Error occured calling alDeleteBuffers.");
 	}
 
@@ -60,10 +60,10 @@ namespace Audio {
 	{
  		for (s32 i = 0; i < mNUM_BUFFER; ++i)
 		{
-			mAudioFile->read(mBufferIds[i]);
+			mAudioFileReader->read(mBufferHandles[i]);
 		}
 
-		alSourceQueueBuffers(mSourceId, mNUM_BUFFER, mBufferIds.get());
+		alSourceQueueBuffers(mSourceId, mNUM_BUFFER, mBufferHandles.get());
 		alErrorHandler("OpenALStream::preload", "Error occured calling alSourceQueueBuffers.");
     }
 
@@ -82,8 +82,8 @@ namespace Audio {
 		// If all buffers are processed the stream is finished.
 		if (processedBuffers >= mNUM_BUFFER)
 		{
-			dbglog << "Stream '"+mAudioFile->toString()+"' finished.";
-			alSourceUnqueueBuffers(mSourceId, mNUM_BUFFER, mBufferIds.get());
+			dbglog << "Stream '"+mAudioFileReader->toString()+"' finished.";
+			alSourceUnqueueBuffers(mSourceId, mNUM_BUFFER, mBufferHandles.get());
 			alErrorHandler("OpenALStream::nextStreamStep", "Error occured calling alSourceUnqueueBuffers.");
 
 			// Calling callback.
@@ -99,7 +99,7 @@ namespace Audio {
 			alSourceUnqueueBuffers(mSourceId, 1, &tempBufferId);
 			alErrorHandler("OpenALStream::nextStreamStep", "Error occured calling alSourceUnqueueBuffers.");
 
-			mAudioFile->read(tempBufferId);
+			mAudioFileReader->read(tempBufferId);
 			
 			alSourceQueueBuffers(mSourceId, 1, &tempBufferId);
 			alErrorHandler("OpenALStream::nextStreamStep", "Error occured calling alSourceQueueBuffers.");

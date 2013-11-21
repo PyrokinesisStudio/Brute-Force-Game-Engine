@@ -35,7 +35,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Audio {
 
-OggFile::OggFile(const std::string& filename) : 
+OggFileReader::OggFileReader(const std::string& filename) : 
 BUFFER_SIZE(44100), 
 mFileName(filename)
 {
@@ -43,12 +43,12 @@ mFileName(filename)
 	open();
 }
 
-OggFile::~OggFile()
+OggFileReader::~OggFileReader()
 {
 	close();
 }
 
-void OggFile::open()
+void OggFileReader::open()
 {
 	mVorbisFile = new OggVorbis_File;
 
@@ -65,19 +65,19 @@ void OggFile::open()
 		mFormat = AL_FORMAT_STEREO16;
 }
 
-void OggFile::close()
+void OggFileReader::close()
 {
 	ov_clear(mVorbisFile);
 }
 
-void OggFile::read(ALuint bufferID)
+void OggFileReader::read(ALuint bufferID)
 {
 	unsigned long bytesDecoded = decode(mBuffer.get(), BUFFER_SIZE);
 	alBufferData(bufferID, mFormat, mBuffer.get(), bytesDecoded, mFileInfo->rate);
-	alErrorHandler("OggFile::read", "Error occured calling alBufferData.");
+	alErrorHandler("OggFileReader::read", "Error occured calling alBufferData.");
 }
 
-unsigned long OggFile::decode(char *buffer, unsigned long bufferSize)
+unsigned long OggFileReader::decode(char *buffer, unsigned long bufferSize)
 {
 	int currentSection;
 	long decodeSize;

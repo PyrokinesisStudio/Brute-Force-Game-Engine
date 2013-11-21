@@ -36,19 +36,19 @@ namespace BFG {
 namespace Audio {
 
 //! This is an interface for reading AudioData out of several file formats.
-class BFG_AUDIO_API AudioFile
+class BFG_AUDIO_API AudioFileReader
 {
 public:
- 	virtual ~AudioFile() {}
+	virtual ~AudioFileReader() {}
 
- 	//! The function gets one OpenAl bufferId whose buffer will be filled with audio data.
- 	//! So every call of read fills one buffer. The size of one buffer depends on the sample-rate. 
- 	virtual void read(ALuint bufferId) = 0;
+	//! The function gets one OpenAl bufferId whose buffer will be filled with audio data.
+	//! So every call of read fills one buffer. The size of one buffer depends on the sample-rate. 
+	virtual void read(ALuint bufferId) = 0;
 	virtual std::string toString() = 0;
 
 private:
- 	virtual void open() = 0;
- 	virtual void close() = 0;
+	virtual void open() = 0;
+	virtual void close() = 0;
 };
 
 } // namespace Audio

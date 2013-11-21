@@ -35,7 +35,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Audio {
 
-WaveFile::WaveFile(const std::string& filename) : 
+WaveFileReader::WaveFileReader(const std::string& filename) : 
 mBUFFER_SIZE(44100),
 mFileName(filename)
 {
@@ -43,17 +43,17 @@ mFileName(filename)
 	open();
 }
 
-WaveFile::~WaveFile()
+WaveFileReader::~WaveFileReader()
 {
 	close();
 }
 
-void WaveFile::close()
+void WaveFileReader::close()
 {
 	sf_close(mSoundFile);
 }
 
-void WaveFile::open()
+void WaveFileReader::open()
 {
 	SF_INFO sfInfo;
 	sfInfo.format = 0;
@@ -74,7 +74,7 @@ void WaveFile::open()
 		mFormat = AL_FORMAT_STEREO16;
 }
 
-void WaveFile::read(ALuint bufferID)
+void WaveFileReader::read(ALuint bufferID)
 {
 	int bytesRead = static_cast<int>(sf_read_int(mSoundFile, mBuffer.get(), mBUFFER_SIZE));
 	alBufferData(bufferID, mFormat, mBuffer.get(), bytesRead, mBUFFER_SIZE);

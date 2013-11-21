@@ -34,12 +34,13 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Audio {
 
-class BFG_AUDIO_API Init
+//! Base Class to initialize the interface to the soundcard.
+class BFG_AUDIO_API SoundDevice
 {
 };
 
-//! Abstract creation method for Init instance.
-boost::shared_ptr<Init> createInit();
+//! Abstract creation method.
+boost::shared_ptr<SoundDevice> createSoundDevice();
 
 } // namespace Audio
 } // namespace BFG

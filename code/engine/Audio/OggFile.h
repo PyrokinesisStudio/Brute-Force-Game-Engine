@@ -41,7 +41,7 @@ namespace BFG {
 namespace Audio {
 
 //! This class reads and decodes audio-data from an OGG vorbis files.
-class BFG_AUDIO_API OggFile : public AudioFile
+class BFG_AUDIO_API OggFileReader : public AudioFileReader
 {
 
 static const unsigned int AB_16BIT_SAMPLES = 2;
@@ -49,8 +49,8 @@ static const unsigned int AB_LITTLEENDIAN = 0;
 static const unsigned int AB_SIGNED = 1;
 
 public:
-	OggFile(const std::string& filename);
-	~OggFile();
+	OggFileReader(const std::string& filename);
+	~OggFileReader();
 
 	void read(ALuint bufferID);
 	std::string toString() { return mFileName; }

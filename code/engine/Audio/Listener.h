@@ -59,6 +59,7 @@ protected:
 
 private:
 
+	//! Master volume.
 	virtual void onEventMasterGain(const f32& gain) = 0;
 	
 	virtual void onEventPositionPlayer(const v3& position) = 0;
