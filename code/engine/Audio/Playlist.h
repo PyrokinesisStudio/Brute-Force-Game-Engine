@@ -27,6 +27,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef AUDIO_PLAYLIST_H
 #define AUDIO_PLAYLIST_H
 
+#include <Core/XmlTree.h>
+
 #include <Audio/AudioModule.h>
 #include <Audio/AudioObject.h>
 
@@ -45,8 +47,7 @@ class BFG_AUDIO_API Playlist : public AudioModule
 	};
 
 public:
-	Playlist(const std::vector<std::string>& program,
-		     bool repeatAll);
+	Playlist(XmlTreeT titles, const std::string& folder);
 
 	void pause();
 	//! Call it to resume from PAUSE or play the program again if FINISHED.
@@ -59,15 +60,16 @@ protected:
 	
 	//! Will be called if a track is finished.
 	void onStreamFinishedForwarded();
+	void load(XmlTreeT tree, const std::string& folder);
 
 private:
 	
 	void onEventPlay();
 	void onEventPause();
 
-	typedef std::vector<boost::shared_ptr<AudioObject> > ProgramT;
-	ProgramT mProgram;
-	ProgramT::iterator mCurrentTrack;
+	typedef std::vector<boost::shared_ptr<AudioObject> > TitleListT;
+	TitleListT mTitles;
+	TitleListT::iterator mCurrentTrack;
 
 	bool mRepeatAll;
 	State mState;

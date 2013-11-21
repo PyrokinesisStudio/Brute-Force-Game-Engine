@@ -27,43 +27,50 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Audio/Playlist.h>
 
 #include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
+#include <Core/strToBool.h>
 #include <Audio/Main.h>
 
 
 namespace BFG {
 namespace Audio {
 
-Playlist::Playlist(const std::vector<std::string>& program,
-	               bool repeatAll):
-	mRepeatAll(repeatAll),
+Playlist::Playlist(XmlTreeT titles, const std::string& folder):
+	mRepeatAll(true),
 	mState(INITIAL)
+{
+	load(titles, folder);
+	mCurrentTrack = mTitles.begin();
+	(*mCurrentTrack)->play();
+	mState = PLAYING;
+}
+
+void Playlist::load(XmlTreeT tree, const std::string& folder)
 {
 	boost::function<void(void)> onFinishedCallback = boost::bind
 	(
 		&Playlist::onStreamFinishedForwarded,
 		this
 	);
-	
-	BOOST_FOREACH(std::string sound, program)
+
+	strToBool(tree->attribute("repeatAll"), mRepeatAll);
+
+	XmlTreeListT titles = tree->childList("Title");
+
+	BOOST_FOREACH(XmlTreeT t, titles)
 	{
-		mProgram.push_back(createAudioObject(sound, mStreamLoop, onFinishedCallback));
+		mTitles.push_back(createAudioObject(folder + "/" + t->elementData(), mStreamLoop, onFinishedCallback));
 	}
-	
-
-	mCurrentTrack = mProgram.begin();
-	(*mCurrentTrack)->play();
-	mState = PLAYING;
 }
-
 
 void Playlist::onStreamFinishedForwarded()
 {
 	++mCurrentTrack;
 
-	if (mCurrentTrack == mProgram.end())
+	if (mCurrentTrack == mTitles.end())
 		if (mRepeatAll)
 		{
-			mCurrentTrack = mProgram.begin();
+			mCurrentTrack = mTitles.begin();
 			(*mCurrentTrack)->play();
 		}
 		else
@@ -80,7 +87,7 @@ void Playlist::play()
 		return;
 
 	if (mState == FINISHED)
-		mCurrentTrack = mProgram.begin();
+		mCurrentTrack = mTitles.begin();
 
 	(*mCurrentTrack)->play();
 	mState = PLAYING;
@@ -94,7 +101,7 @@ void Playlist::pause()
 
 void Playlist::volume(f32 gain)
 {
-	BOOST_FOREACH(boost::shared_ptr<AudioObject> object, mProgram)
+	BOOST_FOREACH(boost::shared_ptr<AudioObject> object, mTitles)
 	{
 		object->volume(gain);
 	}
