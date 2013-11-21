@@ -1,6 +1,7 @@
 <?xml version="1.0" standalone="no" ?>
 <all>
 	<!-- DON'T FORGET TO CHANGE PATHS FOR RELEASE, TOO -->
+	<path type = "P_LOGS" location = "./Logs" autocreate = "true" />
 	<path type = "P_GRAPHICS_TEXTURES" location = "../../resources/graphics/textures" />
 	<path type = "P_GRAPHICS_MATERIALS" location = "../../resources/graphics/materials" />
 	<path type = "P_GRAPHICS_MESHES" location = "../../resources/graphics/meshes" />
@@ -16,5 +17,4 @@
 	<path type = "P_SCRIPTS_GUI" location = "../../scripts/gui" />
 	<path type = "P_SCRIPTS_GUI_HUD" location = "../../scripts/gui/hud" />
 	<path type = "P_SCRIPTS_GUI_MENU" location = "../../scripts/gui/menu" />
-	<path type = "P_LOGS" location = "./Logs" autocreate = "true" />
 </all>
