@@ -29,6 +29,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Base/Logger.h>
 #include <Core/Types.h>
+#include <Core/Path.h>
+#include <Core/XmlFileHandleFactory.h>
 
 #include <tests/AudioTest/functions.h>
 
@@ -46,14 +48,17 @@ void musicAndSoundTest()
 {
     using namespace BFG;
 
-    std::vector<std::string> fileNameList = musicFileNames();
+    Path p;
+	std::string playlistFile = p.Expand("Music.xml");
+	XmlFileHandleT titles = createXmlFileHandle(playlistFile);
+	std::string musicPath = p.Get(ID::P_SOUND_MUSIC);
+	
     dbglog << "CreatePlaylist";
-    Audio::Playlist playlist(fileNameList, true);
-
+    Audio::Playlist playlist(titles->root()->child("PlayList"), musicPath);
 
     dbglog << "CreateSoundEmitter";
-    Path path;
-    std::string laserSound =  path.Get(ID::P_SOUND_EFFECTS)+"Laser_003.wav";
+
+	std::string laserSound =  p.Get(ID::P_SOUND_EFFECTS)+"Laser_003.wav";
     Audio::SoundEmitter soundEmitter;
 
     for (int i = 0; i < 30; ++i)
