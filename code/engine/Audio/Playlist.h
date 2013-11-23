@@ -27,13 +27,38 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef AUDIO_PLAYLIST_H
 #define AUDIO_PLAYLIST_H
 
-#include <Core/XmlTree.h>
+#include <boost/foreach.hpp>
+
+#include <Core/XmlFileHandleFactory.h>
+#include <Core/Path.h>
+#include <Core/strToBool.h>
 
 #include <Audio/AudioModule.h>
 #include <Audio/AudioObject.h>
 
 namespace BFG {
 namespace Audio {
+
+typedef std::vector<std::string> TitlesT;
+
+struct BFG_AUDIO_API PlaylistXml
+{
+	PlaylistXml(const std::string& filename);
+
+	TitlesT mTitles;
+	bool mRepeatAll;
+
+private:
+
+	void load();
+
+	const std::string mPlaylistTag;
+	const std::string mTitleTag;
+	const std::string mRepeatAllAttribute;
+
+	XmlFileHandleT mXmlFile;
+	Path mPath;
+};
 
 //! Plays a list of tracks. The playlist starts playing immediatly after creation.
 class BFG_AUDIO_API Playlist : public AudioModule
@@ -47,20 +72,18 @@ class BFG_AUDIO_API Playlist : public AudioModule
 	};
 
 public:
-	Playlist(XmlTreeT titles, const std::string& folder);
+	Playlist(const PlaylistXml& playlistXml);
 
 	void pause();
 	//! Call it to resume from PAUSE or play the program again if FINISHED.
 	//! A call while stated PLAYING is active will be ingored.
 	void play();
-
 	void volume(f32 gain);
 
 protected:
 	
 	//! Will be called if a track is finished.
 	void onStreamFinishedForwarded();
-	void load(XmlTreeT tree, const std::string& folder);
 
 private:
 	

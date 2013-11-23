@@ -34,17 +34,14 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 AudioState::AudioState(Event::SubLanePtr subLane) :
 	mSubLane(subLane)
 {
-	Path p;
-
-	std::string playlistFile = p.Expand("/default/Music.xml");
-	std::string musicPath = p.Get(ID::P_SOUND_MUSIC);
-	XmlFileHandleT titles = createXmlFileHandle(playlistFile);
-
-	mPlaylist.reset(new Audio::Playlist(titles->root()->child("PlayList"), musicPath));
+	Audio::PlaylistXml musicFile("default/Music.xml");
+	
+	mPlaylist.reset(new Audio::Playlist(musicFile));
 	
 	mSubLane->connect(ID::AE_SOUND_EMITTER_PROCESS_SOUND, this, &AudioState::onSoundEmitterProcessSound);
 	mSubLane->connect(ID::AE_SOUND_EFFECT, this, &AudioState::onSoundEffect);
 	
+	Path p;
 	mSoundEffectMap["Explosion_big"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.ogg";
 	mSoundEffectMap["Explosion_small"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.ogg";
 	mSoundEffectMap["Explosion_medium"] = p.Get(ID::P_SOUND_EFFECTS)+"Destruction_ExplosionD9.ogg";
