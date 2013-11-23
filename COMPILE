@@ -3,7 +3,6 @@ This file describes how to compile the Brute-Force Game Engine.
 Supported Compilers
 ===================
 
-MSVC 10.0 (Visual Studio 2010)
 MSVC 11.0 (Visual Studio 2012)
 gcc-4.6 and higher
 clang-3.1 and higher

@@ -18,6 +18,22 @@ BOOST_AUTO_TEST_CASE (distance)
 	BOOST_REQUIRE (resultCorrect);
 }
 
+BOOST_AUTO_TEST_CASE (nearEnoughFloat)
+{
+	// Should be near enough (distance: 0)
+	BFG::f32 a = 1.0f/10.0f;
+	BFG::f32 b = a   *10.0f;
+	bool result1 = BFG::nearEnough(b, 1.0f, BFG::EPSILON_F);
+
+	// Should not be near enough (distance: 0.2f)
+	BFG::f32 c = 1.2f;
+	BFG::f32 d = 1.0f;
+	bool result2 = BFG::nearEnough(c, d, BFG::EPSILON_F);
+
+	BOOST_CHECK (result1);
+	BOOST_CHECK (!result2);
+}
+
 BOOST_AUTO_TEST_CASE (nearEnough)
 {
 	// distance between `a' and `b' is 16.5563f
