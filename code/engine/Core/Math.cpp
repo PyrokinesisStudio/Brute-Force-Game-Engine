@@ -224,10 +224,7 @@ bool nearEnough(const f32 value1,
                 const f32 distance)
 {
 	assert(! (distance < 0.0f));
-	if (value1 < value2)
-		return distance > abs(value2 - value1);
-
-	return distance > abs(value1 - value2);
+	return distance > std::abs(value1 - value2);
 }
 
 qv4 lerp(const qv4& q0, const qv4& q1, f32 h)

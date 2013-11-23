@@ -27,6 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef CTYPES_H
 #define CTYPES_H
 
+#include <limits>
 #include <boost/cstdint.hpp>
 
 namespace BFG
@@ -45,7 +46,7 @@ namespace BFG
 	typedef float             f32;
 	typedef double            f64;
 	
-	const f32 EPSILON_F = 0.000001f;
+	const f32 EPSILON_F = std::numeric_limits<f32>::epsilon();
 }
 
 #endif
