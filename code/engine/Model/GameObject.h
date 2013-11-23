@@ -33,6 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/weak_ptr.hpp>
 
 #include <Core/Location.h>
+#include <Core/Units.h>
 
 #include <Event/Event.h>
 
@@ -183,7 +184,7 @@ private:
 	Event::SubLanePtr subLane();
 	//! Updates the GameObject as well as all its Modules
 	//! 
-	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
+	virtual void internalUpdate(TimeT timeSinceLastFrame);
 	virtual void internalSynchronize();
 
 	//! Helper function to distribute an event amongst all attached
@@ -325,6 +326,9 @@ private:
 	bool mActivated;
 	
 	std::vector<Adapter> mRootAdapters;
+
+	u32 mUpdateCounter;
+	TimeT mTimeSinceLastUpdate;
 
 	LevelOfDetail mLoD;
 	f32 mCurrentLoD;

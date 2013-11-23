@@ -82,7 +82,10 @@ mEnvironment(environment),
 mPropertyPlugins(propertyPlugins),
 mValues(goValues),
 mDocked(false),
-mActivated(false)
+mActivated(false),
+mTimeSinceLastUpdate(0),
+mUpdateCounter(0),
+mCurrentLoD(1.0f)
 {
 	throwIfEnginePropertiesNotFoundOrWrongId(propertyPlugins);
 
@@ -98,7 +101,6 @@ mActivated(false)
 	setValue(ID::PV_Remote, ValueId::ENGINE_PLUGIN_ID, false);
 
 	mSubLane->connectV(ID::GOE_DETACH_MODULE, this, &GameObject::detachModule, handle);
-	mCurrentLoD = 10.0f;
 }
 
 GameObject::~GameObject()
@@ -322,20 +324,29 @@ const std::vector<Adapter>& GameObject::rootAdapters() const
 	return mRootAdapters;
 }
 
-void GameObject::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
+void GameObject::internalUpdate(TimeT timeSinceLastFrame)
 {
 	if (!mActivated)
 		return;
-	
-	//! \see  GameObject::rebuildConceptUpdateOrder()
-	UpdateOrderContainerT::const_iterator it = mConceptUpdateOrder.begin();
-	for(; it != mConceptUpdateOrder.end(); ++it)
-	{
-		boost::shared_ptr<Property::Concept> pc = it->lock();
-		pc->update(timeSinceLastFrame);
-	}
 
-	updateLoD();
+	++mUpdateCounter;
+	mTimeSinceLastUpdate += timeSinceLastFrame;
+
+	if ((static_cast<u32>(mCurrentLoD) % mUpdateCounter) == 0)
+	{
+		mUpdateCounter = 0;
+		
+		//! \see  GameObject::rebuildConceptUpdateOrder()
+		UpdateOrderContainerT::const_iterator it = mConceptUpdateOrder.begin();
+		for(; it != mConceptUpdateOrder.end(); ++it)
+		{
+			boost::shared_ptr<Property::Concept> pc = it->lock();
+			pc->update(mTimeSinceLastUpdate);
+		}
+
+		mTimeSinceLastUpdate = 0;
+		updateLoD();
+	}
 }
 
 void GameObject::activate()
