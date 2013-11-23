@@ -28,9 +28,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #define STREAM_TEST_H_
 
 #include <tests/AudioTest/functions.h>
-#include <Audio/Loader.h>
 #include <Audio/StreamLoop.h>
-#include <Audio/OpenALAudioObject.h>
+#include <Audio/OpenAL/OpenALAudioObject.h>
 
 
 //! \Hack this won't work in further development!

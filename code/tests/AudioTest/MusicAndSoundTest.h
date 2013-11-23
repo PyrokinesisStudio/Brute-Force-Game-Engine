@@ -34,8 +34,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <tests/AudioTest/functions.h>
 
-#include <Audio/Playlist.h>
-#include <Audio/SoundEmitter.h>
+#include <Audio/Modules/Playlist.h>
+#include <Audio/Modules/SoundEmitter.h>
 
 void printMenuControls()
 {
