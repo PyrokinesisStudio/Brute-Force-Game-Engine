@@ -33,7 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 BOOST_AUTO_TEST_SUITE(LoDTest)
 
 //! \todo Repair broken tests.
-#if 0
+
 BOOST_AUTO_TEST_CASE (QuantifierTest)
 {
 	using namespace BFG;
@@ -132,6 +132,5 @@ BOOST_AUTO_TEST_CASE (LoDLoadFromXmlTest)
 	BOOST_CHECK_NO_THROW(ranges.reload());
 	BOOST_CHECK_NO_THROW(quantifier.reload());
 }
-#endif
 
 BOOST_AUTO_TEST_SUITE_END()
