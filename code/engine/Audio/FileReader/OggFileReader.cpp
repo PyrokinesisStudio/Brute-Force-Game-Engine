@@ -24,7 +24,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Audio/OggFileReader.h>
+#include <Audio/FileReader/OggFileReader.h>
 
 #include <stdexcept>
 #include <stdlib.h>

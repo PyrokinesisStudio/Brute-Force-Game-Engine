@@ -24,14 +24,14 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Audio/FileFactory.h>
+#include <Audio/FileReader/FileFactory.h>
 
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem/path.hpp>
 
-#include <Audio/OggFile.h>
-#include <Audio/WaveFile.h>
+#include <Audio/FileReader/OggFileReader.h>
+#include <Audio/FileReader/WaveFileReader.h>
 
 namespace BFG {
 namespace Audio {

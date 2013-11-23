@@ -24,14 +24,14 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Audio/OpenALAudioObject.h>
+#include <Audio/OpenAL/OpenALAudioObject.h>
 
 #ifdef BFG_USE_OPENAL
 
 #include <Base/Logger.h>
 
-#include <Audio/OpenALStream.h>
-#include <Audio/FileFactory.h>
+#include <Audio/OpenAL/OpenALStream.h>
+#include <Audio/FileReader/FileFactory.h>
 #include <Audio/HelperFunctions.h>
 
 

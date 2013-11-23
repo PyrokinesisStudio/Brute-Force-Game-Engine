@@ -2,8 +2,39 @@ cmake_minimum_required(VERSION 2.6)
 
 BFG_INIT_PACKAGE(Audio)
 
-FILE(GLOB Audio_SOURCES *.cpp)
-FILE(GLOB Audio_HEADERS *.h *.xml *.hh)
+FILE(GLOB Audio_Root_HEADERS *.h *.hh)
+FILE(GLOB Audio_Root_SOURCES *.cpp)
+
+FILE(GLOB Audio_Modules_HEADERS Modules/*.h)
+FILE(GLOB Audio_Modules_SOURCES Modules/*.cpp)
+
+FILE(GLOB Audio_OpenAL_HEADERS OpenAL/*.h)
+FILE(GLOB Audio_OpenAL_SOURCES OpenAL/*.cpp)
+
+FILE(GLOB Audio_FileReader_HEADERS FileReader/*.h)
+FILE(GLOB Audio_FileReader_SOURCES FileReader/*.cpp)
+
+
+FILE(GLOB Audio_HEADERS
+	${Audio_Root_HEADERS}
+	${Audio_Modules_HEADERS}
+	${Audio_OpenAL_HEADERS}
+	${Audio_FileReader_HEADERS}
+	*.h *.xml *.hh
+)
+
+FILE(GLOB Audio_SOURCES
+	${Audio_Root_SOURCES}
+	${Audio_Modules_SOURCES}
+	${Audio_OpenAL_SOURCES}
+	${Audio_FileReader_SOURCES}
+)
+
+SOURCE_GROUP("." FILES ${Audio_Root_HEADERS} ${Audio_Root_SOURCES})
+SOURCE_GROUP("Modules" FILES ${Audio_Modules_HEADERS} ${Audio_Modules_SOURCES})
+SOURCE_GROUP("OpenAL" FILES ${Audio_OpenAL_HEADERS} ${Audio_OpenAL_SOURCES})
+SOURCE_GROUP("FileReader" FILES ${Audio_FileReader_HEADERS} ${Audio_FileReader_SOURCES})
+
 
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${BoostLog_INCLUDE_DIR})

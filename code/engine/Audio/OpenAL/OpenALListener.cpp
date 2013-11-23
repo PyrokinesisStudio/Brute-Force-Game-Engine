@@ -24,7 +24,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Audio/OpenALListener.h>
+#include <Audio/OpenAL/OpenALListener.h>
 
 #ifdef BFG_USE_OPENAL
 

@@ -28,7 +28,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef AUDIO_FILE_FACTORY_H
 #define AUDIO_FILE_FACTORY_H
 
-#include <Audio/FileBase.h>
+#include <Audio/AudioFileReader.h>
 #include <boost/shared_ptr.hpp>
 
 namespace BFG {
