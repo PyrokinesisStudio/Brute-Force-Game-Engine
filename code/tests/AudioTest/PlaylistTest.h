@@ -43,14 +43,8 @@ void playlistTest()
 {
 	using namespace BFG;
 
-	Path p;
-	
-	std::string playlistFile = p.Expand("/default/Music.xml");
-	std::string musicPath = p.Get(ID::P_SOUND_MUSIC);
-	XmlFileHandleT titles = createXmlFileHandle(playlistFile);
-	
-	
-	Audio::Playlist playlist(titles->root()->child("PlayList"), musicPath);
+	Audio::PlaylistXml musicFile("default/Music.xml");
+    Audio::Playlist playlist(musicFile);
 
 	bool noExit = true;
 	int choice = -1;

@@ -35,17 +35,35 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Audio {
 
-Playlist::Playlist(XmlTreeT titles, const std::string& folder):
-	mRepeatAll(true),
-	mState(INITIAL)
+PlaylistXml::PlaylistXml(const std::string& filename):
+	mPlaylistTag("PlayList"),
+	mTitleTag("Title"),
+	mRepeatAllAttribute("repeatAll")
 {
-	load(titles, folder);
-	mCurrentTrack = mTitles.begin();
-	(*mCurrentTrack)->play();
-	mState = PLAYING;
+	mXmlFile = createXmlFileHandle(mPath.Expand(filename));
+	load();
 }
 
-void Playlist::load(XmlTreeT tree, const std::string& folder)
+void PlaylistXml::load()
+{
+	XmlTreeT tree = mXmlFile->root()->child(mPlaylistTag);
+
+	strToBool(tree->attribute(mRepeatAllAttribute), mRepeatAll);
+
+	XmlTreeListT titles = tree->childList(mTitleTag);
+
+	BOOST_FOREACH(XmlTreeT t, titles)
+	{
+		std::string audioFile = t->elementData();
+		mTitles.push_back(mPath.Expand(audioFile));
+	}
+}
+
+
+
+Playlist::Playlist(const PlaylistXml& playlistXml):
+	mRepeatAll(playlistXml.mRepeatAll),
+	mState(INITIAL)
 {
 	boost::function<void(void)> onFinishedCallback = boost::bind
 	(
@@ -53,14 +71,14 @@ void Playlist::load(XmlTreeT tree, const std::string& folder)
 		this
 	);
 
-	strToBool(tree->attribute("repeatAll"), mRepeatAll);
-
-	XmlTreeListT titles = tree->childList("Title");
-
-	BOOST_FOREACH(XmlTreeT t, titles)
+	BOOST_FOREACH(std::string title, playlistXml.mTitles)
 	{
-		mTitles.push_back(createAudioObject(folder + "/" + t->elementData(), mStreamLoop, onFinishedCallback));
+		mTitles.push_back(createAudioObject(title, mStreamLoop, onFinishedCallback));
 	}
+
+	mCurrentTrack = mTitles.begin();
+	(*mCurrentTrack)->play();
+	mState = PLAYING;
 }
 
 void Playlist::onStreamFinishedForwarded()

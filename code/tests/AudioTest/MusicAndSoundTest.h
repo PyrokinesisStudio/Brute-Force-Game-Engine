@@ -48,16 +48,13 @@ void musicAndSoundTest()
 {
     using namespace BFG;
 
-    Path p;
-	std::string playlistFile = p.Expand("Music.xml");
-	XmlFileHandleT titles = createXmlFileHandle(playlistFile);
-	std::string musicPath = p.Get(ID::P_SOUND_MUSIC);
-	
     dbglog << "CreatePlaylist";
-    Audio::Playlist playlist(titles->root()->child("PlayList"), musicPath);
+	Audio::PlaylistXml musicFile("default/Music.xml");
+    Audio::Playlist playlist(musicFile);
 
     dbglog << "CreateSoundEmitter";
 
+	Path p;
 	std::string laserSound =  p.Get(ID::P_SOUND_EFFECTS)+"Laser_003.wav";
     Audio::SoundEmitter soundEmitter;
 
