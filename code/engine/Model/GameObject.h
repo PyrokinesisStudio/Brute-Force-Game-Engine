@@ -42,6 +42,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Property/ConceptId.h>
 #include <Model/Property/Value.h>
 #include <Model/Property/Plugin.h>
+#include <Model/LevelOfDetail.h>
 
 namespace BFG {
 
@@ -238,6 +239,9 @@ private:
 	                  u32 Index,
 	                  Adapter& oldAdapter) const;
 
+	void updateLoD();
+
+
 	/**
 		Property::Concept 's may depend on each other. That's why, a correct
 		update order is crucial. The order resembles a tree structure whose
@@ -321,6 +325,9 @@ private:
 	bool mActivated;
 	
 	std::vector<Adapter> mRootAdapters;
+
+	LevelOfDetail mLoD;
+	f32 mCurrentLoD;
 };
 
 void MODEL_API vectorToModuleFromRoot(const std::vector<Adapter>& adapters,
@@ -328,6 +335,8 @@ void MODEL_API vectorToModuleFromRoot(const std::vector<Adapter>& adapters,
 									  qv4& oriResult);
 
 std::ostream& operator << (std::ostream& lhs, const GameObject& rhs);
+
+bool MODEL_API isCamera(boost::shared_ptr<BFG::GameObject> go);
 
 } // namespace BFG
 

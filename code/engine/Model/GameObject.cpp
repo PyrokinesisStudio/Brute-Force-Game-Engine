@@ -98,6 +98,7 @@ mActivated(false)
 	setValue(ID::PV_Remote, ValueId::ENGINE_PLUGIN_ID, false);
 
 	mSubLane->connectV(ID::GOE_DETACH_MODULE, this, &GameObject::detachModule, handle);
+	mCurrentLoD = 10.0f;
 }
 
 GameObject::~GameObject()
@@ -326,15 +327,15 @@ void GameObject::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 	if (!mActivated)
 		return;
 	
-
 	//! \see  GameObject::rebuildConceptUpdateOrder()
 	UpdateOrderContainerT::const_iterator it = mConceptUpdateOrder.begin();
 	for(; it != mConceptUpdateOrder.end(); ++it)
 	{
 		boost::shared_ptr<Property::Concept> pc = it->lock();
 		pc->update(timeSinceLastFrame);
-
 	}
+
+	updateLoD();
 }
 
 void GameObject::activate()
@@ -349,6 +350,45 @@ void GameObject::activate()
 	sendValueUpdate(ID::PV_RelativeRotationVelocity, ValueId::ENGINE_PLUGIN_ID);
 	sendValueUpdate(ID::PV_Mass, ValueId::ENGINE_PLUGIN_ID);
 	sendValueUpdate(ID::PV_Inertia, ValueId::ENGINE_PLUGIN_ID);
+
+	updateLoD();
+}
+
+void GameObject::updateLoD()
+{
+	v3 position = getValue<v3>(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
+	qv4 orientation = getValue<qv4>(ID::PV_Orientation, ValueId::ENGINE_PLUGIN_ID);
+
+	v3 cameraPosition;
+	GameHandle camera;
+	
+	try
+	{
+		camera = mEnvironment->find(isCamera);
+	}
+	catch (std::exception& e)
+	{
+		camera = NULL_HANDLE;
+	}
+
+	if (camera == NULL_HANDLE)
+		cameraPosition = v3::ZERO;
+	else
+		cameraPosition = mEnvironment->getGoValue<v3>(camera, ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
+
+	v3 velocity = getValue<v3>(ID::PV_Velocity, ValueId::ENGINE_PLUGIN_ID);
+	f32 lod = mLoD.get(position, 
+	                   orientation, 
+	                   cameraPosition, 
+	                   length(velocity), 
+	                   0.0f,  // not implemented yet
+	                   0.0f); // not implemented yet
+
+	if (nearEnough(mCurrentLoD, lod, EPSILON_F))
+	{
+		mCurrentLoD = lod;
+		subLane()->emit(ID::GOE_UPDATE_LOD, mCurrentLoD, getHandle());
+	}
 }
 
 void GameObject::sendValueUpdate(Property::ValueId::VarIdT varId,
@@ -760,5 +800,11 @@ std::ostream& operator << (std::ostream& lhs, const GameObject& rhs)
 	lhs << s;
 	return lhs;
 }
+
+bool isCamera(boost::shared_ptr<BFG::GameObject> go)
+{
+	return go->satisfiesRequirement("Camera");
+} 
+
 
 } // namespace BFG

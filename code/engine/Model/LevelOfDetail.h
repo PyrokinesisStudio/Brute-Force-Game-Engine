@@ -252,12 +252,8 @@ private:
 class LevelOfDetail
 {
 public:
-		LevelOfDetail(const Quantifier& quantifier,
-		              const Ranges& ranges):
-		mQ(quantifier),
-		mRanges(ranges)
-		{
-		}
+		LevelOfDetail()
+		{}
 
 		f32 get(v3 position, 
 		        qv4 orientation, 
@@ -269,7 +265,7 @@ public:
 			v3 directionCam = position - cameraPosition;
 			norm(directionCam);
 
-			f32 angle = angleBetween(orientation, eulerToQuaternion(directionCam)) * RAD2DEG;
+			f32 angle = angleBetween(orientation, eulerToQuaternion(directionCam)) * static_cast<f32>(RAD2DEG);
 			
 			mFoM = mRanges.velocity(velocitiy) * mQ.mVelocity + 
 			       mRanges.direction(angle) * mQ.mDirection + 
@@ -281,17 +277,23 @@ public:
 			return mDtC * mQ.mDtC + mFoM * mQ.mFoM + mSoO * mQ.mSoO;
 		}
 
+		void reload()
+		{
+			mQ.reload();
+			mRanges.reload();
+		}
+
 private:
 
 		//! DistanceToCamera
-		f32 mDtC;
+		u32 mDtC;
 		//! FactorOfMobility
 		f32 mFoM;
 		//! SizeOfObject
-		f32 mSoO;
+		u32 mSoO;
 
-		const Quantifier& mQ;
-		const Ranges& mRanges;
+		Quantifier mQ;
+		Ranges mRanges;
 };
 
 } // namespace BFG

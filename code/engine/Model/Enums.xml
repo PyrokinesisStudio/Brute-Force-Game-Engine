@@ -52,8 +52,11 @@
 
             <value>GOE_SYNCHRONIZATION_MODE</value>
             <value>GOE_GHOST_MODE</value>
+						
+						<value>GOE_UPDATE_LOD</value>
           
             <value>GOE_ENDGOEEVENTS</value>
+
 
             <!-- Sector Events -->
             <value>S_CREATE_GO</value>
