@@ -382,7 +382,7 @@ void PhysicsObject::notifyAboutCollision(GameHandle ownModule,
 	mSubLane->emit
 	(
 		ID::PE_CONTACT,
-		boost::make_tuple(ownModule, otherModule, penetrationDepth),
+		ModulePenetration(ownModule, otherModule, penetrationDepth),
 		mRootModule
 	);
 }

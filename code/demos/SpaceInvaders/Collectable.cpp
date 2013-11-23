@@ -49,5 +49,5 @@ void Collectable::onCollect(const Physics::ModulePenetration& mp)
 
 	// Very Cannon specific stuff.
 	s32 ammo = 5;
-	subLane()->emit(ID::GOE_POWERUP, ammo, mp.get<1>());
+	subLane()->emit(ID::GOE_POWERUP, ammo, mp.mOtherModule);
 }

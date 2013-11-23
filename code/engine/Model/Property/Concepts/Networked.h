@@ -48,7 +48,8 @@ private:
 	void onOrientation(const qv4& newOrientation);
 	void onVelocity(const Physics::VelocityComposite& newVelocity);
 	void onRotationVelocity(const Physics::VelocityComposite& newVelocity);
-	
+	void onContact(const Physics::ModulePenetration& mp);
+
 	void onReceived(const BFG::Network::DataPayload& payload);
 
 	void onSynchronizationMode(ID::SynchronizationMode mode);

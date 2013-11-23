@@ -414,15 +414,24 @@ void PhysicsManager::onDetachObject(const ObjectAttachmentParams& oap)
 
 boost::shared_ptr<PhysicsObject> PhysicsManager::findObject(GameHandle objectHandle) const
 {
-	PhysicsObjectMap::const_iterator it = mPhysicsObjects.find(objectHandle);
-	if (it == mPhysicsObjects.end())
+	boost::shared_ptr<PhysicsObject> result;
+	BOOST_FOREACH(const PhysicsObjectMap::value_type& vt, mPhysicsObjects)
+	{
+		if (vt.second->hasModule(objectHandle))
+		{
+			result = vt.second;
+			break;
+		}
+	}
+
+	if (! result)
 	{
 		std::stringstream ss;
 		ss << "PhysicsObject " << objectHandle << " not registered in Manager!";
 		throw std::logic_error(ss.str());
 	}
 
-	return it->second;
+	return result;
 }
 
 

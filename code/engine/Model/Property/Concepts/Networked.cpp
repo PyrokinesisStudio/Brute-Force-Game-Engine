@@ -62,6 +62,7 @@ mExtrapolatedOrientationDelta(qv4::IDENTITY)
 	subLane()->connect(ID::PE_ORIENTATION, this, &Networked::onOrientation, ownerHandle());
 	subLane()->connect(ID::PE_VELOCITY, this, &Networked::onVelocity, ownerHandle());
 	subLane()->connect(ID::PE_ROTATION_VELOCITY, this, &Networked::onRotationVelocity, ownerHandle());
+	subLane()->connect(ID::PE_CONTACT, this, &Networked::onContact, ownerHandle());
 
 	subLane()->connect(ID::NE_RECEIVED, this, &Networked::onReceived, ownerHandle());
 	
@@ -218,6 +219,23 @@ void Networked::onRotationVelocity(const Physics::VelocityComposite& newVelocity
 	sendRotationVelocity(newVelocity.get<0>());
 }
 
+void Networked::onContact(const Physics::ModulePenetration& mp)
+{
+	CharArray512T ca512;
+	u32 size = valueToArray(mp, ca512, 0);
+
+	BFG::Network::DataPayload payload
+	(
+		ID::PE_CONTACT, 
+		ownerHandle(),
+		ownerHandle(),
+		size,
+		ca512
+	);
+
+	subLane()->emit(BFG::ID::NE_SEND, payload);
+}
+
 void Networked::onReceived(const BFG::Network::DataPayload& payload)
 {
 	if (!receivesData())
@@ -230,6 +248,13 @@ void Networked::onReceived(const BFG::Network::DataPayload& payload)
 
 	switch(payload.mAppEventId)
 	{
+	case ID::PE_CONTACT:
+	{
+		assert(ownerHandle() == payload.mAppDestination);
+
+		subLane()->emit(ID::PE_CONTACT, Physics::ModulePenetration(payload.mAppData), ownerHandle());
+		break;
+	}
 	case ID::PE_UPDATE_POSITION:
 	{
 		assert(ownerHandle() == payload.mAppDestination);

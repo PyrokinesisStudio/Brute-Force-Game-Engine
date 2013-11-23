@@ -72,11 +72,8 @@ void Destroyable::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 
 void Destroyable::onContact(const Physics::ModulePenetration& mp)
 {
-	GameHandle ownModule        = mp.get<0>();
-	f32        penetrationDepth = mp.get<2>();
-	
-	f32 newDamage = penetrationDepth * mDamageMultiplier;
-	value<f32>(ID::PV_Damage, ownModule) += newDamage;
+	f32 newDamage = mp.mPenetrationDepth * mDamageMultiplier;
+	value<f32>(ID::PV_Damage, mp.mOwnModule) += newDamage;
 }
 
 // Not used atm.

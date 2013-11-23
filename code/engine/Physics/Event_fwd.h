@@ -31,6 +31,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/units/quantity.hpp>
 #include <boost/units/systems/si/mass.hpp>
 
+#include <Core/CharArray.h>
 #include <Core/ExternalTypes.h>
 #include <Core/GameHandle.h>
 #include <Core/Location.h>
@@ -136,12 +137,38 @@ typedef boost::tuple
 	qv4                  // Offset Orientation
 > ObjectAttachmentParams;
 
-typedef boost::tuple
-<
-	GameHandle,          // Own Module
-	GameHandle,          // Other Module
-	f32                  // Penetration Depth
-> ModulePenetration;
+struct ModulePenetration
+{
+	ModulePenetration(const GameHandle ownModule = NULL_HANDLE, const GameHandle otherModule = NULL_HANDLE, f32 depth = 0.0f) :
+	mOwnModule(ownModule),
+	mOtherModule(otherModule),
+	mPenetrationDepth(depth)
+	{}
+
+	ModulePenetration(const CharArray512T& in)
+	{
+		u32 offset = arrayToValue(mOwnModule, in, 0);
+		offset = arrayToValue(mOtherModule, in, offset);
+		offset = arrayToValue(mPenetrationDepth, in, offset);
+	}
+
+	GameHandle mOwnModule;
+	GameHandle mOtherModule;
+	f32 mPenetrationDepth;
+};
+
+template <typename ArrayT>
+u32 valueToArray(const ModulePenetration& val, ArrayT& output, const size_t offset)
+{
+	using ::valueToArray;
+
+	u32 newOffset = offset;
+	newOffset = valueToArray(val.mOwnModule, output, newOffset);
+	newOffset = valueToArray(val.mOtherModule, output, newOffset);
+	newOffset = valueToArray(val.mPenetrationDepth, output, newOffset);
+		
+	return newOffset;
+}
 
 } // namespace Physics
 } // namespace BFG
