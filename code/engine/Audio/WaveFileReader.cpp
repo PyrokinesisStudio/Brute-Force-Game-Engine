@@ -25,7 +25,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-#include <Audio/WaveFile.h>
+#include <Audio/WaveFileReader.h>
 
 #include <stdexcept>
 #include <stdlib.h>

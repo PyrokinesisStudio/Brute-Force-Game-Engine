@@ -27,7 +27,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_AUDIO_OPEN_AL_INIT_H
 #define BFG_AUDIO_OPEN_AL_INIT_H
 
-#include <Audio/Init.h>
+#include <Audio/SoundDevice.h>
 
 #ifdef BFG_USE_OPENAL
 

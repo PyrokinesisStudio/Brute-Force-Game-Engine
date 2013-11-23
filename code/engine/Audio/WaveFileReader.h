@@ -33,7 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <sndfile.h>
 
 #include <Audio/Defines.h>
-#include <Audio/FileBase.h>
+#include <Audio/AudioFileReader.h>
 
 namespace BFG {
 namespace Audio {
