@@ -63,7 +63,8 @@ void PlaylistXml::load()
 
 Playlist::Playlist(const PlaylistXml& playlistXml):
 	mRepeatAll(playlistXml.mRepeatAll),
-	mState(INITIAL)
+	mState(INITIAL),
+	mVolume(1.0f)
 {
 	boost::function<void(void)> onFinishedCallback = boost::bind
 	(
@@ -75,6 +76,8 @@ Playlist::Playlist(const PlaylistXml& playlistXml):
 	{
 		mTitles.push_back(createAudioObject(title, mStreamLoop, onFinishedCallback));
 	}
+
+	volume(mVolume);
 
 	mCurrentTrack = mTitles.begin();
 	(*mCurrentTrack)->play();
@@ -96,7 +99,9 @@ void Playlist::onStreamFinishedForwarded()
 			mState = FINISHED;
 		}
 	else
+	{
 		(*mCurrentTrack)->play();
+	}
 }
 
 void Playlist::play()
@@ -119,9 +124,11 @@ void Playlist::pause()
 
 void Playlist::volume(f32 gain)
 {
+	mVolume = gain;
+
 	BOOST_FOREACH(boost::shared_ptr<AudioObject> object, mTitles)
 	{
-		object->volume(gain);
+		object->volume(mVolume);
 	}
 }
 

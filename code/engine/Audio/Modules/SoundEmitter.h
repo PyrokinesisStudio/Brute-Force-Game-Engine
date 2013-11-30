@@ -90,13 +90,14 @@ protected:
 
 private:
 
+	State mState;
+	u32 mIdCounter;
+	f32 mVolume;
+
 	typedef std::map<u32, boost::shared_ptr<AudioObject> > SoundQueueT;
 	typedef std::map<u32, boost::shared_ptr<SoundHandle> > HandlesT;
 	SoundQueueT mSoundQueue;
 	HandlesT mSoundHandles;
-
-	State mState;
-	u32 mIdCounter;
 
 	boost::mutex mMutex;
 };

@@ -32,7 +32,8 @@ namespace Audio {
 
 SoundEmitter::SoundEmitter():
     mState(PLAYING),
-    mIdCounter(0)
+    mIdCounter(0),
+	mVolume(1.0f)
 {
 }
 
@@ -81,6 +82,7 @@ void SoundEmitter::processSound(const std::string &name)
 
 	boost::shared_ptr<AudioObject> audioObject = createAudioObject(name, mStreamLoop, onFinishedCallback);
 	mSoundQueue[mIdCounter] = audioObject;
+	audioObject->volume(mVolume);
 	audioObject->play();
 }
 
@@ -97,6 +99,7 @@ void SoundEmitter::soundFinished(int id)
 
 void SoundEmitter::volume(f32 gain)
 {
+	mVolume = gain;
 	SoundQueueT::iterator ao = mSoundQueue.begin();
 
 	for (; ao != mSoundQueue.end(); ++ao)

@@ -90,12 +90,13 @@ private:
 	void onEventPlay();
 	void onEventPause();
 
+	bool mRepeatAll;
+	State mState;
+	f32 mVolume;
+
 	typedef std::vector<boost::shared_ptr<AudioObject> > TitleListT;
 	TitleListT mTitles;
 	TitleListT::iterator mCurrentTrack;
-
-	bool mRepeatAll;
-	State mState;
 };
 
 } // namespace Audio
