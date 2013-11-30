@@ -50,7 +50,8 @@ protected:
 
 		for(; it != treeList.end(); ++it)
 		{
-			mValueParameters.push_back(PropertyParametersT(new PropertyParameters(*it)));
+			PropertyParametersT pp(new PropertyParameters(*it));
+			mValueParameters.push_back(pp);
 		}
 	}
 };

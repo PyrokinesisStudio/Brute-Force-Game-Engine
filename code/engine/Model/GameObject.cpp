@@ -376,6 +376,11 @@ void GameObject::updateLoD()
 	try
 	{
 		camera = mEnvironment->find(isCamera);
+		
+		//! \todo Because camera is an GameObject. It wouldn't make sense to have an LoD for the camera.
+		//! But this solution is not good. It should be possible to have objects with no or constant LoD.
+		if (camera == mHandle)
+			return;
 	}
 	catch (std::exception& e)
 	{
@@ -383,7 +388,7 @@ void GameObject::updateLoD()
 	}
 
 	if (camera == NULL_HANDLE)
-		cameraPosition = v3::ZERO;
+		cameraPosition = v3::UNIT_Z;
 	else
 		cameraPosition = mEnvironment->getGoValue<v3>(camera, ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
 
