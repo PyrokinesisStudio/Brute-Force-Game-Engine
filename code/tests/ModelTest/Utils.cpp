@@ -54,7 +54,7 @@ GoAndSpacePluginT createTestGameObject(BFG::Event::Lane& lane,
 template<typename T>
 void setValueId(boost::shared_ptr<BFG::Module> module, BFG::ID::PropertyVar id, T value)
 {
-    BFG::Property::ValueId vId = ValueId(id, BFG::Property::ValueId::ENGINE_PLUGIN_ID);
+    BFG::Property::ValueId vId = BFG::Property::ValueId(id, BFG::Property::ValueId::ENGINE_PLUGIN_ID);
     module->mValues[vId] = value;
 }
  
