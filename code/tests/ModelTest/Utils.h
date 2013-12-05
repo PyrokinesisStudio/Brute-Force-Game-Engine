@@ -34,6 +34,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Event/Lane.h>
 #include <Model/GameObject.h>
 #include <Model/Property/SpacePlugin.h>
+#include <Physics/Event_fwd.h>
+
 
 typedef std::pair <
 	boost::shared_ptr<BFG::GameObject>,
@@ -46,6 +48,12 @@ GoAndSpacePluginT createTestGameObject(BFG::Event::Lane& lane,
                                        const BFG::Module::ValueStorageT& vs = BFG::Module::ValueStorageT());
 
 template<typename T>
-void setValueId(boost::shared_ptr<BFG::Module> module, BFG::ID::PropertyVar id, T value);
+void setValueId(boost::shared_ptr<BFG::Module> module, BFG::ID::PropertyVar id, T value)
+{
+    BFG::Property::ValueId vId = BFG::Property::ValueId(id, BFG::Property::ValueId::ENGINE_PLUGIN_ID);
+    module->mValues[vId] = value;
+}
+
+BFG::Physics::FullSyncData createTestFullSyncData();
 
 #endif

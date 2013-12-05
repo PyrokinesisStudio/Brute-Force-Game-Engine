@@ -46,20 +46,6 @@ using BFG::m3x3;
 
 BFG::PluginId enginePluginId = BFG::Property::ValueId::ENGINE_PLUGIN_ID;
 
-BFG::Physics::FullSyncData createTestFullSyncData()
-{
-	const v3 pos(0.1, 0.2, 0.3);
-	const qv4 ori(0.4, 0.5, 0.6);
-	const v3 vel(0.7, 0.8, 0.9);
-	const v3 relvel(1.2, 1.5, 1.8);
-	const v3 rotvel(2.1, 2.4, 2.7);
-	const v3 relrotvel(3.0, 3.3, 3.6);
-	const f32 mass = 999.0f;
-	const m3x3 inertia(9.f,8.f,7.f,6.f,5.f,4.f,3.f,2.f,1.f);
-	
-	BFG::Physics::FullSyncData fsd(pos, ori, vel, relvel, rotvel, relrotvel, mass, inertia);
-	return fsd;
-}
 
 // ----------------------------------------------------------------------------
 

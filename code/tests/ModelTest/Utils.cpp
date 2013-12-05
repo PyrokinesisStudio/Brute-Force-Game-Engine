@@ -26,19 +26,22 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Utils.h"
 
+#include <Core/Types.h>
 #include <Model/Environment.h>
 
-GoAndSpacePluginT createTestGameObject(BFG::Event::Lane& lane,
-                                       BFG::Property::PluginMapT& pluginMap,
-                                       BFG::GameHandle handle,
-                                       const BFG::Module::ValueStorageT& vs)
+using namespace BFG;
+
+GoAndSpacePluginT createTestGameObject(Event::Lane& lane,
+                                       Property::PluginMapT& pluginMap,
+                                       GameHandle handle,
+                                       const Module::ValueStorageT& vs)
 {
-	BFG::PluginId spId = BFG::Property::ValueId::ENGINE_PLUGIN_ID;
-	boost::shared_ptr<BFG::SpacePlugin> sp(new BFG::SpacePlugin(spId));
+	PluginId spId = Property::ValueId::ENGINE_PLUGIN_ID;
+	boost::shared_ptr<SpacePlugin> sp(new SpacePlugin(spId));
 	pluginMap.insert(sp);
 
-	boost::shared_ptr<BFG::Environment> environment(new BFG::Environment());
-	boost::shared_ptr<BFG::GameObject> go(new BFG::GameObject(
+	boost::shared_ptr<Environment> environment(new Environment());
+	boost::shared_ptr<GameObject> go(new GameObject(
 		lane,
 		handle,
 		"TestObject",
@@ -51,10 +54,17 @@ GoAndSpacePluginT createTestGameObject(BFG::Event::Lane& lane,
 	return ret;
 }
 
-template<typename T>
-void setValueId(boost::shared_ptr<BFG::Module> module, BFG::ID::PropertyVar id, T value)
+Physics::FullSyncData createTestFullSyncData()
 {
-    BFG::Property::ValueId vId = BFG::Property::ValueId(id, BFG::Property::ValueId::ENGINE_PLUGIN_ID);
-    module->mValues[vId] = value;
+	const v3 pos(0.1f, 0.2f, 0.3f);
+	const qv4 ori(0.4f, 0.5f, 0.6f);
+	const v3 vel(0.7f, 0.8f, 0.9f);
+	const v3 relvel(1.2f, 1.5f, 1.8f);
+	const v3 rotvel(2.1f, 2.4f, 2.7f);
+	const v3 relrotvel(3.0f, 3.3f, 3.6f);
+	const f32 mass = 999.0f;
+	const m3x3 inertia(9.f,8.f,7.f,6.f,5.f,4.f,3.f,2.f,1.f);
+	
+	Physics::FullSyncData fsd(pos, ori, vel, relvel, rotvel, relrotvel, mass, inertia);
+	return fsd;
 }
- 
