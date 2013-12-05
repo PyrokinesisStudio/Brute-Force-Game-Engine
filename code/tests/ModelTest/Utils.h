@@ -39,9 +39,13 @@ typedef std::pair <
 	boost::shared_ptr<BFG::GameObject>,
 	boost::shared_ptr<BFG::SpacePlugin>
 > GoAndSpacePluginT;
+
 GoAndSpacePluginT createTestGameObject(BFG::Event::Lane& lane,
                                        BFG::Property::PluginMapT&,
                                        BFG::GameHandle = BFG::generateHandle(),
                                        const BFG::Module::ValueStorageT& vs = BFG::Module::ValueStorageT());
+
+template<typename T>
+void setValueId(boost::shared_ptr<BFG::Module> module, BFG::ID::PropertyVar id, T value);
 
 #endif

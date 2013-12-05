@@ -64,6 +64,11 @@ BOOST_AUTO_TEST_CASE (EnvironmentTest)
 	BFG::Event::Lane lane(sync, 100);
 	
 	BFG::Module::ValueStorageT emptyValues;
+
+	emptyValues.insert(std::make_pair(BFG::ValueId(BFG::ID::PV_Position, spId), BFG::v3::ZERO));
+	emptyValues.insert(std::make_pair(BFG::ValueId(BFG::ID::PV_Orientation, spId), BFG::qv4::IDENTITY));
+	emptyValues.insert(std::make_pair(BFG::ValueId(BFG::ID::PV_Velocity, spId), BFG::v3::ZERO));
+
 	boost::shared_ptr<BFG::GameObject> go(new BFG::GameObject(lane, BFG::NULL_HANDLE, "TestObject", emptyValues, pluginMap, environment));
 
 	// add null handle object
