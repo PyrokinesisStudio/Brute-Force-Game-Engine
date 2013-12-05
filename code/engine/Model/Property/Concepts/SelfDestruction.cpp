@@ -53,7 +53,7 @@ void SelfDestruction::internalUpdate(quantity<si::time, f32> timeSinceLastFrame)
 		
 		f32& countdown = value<f32>(ID::PV_SelfDestructCountdown, moduleHandle);
 
-		if (mPassedTime[moduleHandle] > countdown * si::seconds) 
+		if (mPassedTime[moduleHandle] >= countdown * si::seconds) 
 		{
 			mDone[moduleHandle] = true;
 			
