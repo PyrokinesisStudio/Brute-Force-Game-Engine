@@ -24,7 +24,11 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
+
 #include <Core/String.h>
+
+#include <boost/algorithm/string.hpp>
+
 #include <Core/Types.h>
 
 namespace BFG {
@@ -47,19 +51,11 @@ bool split(const std::string& source,
     return true;
 }
 
-void splitComplete(const std::string& source, 
-                   const std::string& seperator, 
-                   std::vector<std::string>& tokens)
+void tokenize(const std::string& source, 
+              const std::string& seperator, 
+              std::vector<std::string>& tokens)
 {
-    std::string token;
-    std::string rest;
-    std::string temp = source;
-    while (split(temp, seperator, token, rest))
-    {
-        tokens.push_back(token);
-        temp = rest;
-    }
-    tokens.push_back(rest);
+    boost::split(tokens, source, boost::is_any_of(seperator), boost::token_compress_on);
 }
 
 } // namespace BFG

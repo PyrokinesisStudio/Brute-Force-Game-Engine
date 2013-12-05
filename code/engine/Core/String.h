@@ -40,9 +40,9 @@ BFG_CORE_API bool split(const std::string& source,
                         std::string& rightToken);
 
 
-BFG_CORE_API void splitComplete(const std::string& source, 
-                                const std::string& seperator, 
-                                std::vector<std::string>& tokens);
+BFG_CORE_API void tokenize(const std::string& source, 
+                           const std::string& seperator, 
+                           std::vector<std::string>& tokens);
 
 } // namespace BFG
 
