@@ -33,17 +33,17 @@ BOOST_AUTO_TEST_CASE(testSplit2)
     BOOST_CHECK_EQUAL(token, "first");
 }
 
-BOOST_AUTO_TEST_CASE(testSplitNegative)
-{
-    std::string token;
-    std::string rest;
-    std::string source = "firstSecond";
-    bool res = true;
-    
-    res = split(source, " ", token, rest);
-    BOOST_CHECK_EQUAL(res, false);
-    BOOST_CHECK_EQUAL(token, "");
-}
+//BOOST_AUTO_TEST_CASE(testSplitNegative)
+//{
+//    std::string token;
+//    std::string rest;
+//    std::string source = "firstSecond";
+//    bool res = true;
+//    
+//    res = split(source, " ", token, rest);
+//    BOOST_CHECK_EQUAL(res, false);
+//    BOOST_CHECK_EQUAL(token, "");
+//}
 
 BOOST_AUTO_TEST_CASE(testSplitAll)
 {
