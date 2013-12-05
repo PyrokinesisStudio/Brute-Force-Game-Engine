@@ -63,13 +63,13 @@ BOOST_AUTO_TEST_CASE (EnvironmentTest)
 	BFG::Event::Synchronizer sync;
 	BFG::Event::Lane lane(sync, 100);
 	
-	BFG::Module::ValueStorageT emptyValues;
+	BFG::Module::ValueStorageT initValues;
 
-	emptyValues.insert(std::make_pair(BFG::ValueId(BFG::ID::PV_Position, spId), BFG::v3::ZERO));
-	emptyValues.insert(std::make_pair(BFG::ValueId(BFG::ID::PV_Orientation, spId), BFG::qv4::IDENTITY));
-	emptyValues.insert(std::make_pair(BFG::ValueId(BFG::ID::PV_Velocity, spId), BFG::v3::ZERO));
+	initValues.insert(std::make_pair(BFG::ValueId(BFG::ID::PV_Position, spId), BFG::v3::ZERO));
+	initValues.insert(std::make_pair(BFG::ValueId(BFG::ID::PV_Orientation, spId), BFG::qv4::IDENTITY));
+	initValues.insert(std::make_pair(BFG::ValueId(BFG::ID::PV_Velocity, spId), BFG::v3::ZERO));
 
-	boost::shared_ptr<BFG::GameObject> go(new BFG::GameObject(lane, BFG::NULL_HANDLE, "TestObject", emptyValues, pluginMap, environment));
+	boost::shared_ptr<BFG::GameObject> go(new BFG::GameObject(lane, BFG::NULL_HANDLE, "TestObject", initValues, pluginMap, environment));
 
 	// add null handle object
 	BOOST_CHECK_EQUAL(environment->exists(BFG::NULL_HANDLE), false);
@@ -78,14 +78,14 @@ BOOST_AUTO_TEST_CASE (EnvironmentTest)
 
 	BOOST_CHECK_NO_THROW(environment->removeGameObject(BFG::NULL_HANDLE));
 
-	go.reset(new BFG::GameObject(lane, handle1, "TestObject", emptyValues, pluginMap, environment));
+	go.reset(new BFG::GameObject(lane, handle1, "TestObject", initValues, pluginMap, environment));
 
 	// add normal object
 	BOOST_CHECK_NO_THROW(environment->addGameObject(go));
 	BOOST_CHECK_EQUAL(environment->exists(handle1), true);
 
 	// destroy old object and create new
-	go.reset(new BFG::GameObject(lane, handle2, "TestObject2", emptyValues, pluginMap, environment));
+	go.reset(new BFG::GameObject(lane, handle2, "TestObject2", initValues, pluginMap, environment));
 	BOOST_CHECK_NO_THROW(environment->addGameObject(go));
 	BOOST_CHECK_EQUAL(environment->exists(handle2), true);
 
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE (EnvironmentTest)
 	BOOST_CHECK_THROW(environment->getGoValue<bool>(handle1, BFG::ID::PV_Remote, spId), std::logic_error);
 
 	// create first object again
-	boost::shared_ptr<BFG::GameObject> go2(new BFG::GameObject(lane, handle1, "TestObject", emptyValues, pluginMap, environment));
+	boost::shared_ptr<BFG::GameObject> go2(new BFG::GameObject(lane, handle1, "TestObject", initValues, pluginMap, environment));
 	BOOST_CHECK_NO_THROW(environment->addGameObject(go2));
 	BOOST_CHECK_EQUAL(environment->exists(handle1), true);
 	BOOST_CHECK_EQUAL(environment->exists(handle2), true);
