@@ -45,7 +45,7 @@ bool split(const std::string& source,
     
     leftToken = source.substr(0, position);
     
-    u32 difference = source.size() - position + seperator.size();
+    u32 difference = source.size() - 1 - position + seperator.size();
     rightToken = source.substr(position + seperator.size(), difference);    
     
     return true;
