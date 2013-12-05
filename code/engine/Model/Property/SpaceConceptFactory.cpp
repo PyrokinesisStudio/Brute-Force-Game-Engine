@@ -35,7 +35,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Property/Concepts/SelfDestruction.h>
 #include <Model/Property/Concepts/ThrustControl.h>
 #include <Model/Property/Concepts/Triggers.h>
-#include <Model/Property/Concepts/WeaponRack.h>
 
 namespace BFG {
 
@@ -56,7 +55,6 @@ SpaceConceptFactory::createConcept(Property::ConceptId pc,
 	PROPERTYCONCEPT_CASE(SelfDestruction)
 	PROPERTYCONCEPT_CASE(ThrustControl)
 	PROPERTYCONCEPT_CASE(Triggers)
-	PROPERTYCONCEPT_CASE(WeaponRack)
 	PROPERTYCONCEPT_BUILD_LIST_END
 }
 
