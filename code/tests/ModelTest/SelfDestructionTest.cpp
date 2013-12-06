@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(SelfDestructionTest)
 	sync.finish();
 	
 	BOOST_CHECK_EQUAL(toDestroy.count(), 1);
+	BOOST_CHECK_EQUAL(toDestroy.payloads()[0], go->getHandle());
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
