@@ -51,38 +51,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <View/MiniMain.h>
 
-namespace BFG {
-namespace Test {
-
-static void odeErrorHandling(int errnum, const char* msg, va_list ap)
-{
-	boost::array<char, 512> formatted_msg;
-
-	vsnprintf(formatted_msg.data(), formatted_msg.size(), msg, ap);
-
-	errlog << "ODE [errnum: " << errnum << "]: " << formatted_msg.data();
-}
-
-static void odeMessageHandling(int errnum, const char* msg, va_list ap)
-{
-	boost::array<char, 512> formatted_msg;
-
-	vsnprintf(formatted_msg.data(), formatted_msg.size(), msg, ap);
-
-	infolog << "ODE [errnum: " << errnum << "]: " << formatted_msg.data();
-}
-
-static void odeDebugHandling(int errnum, const char* msg, va_list ap)
-{
-	boost::array<char, 512> formatted_msg;
-
-	vsnprintf(formatted_msg.data(), formatted_msg.size(), msg, ap);
-
-	dbglog << "ODE [errnum: " << errnum << "]: " << formatted_msg.data();
-}
-
-}
-}
 typedef BFG::Event::Catcher<BFG::Physics::FullSyncData> FullSyncDataCatcherT;
 
 // ---------------------------------------------------------------------------
