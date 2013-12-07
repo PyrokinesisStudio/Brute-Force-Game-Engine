@@ -38,7 +38,7 @@ bool split(const std::string& source,
            std::string& leftToken, 
            std::string& rightToken)
 {
-    u32 position = source.find(seperator);
+    auto position = source.find(seperator);
     
     if (position == std::string::npos)
         return false;
