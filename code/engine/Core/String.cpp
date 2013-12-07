@@ -24,7 +24,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include <Core/String.h>
 
 #include <boost/algorithm/string.hpp>
@@ -38,24 +37,24 @@ bool split(const std::string& source,
            std::string& leftToken, 
            std::string& rightToken)
 {
-    auto position = source.find(seperator);
-    
-    if (position == std::string::npos)
-        return false;
-    
-    leftToken = source.substr(0, position);
-    
-    u32 difference = source.size() - 1 - position + seperator.size();
-    rightToken = source.substr(position + seperator.size(), difference);    
-    
-    return true;
+	auto position = source.find(seperator);
+
+	if (position == std::string::npos)
+		return false;
+
+	leftToken = source.substr(0, position);
+
+	u32 difference = source.size() - 1 - position + seperator.size();
+	rightToken = source.substr(position + seperator.size(), difference);
+
+	return true;
 }
 
 void tokenize(const std::string& source, 
               const std::string& seperator, 
               std::vector<std::string>& tokens)
 {
-    boost::split(tokens, source, boost::is_any_of(seperator), boost::token_compress_on);
+	boost::split(tokens, source, boost::is_any_of(seperator), boost::token_compress_on);
 }
 
 } // namespace BFG
