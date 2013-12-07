@@ -38,11 +38,11 @@ BOOST_AUTO_TEST_CASE (QuantifierTest)
 {
 	using namespace BFG;
 
-	BOOST_CHECK_THROW(Quantifier q1(0.3f, 0.4f, 0.4f, 0.3f, 0.3f, 0.4f), std::logic_error);
-	BOOST_CHECK_THROW(Quantifier q2(0.3f, 0.3f, 0.4f, 0.4f, 0.3f, 0.4f), std::logic_error);
-	BOOST_CHECK_THROW(Quantifier q3(0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f), std::logic_error);
+	BOOST_CHECK_THROW(Quantifier(0.3f, 0.4f, 0.4f, 0.3f, 0.3f, 0.4f), std::logic_error);
+	BOOST_CHECK_THROW(Quantifier(0.3f, 0.3f, 0.4f, 0.4f, 0.3f, 0.4f), std::logic_error);
+	BOOST_CHECK_THROW(Quantifier(0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f), std::logic_error);
 
-	BOOST_CHECK_NO_THROW(Quantifier q4(0.4f, 0.3f, 0.3f, 0.5f, 0.35f, 0.15f));
+	BOOST_CHECK_NO_THROW(Quantifier(0.4f, 0.3f, 0.3f, 0.5f, 0.35f, 0.15f));
 }
 
 BOOST_AUTO_TEST_CASE (LevelOfDetailTest)

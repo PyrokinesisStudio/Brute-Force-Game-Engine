@@ -56,7 +56,7 @@ public:
 		for (; it != mGameObjects.end(); ++it)
 		{
 			boost::shared_ptr<GameObject> go = it->second.lock();
-			if (go == NULL || !go->isActivated())
+			if (go == nullptr || !go->isActivated())
 				continue;
 
 			bool found = pred(go);
@@ -79,7 +79,7 @@ public:
 		for (; it != mGameObjects.end(); ++it)
 		{
 			boost::shared_ptr<GameObject> go = it->second.lock();
-			if (go == NULL || !go->isActivated())
+			if (go == nullptr || !go->isActivated())
 				continue;
 
 			bool found = pred(go);

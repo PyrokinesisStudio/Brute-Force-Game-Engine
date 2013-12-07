@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE (nearEnough)
 	bool resultLower = BFG::nearEnough(a, b, 16.5);
 	bool resultUpper = BFG::nearEnough(a, b, 16.6);
 
-	BOOST_REQUIRE (resultNull == false);
-	BOOST_REQUIRE (resultUpper == true);
-	BOOST_REQUIRE (resultLower == false);
+	BOOST_CHECK (resultNull == false);
+	BOOST_CHECK (resultUpper == true);
+	BOOST_CHECK (resultLower == false);
 }
