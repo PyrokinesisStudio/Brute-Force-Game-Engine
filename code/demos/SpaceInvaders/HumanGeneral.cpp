@@ -60,7 +60,7 @@ void HumanGeneral::spawnPowerupAtRandomPosition() const
 	op.mAngularVelocity = v3(0.0f, 5.0f, 0.0f);
 
 	int spawnRange = static_cast<int>(DISTANCE_TO_WALL) * 2;
-	int spawnPos = rand() % spawnRange - DISTANCE_TO_WALL;
+	int spawnPos = rand() % spawnRange - static_cast<int>(DISTANCE_TO_WALL);
 
 	op.mLocation = v3
 	(

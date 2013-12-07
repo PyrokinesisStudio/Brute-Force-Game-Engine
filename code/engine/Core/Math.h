@@ -44,14 +44,14 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Core/Defs.h>
 
 #ifndef M_PI
-  #define M_PI 3.14159265358979323846
+  #define M_PI 3.14159265358979323846f
 #endif
 
 //! \brief Multiply with with this value to convert from Degrees to RADs.
-#define DEG2RAD (M_PI  / 180.0)
+#define DEG2RAD (M_PI  / 180.0f)
 
 //! \brief Multiply with with this value to convert from RADs to Degrees.
-#define RAD2DEG (180.0 / M_PI)
+#define RAD2DEG (180.0f / M_PI)
 
 namespace BFG {
 

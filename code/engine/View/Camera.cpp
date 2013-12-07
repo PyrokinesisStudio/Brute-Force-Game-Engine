@@ -165,8 +165,8 @@ mRenderTargetCreated(false)
 	else
 	{
 		prepareRenderTarget();
-		f32 width = mRenderTarget->getWidth();
-		f32 height = mRenderTarget->getHeight();
+		f32 width = static_cast<f32>(mRenderTarget->getWidth());
+		f32 height = static_cast<f32>(mRenderTarget->getHeight());
 		cam->setAspectRatio(width / height);
 		mRenderTarget->addViewport(cam);
 	}

@@ -266,7 +266,7 @@ void Camera::updateFixed(quantity<si::time, f32> timeSinceLastFrame)
 			targetPosition = environment()->getGoValue<v3>(mTarget, ID::PV_Position, pluginId());
 			targetOrientation = environment()->getGoValue<qv4>(mTarget, ID::PV_Orientation, pluginId());
 		}
-		catch (const std::runtime_error& e)
+		catch (const std::runtime_error&)
 		{
 			return;
 		}

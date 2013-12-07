@@ -67,7 +67,7 @@ mMaxAngularVelocity(0,0,0)
 	{
 		mTargets = getGoValue<TargetContainerT>(ID::PV_FirstTargets, pluginId());
 	}
-	catch (std::runtime_error& ex)
+	catch (std::runtime_error&)
 	{}
 	
 	assert(ownerHandle() == rootModule() &&

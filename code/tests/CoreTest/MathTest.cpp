@@ -5,8 +5,8 @@
 
 BOOST_AUTO_TEST_CASE (distance)
 {
-	BFG::v3 a(-5.2, 3.8, 4.8);
-	BFG::v3 b(8.7, -4.1, 9.1);
+	BFG::v3 a(-5.2f, 3.8f, 4.8f);
+	BFG::v3 b(8.7f, -4.1f, 9.1f);
 
 	BFG::f32 result = BFG::distance(a,b);
 	BFG::f32 expected = 16.5563f;
@@ -37,12 +37,12 @@ BOOST_AUTO_TEST_CASE (nearEnoughFloat)
 BOOST_AUTO_TEST_CASE (nearEnough)
 {
 	// distance between `a' and `b' is 16.5563f
-	BFG::v3 a(-5.2, 3.8, 4.8);
-	BFG::v3 b(8.7, -4.1, 9.1);
+	BFG::v3 a(-5.2f, 3.8f, 4.8f);
+	BFG::v3 b(8.7f, -4.1f, 9.1f);
 
-	bool resultNull = BFG::nearEnough(a, b, 0.0);
-	bool resultLower = BFG::nearEnough(a, b, 16.5);
-	bool resultUpper = BFG::nearEnough(a, b, 16.6);
+	bool resultNull = BFG::nearEnough(a, b, 0.0f);
+	bool resultLower = BFG::nearEnough(a, b, 16.5f);
+	bool resultUpper = BFG::nearEnough(a, b, 16.6f);
 
 	BOOST_CHECK (resultNull == false);
 	BOOST_CHECK (resultUpper == true);
