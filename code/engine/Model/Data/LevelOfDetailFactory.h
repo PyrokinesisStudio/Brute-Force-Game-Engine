@@ -27,12 +27,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef LEVEL_OF_DETAIL_FACTORY_H_
 #define LEVEL_OF_DETAIL_FACTORY_H_
 
-#include <map>
-
 #include <boost/shared_ptr.hpp>
 
 #include <Base/Singleton.h>
-#include <Core/Types.h>
 
 #include <Model/Defs.h>
 #include <Model/LevelOfDetailDefault.h>
