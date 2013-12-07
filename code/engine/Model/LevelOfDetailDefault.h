@@ -249,13 +249,13 @@ private:
 };
 	
 	
-class LevelOfDetail
+class LevelOfDetailDefault
 {
 public:
-		LevelOfDetail()
+		LevelOfDetailDefault()
 		{}
 
-		f32 get(v3 position, 
+		u32 get(v3 position, 
 		        qv4 orientation, 
 		        v3 cameraPosition, 
 		        f32 velocitiy, 
@@ -274,7 +274,7 @@ public:
 			mSoO = mRanges.soO(sizeOfObject);
 			mDtC = mRanges.dtC(distance(position, cameraPosition));
 		
-			return mDtC * mQ.mDtC + mFoM * mQ.mFoM + mSoO * mQ.mSoO;
+			return static_cast<u32>(mDtC * mQ.mDtC + mFoM * mQ.mFoM + mSoO * mQ.mSoO);
 		}
 
 		void reload()

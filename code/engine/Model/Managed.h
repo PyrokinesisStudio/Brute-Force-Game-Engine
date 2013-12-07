@@ -32,6 +32,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/GameHandle.h>
 #include <Core/Types.h>
+#include <Core/Units.h>
+
 #include <Model/Enums.hh>
 #include <Model/Defs.h>
 
@@ -53,11 +55,11 @@ public:
 
 	ID::ObjectType getObjectType() const {return mType;}
 
-	void update(quantity<si::time, f32> timeSinceLastFrame);
+	void update(TimeT timeSinceLastFrame);
 	void synchronize();
 
 protected:
-	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame) = 0;
+	virtual void internalUpdate(TimeT timeSinceLastFrame) = 0;
 	virtual void internalSynchronize() = 0;
 
 	// It's the ID for the Managed at the moment.

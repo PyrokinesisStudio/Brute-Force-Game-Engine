@@ -24,54 +24,28 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Model/Property/Concepts/SelfDestruction.h>
+#ifndef LEVEL_OF_DETAIL_CONCEPT_H_
+#define LEVEL_OF_DETAIL_CONCEPT_H_
 
-#include <Physics/Enums.hh>
+#include <Model/Property/Concept.h>
 
 namespace BFG {
 
-SelfDestruction::SelfDestruction(GameObject& owner, PluginId pid) :
-Property::Concept(owner, "SelfDestruction", pid)
-{
-	requiredPvInitialized(ID::PV_SelfDestructCountdown);
+class LevelOfDetailDefault;
 
-	require("Destroyable");	
-}
-
-void SelfDestruction::internalUpdate(TimeT timeSinceLastFrame)
+class MODEL_API LevelOfDetail : public Property::Concept
 {
-	ModuleMapT::iterator it = mModules.begin();
-	for (; it != mModules.end(); ++it)
-	{
-		GameHandle moduleHandle = it->first;
+public:
+	LevelOfDetail(GameObject& owner, PluginId pid);
 	
-		if (mDone[moduleHandle])
-			continue;
-		
-		mPassedTime[moduleHandle] += timeSinceLastFrame;
-		
-		f32& countdown = value<f32>(ID::PV_SelfDestructCountdown, moduleHandle);
+private:
+	virtual void internalUpdate(TimeT timeSinceLastFrame);
 
-		if (mPassedTime[moduleHandle] >= countdown * si::seconds) 
-		{
-			mDone[moduleHandle] = true;
-			
-			mToDestroy.push(moduleHandle);
-		}
-	}
-}
+	u32 calculateDefaultLoD();
 
-void SelfDestruction::internalSynchronize()
-{
-	while (!mToDestroy.empty())
-	{
-		GameHandle handle = mToDestroy.front();
-		f32& damage = value<f32>(ID::PV_Damage, handle);
-		
-		damage = 999999.9f;
-
-		mToDestroy.pop();
-	}
-}
+	boost::weak_ptr<LevelOfDetailDefault> mLodAlgorithm;
+};
 
 } // namespace BFG
+
+#endif

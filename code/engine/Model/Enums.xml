@@ -160,7 +160,20 @@
             <value>PV_MaxAngularAcceleration</value>
             <value>PV_MaxRotationSpeed</value>
             <value>PV_MaxSpeed</value>
-        </enum>
+
+					  <!-- PC_Level of Detail -->
+					  <!-- The 'Level of Detail' value -->
+					  <value>PV_LoD</value>
+					  <!-- Info for factory which type of LoD configuration should be taken.-->
+					  <value>PV_LoD_Variant</value>
+					 
+					  <!-- LoD variants-->
+
+					  <!-- Object has one LoD the whole livetime -->
+					  <value>PV_LoD_As_Initialized</value>
+					  <!-- Default LevelOfDetail from LevelOfDetail.xml -->
+					  <value>PV_LoD_Default</value>
+				</enum>
 
         <enum name = "GuiElementType" export = "MODEL_API">
             <value>GUI_Target</value>

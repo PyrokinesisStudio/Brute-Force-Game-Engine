@@ -51,7 +51,7 @@ const std::string& Managed::getPublicName() const
 		return Unnamed;
 }
 
-void Managed::update(quantity<si::time, f32> timeSinceLastFrame)
+void Managed::update(TimeT timeSinceLastFrame)
 {
 	internalUpdate(timeSinceLastFrame);
 }

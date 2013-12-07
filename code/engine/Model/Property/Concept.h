@@ -36,6 +36,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/units/quantity.hpp>
 
 #include <Core/Types.h>
+#include <Core/Units.h>
 
 #include <Model/Defs.h>
 #include <Model/Enums.hh>
@@ -82,7 +83,7 @@ public:
 	void onModuleAttached(boost::shared_ptr<Module>);
 	void onModuleDetached(GameHandle);
 
-	void update(quantity<si::time, f32> timeSinceLastFrame);
+	void update(TimeT timeSinceLastFrame);
 	void synchronize();
 
 	ConceptId concept() const { return mSelf; }
