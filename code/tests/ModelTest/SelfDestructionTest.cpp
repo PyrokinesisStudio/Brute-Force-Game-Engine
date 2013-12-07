@@ -38,24 +38,10 @@ BOOST_AUTO_TEST_CASE(SelfDestructionTest)
 {
 	Event::Synchronizer sync;
 	Event::Lane lane(sync, 100);
-        
-	Property::PluginMapT pluginMap;
-	boost::shared_ptr<GameObject> go = createTestGameObject(lane, pluginMap).first;
- 
-	Physics::ModuleCreationParams mcp 
-	(
-			go->getHandle(),
-			go->getHandle(),
-			"",
-			300.0f,
-			ID::CM_Ghost,
-			v3(3,4,5),
-			qv4::IDENTITY,
-			v3::ZERO,
-			v3::ZERO
-	);
 
-	boost::shared_ptr<Module> module(new Module(mcp.mModuleHandle));
+	Property::PluginMapT pluginMap;
+	auto go = createTestGameObject(lane, pluginMap).first;
+	auto module = boost::make_shared<Module>(go->getHandle());
 
 	// Physical
 	module->mPropertyConcepts.push_back("Physical");
@@ -69,41 +55,48 @@ BOOST_AUTO_TEST_CASE(SelfDestructionTest)
 	setValueId(module, ID::PV_Effect, std::string("Explosion_medium"));
 
 	module->mPropertyConcepts.push_back("Destroyable");
-        
+
 	// Self Destruction
 	f32 selfDestrCountDown = 3.0f;
 	setValueId(module, ID::PV_SelfDestructCountdown, selfDestrCountDown);
-    
+
 	module->mPropertyConcepts.push_back("SelfDestruction");
-        
+
 	go->attachModule(module);
 
-	const Physics::FullSyncData fsd = createTestFullSyncData();
+	// Activate it
+	const auto fsd = createTestFullSyncData();
 	lane.emit(ID::PE_FULL_SYNC, fsd, go->getHandle());
-        
 	sync.start();
+	sync.finish();
 
+	BOOST_REQUIRE_EQUAL(go->isActivated(), true);
+	
 	Event::Catcher<GameHandle> toDestroy(lane, ID::S_DESTROY_GO, NULL_HANDLE);
-
+	
+	sync.start();
 	go->update(1.0f * si::second);
 	go->synchronize();
-
+	sync.finish();
+	
 	BOOST_CHECK_EQUAL(toDestroy.count(), 0);
-
+	
+	sync.start();
 	go->update(1.0f * si::second);
 	go->synchronize();
-
+	sync.finish();
+	
 	BOOST_CHECK_EQUAL(toDestroy.count(), 0);
-
+	
+	sync.start();
 	go->update(1.2f * si::second);
 	go->synchronize();
 
 	go->update(1.0f * si::second);
 	go->synchronize();
-
 	sync.finish();
 	
-	BOOST_CHECK_EQUAL(toDestroy.count(), 1);
+	BOOST_REQUIRE_EQUAL(toDestroy.count(), 1);
 	BOOST_CHECK_EQUAL(toDestroy.payloads()[0], go->getHandle());
 }
 
