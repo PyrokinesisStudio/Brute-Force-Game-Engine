@@ -41,16 +41,24 @@ GameHandle gStateHandle = BFG::generateHandle();
 
 static const int EVENT_FREQU = 100;
 
+struct AudioMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
+{
+	virtual void main(BFG::Event::Lane* lane)
+	{
+		mAudioState.reset(new AudioState(lane->createSubLane()));
+	}
+
+	boost::scoped_ptr<AudioState> mAudioState;
+};
+
 struct Main : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 {
 	virtual void main(BFG::Event::Lane* lane)
 	{
 		mGameState.reset(new MainState(gStateHandle, *lane));
-		mAudioState.reset(new AudioState(lane->createSubLane()));
 	}
 
 	boost::scoped_ptr<MainState> mGameState;
-	boost::scoped_ptr<AudioState> mAudioState;
 };
 
 struct ViewMain : BFG::Base::LibraryMainBase<BFG::Event::Lane>
@@ -89,6 +97,7 @@ int main( int argc, const char* argv[] ) try
 	
 	// Custom States
 	Init::gViewLane->addEntry<ViewMain>();
+	Init::gAudioLane->addEntry<AudioMain>();
 	Event::Lane gameLane(Init::gSynchronizer, 300, "Game", Event::RL3);
 	gameLane.addEntry<Main>();
 
