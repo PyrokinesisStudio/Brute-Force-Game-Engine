@@ -37,11 +37,13 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Core/XmlFileHandleFactory.h>
 
+#include <Model/Defs.h>
+
 
 namespace BFG {
 
 
-struct Quantifier
+struct MODEL_API Quantifier
 {
 	Quantifier();
 	Quantifier(f32 dtC,
@@ -79,7 +81,7 @@ private:
 //! For calculating the LoD value there are several values we consider. Each of these values
 //! defines ranges which tell us how likely or unlikely an object can is or can come into the
 //! near of the camera. A low range number suggest a higher LoD and a higher number a lower LoD.
-struct Ranges
+struct MODEL_API Ranges
 {
 	typedef std::pair<u32, f32> RangeDescriptorT;
 	typedef std::vector<RangeDescriptorT> RangeTableT;
@@ -127,7 +129,7 @@ private:
 };
 	
 	
-class LevelOfDetailDefault
+class MODEL_API LevelOfDetailDefault
 {
 public:
 
