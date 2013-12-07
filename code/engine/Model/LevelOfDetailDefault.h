@@ -31,9 +31,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <stdexcept>
 #include <string>
 
-#include <boost/foreach.hpp>
-#include <boost/lexical_cast.hpp>
-
 #include <Core/Types.h>
 #include <Core/v3.h>
 #include <Core/qv4.h>

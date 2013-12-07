@@ -25,6 +25,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <Model/Property/Concepts/LevelOfDetail.h>
+
+#include <Core/Math.h>
 #include <Model/Data/LevelOfDetailFactory.h>
 #include <Model/Environment.h>
 
