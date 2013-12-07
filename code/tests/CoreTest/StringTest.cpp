@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(testSplit2)
     std::string source = "first-*-second-*-third-*-fourth";
     bool res = false;
     
-    res = split(source, "-\*-", token, rest);
+    res = split(source, "-*-", token, rest);
 	BOOST_CHECK(!token.empty());
     BOOST_CHECK_EQUAL(res, true);
     BOOST_CHECK_EQUAL(token, "first");
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(testSplitAll2)
 {
     std::string source = "first-*-second-*-third-*-fourth";
     std::vector<std::string> tokens;
-    tokenize(source, "-\*-", tokens);
+    tokenize(source, "-*-", tokens);
     BOOST_CHECK(!tokens.empty());
 	BOOST_CHECK_EQUAL(tokens.size(), 4);
     BOOST_CHECK_EQUAL(tokens[0], "first");
