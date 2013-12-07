@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(testSplitAll)
 	tokenize(source, " ", tokens);
 	
 	BOOST_CHECK(!tokens.empty());
-	BOOST_CHECK_EQUAL(tokens.size(), 4);
+	BOOST_REQUIRE_EQUAL(tokens.size(), 4);
 	BOOST_CHECK_EQUAL(tokens[0], "first");
 	BOOST_CHECK_EQUAL(tokens[1], "second");
 	BOOST_CHECK_EQUAL(tokens[2], "third");
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(testSplitAll2)
 	tokenize(source, "-*-", tokens);
 	
 	BOOST_CHECK(!tokens.empty());
-	BOOST_CHECK_EQUAL(tokens.size(), 4);
+	BOOST_REQUIRE_EQUAL(tokens.size(), 4);
 	BOOST_CHECK_EQUAL(tokens[0], "first");
 	BOOST_CHECK_EQUAL(tokens[1], "second");
 	BOOST_CHECK_EQUAL(tokens[2], "third");
