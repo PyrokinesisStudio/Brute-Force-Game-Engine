@@ -142,7 +142,7 @@ public:
 	
 	vector3 operator / (const T scalar) const
 	{
-		assert(scalar != 0.0);
+		assert(std::abs(scalar) > EPSILON_F);
 
 		T inv = 1 / scalar;
 
@@ -181,7 +181,7 @@ public:
 	
 	vector3& operator /= (const T scalar)
 	{
-		assert(scalar != 0.0f);
+		assert(std::abs(scalar) > EPSILON_F);
 
 		T inv = 1.0f / scalar;
 

@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 2.6)
-
 BFG_INIT_PACKAGE(SpaceInvaders)
 
 FILE(GLOB SpaceInvaders_SOURCES *.cpp)

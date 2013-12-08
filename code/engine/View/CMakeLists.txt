@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 2.6)
-
 BFG_INIT_PACKAGE(View)
 
 FILE(GLOB View_SOURCES *.cpp)

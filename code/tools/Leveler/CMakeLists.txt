@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 2.6)
-
 BFG_INIT_PACKAGE(Leveler)
 
 FILE(GLOB LEVELER_SOURCES 

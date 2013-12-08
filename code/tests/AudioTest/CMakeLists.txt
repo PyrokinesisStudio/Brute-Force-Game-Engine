@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 2.6)
-
 FILE(GLOB AudioTest_SOURCES *.cpp)
 FILE(GLOB AudioTest_HEADERS *.h)
 
