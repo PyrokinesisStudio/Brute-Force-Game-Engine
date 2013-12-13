@@ -31,6 +31,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Data/Connection.h>
 #include <Model/Property/Value.h>
 
+#ifdef __clang__
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wunused-comparison"
+	#pragma clang diagnostic pop
+#endif
 
 BOOST_AUTO_TEST_SUITE(DataTestSuite)
 
