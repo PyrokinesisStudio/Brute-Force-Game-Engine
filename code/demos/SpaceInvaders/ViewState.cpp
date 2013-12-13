@@ -49,20 +49,20 @@ ViewMainState::~ViewMainState()
 	mLane.emit(BFG::ID::VE_SHUTDOWN, Event::Void());
 }
 
-bool ViewMainState::frameStarted(const Ogre::FrameEvent& evt)
+bool ViewMainState::frameStarted(const Ogre::FrameEvent&)
 {
 	erase_if(mEffects, boost::bind(&View::Effect::done, _1));
 	return true;
 }
 
 
-bool ViewMainState::frameRenderingQueued(const Ogre::FrameEvent& evt)
+bool ViewMainState::frameRenderingQueued(const Ogre::FrameEvent&)
 {
 	return true;
 }
 
 
-bool ViewMainState::frameEnded(const Ogre::FrameEvent& evt)
+bool ViewMainState::frameEnded(const Ogre::FrameEvent&)
 {
 	return true;
 }

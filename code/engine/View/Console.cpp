@@ -217,7 +217,7 @@ bool Console::frameStarted(const Ogre::FrameEvent& evt)
 	return true;
 }
 
-bool Console::frameEnded(const Ogre::FrameEvent& evt)
+bool Console::frameEnded(const Ogre::FrameEvent& /*evt*/)
 {
 	return true;
 }

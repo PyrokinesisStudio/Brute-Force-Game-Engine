@@ -364,47 +364,47 @@ void ConfigurateByQuestions(Config& c)
 	             "* Press <Enter> to use the default value in brackets.\n"
 	             "\n\n";
 
-	Ask("Controller frequency", g_Config.Frequency, DEFAULT_FREQUENCY,
+	Ask("Controller frequency", c.Frequency, DEFAULT_FREQUENCY,
 	    "Determines how often per second the Controller captures input"
 	    " from its devices.");
 
 #ifdef BFG_USE_NETWORK
-	Ask("Do network test?", g_Config.NetworkTest, 'n',
+	Ask("Do network test?", c.NetworkTest, 'n',
 		"TODO: Write description.");
 
-	if (g_Config.NetworkTest)
+	if (c.NetworkTest)
 	{
-		Ask("Server?", g_Config.IsServer, 'n',
+		Ask("Server?", c.IsServer, 'n',
 			"Saying \"yes\" here will start a server, \"no\" means client.");
 
-		if (! g_Config.IsServer)
+		if (! c.IsServer)
 		{
-			Ask("Ip?", g_Config.Ip, "127.0.0.1",
+			Ask("Ip?", c.Ip, "127.0.0.1",
 				"Destination IP.");
 		}
 
-		Ask("Port?", g_Config.Port, 1337,
+		Ask("Port?", c.Port, 1337,
 			"This is the port the client will connect to, "
 			"or the server will listening on.");
 	}
 #endif
 
-	Ask("Use multi-threading?", g_Config.Multithreaded, 'n',
+	Ask("Use multi-threading?", c.Multithreaded, 'n',
 	    "If the EventSystem will use multiple threads or not.");
 
-	Ask("Perform resource destruction test?", g_Config.ResourceDestructionTest, 'n',
+	Ask("Perform resource destruction test?", c.ResourceDestructionTest, 'n',
 	    "If you choose yes, the application will destroy itself after 30"
 	    " seconds. This can be used to check if resources allocated by the"
 	    " controller get free'd or not.");
 
 #if 0
-	Ask("Perform stress test? (not yet implemented)", g_Config.StressTest, 'n',
+	Ask("Perform stress test? (not yet implemented)", c.StressTest, 'n',
 		"If you choose yes, an automatic stress test will be run in order"
 		" to find memory leaks and performance issues. User input gets"
 	    " deactivated and random input will be thrown at the controller.");
 #endif
 
-	Ask("Use default state?", g_Config.DefaultState, 'y',
+	Ask("Use default state?", c.DefaultState, 'y',
 		"If you choose yes, the state \"Console\" will be used,"
 	    " assuming that it exists. If you decide otherwise (n), you'll be"
 	    " asked to type a list of states you'd like to use. As of this writing"
@@ -413,11 +413,11 @@ void ConfigurateByQuestions(Config& c)
 		" use non-existing states. Identifiers are case-sensitive. Confirm"
 		" with <ENTER> when your list is complete.");
 
-	if (! g_Config.DefaultState)
-		AskStates(g_Config.States);
+	if (! c.DefaultState)
+		AskStates(c.States);
 
-	if (g_Config.States.empty())
-		g_Config.States["Console"] = "Console.xml";	
+	if (c.States.empty())
+		c.States["Console"] = "Console.xml";
 }
 
 void startSingleThreaded()

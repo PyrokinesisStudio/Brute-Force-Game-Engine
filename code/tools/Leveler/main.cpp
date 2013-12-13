@@ -244,7 +244,7 @@ struct ViewMain : Base::LibraryMainBase<Event::Lane>
 	boost::scoped_ptr<LevelerViewState> mViewState;
 };
 
-int main( int argc, const char* argv[] ) try
+int main() try
 {
 	Base::Logger::Init(Base::Logger::SL_DEBUG, "Logs/Leveler.log");
 

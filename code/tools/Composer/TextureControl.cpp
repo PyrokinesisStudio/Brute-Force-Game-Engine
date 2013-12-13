@@ -147,7 +147,7 @@ void TextureControl::deactivate()
 }
 
 
-void TextureControl::update(const Ogre::FrameEvent& evt)
+void TextureControl::update(const Ogre::FrameEvent&)
 {
 	checkForChanges();
 }

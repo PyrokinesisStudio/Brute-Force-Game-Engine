@@ -67,7 +67,7 @@ private:
 class OneToOneIdentificator : public PeerIdentificator
 {
 public:
-	virtual PeerIdT identify(Udp::EndpointPtrT, OPacket<Udp>& firstPacket)
+	virtual PeerIdT identify(Udp::EndpointPtrT, OPacket<Udp>&)
 	{
 		return UNIQUE_PEER;
 	}

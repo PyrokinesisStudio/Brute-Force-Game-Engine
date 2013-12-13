@@ -257,7 +257,7 @@ struct ThrowingLoop : public BFG::Event::EntryPoint<BFG::Event::Lane>
 		lane->connectLoop(this, &ThrowingLoop::update);
 	}
 
-	void update(const BFG::Event::TickData ld)
+	void update(const BFG::Event::TickData)
 	{
 		throw std::runtime_error("ThrowingLoop Test");
 	}

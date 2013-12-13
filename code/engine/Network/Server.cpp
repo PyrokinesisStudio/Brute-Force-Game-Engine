@@ -124,7 +124,7 @@ void Server::acceptHandler(const boost::system::error_code &ec, PeerIdT peerId)
 	startAccepting();
 }
 
-void Server::writeHandshakeHandler(const error_code &ec, std::size_t bytesTransferred, PeerIdT peerId)
+void Server::writeHandshakeHandler(const error_code &ec, std::size_t /*bytesTransferred*/, PeerIdT peerId)
 {
 	if (ec)
 	{

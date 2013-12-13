@@ -66,7 +66,7 @@ public:
 	virtual void deactivate() = 0;
 	virtual bool isActive() {return mActive;}
 
-	virtual void update(const Ogre::FrameEvent& evt){}
+	virtual void update(const Ogre::FrameEvent&){}
 
 protected:
 

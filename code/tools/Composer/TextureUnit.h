@@ -149,7 +149,7 @@ private:
 		{
 			SharedData::TucPtrT change = findChanges();
 
-			if (change != NULL)
+			if (change != nullptr)
 			{
 				mName->setCaption(change->mTextureName);
 				change->mEnabled = false;

@@ -55,8 +55,8 @@ public:
 	// Ogre loop
 	bool frameStarted(const Ogre::FrameEvent& evt);
 
-	bool frameRenderingQueued(const Ogre::FrameEvent& evt) { return true; }
-	bool frameEnded(const Ogre::FrameEvent& evt) { return true;	}
+	bool frameRenderingQueued(const Ogre::FrameEvent&) { return true; }
+	bool frameEnded(const Ogre::FrameEvent&) { return true;	}
 
 private:
 	
