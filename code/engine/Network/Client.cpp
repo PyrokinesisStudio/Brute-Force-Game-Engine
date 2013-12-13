@@ -130,10 +130,6 @@ void Client::connectHandler(const error_code &ec)
 	}
 }
 
-//! \brief Dummy function for UdpWriteModule creation on Client side.
-void idle(PeerIdT clientId, const Udp::EndpointPtrT remoteEndpoint)
-{}
-
 void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 {
 	dbglog << "Client::readHandshakeHandler (" << bytesTransferred << ")";
@@ -185,7 +181,7 @@ void Client::readHandshakeHandler(const error_code &ec, size_t bytesTransferred)
 		mLocalTime,
 		udpSocket,
 		peerIdentificator,
-		idle
+		[](PeerIdT, const Udp::EndpointPtrT){}
 	);
 	mUdpReadModule->startReading();
 
