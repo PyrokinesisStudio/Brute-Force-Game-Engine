@@ -34,7 +34,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifdef __clang__
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wunused-comparison"
-	#pragma clang diagnostic pop
 #endif
 
 BOOST_AUTO_TEST_SUITE(DataTestSuite)
@@ -131,3 +130,7 @@ BOOST_AUTO_TEST_CASE (ValueTest)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#ifdef __clang__
+	#pragma clang diagnostic pop
+#endif
