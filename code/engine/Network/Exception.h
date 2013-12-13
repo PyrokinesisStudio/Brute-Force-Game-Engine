@@ -33,13 +33,19 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace Network {
 
-//! \todo These exceptions aren't done yet.
+template <typename T>
+std::string concat(std::string first, T second, std::string sep)
+{
+	std::stringstream ss;
+	ss << first << sep << second;
+	return ss.str();
+}
 
 //! \brief A token couldn't be identified.
 struct UnknownTokenException : std::runtime_error
 {
 	UnknownTokenException(boost::uuids::uuid token) :
-	std::runtime_error("Unknown token")
+	std::runtime_error(concat("Unknown token", token, ": "))
 	{}
 };
 
@@ -48,7 +54,7 @@ template <typename ProtocolT>
 struct UnknownEndpointException : std::runtime_error
 {
 	UnknownEndpointException(typename ProtocolT::EndpointPtrT endpoint) :
-	std::runtime_error("Unknown endpoint")
+	std::runtime_error(concat("Unknown endpoint", endpoint, ": "))
 	{}
 };
 
