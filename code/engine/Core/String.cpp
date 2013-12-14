@@ -38,31 +38,31 @@ bool split(const std::string& source,
            std::string& leftToken, 
            std::string& rightToken)
 {
-    u32 position = source.find(seperator);
+	auto position = source.find(seperator);
     
-    if (position == std::string::npos)
-        return false;
+	if (position == std::string::npos)
+		return false;
     
-    leftToken = source.substr(0, position);
+	leftToken = source.substr(0, position);
     
-    u32 difference = source.size() - 1 - position + seperator.size();
-    rightToken = source.substr(position + seperator.size(), difference);    
+	u32 difference = source.size() - 1 - position + seperator.size();
+	rightToken = source.substr(position + seperator.size(), difference);    
     
-    return true;
+	return true;
 }
 
 void tokenize(const std::string& source, 
               const std::string& seperator, 
               std::vector<std::string>& tokens)
 {
-    boost::split(tokens, source, boost::is_any_of(seperator), boost::token_compress_on);
+	boost::split(tokens, source, boost::is_any_of(seperator), boost::token_compress_on);
 }
 
 void tokenize(const std::string& source, 
               const std::string& seperator, 
               std::deque<std::string>& tokens)
 {
-    boost::split(tokens, source, boost::is_any_of(seperator), boost::token_compress_on);
+	boost::split(tokens, source, boost::is_any_of(seperator), boost::token_compress_on);
 }
 
 } // namespace BFG
