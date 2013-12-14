@@ -51,37 +51,37 @@ void resetCounter()
 	counter4_1 = 0;
 }
 
-void comOne(const std::string& comBody)
+void comOne(const std::string& comBody, Event::SubLanePtr)
 {
 	++counterOne;
 	std::cout << "ONE " << comBody << "\n";
 }
 
-void comTwo(const std::string& comBody)
+void comTwo(const std::string& comBody, Event::SubLanePtr)
 {
 	++counterTwo;
 	std::cout << "Two " << comBody << "\n";
 }
 
-void comThree(const std::string& comBody)
+void comThree(const std::string& comBody, Event::SubLanePtr)
 {
 	++counterThree;
 	std::cout << "Three " << comBody << "\n";
 }
 
-void com3_1(const std::string& comBody)
+void com3_1(const std::string& comBody, Event::SubLanePtr)
 {
 	++counter3_1;
 	std::cout << "3_1 " << comBody << "\n";
 }
 
-void com3_2(const std::string& comBody)
+void com3_2(const std::string& comBody, Event::SubLanePtr)
 {
 	++counter3_2;
 	std::cout << "3_2" << comBody << "\n";
 }
 
-void com4_1(const std::string& comBody)
+void com4_1(const std::string& comBody, Event::SubLanePtr)
 {
 	++counter4_1;
 	std::cout << "4_1" << comBody << "\n";
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(CommandTest1)
 		command.mCommands["one"]->
 		mCommands["two"]->
 		mCommands["three"]->
-		mFunction("Hello world of Console.")
+		mFunction("Hello world of Console.", Event::SubLanePtr())
 	);
 }
 

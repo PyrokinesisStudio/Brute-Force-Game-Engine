@@ -39,7 +39,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace BFG {
 
-typedef void (*function_ptr)(const std::string&);
+typedef void (*function_ptr)(const std::string&, Event::SubLanePtr);
 
 struct Command;
 typedef boost::shared_ptr<Command> CommandPtrT;
@@ -51,7 +51,7 @@ struct BFG_CORE_API Command
 	Command(function_ptr fptr = nullptr);
 	
 	void add(std::deque<std::string> tokens, function_ptr ptr);
-	void execute(const std::string& commandLine);
+	void execute(const std::string& commandLine, Event::SubLanePtr sublane);
 
 	//! A console command function.
 	function_ptr mFunction;

@@ -63,7 +63,7 @@ void Command::add(std::deque<std::string> tokens, function_ptr ptr)
 	it->second->add(tokens, ptr);
 }
 
-void Command::execute(const std::string& commandLine)
+void Command::execute(const std::string& commandLine, Event::SubLanePtr sublane)
 {
 	std::string out;
 	std::string rest;
@@ -80,7 +80,7 @@ void Command::execute(const std::string& commandLine)
 	// Another subcommand found. Go on.
 	if (cmd != mCommands.end())
 	{
-		cmd->second->execute(rest);
+		cmd->second->execute(rest, sublane);
 		return;
 	}
 	
@@ -88,7 +88,7 @@ void Command::execute(const std::string& commandLine)
 	if (!mFunction)
 		infolog << "Unknown Command!"; // Dead end.
 	else
-		mFunction(commandLine); // Good end.
+		mFunction(commandLine, sublane); // Good end.
 }
 
 
@@ -117,7 +117,7 @@ void Console::onCommand(const std::string& line)
 	if (line.empty())
 		return;
 
-	mCommands->execute(line);
+	mCommands->execute(line, mSubLane);
 }
 
 } // namespace BFG
