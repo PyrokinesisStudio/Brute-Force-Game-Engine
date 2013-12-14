@@ -98,6 +98,7 @@ mActivated(false)
 	setValue(ID::PV_Remote, ValueId::ENGINE_PLUGIN_ID, false);
 
 	mSubLane->connectV(ID::GOE_DETACH_MODULE, this, &GameObject::detachModule, handle);
+	mSubLane->connectV(ID::GOE_DEBUG, this, &GameObject::onDebug, handle);
 }
 
 GameObject::~GameObject()
@@ -309,6 +310,14 @@ void GameObject::debugOutput(std::string& output) const
 	}
 	
 	output = ss.str();
+}
+
+void GameObject::onDebug() const
+{
+	std::string out;
+	debugOutput(out);
+
+	infolog << out;
 }
 
 const boost::shared_ptr<Environment> GameObject::environment() const

@@ -139,6 +139,7 @@ public:
 	bool satisfiesRequirement(Property::ConceptId concept) const;
 
 	void debugOutput(std::string& output) const;
+	void onDebug() const;
 
 	//! \see GameObject::setValue()
 	template <typename RetT>

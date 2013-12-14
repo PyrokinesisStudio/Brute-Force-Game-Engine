@@ -36,7 +36,6 @@ namespace BFG
 
 	void MODEL_API debugPhysicsObject(const std::string&, Event::SubLanePtr sublane);
 	void MODEL_API debugGameObject(const std::string&, Event::SubLanePtr sublane);
-
 }
 
 #endif
