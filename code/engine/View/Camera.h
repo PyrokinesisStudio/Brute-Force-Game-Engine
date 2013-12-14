@@ -77,6 +77,7 @@ private:
 	GameHandle mHandle;
 	bool mNodeCreated;
 	bool mRenderTargetCreated;
+	bool mNoParent;
 }; // class Camera
 
 } // namespace View

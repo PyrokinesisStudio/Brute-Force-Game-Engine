@@ -60,7 +60,8 @@ mCameraNode(camNode),
 mRenderTarget(renderTarget),
 mHandle(cameraHandle),
 mNodeCreated(false),
-mRenderTargetCreated(false)
+mRenderTargetCreated(false),
+mNoParent(true)
 {
 	Ogre::SceneManager* sceneMgr = Ogre::Root::getSingleton().getSceneManager(BFG_SCENEMANAGER);
 	if (mCameraNode == NULL) // Create SceneNode
@@ -171,8 +172,8 @@ mRenderTargetCreated(false)
 		mRenderTarget->addViewport(cam);
 	}
 	
-// 	mSubLane->connect(ID::VE_UPDATE_POSITION, this, &Camera::updatePosition, mHandle);
-// 	mSubLane->connect(ID::VE_UPDATE_ORIENTATION, this, &Camera::updateOrientation, mHandle);
+ 	mSubLane->connect(ID::VE_UPDATE_POSITION, this, &Camera::updatePosition, mHandle);
+ 	mSubLane->connect(ID::VE_UPDATE_ORIENTATION, this, &Camera::updateOrientation, mHandle);
 	mSubLane->connect(ID::VE_SET_CAMERA_TARGET, this, &Camera::onSetTarget, mHandle);
 
 	if (parent != NULL_HANDLE)
@@ -213,12 +214,14 @@ Camera::~Camera()
 
 void Camera::updatePosition(const v3& pos)
 {
-	mCameraNode->setPosition(toOgre(pos));
+	if (mNoParent)
+		mCameraNode->setPosition(toOgre(pos));
 }
 
 void Camera::updateOrientation(const qv4& ori)
 {
-	mCameraNode->setOrientation(toOgre(ori));
+	if (mNoParent)
+		mCameraNode->setOrientation(toOgre(ori));
 }
 
 void Camera::toggleWireframe()
@@ -254,6 +257,8 @@ void Camera::onSetTarget(const GameHandle& target)
 	newParent->addChild(mCameraNode);
 
 	mCameraNode->setPosition(toOgre(offset));
+
+	mNoParent = false;
 }
 
 } // namespcae View
