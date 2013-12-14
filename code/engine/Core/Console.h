@@ -69,14 +69,14 @@ void BFG_CORE_API registerCommand(const std::string& command, function_ptr ptr, 
 class BFG_CORE_API Console
 {
 public:
-    Console(CommandPtrT commands, std::vector<s32> events, Event::SubLanePtr sublane);
+	Console(CommandPtrT commands, std::vector<s32> events, Event::SubLanePtr sublane);
 
 private:
 
-    void onCommand(const std::string& line);
+	void onCommand(const std::string& line);
 	
 	CommandPtrT mCommands;
-    Event::SubLanePtr mSubLane;
+	Event::SubLanePtr mSubLane;
 };
 
 } // namespace BFG

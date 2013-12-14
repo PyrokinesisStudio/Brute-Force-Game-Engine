@@ -95,11 +95,11 @@ void Command::execute(const std::string& commandLine)
 
 void registerCommand(const std::string& command, function_ptr ptr, Command& commands)
 {
-    std::deque<std::string> tokens;
+	std::deque<std::string> tokens;
 	tokenize(command, " ", tokens);
-    assert(!tokens.empty());
+	assert(!tokens.empty());
     
-    commands.add(tokens, ptr);
+	commands.add(tokens, ptr);
 }
 
 
@@ -107,16 +107,16 @@ Console::Console(CommandPtrT commands, std::vector<s32> events, Event::SubLanePt
 	mCommands(commands),
 	mSubLane(sublane)
 {
-    for(auto it = events.begin(); it != events.end(); ++it)
+	for(auto it = events.begin(); it != events.end(); ++it)
 		mSubLane->connect(*it, this, &Console::onCommand);
 }
 
 
 void Console::onCommand(const std::string& line)
 {
-    if (line.empty())
-        return;
- 
+	if (line.empty())
+		return;
+
 	mCommands->execute(line);
 }
 
