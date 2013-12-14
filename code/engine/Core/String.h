@@ -29,6 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 #include <vector>
+#include <deque>
 
 #include <Core/Defs.h>
 
@@ -43,6 +44,10 @@ BFG_CORE_API bool split(const std::string& source,
 BFG_CORE_API void tokenize(const std::string& source, 
                            const std::string& seperator, 
                            std::vector<std::string>& tokens);
+
+BFG_CORE_API void tokenize(const std::string& source, 
+                           const std::string& seperator, 
+                           std::deque<std::string>& tokens);
 
 } // namespace BFG
 
