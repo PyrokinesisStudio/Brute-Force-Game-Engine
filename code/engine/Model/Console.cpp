@@ -35,7 +35,7 @@ namespace BFG
 	void initConsoleCommands(CommandPtrT commands)
 	{
 		registerCommand("debug po", &debugPhysicsObject, *commands);
-		registerCommand("debug go", &debugPhysicsObject, *commands);
+		registerCommand("debug go", &debugGameObject, *commands);
 	}
 
 	void debugPhysicsObject(const std::string& body, Event::SubLanePtr sublane)
