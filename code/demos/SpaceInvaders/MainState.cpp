@@ -45,7 +45,10 @@ MainState::MainState(GameHandle handle, Event::Lane& lane) :
 State(lane),
 mPlayer(NULL_HANDLE),
 mEnvironment(new Environment),
-mLane(lane)
+mLane(lane),
+mGame(generateHandle()),
+mConsole(generateHandle()),
+mConsoleVisible(false)
 {
 	Path p;
 
@@ -83,10 +86,12 @@ mLane(lane)
 	// Init Controller
 
 	BFG::Controller_::ActionMapT actions;
+	BFG::Controller_::fillWithDefaultActions(actions);
 	actions[A_SHIP_AXIS_Y] = "A_SHIP_AXIS_Y";
 	actions[A_SHIP_FIRE]   = "A_SHIP_FIRE";
 	actions[A_QUIT]        = "A_QUIT";
 	actions[A_FPS]         = "A_FPS";
+	actions[A_CONSOLE]     = "A_CONSOLE";
 	BFG::Controller_::sendActionsToController(mLane, actions);
 
 	const std::string config_path = p.Expand("SpaceInvaders.xml");
@@ -96,9 +101,14 @@ mLane(lane)
 	BFG::View::queryWindowAttributes(wa);
 
 	//! \todo Verify usage of generateHandle() here.
-	Controller_::StateInsertion si(config_path, state_name, generateHandle(), true, wa);
+	Controller_::StateInsertion si(config_path, state_name, mGame, true, wa);
 
 	mLane.emit(ID::CE_LOAD_STATE, si);
+
+
+	BFG::Controller_::StateInsertion console("Console.xml", "Console", mConsole, false, wa);
+	mLane.emit(BFG::ID::CE_LOAD_STATE, console);
+
 
 	// ---
 
@@ -123,6 +133,7 @@ mLane(lane)
 	mLane.connect(A_FPS, this, &MainState::onFps);
 	mLane.connectV(A_SHIP_FIRE, this, &MainState::onShipFire);
 	mLane.connect(A_QUIT, this, &MainState::onQuit);
+	mLane.connect(A_CONSOLE, this, &MainState::onConsole);
 }
 
 void MainState::onAxisY(f32 factor)
@@ -150,4 +161,22 @@ void MainState::onTick(const TimeT timeSinceLastTick)
 	mSector->update(timeSinceLastTick);
 	mInvaderGeneral->update(timeSinceLastTick);
 	mHumanGeneral->update(timeSinceLastTick);
+}
+
+void MainState::onConsole(s32)
+{
+	mConsoleVisible = !mConsoleVisible;
+
+	mLane.emit(ID::VE_CONSOLE, mConsoleVisible);
+	
+	if (mConsoleVisible)
+	{
+		mLane.emit(BFG::ID::CE_ACTIVATE_STATE, mConsole);
+		mLane.emit(BFG::ID::CE_DEACTIVATE_STATE, mGame);
+	}
+	else
+	{
+		mLane.emit(BFG::ID::CE_DEACTIVATE_STATE, mConsole);
+		mLane.emit(BFG::ID::CE_ACTIVATE_STATE, mGame);
+	}
 }

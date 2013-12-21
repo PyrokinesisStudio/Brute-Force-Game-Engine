@@ -54,6 +54,7 @@ struct MainState : State
 	void onFps(bool on);
 	void onShipFire();
 	void onQuit(BFG::s32);
+	void onConsole(BFG::s32);
 
 	GameHandle mPlayer;
 
@@ -66,6 +67,11 @@ struct MainState : State
 	BFG::Property::PluginMapT mPluginMap;
 
 	Event::Lane& mLane;
+
+	GameHandle mGame;
+	GameHandle mConsole;
+
+	bool mConsoleVisible;
 };
 
 #endif

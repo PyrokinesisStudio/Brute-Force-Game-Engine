@@ -33,6 +33,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Event/Event.h>
 
+#include <Model/Console.h>
+
 #include "MainState.h"
 #include "AudioState.h"
 #include "Globals.h"
@@ -56,8 +58,16 @@ struct Main : BFG::Base::LibraryMainBase<BFG::Event::Lane>
 	virtual void main(BFG::Event::Lane* lane)
 	{
 		mGameState.reset(new MainState(gStateHandle, *lane));
+
+		BFG::CommandPtrT commands(new BFG::Command);
+		BFG::initConsoleCommands(commands);
+		std::vector<s32> events;
+		events.push_back(BFG::ID::VE_CONSOLE_COMMAND);
+
+		mConsole.reset(new BFG::Console(commands, events, lane->createSubLane()));
 	}
 
+	boost::scoped_ptr<BFG::Console> mConsole;
 	boost::scoped_ptr<MainState> mGameState;
 };
 
@@ -88,7 +98,7 @@ int main( int argc, const char* argv[] ) try
 	srand(time(NULL));
 	
 #if defined(_DEBUG) || !defined(NDEBUG)
-	cfg.logLevel = Base::Logger::SL_DEBUG;
+	cfg.logLevel = Base::Logger::SL_INFORMATION;
 #else
 	cfg.logLevel = Base::Logger::SL_INFORMATION;
 #endif
