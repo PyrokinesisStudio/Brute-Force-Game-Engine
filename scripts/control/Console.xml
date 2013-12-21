@@ -9,9 +9,9 @@ version = "1">
   <include>MyGUI.xml</include>
 
   <action id = "A_CONSOLE">
-    <vip type = "VIP_TOGGLE">
+    <vip type = "VIP_CLICK">
       <special button = "KB_CARET" />
     </vip>
   </action>
-
+  
 </controller>
