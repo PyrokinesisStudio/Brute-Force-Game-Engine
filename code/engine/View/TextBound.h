@@ -24,8 +24,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_VIEW_MYGUIBINDING_H
-#define BFG_VIEW_MYGUIBINDING_H
+#ifndef BFG_VIEW_TEXTBOUND_H
+#define BFG_VIEW_TEXTBOUND_H
 
 #include <string>
 
@@ -38,23 +38,26 @@ namespace BFG {
 namespace View {
 
 template <typename T>
-struct TextBound
+struct TextBound : std::ios
 {
 	TextBound() :
+	std::ios(NULL),
 	mTextBox(NULL)
 	{}
 
 	TextBound(MyGUI::TextBox* _textBox) :
+	std::ios(NULL),
 	mTextBox(_textBox)
 	{}
 
-	TextBound(const std::string& textBoxName)
+	TextBound(const std::string& textBoxName) :
+	std::ios(NULL)
 	{
 		MyGUI::Gui* gui = MyGUI::Gui::getInstancePtr();
 		mTextBox = gui->findWidget<MyGUI::TextBox>(textBoxName);
 	}
 
-	operator T() {return value;}
+	operator T() const {return value;}
 
 	TextBound<T>& operator= (const T& _rhs)
 	{
@@ -78,25 +81,41 @@ struct TextBound
 		return *this;
 	}
 
-	MyGUI::TextBox* textBox()
+	MyGUI::TextBox* textBox() const
 	{
 		return mTextBox;
 	}
 
+	void preFix(const std::string& preFix)
+	{
+		mPreFix = preFix;
+	}
+
+	void postFix(const std::string& postFix)
+	{
+		mPostFix = postFix;
+	}
+
 private:
 
-	void synchronizeTextBox()
+	void synchronizeTextBox() const
 	{
 		if (!mTextBox)
 			throw std::runtime_error("TextBox in TextBound was not set!");
 
 		std::stringstream ss;
+		ss << mPreFix;
+		ss.copyfmt(*this);
 		ss << value;
+		ss << mPostFix;
 		mTextBox->setCaption(ss.str());
 	}
 
 	T value;
 	MyGUI::TextBox* mTextBox;
+
+	std::string mPreFix;
+	std::string mPostFix;
 };
 
 } // namespace View

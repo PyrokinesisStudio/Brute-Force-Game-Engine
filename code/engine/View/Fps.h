@@ -27,7 +27,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_VIEW_FPS_H
 #define BFG_VIEW_FPS_H
 
+#include <OgreRenderWindow.h>
+
 #include <View/HudElement.h>
+#include <View/TextBound.h>
+
 
 namespace BFG {
 namespace View {
@@ -40,6 +44,15 @@ public:
 	
 private:
 	void internalUpdate(f32);
+
+	void updateStats(const Ogre::RenderTarget::FrameStats& stats);
+
+	TextBound<float> lastFPS;
+	TextBound<float> avgFPS;
+	TextBound<float> worstFPS;
+	TextBound<float> bestFPS;
+	TextBound<size_t> triangleCount;
+	TextBound<size_t> batchCount;
 };
 
 } // namespace View
