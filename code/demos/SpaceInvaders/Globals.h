@@ -69,6 +69,7 @@ const s32 A_SHIP_AXIS_Y = 10000;
 const s32 A_SHIP_FIRE   = 10001;
 const s32 A_QUIT        = 10002;
 const s32 A_FPS         = 10003;
+const s32 A_CONSOLE     = 10004;
 
 
 

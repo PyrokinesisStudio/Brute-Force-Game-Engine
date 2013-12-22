@@ -151,12 +151,26 @@ void Console::onKeyPressed(s32 _code)
 
 	dbglog << "Got key code: " << static_cast<s32>(code);
 
-	if (code == ID::KB_RETURN)
-		onReturn();
-	else if (code == ID::KB_BACKSPACE)
-		onBackspace();
-	else if (isprint(code))
-		onPrintable(static_cast<unsigned char>(code));
+	switch (code)
+	{
+		case ID::KB_RETURN:
+			onReturn();
+			break;
+		case ID::KB_BACKSPACE:
+			onBackspace();
+			break;
+		case ID::KB_LALT:
+		case ID::KB_RALT:
+		case ID::KB_LSHIFT:
+		case ID::KB_RSHIFT:
+		case ID::KB_LCTRL:
+		case ID::KB_RCTRL:
+		case ID::KB_CAPSLOCK:
+			break;
+		default:
+			if (isprint(code))
+				onPrintable(static_cast<unsigned char>(code));
+	}
 }
 
 void Console::onReturn()
