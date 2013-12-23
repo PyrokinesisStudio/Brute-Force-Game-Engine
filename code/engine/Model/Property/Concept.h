@@ -99,7 +99,8 @@ protected:
 	//! \see GameObject::update()
 	virtual void internalUpdate(quantity<si::time, f32> timeSinceLastFrame);
 
-	//! TODO
+	//! This function is guaranteed to be called for every Concept once in
+	//! sequence per tick after all update calls have been performed.
 	virtual void internalSynchronize();
 	
 	virtual void internalOnModuleAttached(GameHandle) {}
