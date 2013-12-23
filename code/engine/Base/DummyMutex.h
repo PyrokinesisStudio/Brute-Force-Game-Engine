@@ -24,8 +24,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __C_DUMMY_MUTEX_H_
-#define __C_DUMMY_MUTEX_H_
+#ifndef BFG_BASE_DUMMY_MUTEX_H
+#define BFG_BASE_DUMMY_MUTEX_H
 
 #include <boost/noncopyable.hpp>
 
@@ -36,17 +36,19 @@ namespace Base {
 class CDummyMutex : boost::noncopyable
 {
 public:
-  /// \brief C'tor
-  CDummyMutex() { }
-  /// \brief D'tor
-  ~CDummyMutex() { }
+	CDummyMutex() {}
+	~CDummyMutex() {}
 
-  void lock() const { }
-  bool tryLock(unsigned int /* timeout */) const { return true; }
-  void unlock() const { }
+	void lock() const {}
+	bool tryLock(unsigned int /* timeout */) const
+	{
+		return true;
+	}
+	void unlock() const {}
 };
 
 } //namespace Base
 } //namespace BFG
 
-#endif //__C_DUMMY_MUTEX_H_
+#endif // BFG_BASE_DUMMY_MUTEX_H
+
