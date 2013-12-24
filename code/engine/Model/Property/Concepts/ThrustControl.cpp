@@ -72,7 +72,6 @@ mTargetRotationSpeed(v3::ZERO)
 	requiredPvInitialized(ID::PV_EngineForce);
 	requiredPvInitialized(ID::PV_ManeuverForce);
 	requiredPvInitialized(ID::PV_MaxRotationSpeed);
-	requiredPvInitialized(ID::PV_MaxSpeed);
 }
 
 ThrustControl::~ThrustControl()
