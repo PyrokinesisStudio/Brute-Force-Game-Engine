@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,31 +24,16 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_BASE_DUMMY_MUTEX_H
-#define BFG_BASE_DUMMY_MUTEX_H
+#ifndef BFG_DEMANGLE_H
+#define BFG_DEMANGLE_H
 
-#include <boost/noncopyable.hpp>
+#include <string>
 
 namespace BFG {
-namespace Base {
 
-/// \brief Dummy Mutex for non-threaded applications.
-class CDummyMutex : boost::noncopyable
-{
-public:
-	CDummyMutex() {}
-	~CDummyMutex() {}
+std::string demangle(const char* name);
 
-	void lock() const {}
-	bool tryLock(unsigned int /* timeout */) const
-	{
-		return true;
-	}
-	void unlock() const {}
-};
+} // namespace BFG
 
-} //namespace Base
-} //namespace BFG
-
-#endif // BFG_BASE_DUMMY_MUTEX_H
+#endif
 

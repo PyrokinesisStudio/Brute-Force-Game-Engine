@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2013 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,31 +24,52 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BFG_BASE_DUMMY_MUTEX_H
-#define BFG_BASE_DUMMY_MUTEX_H
+#include <Base/Demangle.h>
 
-#include <boost/noncopyable.hpp>
+#ifdef __GNUG__
+	#include <cstdlib>
+	#include <memory>
+	#include <cxxabi.h>
+#endif
 
 namespace BFG {
-namespace Base {
 
-/// \brief Dummy Mutex for non-threaded applications.
-class CDummyMutex : boost::noncopyable
+#ifdef __GNUG__
+static std::string demangleGnu(const char* name)
 {
-public:
-	CDummyMutex() {}
-	~CDummyMutex() {}
+	int status = -4; // some arbitrary value to eliminate the compiler warning
 
-	void lock() const {}
-	bool tryLock(unsigned int /* timeout */) const
+	std::unique_ptr<char, void(*)(void*)> res
 	{
-		return true;
-	}
-	void unlock() const {}
-};
+		abi::__cxa_demangle(name, NULL, NULL, &status),
+		std::free
+	};
 
-} //namespace Base
-} //namespace BFG
+	return status == 0 ? res.get() : name;
+}
+#endif
 
-#endif // BFG_BASE_DUMMY_MUTEX_H
+#ifdef _WIN32
+static std::string demangleWin(const char* name)
+{
+	// TODO: Win32
+	// http://msdn.microsoft.com/en-us/library/windows/desktop/ms681400%28v=vs.85%29.aspx
+	// https://github.com/ohtorii/demangle/blob/master/src/main.cpp#L12
+	// http://stackoverflow.com/questions/13777681/demangling-in-msvc
+	return name;
+}
+#endif
+
+std::string demangle(const char* name)
+{
+#ifdef __GNUG__
+	return demangleGnu(name);
+#elif _WIN32
+	return demangleWin(name);
+#else
+	return name;
+#endif
+}
+
+} // namespace BFG
 

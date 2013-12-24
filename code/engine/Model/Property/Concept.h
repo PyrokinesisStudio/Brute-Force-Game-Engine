@@ -180,6 +180,14 @@ protected:
 	const RetT& value(ValueId::VarIdT varId,
 	                  GameHandle moduleId) const
 	{
+		return value<RetT>(varId, moduleId, pluginId());
+	}
+
+	template <typename RetT>
+	const RetT& value(ValueId::VarIdT varId,
+	                  GameHandle moduleId,
+					  PluginId pluginId) const
+	{
 		ModuleMapT::const_iterator moduleIt = mModules.find(moduleId);
 		assert(moduleIt != mModules.end());
 		return moduleIt->second->mValues.find
@@ -187,7 +195,7 @@ protected:
 			Property::ValueId
 			(
 				varId,
-				pluginId()
+				pluginId
 			)
 		)->second;
 	}

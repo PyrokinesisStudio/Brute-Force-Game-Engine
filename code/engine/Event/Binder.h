@@ -33,6 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 
+#include <Base/Demangle.h>
 #include <Base/Logger.h>
 
 #include <Event/Binding.h>
@@ -185,12 +186,11 @@ struct Binder
 	                                           DestinationIdT destination,
 	                                           const IncompatibleTypeException& ex) const
 	{
-		//! \todo demangle!
 		errlog << "Event::Binder detected type mismatch on emit."
 		       << " Id:" << id
 		       << ", Destination:" << destination
-		       << ", Emitted Type:" << ex.mEmittedType->name()
-		       << ", Expected Type:" << ex.mExpectedType->name();
+		       << ", Emitted Type:" << demangle(ex.mEmittedType->name())
+		       << ", Expected Type:" << demangle(ex.mExpectedType->name());
 #ifdef BFG_EVENT_RETHROW_INCOMPATIBLE_TYPES_EXCEPTION
 		// Used for unit tests
 		throw;
