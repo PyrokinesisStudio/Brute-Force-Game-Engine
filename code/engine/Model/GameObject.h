@@ -219,6 +219,9 @@ private:
 	
 	void vectorToModuleFromRoot(VD module, v3& vecResult, qv4& oriResult) const;
 
+	//! \brief Registers property concepts of a child module to the root module.
+	//! The modules share their property concept instances.
+	//! Remember, property concepts don't have states, they edit property values of modules.
 	void notifyPropertyConcepts(boost::shared_ptr<Module>);
 	
 	void connectChildToParent(VD parentVd,
