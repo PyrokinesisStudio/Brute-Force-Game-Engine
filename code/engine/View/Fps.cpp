@@ -27,15 +27,19 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <View/Fps.h>
 
 #include <OgreRoot.h>
-#include <OgreRenderWindow.h>
 
-#include <View/MyGuiBinding.h>
 
 namespace BFG {
 namespace View {
 
 Fps::Fps() :
-HudElement("FPS.layout", "FPS")
+HudElement("FPS.layout", "FPS"),
+lastFPS("FPSValue"),
+avgFPS("AvFPSValue"),
+worstFPS("WorstFPSValue"),
+bestFPS("BestFPSValue"),
+triangleCount("TriCountValue"),
+batchCount("BatchCountValue")
 {
 }
 
@@ -47,15 +51,11 @@ void Fps::internalUpdate(f32 /*time*/)
 {
 	Ogre::RenderWindow* rw = Ogre::Root::getSingleton().getAutoCreatedWindow();
 
-	const Ogre::RenderTarget::FrameStats& stats = rw->getStatistics();
+	updateStats(rw->getStatistics());
+}
 
-	TextBound<float> lastFPS("FPSValue");
-	TextBound<float> avgFPS("AvFPSValue");
-	TextBound<float> worstFPS("WorstFPSValue");
-	TextBound<float> bestFPS("BestFPSValue");
-	TextBound<size_t> triangleCount("TriCountValue");
-	TextBound<size_t> batchCount("BatchCountValue");
-
+void Fps::updateStats(const Ogre::RenderTarget::FrameStats& stats)
+{
 	lastFPS = stats.lastFPS;
 	avgFPS = stats.avgFPS;
 	worstFPS = stats.worstFPS;
@@ -63,7 +63,6 @@ void Fps::internalUpdate(f32 /*time*/)
 	triangleCount = stats.triangleCount;
 	batchCount = stats.batchCount;
 }
-
 
 } // namespace View
 } // namespace BFG

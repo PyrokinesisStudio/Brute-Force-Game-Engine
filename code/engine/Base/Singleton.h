@@ -24,8 +24,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __C_SINGLETON_H_
-#define __C_SINGLETON_H_
+#ifndef BFG_BASE_SINGLETON_H
+#define BFG_BASE_SINGLETON_H
 
 #include <boost/noncopyable.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -38,75 +38,61 @@ namespace Base {
 class CNoInstantiation
 {
 protected:
-  
-  template <class UserClassT>
-  static void create( UserClassT*& ) 
-  {  
-    // do nothing
-  }
 
+	template <class UserClassT>
+	static void create(UserClassT*&)
+	{}
 };
 
-/// \brief :TODO: Explain functionality
 class CLazyObject
 {
 protected:
 
-  /**
-   * :TODO: explain concept of Lazy-Instantiation 
-   * and implement other Policy-Types
-   *
-   * Need to be friend with UserClassT
-   */
-  template <class UserClassT>
-  static void create( UserClassT*& _ptr ) 
-  {  
-    _ptr = new UserClassT;
-	static boost::scoped_ptr<UserClassT> destroyer(_ptr);  
-  }
+	//! \note Need to be friend with UserClassT
+	template <class UserClassT>
+	static void create(UserClassT*& _ptr)
+	{
+		_ptr = new UserClassT;
+		static boost::scoped_ptr<UserClassT> destroyer(_ptr);
+	}
 };
 
-/// \brief The new BFG Singleton pattern.
-///
-/// Based on Andrei Alexandrescu's idea from the book "Modern C++ Design" 
-///
-/// Normally the Lock is CDummyMutex.
-/// If you have problems using the Singleton
-/// friend class 
-///
-template < class UserClassT, 
-		   class Lock=CDummyMutex,
-           class InstancePolicy=CLazyObject
-         >
+//! \brief The new BFG Singleton pattern.
+//!
+//! Based on Andrei Alexandrescu's idea from the book "Modern C++ Design"
+//!
+template <
+	typename UserClassT,
+	typename Lock=CDummyMutex,
+	typename InstancePolicy=CLazyObject
+ >
 class CSingletonT : private InstancePolicy, private boost::noncopyable
 {
 public:
+	typedef InstancePolicy InstantiationPolicyT;
+	typedef Lock           LockT;
 
-  typedef InstancePolicy InstantiationPolicyT;
-  typedef Lock            LockT;
-
-  /// \brief Access to instance.
-  ///
-  /// Provide access to the single instance through double-checked locking 
-  ///
-  /// \return T* single instance 
-  ///
-  static UserClassT* instance()
-  {
-    // Uses local static storage to avoid static construction
-    // sequence issues. (regaring when the lock is created)
-    static UserClassT* ptr = 0;    
-    static LockT lock;
-    
-    if(!ptr) 
-    {
-      lock.lock();
-      if(!ptr)        
-        InstancePolicy::create(ptr);
-	  lock.unlock();
-    }   
-    return const_cast<UserClassT*>(ptr);    
-  }
+	/// \brief Access to instance.
+	///
+	/// Provide access to the single instance through double-checked locking
+	///
+	/// \return T* single instance
+	///
+	static UserClassT* instance()
+	{
+		// Uses local static storage to avoid static construction
+		// sequence issues. (regaring when the lock is created)
+		static UserClassT* ptr = 0;
+		static LockT lock;
+		if (!ptr)
+		{
+			lock.lock();
+			if (!ptr)
+				InstancePolicy::create(ptr);
+			lock.unlock();
+		}
+		return const_cast<UserClassT*>(ptr);
+	}
 };
 
 // Of course you can manually add the Instance-Function to your class
@@ -118,4 +104,5 @@ public:
 } // namespace Base
 } // namespace BFG
 
-#endif //__C_SINGLETON_H_
+#endif // BFG_BASE_SINGLETON_H
+
