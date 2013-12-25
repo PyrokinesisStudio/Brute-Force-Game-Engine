@@ -104,11 +104,7 @@ mActivated(false)
 GameObject::~GameObject()
 {
 	mEnvironment->removeGameObject(getHandle());
-
 	mSubLane.reset();
-
-	// Explicitly clear() since unregisterEvent() calls may still happen
-	mEventDemands.clear();
 }
 
 void GameObject::attachModule(GameObject::ChildT managed,
@@ -286,15 +282,6 @@ void GameObject::debugOutput(std::string& output) const
 		ss << "- " << it1->first << " @ "
 		   << it1->second << "\n";
 
-	ss << "\n";
-	ss << "[Requested Events]\n";
-
-	EventDemandContainerT::const_iterator it2 = mEventDemands.begin();
-	
-	for (; it2 != mEventDemands.end(); ++it2)
-		ss << "- " << it2->first << " by "
-		   << it2->second->concept() << "\n";
-		
 	ss << "\n";
 	ss << "[Property Values]\n";
 	

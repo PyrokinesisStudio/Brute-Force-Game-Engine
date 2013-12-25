@@ -274,13 +274,6 @@ private:
 		boost::shared_ptr<Property::Concept>
 	> ConceptContainerT;
 
-	//! Container type for storage of event requests from Property::Concept 's.
-	typedef boost::unordered_multimap
-	<
-		Event::IdT,
-		boost::shared_ptr<Property::Concept>
-	> EventDemandContainerT;
-
 	typedef std::map
 	<
 		GameHandle,
@@ -317,9 +310,7 @@ private:
 
 	ModuleTreeT               mModules;
 	VirtualModuleMapT         mVirtualModules;
-	
 	ConceptContainerT         mConcepts;
-	EventDemandContainerT     mEventDemands;
 
 	//! Cache for hasModuleWithHandle()
 	std::vector<GameHandle> mModuleHandles;
