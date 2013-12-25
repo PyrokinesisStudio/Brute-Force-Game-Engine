@@ -187,13 +187,6 @@ private:
 	virtual void internalUpdate(TimeT timeSinceLastFrame);
 	virtual void internalSynchronize();
 
-	//! Helper function to distribute an event amongst all attached
-	//! PropertyConcepts of this GameObject.
-	void distributeEvent(Event::IdT action,
-	                     const Property::Value& payload,
-	                     GameHandle receivingModule,
-	                     GameHandle sender);
-
 	/** \brief Sets a Property::Value for the whole GameObject
 		
 		Concepts may call this function to set Property::Value 's
