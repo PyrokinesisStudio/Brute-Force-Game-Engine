@@ -74,14 +74,14 @@ public:
 	typedef boost::shared_ptr<Managed> VertexData;
 	typedef Adapter                    EdgeData;
 
-    typedef boost::adjacency_list 
-    < 
-        boost::vecS, 
-        boost::vecS, 
-        boost::bidirectionalS,
-        VertexData,
-        EdgeData
-    > ModuleTreeT;
+	typedef boost::adjacency_list
+	<
+		boost::vecS,
+		boost::vecS,
+		boost::bidirectionalS,
+		VertexData,
+		EdgeData
+	> ModuleTreeT;
 
 	typedef ModuleTreeT::vertex_descriptor VD;
 	typedef ModuleTreeT::edge_descriptor ED;
@@ -287,7 +287,7 @@ private:
 		boost::shared_ptr<Module>
 	> VirtualModuleMapT;
 
-	//! 'First' is Self, 'Second' is Other
+	//! 'first' is Self, 'second' is Other
 	typedef std::multimap
 	<
 		Property::ConceptId,
@@ -329,8 +329,8 @@ private:
 };
 
 void MODEL_API vectorToModuleFromRoot(const std::vector<Adapter>& adapters,
-									  v3& vecResult,
-									  qv4& oriResult);
+                                      v3& vecResult,
+                                      qv4& oriResult);
 
 std::ostream& operator << (std::ostream& lhs, const GameObject& rhs);
 

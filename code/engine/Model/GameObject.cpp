@@ -338,7 +338,7 @@ void GameObject::internalUpdate(TimeT timeSinceLastFrame)
 	if (!mActivated)
 		return;
 
-	//! \see  GameObject::rebuildConceptUpdateOrder()
+	//! \see GameObject::rebuildConceptUpdateOrder()
 	UpdateOrderContainerT::const_iterator it = mConceptUpdateOrder.begin();
 	for(; it != mConceptUpdateOrder.end(); ++it)
 	{
