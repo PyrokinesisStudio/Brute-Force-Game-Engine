@@ -33,6 +33,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Data/GameObjectFactory.h>
 #include <Model/Sector.h>
 
+#include "Utils.h"
+
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(SectorTestSuite)
@@ -88,6 +90,47 @@ BOOST_AUTO_TEST_CASE (CreateObjectTest)
 	
 	// It must contain the value 
 	BOOST_CHECK_EQUAL(environment->getGoValue<BFG::s32>(op.mHandle, ID::PV_Damage, spId), damage);
+}
+
+BOOST_AUTO_TEST_CASE (AddRemoveTest)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+	
+	// Sector prerequisites
+	BFG::Path p;
+	std::string def = p.Get(BFG::ID::P_SCRIPTS_LEVELS) + "default/";
+	
+	BFG::LevelConfig lc;
+	lc.mModules.push_back(def + "Object.xml");
+	lc.mAdapters.push_back(def + "Adapter.xml");
+	lc.mConcepts.push_back(def + "Concept.xml");
+	lc.mProperties.push_back(def + "Value.xml");
+
+	BFG::Property::PluginMapT pluginMap;
+	auto go = createTestGameObject(lane, pluginMap).first;
+	auto gof = boost::make_shared<BFG::GameObjectFactory>(lane, lc, pluginMap, go->environment(), BFG::generateHandle());
+	
+	// Create a sector
+	BFG::Sector sector(lane, 1, "TestSector", gof);
+	
+	// Adding an object
+	sector.addObject(go);
+	
+	// Adding the same object again
+	BOOST_CHECK_THROW(sector.addObject(go), std::logic_error);
+	
+	// Mark it for removal
+	sector.removeObject(go->getHandle());
+	
+	// Shouldn't be removed yet.
+	BOOST_CHECK_THROW(sector.addObject(go), std::logic_error);
+	
+	// The object will be removed at the next update() call
+	sector.update(1.0f * si::seconds);
+	
+	// Adding the object again after removal should be OK
+	BOOST_CHECK_NO_THROW(sector.addObject(go));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
