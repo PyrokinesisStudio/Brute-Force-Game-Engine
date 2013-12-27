@@ -51,22 +51,39 @@ BOOST_AUTO_TEST_CASE (GameObjectTest)
 	sync.start();
 	sync.finish();
 
-	// test getValue
+	// test getValue()
  	BOOST_CHECK_EQUAL(go->getValue<bool>(BFG::ID::PV_Remote, spId), false);
  
+	// test getValue() with invalid values
  	BOOST_CHECK_THROW(go->getValue<bool>(BFG::ID::PV_Armor, spId), std::runtime_error);
  	BOOST_CHECK_THROW(go->getValue<BFG::u32>(BFG::ID::PV_Remote, spId), boost::bad_any_cast);
+	
+	// test docked()
+	BOOST_CHECK_EQUAL(go->docked(), false);
+	
+	// test environment()
+	BOOST_CHECK(go->environment() != nullptr);
+	
+	// test rootAdapters()
+	BOOST_CHECK(go->rootAdapters().empty());
+	
+	// test plugins()
+	BOOST_CHECK_EQUAL(go->plugins().size(), 1);
 
+	// test getHandle()
+	BOOST_CHECK_NE(go->getHandle(), BFG::NULL_HANDLE);
+	
+	// test getPublicName()
+	BOOST_CHECK(!go->getPublicName().empty());
+	
+	// test getObjectType()
+	BOOST_CHECK_EQUAL(go->getObjectType(), BFG::ID::OT_GameObject);
 	
 	// test attachModule
 	// test attachModule
 	// test detachModule
 	// test satisfiesRequirement
 	// test debugOutput
-	// test rootAdapters
-	// test plugins
-	// test docked
-	// test activate
 }
 
 BOOST_AUTO_TEST_CASE (VectorToModuleFromRootTest)
