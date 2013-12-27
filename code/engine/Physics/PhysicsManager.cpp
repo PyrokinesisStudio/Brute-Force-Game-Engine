@@ -131,6 +131,19 @@ PhysicsManager::~PhysicsManager()
 	infolog << "PhysicsManager destroyed";
 }
 
+void PhysicsManager::registerEvents()
+{
+	mLane.connectLoop(this, &PhysicsManager::move);
+	mLane.connect(ID::PE_ATTACH_MODULE, this, &PhysicsManager::onAttachModule);
+	mLane.connectV(ID::PE_CLEAR, this, &PhysicsManager::clear);
+	mLane.connect(ID::PE_CREATE_OBJECT, this, &PhysicsManager::onCreateObject);
+	mLane.connect(ID::PE_DELETE_OBJECT, this, &PhysicsManager::onDeleteObject);
+	mLane.connect(ID::PE_REMOVE_MODULE, this, &PhysicsManager::onRemoveModule);
+	mLane.connect(ID::VE_DELIVER_MESH, this, &PhysicsManager::onMeshDelivery);
+	mLane.connect(ID::PE_ATTACH_OBJECT, this, &PhysicsManager::onAttachObject);
+    mLane.connect(ID::PE_DETACH_OBJECT, this, &PhysicsManager::onDetachObject);
+}
+
 dSpaceID PhysicsManager::getSpaceID() const
 {
 	return mHashSpaceID;
@@ -329,19 +342,6 @@ void PhysicsManager::collideGeoms(dGeomID geo1, dGeomID geo2) const
 		po2->notifyAboutCollision(moduleHandle2, moduleHandle1, totalPenetrationDepth);
 }
 
-void PhysicsManager::registerEvents()
-{
-	mLane.connectLoop(this, &PhysicsManager::move);
-	mLane.connect(ID::PE_ATTACH_MODULE, this, &PhysicsManager::onAttachModule);
-	mLane.connectV(ID::PE_CLEAR, this, &PhysicsManager::clear);
-	mLane.connect(ID::PE_CREATE_OBJECT, this, &PhysicsManager::onCreateObject);
-	mLane.connect(ID::PE_DELETE_OBJECT, this, &PhysicsManager::onDeleteObject);
-	mLane.connect(ID::PE_REMOVE_MODULE, this, &PhysicsManager::onRemoveModule);
-	mLane.connect(ID::VE_DELIVER_MESH, this, &PhysicsManager::onMeshDelivery);
-	mLane.connect(ID::PE_ATTACH_OBJECT, this, &PhysicsManager::onAttachObject);
-    mLane.connect(ID::PE_DETACH_OBJECT, this, &PhysicsManager::onDetachObject);
-}
-
 void PhysicsManager::onMeshDelivery(const NamedMesh& namedMesh)
 {
 	if (mPhysicsObjects.empty())
@@ -357,10 +357,11 @@ void PhysicsManager::onMeshDelivery(const NamedMesh& namedMesh)
 	}
 }
 
-void PhysicsManager::onCreateObject(const ObjectCreationParams& ocp)
+void PhysicsManager::onCreateObject(const std::vector<ModuleCreationParams>& modules)
 {
-	GameHandle handle = ocp.get<0>();
-	const Location& location = ocp.get<1>();
+	const auto& rootModule = modules[0];
+
+	Location location(rootModule.mPosition, rootModule.mOrientation);
 
 	boost::shared_ptr<PhysicsObject> po
 	(
@@ -372,7 +373,13 @@ void PhysicsManager::onCreateObject(const ObjectCreationParams& ocp)
 			location
 		)
 	);
-	addObject(handle, po);
+	
+	addObject(rootModule.mGoHandle, po);
+
+	auto itModules = modules.begin();
+	for (; itModules != modules.end(); ++itModules)
+		po->addModule(*itModules);
+	
 	po->sendFullSync();
 }
 
