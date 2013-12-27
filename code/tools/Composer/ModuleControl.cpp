@@ -393,18 +393,19 @@ namespace Tool
 			mData->mRootMesh = BFG::generateHandle();
 		}
 
+		BFG::View::ObjectCreation oc
+		(
+			NULL_HANDLE,
+			mData->mRootMesh,
+			meshName,
+			BFG::v3::ZERO,
+			BFG::qv4::IDENTITY
+		);
+
 		mData->mRenderObjects[mData->mRootMesh].reset();
 		mData->mRenderObjects[mData->mRootMesh].reset
 		(
-			new BFG::View::RenderObject
-			(
-				mLane,
-				NULL_HANDLE,
-				mData->mRootMesh,
-				meshName,
-				BFG::v3::ZERO,
-				BFG::qv4::IDENTITY
-			)
+			new BFG::View::RenderObject(mLane, oc)
 		);
 
 		mData->mMeshNames[mData->mRootMesh] = meshName;
@@ -453,16 +454,20 @@ namespace Tool
 
 				BFG::GameHandle moduleHandle = BFG::generateHandle();
 
-				mData->mRenderObjects[moduleHandle].reset();
-				mData->mRenderObjects[moduleHandle].reset(new BFG::View::RenderObject
+				BFG::View::ObjectCreation oc
 				(
-					mLane,
 					mModuleMap[parentName],
 					moduleHandle,
 					childModule->mMesh->getItemNameAt(childModule->mMesh->getIndexSelected()),
 					BFG::v3::ZERO,
 					BFG::qv4::IDENTITY
-				));
+				);
+
+				mData->mRenderObjects[moduleHandle].reset();
+				mData->mRenderObjects[moduleHandle].reset
+				(
+					new BFG::View::RenderObject(mLane, oc)
+				);
 
 				boost::shared_ptr<BFG::Module> module;
 				module.reset(new BFG::Module(moduleHandle));
