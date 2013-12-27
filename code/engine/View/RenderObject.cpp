@@ -37,19 +37,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 namespace BFG {
 namespace View {
 
-RenderObject::RenderObject(Event::Lane& lane,
-                           GameHandle parent, 
-                           GameHandle handle,
-                           const std::string& meshName,
-                           const v3& position,
-                           const qv4& orientation,
-						   bool visible) :
+RenderObject::RenderObject(Event::Lane& lane, const ObjectCreation& oc):
 mSubLane(lane.createSubLane()),
-mHandle(handle),
+mHandle(oc.mHandle),
 mSceneNode(NULL),
 mEntity(NULL)
 {
-
 	using namespace Ogre;
 	
 	Root* root = Root::getSingletonPtr();
@@ -57,16 +50,16 @@ mEntity(NULL)
 
 	SceneNode* parentNode;
 
-	if(parent == NULL_HANDLE)
+	if(oc.mParent == NULL_HANDLE)
 		parentNode = sceneMgr->getRootSceneNode();
 	else		
-		parentNode = sceneMgr->getSceneNode(stringify(parent));	
+		parentNode = sceneMgr->getSceneNode(stringify(oc.mParent));	
 
 	mSceneNode = parentNode->createChildSceneNode
 	(
-		stringify(handle),
-		toOgre(position),
-		toOgre(orientation)
+		stringify(mHandle),
+		toOgre(oc.mPosition),
+		toOgre(oc.mOrientation)
 	);
 
 	mSubLane->connect(ID::VE_SET_VISIBLE, this, &RenderObject::onSetVisible, mHandle);
@@ -75,11 +68,11 @@ mEntity(NULL)
 	mSubLane->connect(ID::VE_ATTACH_OBJECT, this, &RenderObject::onAttachObject, mHandle);
 	mSubLane->connectV(ID::VE_DETACH_OBJECT, this, &RenderObject::onDetachObject, mHandle);
 
-	mEntity = sceneMgr->createEntity(stringify(handle), meshName);
+	mEntity = sceneMgr->createEntity(stringify(mHandle), oc.mMeshName);
 
 	mSceneNode->attachObject(mEntity);
 
-	mSceneNode->setVisible(visible);
+	mSceneNode->setVisible(oc.mVisible);
 }
 
 RenderObject::~RenderObject()

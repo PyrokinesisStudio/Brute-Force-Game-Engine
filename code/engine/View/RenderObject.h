@@ -33,6 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Event/Event.h>
 
 #include <View/Defs.h>
+#include <View/ObjectCreation.h>
 
 namespace Ogre{
 	class MovableObject;
@@ -46,17 +47,12 @@ namespace View {
 class VIEW_API RenderObject
 {
 public:
-	RenderObject(Event::Lane& lane,
-	             GameHandle parent,
-	             GameHandle handle,
-	             const std::string& meshName,
-	             const v3& position = v3::ZERO,
-	             const qv4& orientation = qv4::IDENTITY,
-				 bool visible = true);
 
+	RenderObject(Event::Lane& lane, const ObjectCreation& oc);
 	~RenderObject();
 
 private:
+
 	void updatePosition(const v3& position);
 	void updateOrientation(const qv4& orientation);
 

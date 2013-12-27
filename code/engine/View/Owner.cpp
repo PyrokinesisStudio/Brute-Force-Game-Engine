@@ -63,20 +63,19 @@ Owner::~Owner()
 	mSubLane.reset();
 }
 
-void Owner::createObject(const ObjectCreation& OC)
+void Owner::createObject(const std::vector<ObjectCreation>& modules)
 {
-	boost::shared_ptr<RenderObject> ro;
-	ro.reset(new RenderObject
-	(
-		mLane,
-		OC.mParent,
-		OC.mHandle,
-		OC.mMeshName.data(),
-		OC.mPosition,
-		OC.mOrientation,
-		OC.mVisible
-	));
-	mObjects[OC.mHandle] = ro;
+	auto itModules = modules.begin();
+	for (;itModules != modules.end(); ++itModules)
+	{
+		boost::shared_ptr<RenderObject> ro;
+		ro.reset(new RenderObject
+		(
+			mLane,
+			*itModules
+		));
+		mObjects[itModules->mHandle] = ro;
+	}
 }
 
 void Owner::destroyObject(GameHandle handle)
