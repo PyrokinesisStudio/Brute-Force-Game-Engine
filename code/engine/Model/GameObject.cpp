@@ -128,15 +128,29 @@ void GameObject::attachModule(GameObject::ChildT managed,
 	//!	module to a new one (which will become the edge between)
 	//! If not, it'll become the root module.
 
+	v3  fromRootToNewOne;
+	qv4 finalOrientation;
+
 	if (parent != NULL_HANDLE) // is module
 	{
 		VD parentVd = findVertex(parent);
 		
 		if (parentVd == mDummy)
-			throw std::logic_error
-				("Parent-module handle for new child not found!");
+			throw std::logic_error("Parent-module handle for new child not found!");
 		
 		connectChildToParent(parentVd, parentAdapterID, childVd, childAdapterID);
+
+		// Here, we're calculating the absolute position for the new
+		// Module/GameObject towards the root Module of this ship by adding vectors
+		// from previous parents.
+		vectorToModuleFromRoot(childVd, fromRootToNewOne, finalOrientation);
+
+		if (managed->getObjectType() == ID::OT_GameObject)
+		{
+			boost::shared_ptr<GameObject> go = boost::static_pointer_cast<GameObject>(managed);
+			connectOtherGameObject(go, fromRootToNewOne, finalOrientation);
+			return;
+		}
 	}
 	else // is root
 	{
@@ -155,42 +169,24 @@ void GameObject::attachModule(GameObject::ChildT managed,
 			"The root module must have the same handle as its container GO");
 
 		mRootAdapters = adapters;
+
+		fromRootToNewOne = getValue<v3>(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
+		finalOrientation = getValue<qv4>(ID::PV_Orientation, ValueId::ENGINE_PLUGIN_ID);
 	}
 
-	// Here, we're calculating the absolute position for the new
-	// Module/GameObject towards the root Module of this ship by adding vectors
-	// from previous parents.
-	v3  fromRootToNewOne;
-	qv4 finalOrientation;
-	vectorToModuleFromRoot(childVd, fromRootToNewOne, finalOrientation);
+	Property::ValueId positionId(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
+	Property::ValueId orientationId(ID::PV_Orientation, ValueId::ENGINE_PLUGIN_ID);
+
+	boost::shared_ptr<Module> mod = boost::static_pointer_cast<Module>(managed);
+
+	mod->mValues[positionId] = fromRootToNewOne;
+	mod->mValues[orientationId] = finalOrientation;
 
 	if (managed->getObjectType() == ID::OT_Module)
 	{
-		boost::shared_ptr<Module> mod = boost::static_pointer_cast<Module>(managed);
-
-		Property::ValueId positionId(ID::PV_Position, ValueId::ENGINE_PLUGIN_ID);
-		Property::ValueId orientationId(ID::PV_Orientation, ValueId::ENGINE_PLUGIN_ID);
-
-		mod->mValues[positionId] = fromRootToNewOne;
-		mod->mValues[orientationId] = finalOrientation;
-		
-		//! \todo in non-physical systems it is necessary to initialize the render objects but 
-		//!       view updates should always be emitted from physical or an equivalent Concept.
-		mSubLane->emit(ID::VE_UPDATE_POSITION, fromRootToNewOne, managed->getHandle());
-		mSubLane->emit(ID::VE_UPDATE_ORIENTATION, finalOrientation,  managed->getHandle());
-		mSubLane->emit(ID::PE_UPDATE_MODULE_POSITION, fromRootToNewOne,	managed->getHandle());
-		mSubLane->emit(ID::PE_UPDATE_MODULE_ORIENTATION, finalOrientation, managed->getHandle());
-
 		// Add to hasModuleWithHandle()-Cache
 		mModuleHandles.push_back(managed->getHandle());
-		
 		notifyPropertyConcepts(boost::static_pointer_cast<Module>(managed));
-	}
-	else if (managed->getObjectType() == ID::OT_GameObject)
-	{
-		boost::shared_ptr<GameObject> go = boost::static_pointer_cast<GameObject>(managed);
-		
-		connectOtherGameObject(go, fromRootToNewOne, finalOrientation);
 	}
 }
 
