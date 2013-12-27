@@ -65,13 +65,9 @@ BOOST_AUTO_TEST_CASE (CreateObjectTest)
 	pluginMap.insert(sp);
 
 	// Environment, GOF, Sector setup
-	boost::shared_ptr<Environment> environment(new Environment());
-	
-	boost::shared_ptr<GameObjectFactory> gof;
-	gof.reset(new GameObjectFactory(lane, lc, pluginMap, environment, generateHandle()));
-
-	boost::shared_ptr<Sector> sector;
-	sector.reset(new Sector(lane, 1, "TestSector", gof));
+	auto environment = boost::make_shared<Environment>();
+	auto gof = boost::make_shared<GameObjectFactory>(lane, lc, pluginMap, environment, generateHandle());
+	auto sector = boost::make_shared<Sector>(lane, 1, "TestSector", gof);
 	
 	// Create an object (with some 'damage' as goValue)
 	const BFG::s32 damage = 50;
