@@ -111,8 +111,8 @@ GameObjectFactory::createGameObject(const ObjectParameter& parameter)
 		using Property::ValueId;
 		auto pId = ValueId::ENGINE_PLUGIN_ID;
 		
-		auto position = module->mValues[ValueId::ComposedId(ID::PV_Position, pId)];
-		auto orientation = module->mValues[ValueId::ComposedId(ID::PV_Orientation, pId)];
+		auto position = module->mValues[ValueId(ID::PV_Position, pId)];
+		auto orientation = module->mValues[ValueId(ID::PV_Orientation, pId)];
 		
 		physicsParameters.push_back
 		(
