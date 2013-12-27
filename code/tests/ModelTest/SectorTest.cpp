@@ -25,6 +25,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <Event/Event.h>
+#include <Event/Catcher.h>
 
 #include <Core/Path.h>
 #include <Model/Environment.h>
@@ -32,6 +33,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Property/SpacePlugin.h>
 #include <Model/Data/GameObjectFactory.h>
 #include <Model/Sector.h>
+#include <View/Enums.hh>
 
 #include "Utils.h"
 
@@ -107,11 +109,19 @@ BOOST_AUTO_TEST_CASE (AddRemoveTest)
 	auto go = createTestGameObject(lane, pluginMap).first;
 	auto gof = boost::make_shared<BFG::GameObjectFactory>(lane, lc, pluginMap, go->environment(), BFG::generateHandle());
 	
+	// Some test prerequisites
+	typedef BFG::Event::Catcher<BFG::GameHandle> GameHandleCatcherT;
+	GameHandleCatcherT veCatcher(lane, BFG::ID::PE_DELETE_OBJECT, BFG::NULL_HANDLE);
+	GameHandleCatcherT peCatcher(lane, BFG::ID::VE_DESTROY_OBJECT, BFG::NULL_HANDLE);
+	
 	// Create a sector
 	BFG::Sector sector(lane, 1, "TestSector", gof);
 	
 	// Adding an object
 	sector.addObject(go);
+	
+	// Updating the sector should work too
+	BOOST_CHECK_NO_THROW(sector.update(1.0f * si::seconds));
 	
 	// Adding the same object again
 	BOOST_CHECK_THROW(sector.addObject(go), std::logic_error);
@@ -119,14 +129,28 @@ BOOST_AUTO_TEST_CASE (AddRemoveTest)
 	// Mark it for removal
 	sector.removeObject(go->getHandle());
 	
+	// Deliver events
+	sync.start();
+	sync.finish();
+	
 	// Shouldn't be removed yet.
+	BOOST_CHECK_EQUAL(peCatcher.count(), 0);
+	BOOST_CHECK_EQUAL(veCatcher.count(), 0);
 	BOOST_CHECK_THROW(sector.addObject(go), std::logic_error);
 	
 	// The object will be removed at the next update() call
 	sector.update(1.0f * si::seconds);
 	
+	// Deliver events
+	sync.start();
+	sync.finish();
+	
 	// Adding the object again after removal should be OK
 	BOOST_CHECK_NO_THROW(sector.addObject(go));
+	
+	// It should remove the corresponding View and Physics representation as well.
+	BOOST_CHECK_EQUAL(peCatcher.count(), 1);
+	BOOST_CHECK_EQUAL(veCatcher.count(), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
