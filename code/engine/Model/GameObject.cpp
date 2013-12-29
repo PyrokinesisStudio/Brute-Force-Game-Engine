@@ -469,7 +469,11 @@ void GameObject::notifyPropertyConcepts(boost::shared_ptr<Module> module)
 		mConcepts[*it]->onModuleAttached(module);
 	}
 	
-	rebuildConceptUpdateOrder();
+	mConceptUpdateOrder = rebuildConceptUpdateOrder<UpdateOrderContainerT>
+	(
+		mConceptDependencies,
+		mConcepts
+	);
 }
 
 void GameObject::connectChildToParent(VD parentVd,
@@ -630,45 +634,51 @@ public:
 
 } // namespace detail
 
-void GameObject::rebuildConceptUpdateOrder()
+template <
+	typename UpdateOrderSequenceT,
+	typename ConceptDependenciesMapT,
+	typename ConceptsMapT
+>
+UpdateOrderSequenceT
+rebuildConceptUpdateOrder(const ConceptDependenciesMapT& dependencies,
+                          const ConceptsMapT& concepts)
 {
+	UpdateOrderSequenceT conceptUpdateOrder;
+	
 	//! Property::Concept update tree hierarchy
 	//! http://stackoverflow.com/questions/2244580/find-boost-bgl-vertex-by-a-key
-	typedef boost::labeled_graph
+	boost::labeled_graph
 	<
 		boost::adjacency_list
 		<
 			boost::vecS,
 			boost::vecS,
 			boost::directedS,
-			UpdateOrderContainerT::value_type
+			GameObject::UpdateOrderContainerT::value_type
 		>,
 	    std::string
-	> DependenciesTreeT;
+	> conceptDependenciesTree;
 
-	typedef DependenciesTreeT::graph_type GraphT;
-	typedef GraphT::vertex_descriptor VertexDescT;
-
-	DependenciesTreeT conceptDependenciesTree;
-	GraphT& g = conceptDependenciesTree.graph();
+	auto& graph = conceptDependenciesTree.graph();
 	
 	// Building a nice dependency tree (std::multimap -> boost::graph)
-	ConceptDependenciesT::const_iterator it = mConceptDependencies.begin();
-	for (; it != mConceptDependencies.end(); ++it)
+	for (const auto& selfAndOther : dependencies)
 	{
-		ConceptContainerT::const_iterator itSelf = mConcepts.find(it->first);
-		ConceptContainerT::const_iterator itOther = mConcepts.find(it->second);
-
-		// \todo Check validity of itOther
-		// \todo Add check for missing concepts
-
-		VertexDescT selfVd = boost::add_vertex(it->first, conceptDependenciesTree);
-		VertexDescT otherVd = boost::add_vertex(it->second, conceptDependenciesTree);
+		auto selfVd = boost::add_vertex(selfAndOther.first, conceptDependenciesTree);
+		auto otherVd = boost::add_vertex(selfAndOther.second, conceptDependenciesTree);
 
 		// Attaching the particular Concept pointer to the tree vertices, which
 		// safes some time later when updating concepts (in the correct order).
-		g[selfVd] = itSelf->second;
-		g[otherVd] = itOther->second;
+		auto itSelf = concepts.find(selfAndOther.first);
+		auto itOther = concepts.find(selfAndOther.second);
+
+		//! \todo Check validity of itOther
+		//! \todo Add check for missing concepts
+		assert(itSelf != concepts.end());
+		assert(itOther != concepts.end());
+
+		graph[selfVd] = itSelf->second;
+		graph[otherVd] = itOther->second;
 
 		boost::add_edge(selfVd, otherVd, conceptDependenciesTree);
 	}
@@ -676,25 +686,24 @@ void GameObject::rebuildConceptUpdateOrder()
 	//! http://www.boost.org/doc/libs/1_46_1/boost/graph/topological_sort.hpp
 	//! http://www.boost.org/doc/libs/1_46_1/libs/graph/doc/bgl_named_params.html
 	//! http://www.boost.org/doc/libs/1_46_1/libs/graph/doc/depth_first_search.html
-
-	mConceptUpdateOrder.clear();
-	typedef detail::DfsOrderVisitor<UpdateOrderContainerT> MyVisitor;
-	boost::depth_first_search(g, boost::visitor(MyVisitor(mConceptUpdateOrder)));
+	typedef detail::DfsOrderVisitor<UpdateOrderSequenceT> MyVisitor;
+	boost::depth_first_search(graph, boost::visitor(MyVisitor(conceptUpdateOrder)));
 
 	// Copy every Concept of mConcepts to mConceptUpdateOrder if it's not already there
-	
-	ConceptContainerT::const_iterator conceptIt = mConcepts.begin();
-	for (; conceptIt != mConcepts.end(); ++conceptIt)
+	typedef typename UpdateOrderSequenceT::value_type ConceptWeakPtrT;
+	for (auto conceptIdAndPtr : concepts)
 	{
-		UpdateOrderContainerT::const_iterator result = std::find_if
+		auto result = std::find_if
 		(
-			mConceptUpdateOrder.begin(),
-			mConceptUpdateOrder.end(),
-			boost::bind(&UpdateOrderContainerT::value_type::lock, _1) == conceptIt->second
+			conceptUpdateOrder.begin(),
+			conceptUpdateOrder.end(),
+			boost::bind(&ConceptWeakPtrT::lock, _1) == conceptIdAndPtr.second
 		);
-		if (result == mConceptUpdateOrder.end())
-			mConceptUpdateOrder.push_back(conceptIt->second);
+		if (result == conceptUpdateOrder.end())
+			conceptUpdateOrder.push_back(conceptIdAndPtr.second);
 	}
+
+	return conceptUpdateOrder;
 }
 
 Event::SubLanePtr GameObject::subLane()

@@ -236,30 +236,6 @@ private:
 	                  u32 Index,
 	                  Adapter& oldAdapter) const;
 
-	/**
-		Property::Concept 's may depend on each other. That's why, a correct
-		update order is crucial. The order resembles a tree structure whose
-		deepest nodes get updated first.
-		
-		Every time a new Concept gets instantiated within this GameObject, this
-		function gets called and the order will be stored into a container,
-		which is then accessed by internalUpdate().
-		
-		Assuming that we'd have the following Concept dependency hierarchy:
-		
-		\verbatim
-		                  0
-		                  |
-		         8        1
-		       / | \      |
-		      7 12  9     2
-
-		\endverbatim
-
-		The order would be: 2, 1, 0, 3, 4, 5, 6, 7, 12, 9, 8, 10, 11.
-	*/
-	void rebuildConceptUpdateOrder();
-
 	//! Container type for storage of Property::Concept 's
 	typedef boost::unordered_map
 	<
@@ -311,6 +287,37 @@ private:
 	VD mDummy;
 	std::vector<Adapter> mRootAdapters;
 };
+
+/**
+	Property::Concept 's may depend on each other. That's why, a correct
+	update order is crucial. The order resembles a tree structure whose
+	deepest nodes get updated first.
+
+	Every time a new Concept gets instantiated within this GameObject, this
+	function gets called and the order will be stored into a container,
+	which is then accessed by internalUpdate().
+
+	Assuming that we'd have the following Concept dependency hierarchy:
+
+	\verbatim
+	                  0
+	                  |
+	         8        1
+	       / | \      |
+	      7 12  9     2
+
+	\endverbatim
+
+	The order would be: 2, 1, 0, 3, 4, 5, 6, 7, 12, 9, 8, 10, 11.
+*/
+template <
+	typename UpdateOrderSequenceT,
+	typename ConceptDependenciesMapT,
+	typename ConceptsMapT
+>
+UpdateOrderSequenceT
+rebuildConceptUpdateOrder(const ConceptDependenciesMapT& dependencies,
+                          const ConceptsMapT& concepts);
 
 void MODEL_API vectorToModuleFromRoot(const std::vector<Adapter>& adapters,
                                       v3& vecResult,
