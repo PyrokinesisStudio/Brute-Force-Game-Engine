@@ -640,6 +640,8 @@ rebuildConceptUpdateOrder(const ConceptDependenciesMapT& dependencies,
                           const ConceptsMapT& concepts)
 {
 	UpdateOrderSequenceT conceptUpdateOrder;
+
+	typedef typename UpdateOrderSequenceT::value_type ConceptWeakPtrT;
 	
 	//! Property::Concept update tree hierarchy
 	//! http://stackoverflow.com/questions/2244580/find-boost-bgl-vertex-by-a-key
@@ -650,9 +652,9 @@ rebuildConceptUpdateOrder(const ConceptDependenciesMapT& dependencies,
 			boost::vecS,
 			boost::vecS,
 			boost::directedS,
-			GameObject::UpdateOrderContainerT::value_type
+			ConceptWeakPtrT
 		>,
-	    std::string
+		std::string
 	> conceptDependenciesTree;
 
 	auto& graph = conceptDependenciesTree.graph();
@@ -686,7 +688,6 @@ rebuildConceptUpdateOrder(const ConceptDependenciesMapT& dependencies,
 	boost::depth_first_search(graph, boost::visitor(MyVisitor(conceptUpdateOrder)));
 
 	// Copy every Concept of mConcepts to mConceptUpdateOrder if it's not already there
-	typedef typename UpdateOrderSequenceT::value_type ConceptWeakPtrT;
 	for (auto conceptIdAndPtr : concepts)
 	{
 		auto result = std::find_if
