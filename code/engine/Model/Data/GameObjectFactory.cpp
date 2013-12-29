@@ -71,44 +71,80 @@ GameHandle checkGoHandle(GameHandle handle)
 	return generateHandle();
 }
 
-
 boost::shared_ptr<GameObject>
 GameObjectFactory::createGameObject(const ObjectParameter& parameter)
 {
-	GameHandle goHandle = checkGoHandle(parameter.mHandle);
+	auto gameObject = createEmptyGameObject(parameter);
+	auto goHandle = gameObject->getHandle();
 
-	// Create the PhysicsObject
-	Physics::ObjectCreationParams ocp(goHandle, parameter.mLocation);
-	mLane.emit(ID::PE_CREATE_OBJECT, ocp);
-
-	// First Module is always root
-	bool isRoot = true;
-
-	boost::shared_ptr<GameObject> gameObject =
-		createEmptyGameObject(parameter.mName, goHandle, parameter.mGoValues);
-
-	ModuleConfigT modules = mModuleParameters.requestConfig(parameter.mType);
+	auto modules = mModuleParameters.requestConfig(parameter.mType);
+	
 	if (!modules)
 		throw std::runtime_error("GameObjectFactory::createGameObject(): "
 			"Type \"" + parameter.mType + "\" not found!");
 
+	
 	// In order to connect Modules together, we need the GameHandles of
 	// previously created modules.
 	std::map<std::string, GameHandle> moduleNameHandleMap;
 
-	ModuleConfig::ModulesT::const_iterator moduleIt = modules->mModules.begin();
-	for (; moduleIt != modules->mModules.end(); ++moduleIt)
+	GameHandle moduleHandle = goHandle;
+
+	std::vector<Physics::ModuleCreationParams> physicsParameters;
+	std::vector<View::ObjectCreation> viewParameters;
+
+	auto moduleIt = modules->mModules.begin();
+	for (; moduleIt != modules->mModules.end(); ++moduleIt, moduleHandle = generateHandle())
 	{
-		boost::shared_ptr<Module> module =
-			createModule(parameter, *moduleIt, isRoot, goHandle);
+		auto mc = (*moduleIt);
+		auto module = createModule(mc->mConcept, moduleHandle);
 		
 		// Store GameHandle for later use
-		moduleNameHandleMap[(*moduleIt)->mName] = module->getHandle();
+		moduleNameHandleMap[mc->mName] = module->getHandle();
 		
-		attachModuleTo(gameObject, module, *moduleIt, moduleNameHandleMap);
+		attachModuleTo(gameObject, module, mc, moduleNameHandleMap);
+
+		// is virtual (no physics or view representation)
+		if (mc->mMesh.empty())
+			continue;
+
+		using Property::ValueId;
+		auto pId = ValueId::ENGINE_PLUGIN_ID;
 		
-		isRoot = false;
+		auto position = module->mValues[ValueId(ID::PV_Position, pId)];
+		auto orientation = module->mValues[ValueId(ID::PV_Orientation, pId)];
+		
+		physicsParameters.push_back
+		(
+			Physics::ModuleCreationParams
+			(
+				goHandle,
+				moduleHandle,
+				mc->mMesh,
+				mc->mDensity,
+				mc->mCollision,
+				position,
+				orientation,
+				parameter.mLinearVelocity,
+				parameter.mAngularVelocity
+			)
+		);
+
+		viewParameters.push_back
+		(
+			View::ObjectCreation
+			(
+				goHandle==moduleHandle ? NULL_HANDLE : goHandle,
+				moduleHandle,
+				mc->mMesh,
+				position,
+				orientation
+			)
+		);
 	}
+
+	mLane.emit(ID::PE_CREATE_OBJECT, physicsParameters);
+	mLane.emit(ID::VE_CREATE_OBJECT, viewParameters, mStateHandle);
 
 	mGoModules[parameter.mName] = moduleNameHandleMap;
 	mGameObjects[parameter.mName] = gameObject;
@@ -119,17 +155,22 @@ GameObjectFactory::createGameObject(const ObjectParameter& parameter)
 }
 
 boost::shared_ptr<GameObject>
-GameObjectFactory::createEmptyGameObject(const std::string& name,
-                                         GameHandle goHandle,
-                                         const Module::ValueStorageT& goValues)
+GameObjectFactory::createEmptyGameObject(const ObjectParameter& p)
 {
+	//! \hack No design for init location values.
+	auto pId = Property::ValueId::ENGINE_PLUGIN_ID;
+	auto values = p.mGoValues;
+
+	values.insert(std::make_pair(ValueId(ID::PV_Position, pId), p.mLocation.position));
+	values.insert(std::make_pair(ValueId(ID::PV_Orientation, pId), p.mLocation.orientation));
+	
 	boost::shared_ptr<BFG::GameObject> go(
 		new GameObject
 		(
 			mLane,
-			goHandle,
-			name,
-			goValues,
+			checkGoHandle(p.mHandle),
+			p.mName,
+			values,
 			mPropertyPlugins,
 			mEnvironment
 		)
@@ -140,69 +181,14 @@ GameObjectFactory::createEmptyGameObject(const std::string& name,
 }
 
 boost::shared_ptr<Module>
-GameObjectFactory::createModule(const BFG::ObjectParameter& parameter, BFG::ModuleParametersT moduleParameter, bool isRoot, GameHandle goHandle)
+GameObjectFactory::createModule(const std::string& moduleConcept, GameHandle moduleHandle)
 {
-	Physics::ModuleCreationParams mcp;
+	if (moduleConcept.empty())
+		throw std::runtime_error("No concept defined.");
 
-	// The root module and its owner GameObject must share the same GameHandle.
-	if (isRoot)
-	{
-		mcp = Physics::ModuleCreationParams
-		(
-			goHandle,
-			goHandle,
-			moduleParameter->mMesh,
-			moduleParameter->mDensity,
-			moduleParameter->mCollision,
-			parameter.mLocation.position,
-			parameter.mLocation.orientation,
-			parameter.mLinearVelocity,
-			parameter.mAngularVelocity
-		);
-	}
-	else
-	{
-		mcp = Physics::ModuleCreationParams
-		(
-			goHandle,
-			generateHandle(),
-			moduleParameter->mMesh,
-			moduleParameter->mDensity,
-			moduleParameter->mCollision
-		);
-	}
-
-	bool isVirtual = moduleParameter->mMesh.empty();
-
-	if (!isVirtual)
-	{
-		mLane.emit(ID::PE_ATTACH_MODULE, mcp);
-
-		// Visual representation
-		View::ObjectCreation oc
-		(
-			NULL_HANDLE,
-			mcp.mModuleHandle,
-			moduleParameter->mMesh,
-			parameter.mLocation.position,
-			parameter.mLocation.orientation
-		);
-
-		mLane.emit(ID::VE_CREATE_OBJECT, oc, mStateHandle);
-		
-		if (!isRoot)
-		{
-			mLane.emit(ID::VE_ATTACH_OBJECT, mcp.mModuleHandle, goHandle);
-		}
-	}
-
-	ConceptConfigT conceptParameter = mConceptParameters.requestConfig(moduleParameter->mConcept);
+	ConceptConfigT conceptParameter = mConceptParameters.requestConfig(moduleConcept);
 	
-	if (!conceptParameter && moduleParameter->mConcept.empty())
-		throw std::runtime_error
-			("GameObjectFactory::createGameObject(): Missing concept specification for object type \"" + parameter.mType + "\".");
-
-	boost::shared_ptr<Module> module(new Module(mcp.mModuleHandle));
+	boost::shared_ptr<Module> module(new Module(moduleHandle));
 	addConceptsTo(module, conceptParameter);
 
 	return module;
@@ -303,22 +289,28 @@ GameObjectFactory::createCamera(const CameraParameter& cameraParameter,
 	GameHandle parentHandle = it->second.lock()->getHandle();
 	GameHandle camHandle = generateHandle();
 
-	Physics::ObjectCreationParams ocp(camHandle, Location());
-	mLane.emit(ID::PE_CREATE_OBJECT, ocp);
+	std::vector<Physics::ModuleCreationParams> physicsParameters;
 
-	Physics::ModuleCreationParams mcp
+	physicsParameters.push_back
 	(
-		camHandle,
-		camHandle,
-		"Cube.mesh",
-		50.0f,
-		ID::CM_Disabled
+		Physics::ModuleCreationParams
+		(
+			camHandle,
+			camHandle,
+			"Cube.mesh",
+			50.0f,
+			ID::CM_Disabled
+		)
 	);
+	
+	Physics::ObjectCreationParams ocp(camHandle, Location());
+	mLane.emit(ID::PE_CREATE_OBJECT, physicsParameters);
 
-	mLane.emit(ID::PE_ATTACH_MODULE, mcp);
+	ObjectParameter op;
+	op.mName = "Camera";
+	op.mHandle = camHandle;
 
-	boost::shared_ptr<GameObject> camera =
-		createEmptyGameObject("Camera", camHandle, Module::ValueStorageT());
+	auto camera = createEmptyGameObject(op);
 
 	// Create Root Module
 	boost::shared_ptr<Module> camModule(new Module(camHandle));

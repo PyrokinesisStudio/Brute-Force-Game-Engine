@@ -76,16 +76,19 @@ void MeshControl::onLoadOk(MyGUI::Widget* w)
 		mData->mRootMesh = BFG::generateHandle();
 	}
 
+	BFG::View::ObjectCreation oc
+	(
+		BFG::NULL_HANDLE,
+		mData->mRootMesh,
+		meshName,
+		BFG::v3::ZERO,
+		BFG::qv4::IDENTITY
+	);
+	
 	mData->mRenderObjects[mData->mRootMesh].reset();
 	mData->mRenderObjects[mData->mRootMesh].reset
 	(
-		new BFG::View::RenderObject
-		(
-			mLane,
-			BFG::NULL_HANDLE,
-			mData->mRootMesh,
-			meshName		
-		)
+		new BFG::View::RenderObject(mLane,	oc)
 	);
 
 	mData->mMeshNames[mData->mRootMesh] = meshName;

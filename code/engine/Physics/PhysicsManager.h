@@ -87,7 +87,7 @@ private:
 	void registerEvents();
 
 	void onMeshDelivery(const NamedMesh& namedMesh);
-	void onCreateObject(const ObjectCreationParams& ocp);
+	void onCreateObject(const std::vector<ModuleCreationParams>& modules);
 	void onDeleteObject(GameHandle);
 	void onAttachModule(const ModuleCreationParams&);
 	void onRemoveModule(const ModuleRemovalParams&);

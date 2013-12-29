@@ -82,15 +82,10 @@ public:
 private:
 	//! \brief Creates a new GameObject without Modules (thus "empty").
 	boost::shared_ptr<GameObject>
-	createEmptyGameObject(const std::string& name,
-	                      GameHandle goHandle,
-	                      const Module::ValueStorageT& goValues);
+	createEmptyGameObject(const ObjectParameter& parameter);
 
 	boost::shared_ptr<Module>
-	createModule(const ObjectParameter& parameter,
-	             ModuleParametersT moduleParameter,
-	             bool isRoot,
-	             GameHandle goHandle);
+	createModule(const std::string& moduleConcept, GameHandle moduleHandle);
 	
 	void
 	attachModuleTo(boost::shared_ptr<GameObject> gameObject,

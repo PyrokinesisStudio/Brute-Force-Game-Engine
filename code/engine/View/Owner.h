@@ -57,7 +57,7 @@ public:
 	virtual ~Owner();
 
 protected:
-	void createObject(const ObjectCreation& OC);
+	void createObject(const std::vector<ObjectCreation>& modules);
 	void destroyObject(GameHandle handle);
 	void createCamera(const CameraCreation& CC);
 	void setSky(const SkyCreation& SC);

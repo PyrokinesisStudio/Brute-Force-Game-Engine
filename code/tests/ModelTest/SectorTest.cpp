@@ -25,6 +25,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <Event/Event.h>
+#include <Event/Catcher.h>
 
 #include <Core/Path.h>
 #include <Model/Environment.h>
@@ -32,6 +33,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Model/Property/SpacePlugin.h>
 #include <Model/Data/GameObjectFactory.h>
 #include <Model/Sector.h>
+#include <View/Enums.hh>
+
+#include "Utils.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -63,13 +67,9 @@ BOOST_AUTO_TEST_CASE (CreateObjectTest)
 	pluginMap.insert(sp);
 
 	// Environment, GOF, Sector setup
-	boost::shared_ptr<Environment> environment(new Environment());
-	
-	boost::shared_ptr<GameObjectFactory> gof;
-	gof.reset(new GameObjectFactory(lane, lc, pluginMap, environment, generateHandle()));
-
-	boost::shared_ptr<Sector> sector;
-	sector.reset(new Sector(lane, 1, "TestSector", gof));
+	auto environment = boost::make_shared<Environment>();
+	auto gof = boost::make_shared<GameObjectFactory>(lane, lc, pluginMap, environment, generateHandle());
+	auto sector = boost::make_shared<Sector>(lane, 1, "TestSector", gof);
 	
 	// Create an object (with some 'damage' as goValue)
 	const BFG::s32 damage = 50;
@@ -88,6 +88,69 @@ BOOST_AUTO_TEST_CASE (CreateObjectTest)
 	
 	// It must contain the value 
 	BOOST_CHECK_EQUAL(environment->getGoValue<BFG::s32>(op.mHandle, ID::PV_Damage, spId), damage);
+}
+
+BOOST_AUTO_TEST_CASE (AddRemoveTest)
+{
+	BFG::Event::Synchronizer sync;
+	BFG::Event::Lane lane(sync, 100);
+	
+	// Sector prerequisites
+	BFG::Path p;
+	std::string def = p.Get(BFG::ID::P_SCRIPTS_LEVELS) + "default/";
+	
+	BFG::LevelConfig lc;
+	lc.mModules.push_back(def + "Object.xml");
+	lc.mAdapters.push_back(def + "Adapter.xml");
+	lc.mConcepts.push_back(def + "Concept.xml");
+	lc.mProperties.push_back(def + "Value.xml");
+
+	BFG::Property::PluginMapT pluginMap;
+	auto go = createTestGameObject(lane, pluginMap).first;
+	auto gof = boost::make_shared<BFG::GameObjectFactory>(lane, lc, pluginMap, go->environment(), BFG::generateHandle());
+	
+	// Some test prerequisites
+	typedef BFG::Event::Catcher<BFG::GameHandle> GameHandleCatcherT;
+	GameHandleCatcherT veCatcher(lane, BFG::ID::PE_DELETE_OBJECT, BFG::NULL_HANDLE);
+	GameHandleCatcherT peCatcher(lane, BFG::ID::VE_DESTROY_OBJECT, BFG::NULL_HANDLE);
+	
+	// Create a sector
+	BFG::Sector sector(lane, 1, "TestSector", gof);
+	
+	// Adding an object
+	sector.addObject(go);
+	
+	// Updating the sector should work too
+	BOOST_CHECK_NO_THROW(sector.update(1.0f * si::seconds));
+	
+	// Adding the same object again
+	BOOST_CHECK_THROW(sector.addObject(go), std::logic_error);
+	
+	// Mark it for removal
+	sector.removeObject(go->getHandle());
+	
+	// Deliver events
+	sync.start();
+	sync.finish();
+	
+	// Shouldn't be removed yet.
+	BOOST_CHECK_EQUAL(peCatcher.count(), 0);
+	BOOST_CHECK_EQUAL(veCatcher.count(), 0);
+	BOOST_CHECK_THROW(sector.addObject(go), std::logic_error);
+	
+	// The object will be removed at the next update() call
+	sector.update(1.0f * si::seconds);
+	
+	// Deliver events
+	sync.start();
+	sync.finish();
+	
+	// Adding the object again after removal should be OK
+	BOOST_CHECK_NO_THROW(sector.addObject(go));
+	
+	// It should remove the corresponding View and Physics representation as well.
+	BOOST_CHECK_EQUAL(peCatcher.count(), 1);
+	BOOST_CHECK_EQUAL(veCatcher.count(), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
