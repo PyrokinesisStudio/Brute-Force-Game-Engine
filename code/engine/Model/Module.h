@@ -27,6 +27,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef BFG_MODULE__
 #define BFG_MODULE__
 
+#include <boost/shared_ptr.hpp>
+
 #include <Model/Property/ConceptId.h>
 #include <Model/Property/ValueId.h>
 #include <Model/Property/Value.h>
@@ -61,7 +63,23 @@ struct Module : public Managed
 
 	virtual void internalSynchronize()
 	{}
+
+	//! Safe getter for values. For unsafe usage take mValues directly.
+	bool getValue(Property::ValueId id, Property::Value& value) const
+	{
+		auto it = mValues.find(id);
+		
+		if (it != mValues.end())
+		{
+			value = it->second;
+			return true;
+		}
+
+		return false;
+	}
 };
+
+typedef boost::shared_ptr<Module> ModulePtr;
 
 } // namespace BFG
 
