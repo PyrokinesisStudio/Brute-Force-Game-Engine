@@ -75,8 +75,7 @@ Plugin(pluginId, "Engine Properties")
 	addConcept("Physical");
 	addConcept("SelfDestruction");
 	addConcept("ThrustControl");
-	addConcept("Triggers");
-	addConcept("WeaponRack");
+	addConcept("Visual");
 }
 
 boost::shared_ptr<Property::ConceptFactory>

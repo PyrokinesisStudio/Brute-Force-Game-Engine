@@ -32,6 +32,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <Physics/Enums.hh>
 
 #include <Model/Data/Connection.h>
+#include <Model/Data/PropertyConfig.h>
 #include <Model/Property/Plugin.h>
 
 
@@ -46,13 +47,11 @@ struct ModuleParameters
 
 	std::string mName;
 	
-	std::string mMesh;
 	std::string mAdapter;
 	std::string mConcept;
-	ID::CollisionMode mCollision;
-	bool mVisible;
-	f32 mDensity;
     Connection mConnection;	
+
+	PropertyConfigT mCustomValues;
 
 protected:
 
@@ -62,26 +61,12 @@ protected:
 		{
 			mName = tree->attribute("name");
 
-			mMesh = tree->child("Mesh")->elementData();
 			mAdapter = tree->child("Adapters")->elementData();
 			mConcept = tree->child("Concepts")->elementData();
 			
-			std::string collisionMode = tree->child("Collision")->elementData();
-			
-			if (!collisionMode.empty())
-				mCollision = ID::asCollisionMode(collisionMode);
-		
-			std::string visibleStr = tree->child("Visible")->elementData();
-			
-			if (!visibleStr.empty())
-				strToBool(visibleStr, mVisible);
-
-			std::string density = tree->child("Density")->elementData();
-			
-			if (!density.empty())
-				mDensity = boost::lexical_cast<f32>(density);
-			
 			parseConnection(tree->child("Connection")->elementData(), mConnection);
+
+			mCustomValues.reset(new PropertyConfig(tree->child("CustomValues")->childList("PV")));
 		}
 		catch (std::exception& e)
 		{

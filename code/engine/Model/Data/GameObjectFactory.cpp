@@ -71,6 +71,70 @@ GameHandle checkGoHandle(GameHandle handle)
 	return generateHandle();
 }
 
+void GameObjectFactory::createPhysical(ModulePtr module, 
+                                       GameHandle goHandle, 
+                                       std::vector<Physics::ModuleCreationParams>& physicsParameters)
+{
+	using Property::ValueId;
+	auto pId = ValueId::ENGINE_PLUGIN_ID;
+		
+	// These values were calculated and set by attachModuleTo()
+	auto position = module->mValues[ValueId(ID::PV_Position, pId)];
+	auto orientation = module->mValues[ValueId(ID::PV_Orientation, pId)];
+	auto density = module->mValues[ValueId(ID::PV_Density, pId)];
+
+	BFG::Property::Value mesh = std::string();
+	BFG::Property::Value cmStr = std::string();
+
+	module->getValue(ValueId(ID::PV_PhysicalMesh, pId), mesh);
+	if(!module->getValue(ValueId(ID::PV_CollisionMode, pId), cmStr))
+	{
+		cmStr = ID::asStr(ID::CM_Disabled);
+	}
+
+	physicsParameters.push_back
+	(
+		Physics::ModuleCreationParams
+		(
+			goHandle,
+			module->getHandle(),
+			mesh,
+			density,
+			ID::asCollisionMode(cmStr),
+			position,
+			orientation
+		)
+	);
+}
+
+void GameObjectFactory::createVisual(ModulePtr module, 
+                                     GameHandle goHandle, 
+                                     std::vector<View::ObjectCreation>& viewParameters)
+{
+	using Property::ValueId;
+	auto pId = ValueId::ENGINE_PLUGIN_ID;
+		
+	// These values were calculated and set by attachModuleTo()
+	auto position = module->mValues[ValueId(ID::PV_Position, pId)];
+	auto orientation = module->mValues[ValueId(ID::PV_Orientation, pId)];
+	
+	BFG::Property::Value mesh = std::string();
+
+	module->getValue(ValueId(ID::PV_VisualMesh, pId), mesh);
+
+	viewParameters.push_back
+	(
+		View::ObjectCreation
+		(
+			goHandle==module->getHandle() ? NULL_HANDLE : goHandle,
+			module->getHandle(),
+			mesh,
+			position,
+			orientation
+		)
+	);
+}
+
 boost::shared_ptr<GameObject>
 GameObjectFactory::createGameObject(const ObjectParameter& parameter)
 {
@@ -83,7 +147,6 @@ GameObjectFactory::createGameObject(const ObjectParameter& parameter)
 		throw std::runtime_error("GameObjectFactory::createGameObject(): "
 			"Type \"" + parameter.mType + "\" not found!");
 
-	
 	// In order to connect Modules together, we need the GameHandles of
 	// previously created modules.
 	std::map<std::string, GameHandle> moduleNameHandleMap;
@@ -98,53 +161,32 @@ GameObjectFactory::createGameObject(const ObjectParameter& parameter)
 	{
 		auto mc = (*moduleIt);
 		auto module = createModule(mc->mConcept, moduleHandle);
+		setCustomValues(module, mc->mCustomValues);
 		
 		// Store GameHandle for later use
 		moduleNameHandleMap[mc->mName] = module->getHandle();
 		
 		attachModuleTo(gameObject, module, mc, moduleNameHandleMap);
 
-		// is virtual (no physics or view representation)
-		if (mc->mMesh.empty())
-			continue;
+		auto begin = module->mPropertyConcepts.begin();
+		auto end = module->mPropertyConcepts.end();
 
-		using Property::ValueId;
-		auto pId = ValueId::ENGINE_PLUGIN_ID;
+		if (std::find(begin, end, "Physical") != end)
+			createPhysical(module, goHandle, physicsParameters);
 		
-		auto position = module->mValues[ValueId(ID::PV_Position, pId)];
-		auto orientation = module->mValues[ValueId(ID::PV_Orientation, pId)];
-		
-		physicsParameters.push_back
-		(
-			Physics::ModuleCreationParams
-			(
-				goHandle,
-				moduleHandle,
-				mc->mMesh,
-				mc->mDensity,
-				mc->mCollision,
-				position,
-				orientation,
-				parameter.mLinearVelocity,
-				parameter.mAngularVelocity
-			)
-		);
-
-		viewParameters.push_back
-		(
-			View::ObjectCreation
-			(
-				goHandle==moduleHandle ? NULL_HANDLE : goHandle,
-				moduleHandle,
-				mc->mMesh,
-				position,
-				orientation
-			)
-		);
+		if (std::find(begin, end, "Visual") != end)
+			createVisual(module, goHandle, viewParameters);
 	}
 
-	mLane.emit(ID::PE_CREATE_OBJECT, physicsParameters);
-	mLane.emit(ID::VE_CREATE_OBJECT, viewParameters, mStateHandle);
+	if (!physicsParameters.empty())
+	{
+		physicsParameters[0].mVelocity = parameter.mLinearVelocity;
+		physicsParameters[0].mRotationVelocity = parameter.mAngularVelocity;
+		mLane.emit(ID::PE_CREATE_OBJECT, physicsParameters);
+	}
+
+	if (!viewParameters.empty())
+		mLane.emit(ID::VE_CREATE_OBJECT, viewParameters, mStateHandle);
 
 	mGoModules[parameter.mName] = moduleNameHandleMap;
 	mGameObjects[parameter.mName] = gameObject;
@@ -154,10 +196,22 @@ GameObjectFactory::createGameObject(const ObjectParameter& parameter)
 	return gameObject;
 }
 
+void GameObjectFactory::setCustomValues(ModulePtr module, PropertyConfigT values)
+{
+	auto valueIt = values->mValueParameters.begin();
+
+	for (; valueIt != values->mValueParameters.end(); ++valueIt)
+	{
+		PropertyParametersT valueParameter = *valueIt;
+		ValueId vId = Property::symbolToValueId(valueParameter->mName, mPropertyPlugins);
+		module->mValues[vId] = valueParameter->mValue;
+	}
+}
+
 boost::shared_ptr<GameObject>
 GameObjectFactory::createEmptyGameObject(const ObjectParameter& p)
 {
-	//! \hack No design for init location values.
+	//! \hack No design made for init location values. So we just added it to the value store.
 	auto pId = Property::ValueId::ENGINE_PLUGIN_ID;
 	auto values = p.mGoValues;
 
@@ -196,30 +250,33 @@ GameObjectFactory::createModule(const std::string& moduleConcept, GameHandle mod
 
 void GameObjectFactory::attachModuleTo(boost::shared_ptr<BFG::GameObject> gameObject, boost::shared_ptr<Module> module, BFG::ModuleParametersT moduleParameter,  std::map<std::string, BFG::GameHandle>& moduleNameHandleMap)
 {
-	bool isVirtual = moduleParameter->mMesh.empty();
+	auto pId = ValueId::ENGINE_PLUGIN_ID;
+	BFG::Property::Value mesh = std::string();
+	
+	bool isVirtual = !module->getValue(ValueId(ID::PV_PhysicalMesh, pId), mesh);
+	
 	if (isVirtual)
 	{
 		gameObject->attachModule(module);
+		return;
 	}
-	else
-	{
-		GameHandle parentHandle;
-		if (moduleParameter->mConnection.mConnectedExternToModule.empty())
-			parentHandle = NULL_HANDLE;
-		else
-			parentHandle = moduleNameHandleMap[moduleParameter->mConnection.mConnectedExternToModule];
-		
-		std::vector<Adapter> adapters = createAdapters(moduleParameter);
 
-		gameObject->attachModule
-		(
-			module,
-			adapters,
-			moduleParameter->mConnection.mConnectedLocalAt,
-			parentHandle,
-			moduleParameter->mConnection.mConnectedExternAt
-		);
-	}	
+	GameHandle parentHandle;
+	if (moduleParameter->mConnection.mConnectedExternToModule.empty())
+		parentHandle = NULL_HANDLE;
+	else
+		parentHandle = moduleNameHandleMap[moduleParameter->mConnection.mConnectedExternToModule];
+		
+	std::vector<Adapter> adapters = createAdapters(moduleParameter);
+
+	gameObject->attachModule
+	(
+		module,
+		adapters,
+		moduleParameter->mConnection.mConnectedLocalAt,
+		parentHandle,
+		moduleParameter->mConnection.mConnectedExternAt
+	);
 }
 
 std::vector<Adapter>
@@ -250,14 +307,14 @@ GameObjectFactory::createAdapters(ModuleParametersT moduleParameter) const
 
 void GameObjectFactory::addConceptsTo(boost::shared_ptr<Module> module, const ConceptConfigT conceptParameter) const
 {
-	ConceptConfig::ConceptParameterListT::const_iterator conceptIt = conceptParameter->mConceptParameters.begin();
+	auto conceptIt = conceptParameter->mConceptParameters.begin();
 
 	for (; conceptIt != conceptParameter->mConceptParameters.end(); ++conceptIt)
 	{
 		ConceptParametersT conceptParameter = *conceptIt;
 		
-		PropertyConfigT valueConfig = mValueParameters.requestConfig(conceptParameter->mProperties);
-		PropertyConfig::PropertyParametersListT::const_iterator valueIt = valueConfig->mValueParameters.begin();
+		auto valueConfig = mValueParameters.requestConfig(conceptParameter->mProperties);
+		auto valueIt = valueConfig->mValueParameters.begin();
 
 		for (; valueIt != valueConfig->mValueParameters.end(); ++valueIt)
 		{

@@ -49,6 +49,14 @@ namespace Property {
 	class ConceptFactory;
 }
 
+namespace Physics {
+	struct ModuleCreationParams;
+}
+
+namespace View {
+	struct ObjectCreation;
+}
+
 struct Adapter;
 struct CameraParameter;
 class Environment;
@@ -86,10 +94,20 @@ private:
 
 	boost::shared_ptr<Module>
 	createModule(const std::string& moduleConcept, GameHandle moduleHandle);
+
+	void setCustomValues(ModulePtr module, PropertyConfigT values);
+
+	void createPhysical(ModulePtr module,
+	                    GameHandle goHandle,
+	                    std::vector<Physics::ModuleCreationParams>& p);
+	
+	void createVisual(ModulePtr module,
+	                  GameHandle goHandle,
+	                  std::vector<View::ObjectCreation>& p);
 	
 	void
 	attachModuleTo(boost::shared_ptr<GameObject> gameObject,
-	               boost::shared_ptr<Module> module,
+	               ModulePtr module,
 	               BFG::ModuleParametersT moduleParameter,
 	               std::map<std::string, BFG::GameHandle>& moduleNameHandleMap);
 	
