@@ -31,7 +31,17 @@
 	</ValueConfig>
 
 	<ValueConfig name="RocketSelfDestruction">
-		<PV name="PV_SelfDestructCountdown" type="stdVal">10.0</PV>
+		<PV name="SelfDestructCountdown" type="stdVal">10.0</PV>
+	</ValueConfig>
+	
+	<ValueConfig name="VisualDefault">
+		<PV name="VisualMesh" type="stdVal">Cube.mesh</PV>
+	</ValueConfig>
+
+	<ValueConfig name="PhysicalDefault">
+		<PV name="PhysicalMesh" type="stdVal">Cube.mesh</PV>
+		<PV name="Density" type="stdVal">1000.0</PV>
+		<PV name="CollisionMode" type="stdVal">CM_Standard</PV>
 	</ValueConfig>
 
 </ValueConfigs>

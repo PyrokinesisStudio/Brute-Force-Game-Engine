@@ -3,21 +3,21 @@
 <ObjectConfigs>
 	<ObjectConfig name="PongBall">
 		<Module name="Root">
-			<Mesh>Cube.mesh</Mesh>
 			<Concepts>PongBallConcept</Concepts>
-			<Collision>CM_Standard</Collision>
-			<Visible>yes</Visible>
-			<Density>0.01</Density>
-	</Module>
+			<CustomValues>
+				<PV name="Density">0.01</PV>
+			</CustomValues>
+		</Module>
 	</ObjectConfig>
 	<ObjectConfig name="PongBar">
 		<Module name="Root">
-			<Mesh>Packer.mesh</Mesh>
 			<Adapters>CubeAllAdapters</Adapters>
 			<Concepts>PongBarConcept</Concepts>
-			<Collision>CM_Standard</Collision>
-			<Visible>yes</Visible>
-			<Density>10000.0</Density>
+			<CustomValues>
+				<PV name="Density">0.01</PV>
+				<PV name="PhysicalMesh">Packer.mesh</PV>
+				<PV name="VisualMesh">Packer.mesh</PV>
+			</CustomValues>
 		</Module>
 	</ObjectConfig>
 </ObjectConfigs>

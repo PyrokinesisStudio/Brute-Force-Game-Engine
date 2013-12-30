@@ -4,12 +4,14 @@
 
 	<ConceptConfig name="PongBallConcept">
 		<PC name="BallControl">NoProperties</PC>
-		<PC name="Physical">NoProperties</PC>
+		<PC name="Physical">PhysicalDefault</PC>
+		<PC name="Visual">VisualDefault</PC>
 		<PC name="Networked">NoProperties</PC>
 	</ConceptConfig>
 
 	<ConceptConfig name="PongBarConcept">
-		<PC name="Physical">NoProperties</PC>
+		<PC name="Physical">PhysicalDefault</PC>
+		<PC name="Visual">VisualDefault</PC>
 		<PC name="BarControl">NoProperties</PC>
 		<PC name="Networked">NoProperties</PC>
 	</ConceptConfig>

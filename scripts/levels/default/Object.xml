@@ -3,22 +3,14 @@
 <ObjectConfigs>
 	<ObjectConfig name="Cube">
 		<Module name="Root">
-			<Mesh>Cube.mesh</Mesh>
 			<Adapters>CubeAllAdapters</Adapters>
 			<Concepts>CubeConcept</Concepts>
-			<Collision>CM_Standard</Collision>
-			<Visible>yes</Visible>
-			<Density>1000.0</Density>
 		</Module>
 	</ObjectConfig>
 	<ObjectConfig name="Cube_Ghost">
 		<Module name="Root">
-			<Mesh>Cube_ghost.mesh</Mesh>
 			<Adapters>CubeAllAdapters</Adapters>
 			<Concepts>CubeGhostConcept</Concepts>
-			<Collision>CM_Disabled</Collision>
-			<Visible>yes</Visible>
-			<Density>1000.0</Density>
 		</Module>
 	</ObjectConfig>
 </ObjectConfigs>

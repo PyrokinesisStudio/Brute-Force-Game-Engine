@@ -26,6 +26,15 @@
     <PV name="Effect" type="stdVal">Explosion_1</PV>
     <PV name="SoundEffect" type="stdVal">Explosion_big</PV>
   </ValueConfig>
+	
+	<ValueConfig name="VisualProjectile">
+		<PV name="VisualMesh" type="stdVal">Rocket.mesh</PV>
+	</ValueConfig>
 
+	<ValueConfig name="PhysicalProjectile">
+		<PV name="PhysicalMesh" type="stdVal">Rocket.mesh</PV>
+		<PV name="Density" type="stdVal">5.0</PV>
+		<PV name="CollisionMode" type="stdVal">CM_Standard</PV>
+	</ValueConfig>
  </ValueConfigs>
 

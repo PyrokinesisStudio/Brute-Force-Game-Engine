@@ -3,27 +3,31 @@
 <ConceptConfigs>
 
   <ConceptConfig name="InvaderConcept" >
-    <PC name="Physical">NoProperties</PC>
-    <PC name="Destroyable">ExplodeOnContact</PC>
+    <PC name="Physical">PhysicalDefault</PC>
+	<PC name="Visual">VisualDefault</PC>
+	<PC name="Destroyable">ExplodeOnContact</PC>
     <PC name="InvaderControl">NoProperties</PC>
     <PC name="Cannon">DefaultCannon</PC>
   </ConceptConfig>
 
   <ConceptConfig name="ShipConcept" >
-    <PC name="Physical">NoProperties</PC>
-    <PC name="Destroyable">PlayerDestroyable</PC>
-    <PC name="ShipControl">NoProperties</PC>
-    <PC name="Cannon">DefaultCannon</PC>
+	<PC name="Physical">PhysicalDefault</PC>
+	<PC name="Visual">VisualDefault</PC>
+	<PC name="Destroyable">PlayerDestroyable</PC>
+	<PC name="ShipControl">NoProperties</PC>
+	<PC name="Cannon">DefaultCannon</PC>
   </ConceptConfig>
 
   <ConceptConfig name="ProjectileConcept" >
-    <PC name="Physical">NoProperties</PC>
+	<PC name="Physical">PhysicalProjectile</PC>
+	<PC name="Visual">VisualProjectile</PC>
     <PC name="Destroyable">ExplodeOnContact</PC>
     <PC name="SelfDestruction">RocketSelfDestruction</PC>
   </ConceptConfig>
 
   <ConceptConfig name="AutoProjectileConcept" >
-    <PC name="Physical">NoProperties</PC>
+	<PC name="Physical">PhysicalProjectile</PC>
+	<PC name="Visual">VisualProjectile</PC>
     <PC name="Destroyable">ExplodeOnContact</PC>
     <PC name="SelfDestruction">RocketSelfDestruction</PC>
     <PC name="ThrustControl">RocketEngine</PC>
@@ -31,7 +35,8 @@
   </ConceptConfig>
 
   <ConceptConfig name="PowerupConcept" >
-    <PC name="Physical">NoProperties</PC>
+	<PC name="Physical">PhysicalDefault</PC>
+	<PC name="Visual">VisualDefault</PC>
     <PC name="Destroyable">PowerUpDestroyable</PC>
     <PC name="Collectable">NoProperties</PC>
   </ConceptConfig>

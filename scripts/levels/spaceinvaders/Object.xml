@@ -4,52 +4,46 @@
 
   <ObjectConfig name="Invader">
     <Module name="Root">
-      <Mesh>Packer.mesh</Mesh>
       <Concepts>InvaderConcept</Concepts>
-      <Collision>CM_Standard</Collision>
-      <Visible>yes</Visible>
-      <Density>50.0</Density>
-    </Module>
+	  <CustomValues>
+		<PV name="Density">50.0</PV>
+		<PV name="PhysicalMesh">Packer.mesh</PV>
+		<PV name="VisualMesh">Packer.mesh</PV>
+	  </CustomValues>
+	  </Module>
   </ObjectConfig>
 
   <ObjectConfig name="Ship">
     <Module name="Root">
-      <Mesh>Arrow.mesh</Mesh>
       <Concepts>ShipConcept</Concepts>
-      <Collision>CM_Standard</Collision>
-      <Visible>yes</Visible>
-      <Density>10000.0</Density>
+	  <CustomValues>
+		<PV name="Density">10000.0</PV>
+		<PV name="PhysicalMesh">Arrow.mesh</PV>
+		<PV name="VisualMesh">Arrow.mesh</PV>
+	  </CustomValues>
     </Module>
   </ObjectConfig>
 
   <ObjectConfig name="Projectile">
     <Module name="Root">
-      <Mesh>Rocket.mesh</Mesh>
       <Concepts>ProjectileConcept</Concepts>
-      <Collision>CM_Standard</Collision>
-      <Visible>yes</Visible>
-      <Density>5.0</Density>
     </Module>
   </ObjectConfig>
 
   <ObjectConfig name="AutoProjectile">
     <Module name="Root">
-      <Mesh>Rocket.mesh</Mesh>
       <Concepts>AutoProjectileConcept</Concepts>
-      <Collision>CM_Standard</Collision>
-      <Visible>yes</Visible>
-      <Density>5.0</Density>
     </Module>
   </ObjectConfig>
 
   <ObjectConfig name="Powerup">
     <Module name="Root">
-      <Mesh>Cube.mesh</Mesh>
       <Concepts>PowerupConcept</Concepts>
-      <Collision>CM_Ghost</Collision>
-      <Visible>yes</Visible>
-      <Density>5.0</Density>
-    </Module>
+ 	  <CustomValues>
+		<PV name="CollisionMode">CM_Ghost</PV>
+		<PV name="Density">5.0</PV>
+	  </CustomValues>
+   </Module>
   </ObjectConfig>
 
 </ObjectConfigs>
