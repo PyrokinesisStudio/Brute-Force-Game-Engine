@@ -29,6 +29,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <map>
 #include <string>
+#include <Base/Deprecated.h>
 #include <Controller/Defs.h>
 #include <Event/Event.h>
 
@@ -41,8 +42,10 @@ typedef std::map
 	std::string
 > ActionMapT;
 
+BFG_DEPRECATED("Use class ActionBuilder and call addDefaultActions()")
 void CONTROLLER_API fillWithDefaultActions(ActionMapT& actions);
 
+BFG_DEPRECATED("Use class ActionBuilder and call emitActions()")
 void CONTROLLER_API sendActionsToController(Event::Lane& eventLane, const ActionMapT& actions);
 
 } // namespace Controller_
