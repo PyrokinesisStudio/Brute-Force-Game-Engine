@@ -34,6 +34,7 @@ namespace BFG
 {
 	void MODEL_API initConsoleCommands(CommandPtrT commands);
 
+	void MODEL_API test(const std::string&, Event::SubLanePtr sublane);
 	void MODEL_API debugPhysicsObject(const std::string&, Event::SubLanePtr sublane);
 	void MODEL_API debugGameObject(const std::string&, Event::SubLanePtr sublane);
 }

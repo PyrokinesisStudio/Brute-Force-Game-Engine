@@ -36,6 +36,7 @@ namespace BFG
 	{
 		registerCommand("debug po", &debugPhysicsObject, *commands);
 		registerCommand("debug go", &debugGameObject, *commands);
+		registerCommand("test", &test, *commands);
 	}
 
 	void debugPhysicsObject(const std::string& body, Event::SubLanePtr sublane)
@@ -64,4 +65,24 @@ namespace BFG
 		}
 	}
 
+	void MODEL_API test(const std::string&, Event::SubLanePtr sublane)
+	{
+		infolog << "testline 1";
+		infolog << "testline 2";
+		infolog << "testline 3";
+		infolog << "testline 4";
+		infolog << "testline 5";
+		infolog << "testline 6";
+		infolog << "testline 7";
+		infolog << "testline 8";
+		infolog << "testline 9";
+		infolog << "testline 10";
+		infolog << "testline 11";
+		infolog << "testline 12";
+		infolog << "testline 13";
+		infolog << "testline 14";
+		infolog << "testline 15";
+		infolog << "testline 16";
+		infolog << "testline 17";
+	}
 }
