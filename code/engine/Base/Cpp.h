@@ -66,9 +66,9 @@ T falk_cast(U u)
 //! Utility for boost::shared_ptr.
 struct null_deleter
 {
-    void operator()(void const *) const
-    {
-    }
+	void operator()(void const *) const
+	{
+	}
 };
 
 template<class It>
@@ -76,10 +76,10 @@ struct Range
 {
 	Range(It begin, It end) : b(begin), e(end) {}
 
-    It b;
-    It e;
-    It begin() { return b; }
-    It end() { return e; }
+	It b;
+	It e;
+	It begin() { return b; }
+	It end() { return e; }
 };
 
 template<class It>
