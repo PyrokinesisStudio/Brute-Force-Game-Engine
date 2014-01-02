@@ -165,10 +165,7 @@ void Console::onKeyPressed(s32 _code)
 			try
 			{
 				if (isprint(code))
-				{
 					onPrintable(static_cast<unsigned char>(code));
-					mHasNewContent = true;
-				}
 			}
 			catch (std::exception e)
 			{
@@ -198,12 +195,16 @@ void Console::onReturn()
 void Console::onBackspace()
 {
 	if (!mInputBuffer.empty())
+	{
 		mInputBuffer.resize(mInputBuffer.size() - 1);
+		mHasNewContent = true;
+	}
 }
 
 void Console::onPrintable(unsigned char printable)
 {
 	mInputBuffer += printable;
+	mHasNewContent = true;
 }
 
 void Console::truncateLineBuffer()
