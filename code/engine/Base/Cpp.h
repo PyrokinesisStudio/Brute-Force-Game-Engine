@@ -71,4 +71,18 @@ struct null_deleter
     }
 };
 
+template<class It>
+struct Range
+{
+	Range(It begin, It end) : b(begin), e(end) {}
+
+    It b;
+    It e;
+    It begin() { return b; }
+    It end() { return e; }
+};
+
+template<class It>
+Range<It> make_range(It begin, It end) { return Range<It>(begin, end); }
+
 #endif
