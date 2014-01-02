@@ -29,9 +29,13 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreFrameListener.h>
 #include <Ogre.h>
 
+#include <Base/Cpp.h>
+
 #include <Controller/ControllerEvents.h>
 
 #include <Core/Path.h>
+#include <Core/Math.h>
+#include <Core/String.h>
 
 #include <View/Enums.hh>
 
@@ -39,23 +43,6 @@ namespace logging = boost::log;
 
 namespace BFG {
 namespace View {
-
-static std::string lastlines(const std::string& s, size_t lines)
-{
-	std::string result;
-	std::size_t totalLines = std::count(s.begin(), s.end(), '\n');
-
-	if (totalLines <= lines)
-		return s;
-
-	std::size_t linesTillStart = totalLines - lines;
-	std::size_t start = 0;
-	for (std::size_t i=0; i<linesTillStart; ++i) {
-		start = s.find('\n', start + 1);
-	}
-	result = s.substr(start + 1);
-	return result;
-}
 
 static std::wstring atow(const std::string& str)
 {
@@ -70,7 +57,10 @@ mIsVisible(false),
 mSubLane(lane.createSubLane()),
 mRoot(root),
 mHeight(1.0f),
-mDisplayedLines(15)
+mDisplayedLines(15),
+mScrollPosition(0),
+PROMT("] "),
+MAX_LINES(200)
 {
 	createUI();
 	registerSink();
@@ -87,9 +77,10 @@ Console::~Console()
 
 void Console::toggleVisible(bool show)
 {
-	mInput.clear();
+	mInputBuffer.clear();
 	mHasNewContent = true;
 	mIsVisible = show;
+	mDuringAnimation = true;
 }
 
 void Console::createUI()
@@ -123,9 +114,6 @@ void Console::createUI()
 	overlay = Ogre::OverlayManager::getSingleton().create("Console");   
 	overlay->add2D(static_cast<Ogre::OverlayContainer*>(mTextBox.get()));
 	overlay->show();
-	
-	//! TODO: Add logging output from OGRE
-	//Ogre::LogManager::getSingleton().getDefaultLog()->addListener(this);
 }
 
 void Console::registerSink()
@@ -159,6 +147,12 @@ void Console::onKeyPressed(s32 _code)
 		case ID::KB_BACKSPACE:
 			onBackspace();
 			break;
+		case ID::KB_PAGEUP:
+			onScroll(1);
+			break;
+		case ID::KB_PAGEDOWN:
+			onScroll(-1);
+			break;
 		case ID::KB_LALT:
 		case ID::KB_RALT:
 		case ID::KB_LSHIFT:
@@ -168,32 +162,83 @@ void Console::onKeyPressed(s32 _code)
 		case ID::KB_CAPSLOCK:
 			break;
 		default:
-			if (isprint(code))
-				onPrintable(static_cast<unsigned char>(code));
+			try
+			{
+				if (isprint(code))
+				{
+					onPrintable(static_cast<unsigned char>(code));
+					mHasNewContent = true;
+				}
+			}
+			catch (std::exception e)
+			{
+				warnlog << "Could not translate keycode Console::onKeyPressed: " << e.what();
+			}
 	}
+}
+
+void Console::onScroll(s32 lines)
+{
+	if (mLineBuffer.size() <= mDisplayedLines)
+		return;
+
+	mScrollPosition = static_cast<size_t>(clamp<s32>(mScrollPosition + lines, 0, mLineBuffer.size() - mDisplayedLines));
+	updateDisplayBuffer();
 }
 
 void Console::onReturn()
 {
-	mSubLane->emit(ID::VE_CONSOLE_COMMAND, mInput);
-	mInput.clear();
-	mHasNewContent = true;
+	mSubLane->emit(ID::VE_CONSOLE_COMMAND, mInputBuffer);
+	mLineBuffer.push_front(mInputBuffer + "\n");	
+	mInputBuffer.clear();
+	updateDisplayBuffer();
 }
 
 void Console::onBackspace()
 {
-	if (!mInput.empty())
-		mInput.resize(mInput.size() - 1);
+	if (!mInputBuffer.empty())
+		mInputBuffer.resize(mInputBuffer.size() - 1);
 }
 
 void Console::onPrintable(unsigned char printable)
 {
-	mInput += printable;
+	mInputBuffer += printable;
 }
 
-bool Console::frameStarted(const Ogre::FrameEvent& evt)
+void Console::truncateLineBuffer()
 {
-	// Console raise/lower animation logic
+	while (mLineBuffer.size() > MAX_LINES)
+		mLineBuffer.pop_back();
+}
+
+void Console::updateDisplayBuffer()
+{
+	auto realDisplayedLines = mLineBuffer.size() > mDisplayedLines ? mDisplayedLines : mLineBuffer.size();
+	
+	std::cout << mScrollPosition;
+	
+	auto begin = mLineBuffer.rend() - mScrollPosition - realDisplayedLines;
+	auto end = begin + realDisplayedLines;
+	
+	auto r = make_range(begin, end);
+
+	mDisplayBuffer.clear();
+
+	for (const auto& line : r)
+		mDisplayBuffer += line;
+
+	mHasNewContent = true;
+}
+
+
+void Console::printDisplayBuffer()
+{
+	mTextBox->setCaption(Ogre::UTFString((atow(mDisplayBuffer + PROMT + mInputBuffer))));
+	mHasNewContent = false;
+}
+
+void Console::onOffAnimation(const Ogre::FrameEvent& evt)
+{
 	if (mIsVisible && mHeight < 1)
 	{
 		mHeight += evt.timeSinceLastFrame*2;
@@ -213,21 +258,23 @@ bool Console::frameStarted(const Ogre::FrameEvent& evt)
 			mTextBox->hide();
 		}
 	}
+	else
+	{
+		mDuringAnimation = false;
+	}
 
 	mTextBox->setPosition(0.0f, (mHeight - 1.0f) * 0.5f);
 	mRect->setCorners(-1.0f, 1.0f + mHeight, 1.0f, 1.0f - mHeight);
+}
+
+bool Console::frameStarted(const Ogre::FrameEvent& evt)
+{
+	if (mDuringAnimation)
+		onOffAnimation(evt);
 
 	if (mHasNewContent)
-	{
-		// Truncate buffer in memory
-		const size_t MAX_LINES = 200;
-		mConsoleContent = lastlines(mConsoleContent, MAX_LINES);
-
-		// Display buffer
-		std::string all = lastlines(mConsoleContent, mDisplayedLines);
-		all += "] " + mInput;
-		mTextBox->setCaption(Ogre::UTFString((atow(all))));
-	}
+		printDisplayBuffer();
+	
 	return true;
 }
 
@@ -238,16 +285,23 @@ bool Console::frameEnded(const Ogre::FrameEvent& /*evt*/)
 
 int Console::xsputn(const char * s, int n)
 {
-	mConsoleContent += std::string(s, n);
-	mHasNewContent = true;
+	mLineBuffer.push_front(std::string(s, n));
+	updateDisplayBuffer();
 	return n;
 }
 
 
 int Console::overflow(int c)
 {
-	mConsoleContent += c;
-	mHasNewContent = true;
+	mBackgroundBuffer += c;
+	
+	if (c == '\n')	
+	{
+		mLineBuffer.push_front(mBackgroundBuffer);
+		mBackgroundBuffer.clear();
+		updateDisplayBuffer();
+	}
+
 	return 0;
 }
 

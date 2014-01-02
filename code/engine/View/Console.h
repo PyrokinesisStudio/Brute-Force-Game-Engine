@@ -83,28 +83,50 @@ private:
 	//! \brief Is called, when someone presses backspace in the inputline
 	void onBackspace();
 
+	void onScroll(s32 lines);
+
 	//! \brief Is called, when a printable character has been entered in the inputline
 	void onPrintable(unsigned char);
 	
 	bool frameStarted(const Ogre::FrameEvent&);
 	bool frameEnded(const Ogre::FrameEvent&);
 
-	bool mHasNewContent;
-	bool mIsVisible;
+	void truncateLineBuffer();
+	void updateDisplayBuffer();
+	
+	void printDisplayBuffer();
 
-	std::string mConsoleContent;
+	void onOffAnimation(const Ogre::FrameEvent& evt);
+
+	//! For current input (before enter has been pressed)
+	std::string mInputBuffer;
+	std::string mBackgroundBuffer;
+	//! All processed input lines
+	//std::string mDisplayBuffer;
+	std::string mDisplayBuffer;
+	std::deque<std::string> mLineBuffer;
+	
+	
+	
+	//! New input on current line is ready to be print on screen.
+	bool mHasNewContent;
+	bool mDuringAnimation;
+	bool mIsVisible;
 
 	Event::SubLanePtr mSubLane;
 
 	boost::shared_ptr<Ogre::Root> mRoot;
-	boost::shared_ptr<Ogre::Rectangle2D> mRect;
-	boost::shared_ptr<Ogre::SceneNode> mNode;
-	boost::shared_ptr<Ogre::OverlayElement> mTextBox;
 
 	f32 mHeight;
 	u32 mDisplayedLines;
+	size_t mScrollPosition;
 
-	std::string mInput;
+	const std::string PROMT;
+	const size_t MAX_LINES;
+	
+	boost::shared_ptr<Ogre::Rectangle2D> mRect;
+	boost::shared_ptr<Ogre::SceneNode> mNode;
+	boost::shared_ptr<Ogre::OverlayElement> mTextBox;
 
 	typedef boost::log::sinks::asynchronous_sink<
 		boost::log::sinks::text_ostream_backend
