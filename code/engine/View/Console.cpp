@@ -182,6 +182,7 @@ void Console::onScroll(s32 lines)
 	if (mLineBuffer.size() <= mDisplayedLines)
 		return;
 
+	//! Clamps between 0 and maxBufferSize - displayedLines.
 	mScrollPosition = static_cast<size_t>(clamp<s32>(mScrollPosition + lines, 0, mLineBuffer.size() - mDisplayedLines));
 	updateDisplayBuffer();
 }
@@ -229,7 +230,6 @@ void Console::updateDisplayBuffer()
 
 	mHasNewContent = true;
 }
-
 
 void Console::printDisplayBuffer()
 {
@@ -289,7 +289,6 @@ int Console::xsputn(const char * s, int n)
 	updateDisplayBuffer();
 	return n;
 }
-
 
 int Console::overflow(int c)
 {

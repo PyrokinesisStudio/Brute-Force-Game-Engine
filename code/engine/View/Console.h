@@ -83,6 +83,7 @@ private:
 	//! \brief Is called, when someone presses backspace in the inputline
 	void onBackspace();
 
+	//! \brief is called by pressing page_up, page_down.
 	void onScroll(s32 lines);
 
 	//! \brief Is called, when a printable character has been entered in the inputline
@@ -101,20 +102,16 @@ private:
 	//! For current input (before enter has been pressed)
 	std::string mInputBuffer;
 	std::string mBackgroundBuffer;
-	//! All processed input lines
-	//std::string mDisplayBuffer;
+
+	//! Number of lines which are diplayed. (depends on mDisplayedLines)
 	std::string mDisplayBuffer;
 	std::deque<std::string> mLineBuffer;
 	
-	
-	
-	//! New input on current line is ready to be print on screen.
 	bool mHasNewContent;
 	bool mDuringAnimation;
 	bool mIsVisible;
 
 	Event::SubLanePtr mSubLane;
-
 	boost::shared_ptr<Ogre::Root> mRoot;
 
 	f32 mHeight;
