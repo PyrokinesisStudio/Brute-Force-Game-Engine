@@ -37,6 +37,12 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 #include <Event/Event.h>
 
+/* THIS FILE IS DEPRECATED! DON'T ADD ANYTHING HERE */
+/* THIS FILE IS DEPRECATED! DON'T ADD ANYTHING HERE */
+/* THIS FILE IS DEPRECATED! DON'T ADD ANYTHING HERE */
+/* THIS FILE IS DEPRECATED! DON'T ADD ANYTHING HERE */
+/* THIS FILE IS DEPRECATED! DON'T ADD ANYTHING HERE */
+
 namespace BFG {
 namespace Controller_ {
 

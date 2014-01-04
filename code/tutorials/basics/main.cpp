@@ -72,10 +72,10 @@ struct GameState : BFG::State
 		// or a View state and in fact, they must have the same handle
 		// (GameHandle).
 		// This part here is necessary for Action deserialization.
-		BFG::Controller_::ActionMapT actions;
-		actions[A_EXIT] = "A_EXIT";
-		BFG::Controller_::fillWithDefaultActions(actions);
-		BFG::Controller_::sendActionsToController(lane, actions);
+		auto actionBuilder = BFG::Controller_::createActionBuilder(mSubLane);
+		actionBuilder.add(A_EXIT, "A_EXIT");
+		actionBuilder.addDefaultActions();
+		actionBuilder.emitActions();
 
 		// Actions must be configured by XML
 		BFG::Path path;
