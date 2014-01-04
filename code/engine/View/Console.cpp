@@ -53,6 +53,7 @@ static std::wstring atow(const std::string& str)
 
 Console::Console(Event::Lane& lane, boost::shared_ptr<Ogre::Root> root) :
 mHasNewContent(false),
+mHistoryPointer(mCommandBuffer.end()),
 mIsVisible(false),
 mSubLane(lane.createSubLane()),
 mRoot(root),
@@ -71,8 +72,14 @@ MAX_LINES(200)
 
 Console::~Console()
 {
-	unregisterSink();
 	mRoot->removeFrameListener(this);
+	unregisterSink();
+	mSink.reset();
+	mTextBox.reset();
+	mRect.reset();
+	mNode.reset();
+	mRoot.reset();
+
 }
 
 void Console::toggleVisible(bool show)
@@ -133,6 +140,34 @@ void Console::unregisterSink()
 	boost::log::core::get()->remove_sink(mSink);
 }
 
+void Console::onHistory(bool up)
+{
+	if (mCommandBuffer.empty())
+		return;
+	
+	mInputBuffer.clear();
+	
+	if (up)
+	{
+		if (mHistoryPointer == mCommandBuffer.end())
+			mHistoryPointer = mCommandBuffer.begin();
+		else if (mHistoryPointer + 1 == mCommandBuffer.end())
+			mHistoryPointer = mCommandBuffer.begin();
+		else
+			++mHistoryPointer;
+	}
+	else
+	{
+		if (mHistoryPointer == mCommandBuffer.begin())
+			mHistoryPointer = mCommandBuffer.end();
+			
+		--mHistoryPointer;
+	}
+
+	mInputBuffer = *mHistoryPointer;
+	mHasNewContent = true;
+}
+
 void Console::onKeyPressed(s32 _code)
 {
 	ID::KeyboardButton code = static_cast<ID::KeyboardButton>(_code);
@@ -159,6 +194,14 @@ void Console::onKeyPressed(s32 _code)
 		case ID::KB_RSHIFT:
 		case ID::KB_LCTRL:
 		case ID::KB_RCTRL:
+		case ID::KB_UP:
+			onHistory(true);
+			break;
+		case ID::KB_DOWN:
+			onHistory(false);
+			break;
+		case ID::KB_RIGHT:
+		case ID::KB_LEFT:
 		case ID::KB_CAPSLOCK:
 			break;
 		default:
@@ -187,7 +230,16 @@ void Console::onScroll(s32 lines)
 void Console::onReturn()
 {
 	mSubLane->emit(ID::VE_CONSOLE_COMMAND, mInputBuffer);
-	mLineBuffer.push_front(mInputBuffer + "\n");	
+	mLineBuffer.push_front(mInputBuffer + "\n");
+	
+	auto it = std::find(mCommandBuffer.begin(), mCommandBuffer.end(), mInputBuffer);
+
+	if (it != mCommandBuffer.end())
+		mCommandBuffer.erase(it);		
+
+	mCommandBuffer.push_front(mInputBuffer);
+	mHistoryPointer = mCommandBuffer.end();
+	
 	mInputBuffer.clear();
 	updateDisplayBuffer();
 }
@@ -211,13 +263,14 @@ void Console::truncateLineBuffer()
 {
 	while (mLineBuffer.size() > MAX_LINES)
 		mLineBuffer.pop_back();
+
+	while (mCommandBuffer.size() > MAX_LINES)
+		mCommandBuffer.pop_back();
 }
 
 void Console::updateDisplayBuffer()
 {
 	auto realDisplayedLines = mLineBuffer.size() > mDisplayedLines ? mDisplayedLines : mLineBuffer.size();
-	
-	std::cout << mScrollPosition;
 	
 	auto begin = mLineBuffer.rend() - mScrollPosition - realDisplayedLines;
 	auto end = begin + realDisplayedLines;

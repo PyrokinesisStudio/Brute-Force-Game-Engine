@@ -27,12 +27,11 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-#include <Base/Logger.h>      // Included to fix an operator problem with clang
-#include <Event/Event.h>
-#include <iostream>
 #include <boost/log/sinks.hpp>
 #include <OgreFrameListener.h>
 
+#include <Base/Logger.h>      // Included to fix an operator problem with clang
+#include <Event/Event.h>
 
 namespace Ogre {
 	class Rectangle2D;
@@ -99,6 +98,8 @@ private:
 
 	void onOffAnimation(const Ogre::FrameEvent& evt);
 
+	void onHistory(bool up);
+
 	//! For current input (before enter has been pressed)
 	std::string mInputBuffer;
 	std::string mBackgroundBuffer;
@@ -106,7 +107,10 @@ private:
 	//! Number of lines which are diplayed. (depends on mDisplayedLines)
 	std::string mDisplayBuffer;
 	std::deque<std::string> mLineBuffer;
+	std::deque<std::string> mCommandBuffer;
 	
+	std::deque<std::string>::iterator mHistoryPointer;
+
 	bool mHasNewContent;
 	bool mDuringAnimation;
 	bool mIsVisible;
@@ -121,9 +125,9 @@ private:
 	const std::string PROMT;
 	const size_t MAX_LINES;
 	
-	boost::shared_ptr<Ogre::Rectangle2D> mRect;
 	boost::shared_ptr<Ogre::SceneNode> mNode;
 	boost::shared_ptr<Ogre::OverlayElement> mTextBox;
+	boost::shared_ptr<Ogre::Rectangle2D> mRect;
 
 	typedef boost::log::sinks::asynchronous_sink<
 		boost::log::sinks::text_ostream_backend
