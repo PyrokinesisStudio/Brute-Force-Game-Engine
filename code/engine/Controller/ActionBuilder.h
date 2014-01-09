@@ -40,7 +40,7 @@ namespace Controller_ {
 //! \see createActionBuilder
 //! \todo Maybe use SubLanePtr by default.
 template <typename LanePtrT>
-class CONTROLLER_API ActionBuilder
+class ActionBuilder
 {
 public:
 	ActionBuilder(LanePtrT lane) :
@@ -98,7 +98,7 @@ public:
 //! Use this to create an ActionBuilder
 template <typename LanePtrT>
 ActionBuilder<LanePtrT>
-CONTROLLER_API createActionBuilder(LanePtrT& lane)
+createActionBuilder(LanePtrT& lane)
 {
 	ActionBuilder<LanePtrT> ab(lane);
 	return ab;
