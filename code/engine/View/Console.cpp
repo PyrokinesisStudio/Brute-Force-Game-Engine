@@ -210,7 +210,7 @@ void Console::onKeyPressed(s32 _code)
 				if (isprint(code))
 					onPrintable(static_cast<unsigned char>(code));
 			}
-			catch (std::exception e)
+			catch (std::exception& e)
 			{
 				warnlog << "Could not translate keycode Console::onKeyPressed: " << e.what();
 			}
