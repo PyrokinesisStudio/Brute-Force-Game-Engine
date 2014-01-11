@@ -119,8 +119,10 @@ void GameObjectFactory::createVisual(ModulePtr module,
 	auto orientation = module->mValues[ValueId(ID::PV_Orientation, pId)];
 	
 	BFG::Property::Value mesh = std::string();
+	BFG::Property::Value particleEffects = std::string();
 
 	module->getValue(ValueId(ID::PV_VisualMesh, pId), mesh);
+	module->getValue(ValueId(ID::PV_ParticleEffects, pId), particleEffects);
 
 	viewParameters.push_back
 	(
@@ -130,7 +132,8 @@ void GameObjectFactory::createVisual(ModulePtr module,
 			module->getHandle(),
 			mesh,
 			position,
-			orientation
+			orientation,
+			particleEffects
 		)
 	);
 }

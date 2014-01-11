@@ -141,6 +141,7 @@
 			<!-- PC_Visual -->
 			<value>PV_VisualMesh</value>
 			<value>PV_VisualScale</value>
+			<value>PV_ParticleEffects</value>
 
 			<!-- PC_Physical -->
 			<value>PV_PhysicalMesh</value>
