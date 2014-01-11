@@ -37,6 +37,7 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 namespace Ogre{
 	class MovableObject;
+	class ParticleSystem;
 	class SceneNode;
 	class Entity;
 }
@@ -73,6 +74,8 @@ private:
 
 	Ogre::SceneNode* mSceneNode;
 	Ogre::Entity* mEntity;
+
+	std::vector<Ogre::ParticleSystem*> mParticleSystems;
 
 };
 } // namespace View

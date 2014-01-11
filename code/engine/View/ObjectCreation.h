@@ -45,6 +45,7 @@ struct VIEW_API ObjectCreation
 	               const std::string& meshName,
 	               const v3& position,
 	               const qv4& orientation,
+	               const std::string& particleEffects = "",
 				   bool visible = true);
 
 	GameHandle mParent;
@@ -52,6 +53,7 @@ struct VIEW_API ObjectCreation
 	std::string mMeshName;
 	v3 mPosition;
 	qv4 mOrientation;
+	std::string mParticleEffects;
 	bool mVisible;
 };
 

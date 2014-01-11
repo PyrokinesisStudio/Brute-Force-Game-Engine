@@ -29,6 +29,9 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <OgreEntity.h>
 #include <OgreRoot.h>
 #include <OgreSceneNode.h>
+#include <OgreParticleSystem.h>
+
+#include <Core/String.h>
 
 #include <View/Convert.h>
 #include <View/Enums.hh>
@@ -68,9 +71,24 @@ mEntity(NULL)
 	mSubLane->connect(ID::VE_ATTACH_OBJECT, this, &RenderObject::onAttachObject, mHandle);
 	mSubLane->connectV(ID::VE_DETACH_OBJECT, this, &RenderObject::onDetachObject, mHandle);
 
-	mEntity = sceneMgr->createEntity(stringify(mHandle), oc.mMeshName);
+	if (!oc.mMeshName.empty())
+	{
+		mEntity = sceneMgr->createEntity(stringify(mHandle), oc.mMeshName);
+		mSceneNode->attachObject(mEntity);
+	}
 
-	mSceneNode->attachObject(mEntity);
+	if (!oc.mParticleEffects.empty())
+	{
+		std::vector<std::string> particleEffects;
+		tokenize(oc.mParticleEffects, ",", particleEffects);
+
+		for (std::string effect : particleEffects)
+		{
+			Ogre::ParticleSystem* ps = sceneMgr->createParticleSystem(stringify(mHandle)+effect, effect);
+			mSceneNode->attachObject(ps);
+			mParticleSystems.push_back(ps);
+		}
+	}
 
 	mSceneNode->setVisible(oc.mVisible);
 }
@@ -82,8 +100,16 @@ RenderObject::~RenderObject()
 	Ogre::Root* root = Ogre::Root::getSingletonPtr();
 	Ogre::SceneManager* sceneMgr = root->getSceneManager(BFG_SCENEMANAGER);
 	
+	for (Ogre::ParticleSystem* ps : mParticleSystems)
+	{
+		mSceneNode->detachObject(ps);
+		sceneMgr->destroyParticleSystem(ps);
+	}
+
 	sceneMgr->destroySceneNode(mSceneNode);
-	sceneMgr->destroyEntity(mEntity);
+	
+	if (mEntity)
+		sceneMgr->destroyEntity(mEntity);
 }
 
 void RenderObject::updatePosition(const v3& position)

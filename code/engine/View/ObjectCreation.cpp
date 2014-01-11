@@ -34,12 +34,14 @@ ObjectCreation::ObjectCreation(GameHandle parent,
                                const std::string& meshName,
                                const v3& position,
                                const qv4& orientation,
+                               const std::string& particleEffects,
 							   bool visible) :
 mParent(parent),
 mHandle(handle),
 mMeshName(meshName),
 mPosition(position),
 mOrientation(orientation),
+mParticleEffects(particleEffects),
 mVisible(visible)
 {}
 
