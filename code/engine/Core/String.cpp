@@ -26,9 +26,6 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include <Core/String.h>
-
-#include <boost/algorithm/string.hpp>
-
 #include <Core/Types.h>
 
 namespace BFG {
@@ -49,20 +46,6 @@ bool split(const std::string& source,
 	rightToken = source.substr(position + seperator.size(), difference);    
     
 	return true;
-}
-
-void tokenize(const std::string& source, 
-              const std::string& seperator, 
-              std::vector<std::string>& tokens)
-{
-	boost::split(tokens, source, boost::is_any_of(seperator), boost::token_compress_on);
-}
-
-void tokenize(const std::string& source, 
-              const std::string& seperator, 
-              std::deque<std::string>& tokens)
-{
-	boost::split(tokens, source, boost::is_any_of(seperator), boost::token_compress_on);
 }
 
 } // namespace BFG

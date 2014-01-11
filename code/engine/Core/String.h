@@ -31,6 +31,8 @@ along with the BFG-Engine. If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <deque>
 
+#include <boost/algorithm/string.hpp>
+
 #include <Core/Defs.h>
 
 namespace BFG {
@@ -41,13 +43,13 @@ BFG_CORE_API bool split(const std::string& source,
                         std::string& rightToken);
 
 
-BFG_CORE_API void tokenize(const std::string& source, 
-                           const std::string& seperator, 
-                           std::vector<std::string>& tokens);
-
-BFG_CORE_API void tokenize(const std::string& source, 
-                           const std::string& seperator, 
-                           std::deque<std::string>& tokens);
+template<class ContainerT>
+void tokenize(const std::string& source, 
+              const std::string& seperator, 
+              ContainerT& tokens)
+{
+	boost::split(tokens, source, boost::is_any_of(seperator), boost::token_compress_on);
+}
 
 } // namespace BFG
 
