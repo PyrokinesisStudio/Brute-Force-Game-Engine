@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(testSplitNegative)
 	BOOST_CHECK(!res);
 }
 
-BOOST_AUTO_TEST_CASE(testSplitAll)
+BOOST_AUTO_TEST_CASE(testTokenize)
 {
 	std::string source = "first second third fourth";
 	std::vector<std::string> tokens;
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(testSplitAll)
 	BOOST_CHECK_EQUAL(tokens[3], "fourth");
 }
 
-BOOST_AUTO_TEST_CASE(tokenizeDequeTest)
+BOOST_AUTO_TEST_CASE(testTokenizeWithDeque)
 {
 	std::string source = "first second third fourth";
 	std::deque<std::string> tokens;
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(tokenizeDequeTest)
 }
 
 
-BOOST_AUTO_TEST_CASE(testSplitAll2)
+BOOST_AUTO_TEST_CASE(testTokenizeLongToken)
 {
 	std::string source = "first-*-second-*-third-*-fourth";
 	std::vector<std::string> tokens;
@@ -110,6 +110,16 @@ BOOST_AUTO_TEST_CASE(testSplitAll2)
 	BOOST_CHECK_EQUAL(tokens[1], "second");
 	BOOST_CHECK_EQUAL(tokens[2], "third");
 	BOOST_CHECK_EQUAL(tokens[3], "fourth");
+}
+
+BOOST_AUTO_TEST_CASE(testTokenizeNoToken)
+{
+	std::string source = "firstsecondthirdfourth";
+	std::vector<std::string> tokens;
+	tokenize(source, " ", tokens);
+	BOOST_CHECK(!tokens.empty());
+	BOOST_CHECK_EQUAL(tokens.size(), 1);
+	BOOST_CHECK_EQUAL(tokens[0], "firstsecondthirdfourth");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
