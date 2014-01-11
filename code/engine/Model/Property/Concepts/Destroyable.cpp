@@ -114,9 +114,11 @@ void Destroyable::updateModule(GameHandle module,
 
 void Destroyable::updateGui(f32 damage, f32 armor)
 {
+	assert(!nearEnough(armor, 0.0f, EPSILON_F));
+
+	// \todo explain this calculation ...
 	f32 remainingArmor = (1.0f - damage / armor) * 100;
 	s32 value = clamp((s32)remainingArmor, 0, 100);
-	// TODO: separate calculation and subLane()->emitting
 	subLane()->emit(ID::GOE_ARMOR, value, NULL_HANDLE, ownerHandle());
 }
 
