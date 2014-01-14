@@ -8,7 +8,7 @@ This file is part of the Brute-Force Game Engine, BFG-Engine
 
 For the latest info, see http://www.brute-force-games.com
 
-Copyright (c) 2011 Brute-Force Games GbR
+Copyright (c) 2014 Brute-Force Games GbR
 
 The BFG-Engine is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
